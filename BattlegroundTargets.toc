@@ -1,7 +1,7 @@
 ## Interface: 40200
 ## Author: kunda
 ## Title: BattlegroundTargets
-## Notes: Shows battleground targets.
+## Notes: Shows all battleground enemies. Simple 'Enemy Unit Frame' for battlegrounds.
 ## Version: 40200-1
 ## SavedVariables: BattlegroundTargets_Options
 

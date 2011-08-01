@@ -24,7 +24,6 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Height"] = true,
 
 ["General Settings"] = true,
-["Update Frequency"] = true,
 ["Show Minimap-Button"] = true,
 
 ["click & move"] = true,

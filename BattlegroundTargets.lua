@@ -1,6 +1,27 @@
 -- -------------------------------------------------------------------------- --
 -- BattlegroundTargets by kunda                                               --
 -- -------------------------------------------------------------------------- --
+--                                                                            --
+-- BattlegroundTargets is a simple 'Enemy Unit Frame' for battlegrounds.      --
+--                                                                            --
+-- Features:                                                                  --
+-- - Shows all battleground enemies with role, class and name.                --
+-- - Click on button to target an enemy.                                      --
+-- - Independent settings for '10 vs 10', '15 vs 15' and '40 vs 40' brackets. --
+-- - Target Indicator                                                         --
+-- - Target Count                                                             --
+-- - It should be impossible to produce an ADDON_ACTION_BLOCKED error message --
+--   by tainting the used secure templates. This includes configuration.      --
+--                                                                            --
+-- - Works with all officially supported languages: (I hope so)               --
+--   English (Default), deDE, esES, frFR, koKR, ruRU, zhCN and zhTW           --
+--                                                                            --
+-- -------------------------------------------------------------------------- --
+--                                                                            --
+-- Credits:                                                                   --
+-- - Talented from Jerry (for a list of all localized talent specs)           --
+--                                                                            --
+-- -------------------------------------------------------------------------- --
 
 -- ---------------------------------------------------------------------------------------------------------------------
 BattlegroundTargets_Options = {}           -- SavedVariable options table
@@ -39,6 +60,7 @@ local reSizeCheck = 0 -- check bgname max. 3 times if we are out of combat and n
 local reSetLayout
 local isConfig
 local scoreUpdateThrottle = GetTime()
+local scoreUpdateFrequency = 1
 
 local playerFaction = ""  -- player Faction  : 'Horde' or 'Alliance' (set after event PLAYER_LOGIN)
 local oppositeFaction = 0 -- opposite Faction: 0 = 'Horde' or 1 = 'Alliance' (set after event PLAYER_LOGIN)
@@ -65,15 +87,20 @@ local color = { -- e.g.: color.Gold.hex | color.Orange.rgb[1]...[3]
 }
 
 local fonts = {
-	[1] = {text =  "9px", name = "GameFontBlackTiny"},
-	[2] = {text = "10px", name = "GameFontBlackSmall"},
-	[3] = {text = "12px", name = "GameFontNormal"},
-	[4] = {text = "14px", name = "GameFontBlackMedium"},
-	[5] = {text = "16px", name = "GameFontNormalLarge"},
+	[1] = {name = "GameFontBlackTiny"},
+	[2] = {name = "GameFontBlackSmall"},
+	[3] = {name = "GameFontNormal"},
+	[4] = {name = "GameFontBlackMedium"},
+	[5] = {name = "GameFontNormalLarge"},
 }
 for key, value in pairs(fonts) do
 	local _, fontHeight = _G[value.name]:GetFont()
 	value.height = math_floor(fontHeight+0.5)
+	if value.height then
+		value.text = value.height.."px"
+	else
+		value.text = "?px"
+	end
 end
 
 local currentSize = 10
@@ -721,7 +748,6 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if BattlegroundTargets_Options.version                   == nil then BattlegroundTargets_Options.version                   = 1     end
-	if BattlegroundTargets_Options.UpdateFrequency           == nil then BattlegroundTargets_Options.UpdateFrequency           = 1     end
 	if BattlegroundTargets_Options.MinimapButton             == nil then BattlegroundTargets_Options.MinimapButton             = false end
 	if BattlegroundTargets_Options.MinimapButtonPos          == nil then BattlegroundTargets_Options.MinimapButtonPos          = -90   end
 
@@ -977,7 +1003,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	if BattlegroundTargets_OptionsFrame then return end
 
 	local frameWidth  = 400
-	local frameHeight = 560
+	local frameHeight = 520
 	local tabWidth = floor( (frameWidth/3)-10 )
 
 	GVAR.OptionsFrame = CreateFrame("Frame", "BattlegroundTargets_OptionsFrame", UIParent)
@@ -1184,6 +1210,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.SortByTitle:SetPoint("TOP", GVAR.OptionsFrame.ShowTargetCount, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.SortByTitle:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.SortByTitle:SetText(L["Sort By"]..":")
+	GVAR.OptionsFrame.SortByTitle:SetTextColor(1, 1, 1, 1)
 
 	GVAR.OptionsFrame.SortByTitlePullDown = CreateFrame("Button", nil, GVAR.OptionsFrame)
 	TEMPLATE.PullDownMenu(GVAR.OptionsFrame.SortByTitlePullDown, "SortBy", sortBy[ BattlegroundTargets_Options.ButtonSortBySize[currentSize] ], 150, #sortBy, SortByTitlePullDownFunc)
@@ -1199,6 +1226,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FontTitle:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.FontTitle:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.FontTitle:SetText(L["Text Size"]..":")
+	GVAR.OptionsFrame.FontTitle:SetTextColor(1, 1, 1, 1)
 
 	GVAR.OptionsFrame.FontPullDown = CreateFrame("Button", nil, GVAR.OptionsFrame)
 	TEMPLATE.PullDownMenu(GVAR.OptionsFrame.FontPullDown, "Font", fonts[ BattlegroundTargets_Options.ButtonFontSize[currentSize] ].text, 70, #fonts, FontPullDownFunc)
@@ -1213,14 +1241,15 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Scale:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Scale:SetPoint("TOP", GVAR.OptionsFrame.FontTitle, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.Scale:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.Scale:SetText(L["Scale"]..": |cffffffff"..(BattlegroundTargets_Options.ButtonScale[currentSize]*100).."%|r")
+	GVAR.OptionsFrame.Scale:SetText(L["Scale"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonScale[currentSize]*100).."%|r")
+	GVAR.OptionsFrame.Scale:SetTextColor(1, 1, 1, 1)
 
 	GVAR.OptionsFrame.ScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	TEMPLATE.Slider(GVAR.OptionsFrame.ScaleSlider, 180, 5, 50, 200, BattlegroundTargets_Options.ButtonScale[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonScale[currentSize] = value/100
 		BattlegroundTargets:SetupButtonLayout()
-		GVAR.OptionsFrame.Scale:SetText(L["Scale"]..": |cffffffff"..(BattlegroundTargets_Options.ButtonScale[currentSize]*100).."%|r")
+		GVAR.OptionsFrame.Scale:SetText(L["Scale"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonScale[currentSize]*100).."%|r")
 	end,
 	"%",
 	10)
@@ -1233,14 +1262,15 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Width:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Width:SetPoint("TOP", GVAR.OptionsFrame.ScaleSlider, "BOTTOM", 0, -20)
 	GVAR.OptionsFrame.Width:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.Width:SetText(L["Width"]..": |cffffffff"..(BattlegroundTargets_Options.ButtonWidth[currentSize]).."|r")
+	GVAR.OptionsFrame.Width:SetText(L["Width"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonWidth[currentSize]).."|r")
+	GVAR.OptionsFrame.Width:SetTextColor(1, 1, 1, 1)
 
 	GVAR.OptionsFrame.WidthSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	TEMPLATE.Slider(GVAR.OptionsFrame.WidthSlider, 180, 5, 50, 250, BattlegroundTargets_Options.ButtonWidth[currentSize],
 	function(self, value)
 		BattlegroundTargets_Options.ButtonWidth[currentSize] = value
 		BattlegroundTargets:SetupButtonLayout()
-		GVAR.OptionsFrame.Width:SetText(L["Width"]..": |cffffffff"..(BattlegroundTargets_Options.ButtonWidth[currentSize]).."|r")
+		GVAR.OptionsFrame.Width:SetText(L["Width"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonWidth[currentSize]).."|r")
 	end,
 	nil,
 	10)
@@ -1253,14 +1283,15 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Height:SetPoint("LEFT", GVAR.OptionsFrame.WidthSlider, "RIGHT", 20, 0)
 	GVAR.OptionsFrame.Height:SetPoint("TOP", GVAR.OptionsFrame.Width, "TOP", 0, 0)
 	GVAR.OptionsFrame.Height:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.Height:SetText(L["Height"]..": |cffffffff"..(BattlegroundTargets_Options.ButtonHeight[currentSize]).."|r")
+	GVAR.OptionsFrame.Height:SetText(L["Height"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonHeight[currentSize]).."|r")
+	GVAR.OptionsFrame.Height:SetTextColor(1, 1, 1, 1)
 
 	GVAR.OptionsFrame.HeightSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	TEMPLATE.Slider(GVAR.OptionsFrame.HeightSlider, 180, 1, 12, 25, BattlegroundTargets_Options.ButtonHeight[currentSize],
 	function(self, value)
 		BattlegroundTargets_Options.ButtonHeight[currentSize] = value
 		BattlegroundTargets:SetupButtonLayout()
-		GVAR.OptionsFrame.Height:SetText(L["Height"]..": |cffffffff"..(BattlegroundTargets_Options.ButtonHeight[currentSize]).."|r")
+		GVAR.OptionsFrame.Height:SetText(L["Height"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonHeight[currentSize]).."|r")
 	end,
 	nil,
 	10)
@@ -1283,32 +1314,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.General:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.General:SetText(L["General Settings"]..":")
 
-
-
-	-- - update frequency
-	GVAR.OptionsFrame.UpdateFreq = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.UpdateFreq:SetHeight(20)
-	GVAR.OptionsFrame.UpdateFreq:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 20, 0)
-	GVAR.OptionsFrame.UpdateFreq:SetPoint("TOP", GVAR.OptionsFrame.General, "BOTTOM", 0, 0)
-	GVAR.OptionsFrame.UpdateFreq:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.UpdateFreq:SetText(L["Update Frequency"]..": |cffffffff"..(BattlegroundTargets_Options.UpdateFrequency).." "..SECONDS.."|r")
-
-	GVAR.OptionsFrame.UpdateFreqSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
-	TEMPLATE.Slider(GVAR.OptionsFrame.UpdateFreqSlider, 150, 10, 10, 200, BattlegroundTargets_Options.UpdateFrequency*100,
-	function(self, value)
-		BattlegroundTargets_Options.UpdateFrequency = value/100
-		GVAR.OptionsFrame.UpdateFreq:SetText(L["Update Frequency"]..": |cffffffff"..(BattlegroundTargets_Options.UpdateFrequency).." "..SECONDS.."|r")
-	end,
-	"H",
-	10)
-	GVAR.OptionsFrame.UpdateFreqSlider:SetPoint("LEFT", GVAR.OptionsFrame.UpdateFreq, "LEFT", 0, 0)
-	GVAR.OptionsFrame.UpdateFreqSlider:SetPoint("TOP", GVAR.OptionsFrame.UpdateFreq, "BOTTOM", 0, 5)
-
 	-- - minimap button
 	GVAR.OptionsFrame.Minimap = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.Minimap, 16, 4, L["Show Minimap-Button"])
-	GVAR.OptionsFrame.Minimap:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 20, 0)
-	GVAR.OptionsFrame.Minimap:SetPoint("TOP", GVAR.OptionsFrame.UpdateFreqSlider, "BOTTOM", 0, -20)
+	GVAR.OptionsFrame.Minimap:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Minimap:SetPoint("TOP", GVAR.OptionsFrame.General, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.Minimap:SetChecked(BattlegroundTargets_Options.MinimapButton)
 	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.Minimap)
 	GVAR.OptionsFrame.Minimap:SetScript("OnClick", function(self)
@@ -1388,13 +1398,13 @@ function BattlegroundTargets:SetOptions()
 	GVAR.OptionsFrame.SortByTitlePullDown.PullDownButtonText:SetText(sortBy[ BattlegroundTargets_Options.ButtonSortBySize[currentSize] ])
 
 	GVAR.OptionsFrame.ScaleSlider:SetValue(BattlegroundTargets_Options.ButtonScale[currentSize]*100)
-	GVAR.OptionsFrame.Scale:SetText(L["Scale"]..": |cffffffff"..(BattlegroundTargets_Options.ButtonScale[currentSize]*100).."%|r")
+	GVAR.OptionsFrame.Scale:SetText(L["Scale"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonScale[currentSize]*100).."%|r")
 
 	GVAR.OptionsFrame.WidthSlider:SetValue(BattlegroundTargets_Options.ButtonWidth[currentSize])
-	GVAR.OptionsFrame.Width:SetText(L["Width"]..": |cffffffff"..(BattlegroundTargets_Options.ButtonWidth[currentSize]).."|r")
+	GVAR.OptionsFrame.Width:SetText(L["Width"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonWidth[currentSize]).."|r")
 
 	GVAR.OptionsFrame.HeightSlider:SetValue(BattlegroundTargets_Options.ButtonHeight[currentSize])
-	GVAR.OptionsFrame.Height:SetText(L["Height"]..": |cffffffff"..(BattlegroundTargets_Options.ButtonHeight[currentSize]).."|r")
+	GVAR.OptionsFrame.Height:SetText(L["Height"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonHeight[currentSize]).."|r")
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -1695,163 +1705,163 @@ function BattlegroundTargets:EnableConfigMode()
 
 	-- Test Data START
 	ENEMY_Data[1] = {}
-	ENEMY_Data[1].name = "James-Alterac Mountains"
+	ENEMY_Data[1].name = "Aatest-Alterac Mountains"
 	ENEMY_Data[1].classToken = "DRUID"
 	ENEMY_Data[1].talentSpec = T.DRUID[3]
 	ENEMY_Data[2] = {}
-	ENEMY_Data[2].name = "Jelena-Ragnaros"
+	ENEMY_Data[2].name = "Bbtest-Ragnaros"
 	ENEMY_Data[2].classToken = "PRIEST"
 	ENEMY_Data[2].talentSpec = T.PRIEST[3]
 	ENEMY_Data[3] = {}
-	ENEMY_Data[3].name = "Cho-Blackrock"
+	ENEMY_Data[3].name = "Cctest-Blackrock"
 	ENEMY_Data[3].classToken = "WARLOCK"
 	ENEMY_Data[3].talentSpec = T.WARLOCK[1]
 	ENEMY_Data[4] = {}
-	ENEMY_Data[4].name = "Hans-Wildhammer"
+	ENEMY_Data[4].name = "Ddtest-Wildhammer"
 	ENEMY_Data[4].classToken = "HUNTER"
 	ENEMY_Data[4].talentSpec = T.HUNTER[3]
 	ENEMY_Data[5] = {}
-	ENEMY_Data[5].name = "Vitali-Khaz'goroth"
+	ENEMY_Data[5].name = "Eetest-Khaz'goroth"
 	ENEMY_Data[5].classToken = "WARRIOR"
 	ENEMY_Data[5].talentSpec = T.WARRIOR[3]
 	ENEMY_Data[6] = {}
-	ENEMY_Data[6].name = "Pedro-Xavius"
+	ENEMY_Data[6].name = "Fftest-Xavius"
 	ENEMY_Data[6].classToken = "ROGUE"
 	ENEMY_Data[6].talentSpec = T.ROGUE[2]
 	ENEMY_Data[7] = {}
-	ENEMY_Data[7].name = "Tore-Area 52"
+	ENEMY_Data[7].name = "Ggtest-Area 52"
 	ENEMY_Data[7].classToken = "SHAMAN"
 	ENEMY_Data[7].talentSpec = T.SHAMAN[3]
 	ENEMY_Data[8] = {}
-	ENEMY_Data[8].name = "Samuel-Blackmoore"
+	ENEMY_Data[8].name = "Hhtest-Blackmoore"
 	ENEMY_Data[8].classToken = "PALADIN"
 	ENEMY_Data[8].talentSpec = T.PALADIN[3]
 	ENEMY_Data[9] = {}
-	ENEMY_Data[9].name = "Mirko-Scarshield Legion"
+	ENEMY_Data[9].name = "Iitest-Scarshield Legion"
 	ENEMY_Data[9].classToken = "MAGE"
 	ENEMY_Data[9].talentSpec = T.MAGE[3]
 	ENEMY_Data[10] = {}
-	ENEMY_Data[10].name = "Philippe-Conseil des Ombres"
+	ENEMY_Data[10].name = "Jjtest-Conseil des Ombres"
 	ENEMY_Data[10].classToken = "DEATHKNIGHT"
 	ENEMY_Data[10].talentSpec = T.DEATHKNIGHT[2]
 	ENEMY_Data[11] = {}
-	ENEMY_Data[11].name = "Alexander-Archimonde"
+	ENEMY_Data[11].name = "Kktest-Archimonde"
 	ENEMY_Data[11].classToken = "DRUID"
 	ENEMY_Data[11].talentSpec = T.DRUID[1]
 	ENEMY_Data[12] = {}
-	ENEMY_Data[12].name = "Lee-Nefarian"
+	ENEMY_Data[12].name = "Lltest-Nefarian"
 	ENEMY_Data[12].classToken = "DEATHKNIGHT"
 	ENEMY_Data[12].talentSpec = T.DEATHKNIGHT[3]
 	ENEMY_Data[13] = {}
-	ENEMY_Data[13].name = "Xavier-Trollbane"
+	ENEMY_Data[13].name = "Mmtest-Trollbane"
 	ENEMY_Data[13].classToken = "PALADIN"
 	ENEMY_Data[13].talentSpec = T.PALADIN[3]
 	ENEMY_Data[14] = {}
-	ENEMY_Data[14].name = "Jennifer-Un'Goro"
+	ENEMY_Data[14].name = "Nntest-Un'Goro"
 	ENEMY_Data[14].classToken = "MAGE"
 	ENEMY_Data[14].talentSpec = T.MAGE[1]
 	ENEMY_Data[15] = {}
-	ENEMY_Data[15].name = "Amanda-Teldrassil"
+	ENEMY_Data[15].name = "Ootest-Teldrassil"
 	ENEMY_Data[15].classToken = "SHAMAN"
 	ENEMY_Data[15].talentSpec = T.SHAMAN[2]
 	ENEMY_Data[16] = {}
-	ENEMY_Data[16].name = "Boris-Rexxar"
+	ENEMY_Data[16].name = "Pptest-Rexxar"
 	ENEMY_Data[16].classToken = "ROGUE"
 	ENEMY_Data[16].talentSpec = T.ROGUE[1]
 	ENEMY_Data[17] = {}
-	ENEMY_Data[17].name = "Kim-Gilneas"
+	ENEMY_Data[17].name = "Qqtest-Gilneas"
 	ENEMY_Data[17].classToken = "WARLOCK"
 	ENEMY_Data[17].talentSpec = T.WARLOCK[2]
 	ENEMY_Data[18] = {}
-	ENEMY_Data[18].name = "Jyrki-Terokkar"
+	ENEMY_Data[18].name = "Rrtest-Terokkar"
 	ENEMY_Data[18].classToken = "PRIEST"
 	ENEMY_Data[18].talentSpec = T.PRIEST[3]
 	ENEMY_Data[19] = {}
-	ENEMY_Data[19].name = "Lars-Zuluhed"
+	ENEMY_Data[19].name = "Sstest-Zuluhed"
 	ENEMY_Data[19].classToken = "WARRIOR"
 	ENEMY_Data[19].talentSpec = T.WARRIOR[1]
 	ENEMY_Data[20] = {}
-	ENEMY_Data[20].name = "Pawel-Archimonde"
+	ENEMY_Data[20].name = "Tttest-Archimonde"
 	ENEMY_Data[20].classToken = "DRUID"
 	ENEMY_Data[20].talentSpec = T.DRUID[2]
 	ENEMY_Data[21] = {}
-	ENEMY_Data[21].name = "Han-Anub'arak"
+	ENEMY_Data[21].name = "Uutest-Anub'arak"
 	ENEMY_Data[21].classToken = "PRIEST"
 	ENEMY_Data[21].talentSpec = T.PRIEST[3]
 	ENEMY_Data[22] = {}
-	ENEMY_Data[22].name = "Nanami-Kul Tiras"
+	ENEMY_Data[22].name = "Vvtest-Kul Tiras"
 	ENEMY_Data[22].classToken = "WARRIOR"
 	ENEMY_Data[22].talentSpec = T.WARRIOR[1]
 	ENEMY_Data[23] = {}
-	ENEMY_Data[23].name = "Axel-Garrosh"
+	ENEMY_Data[23].name = "Wwtest-Garrosh"
 	ENEMY_Data[23].classToken = "SHAMAN"
 	ENEMY_Data[23].talentSpec = T.SHAMAN[1]
 	ENEMY_Data[24] = {}
-	ENEMY_Data[24].name = "Bill-Durotan"
+	ENEMY_Data[24].name = "Xxtest-Durotan"
 	ENEMY_Data[24].classToken = "HUNTER"
 	ENEMY_Data[24].talentSpec = T.HUNTER[2]
 	ENEMY_Data[25] = {}
-	ENEMY_Data[25].name = "Lloque-Thrall"
+	ENEMY_Data[25].name = "Yytest-Thrall"
 	ENEMY_Data[25].classToken = "SHAMAN"
 	ENEMY_Data[25].talentSpec = T.SHAMAN[2]
 	ENEMY_Data[26] = {}
-	ENEMY_Data[26].name = "Fahari-Frostmourne"
+	ENEMY_Data[26].name = "Zztest-Frostmourne"
 	ENEMY_Data[26].classToken = "WARLOCK"
 	ENEMY_Data[26].talentSpec = T.WARLOCK[3]
 	ENEMY_Data[27] = {}
-	ENEMY_Data[27].name = "Maria-Stormrage"
+	ENEMY_Data[27].name = "Abtest-Stormrage"
 	ENEMY_Data[27].classToken = "PRIEST"
 	ENEMY_Data[27].talentSpec = T.PRIEST[2]
 	ENEMY_Data[28] = {}
-	ENEMY_Data[28].name = "Penelope-Les Sentinelles"
+	ENEMY_Data[28].name = "Bctest-Les Sentinelles"
 	ENEMY_Data[28].classToken = "MAGE"
 	ENEMY_Data[28].talentSpec = T.MAGE[2]
 	ENEMY_Data[29] = {}
-	ENEMY_Data[29].name = "Hauke-Arthas"
+	ENEMY_Data[29].name = "Cdtest-Arthas"
 	ENEMY_Data[29].classToken = "ROGUE"
 	ENEMY_Data[29].talentSpec = T.ROGUE[3]
 	ENEMY_Data[30] = {}
-	ENEMY_Data[30].name = "Mustafa-Bronzebeard"
+	ENEMY_Data[30].name = "Detest-Bronzebeard"
 	ENEMY_Data[30].classToken = "DRUID"
 	ENEMY_Data[30].talentSpec = T.DRUID[1]
 	ENEMY_Data[31] = {}
-	ENEMY_Data[31].name = "Sheldon-Forscherliga"
+	ENEMY_Data[31].name = "Eftest-Forscherliga"
 	ENEMY_Data[31].classToken = "HUNTER"
 	ENEMY_Data[31].talentSpec = T.HUNTER[3]
 	ENEMY_Data[32] = {}
-	ENEMY_Data[32].name = "Juri-Deephome"
+	ENEMY_Data[32].name = "Fgtest-Deephome"
 	ENEMY_Data[32].classToken = "WARRIOR"
 	ENEMY_Data[32].talentSpec = T.WARRIOR[2]
 	ENEMY_Data[33] = {}
-	ENEMY_Data[33].name = "Naresh-Arthas"
+	ENEMY_Data[33].name = "Ghtest-Arthas"
 	ENEMY_Data[33].classToken = "PALADIN"
 	ENEMY_Data[33].talentSpec = T.PALADIN[1]
 	ENEMY_Data[34] = {}
-	ENEMY_Data[34].name = "Leonardo-Blade's Edge"
+	ENEMY_Data[34].name = "Hitest-Blade's Edge"
 	ENEMY_Data[34].classToken = "MAGE"
 	ENEMY_Data[34].talentSpec = T.MAGE[3]
 	ENEMY_Data[35] = {}
-	ENEMY_Data[35].name = "Daniel-Talnivarr"
+	ENEMY_Data[35].name = "Ijtest-Talnivarr"
 	ENEMY_Data[35].classToken = "DEATHKNIGHT"
 	ENEMY_Data[35].talentSpec =  T.DEATHKNIGHT[3]
 	ENEMY_Data[36] = {}
-	ENEMY_Data[36].name = "Masato-Steamwheedle Cartel"
+	ENEMY_Data[36].name = "Jktest-Steamwheedle Cartel"
 	ENEMY_Data[36].classToken = "MAGE"
 	ENEMY_Data[36].talentSpec = T.MAGE[2]
 	ENEMY_Data[37] = {}
-	ENEMY_Data[37].name = "Kaleb-Naxxramas"
+	ENEMY_Data[37].name = "Kltest-Naxxramas"
 	ENEMY_Data[37].classToken = "HUNTER"
 	ENEMY_Data[37].talentSpec = T.HUNTER[2]
 	ENEMY_Data[38] = {}
-	ENEMY_Data[38].name = "Mario-Archimonde"
+	ENEMY_Data[38].name = "Lmtest-Archimonde"
 	ENEMY_Data[38].classToken = "WARLOCK"
 	ENEMY_Data[38].talentSpec = T.WARLOCK[1]
 	ENEMY_Data[39] = {}
-	ENEMY_Data[39].name = "Yama-Nazjatar"
+	ENEMY_Data[39].name = "Mntest-Nazjatar"
 	ENEMY_Data[39].classToken = "WARLOCK"
 	ENEMY_Data[39].talentSpec = T.WARLOCK[2]
 	ENEMY_Data[40] = {}
-	ENEMY_Data[40].name = "Dragan-Drak'thul"
+	ENEMY_Data[40].name = "Notest-Drak'thul"
 	ENEMY_Data[40].classToken = "ROGUE"
 	ENEMY_Data[40].talentSpec = T.ROGUE[2]
 	-- Test Data END
@@ -1889,7 +1899,7 @@ function BattlegroundTargets:EnableConfigMode()
 
 	for i = 1, currentSize do
 		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
-		GVAR.TargetButton[i].TargetCount:SetText(i)
+		GVAR.TargetButton[i].TargetCount:SetText("0")
 	end
 	GVAR.TargetButton[2].TargetTexture:SetAlpha(1)
 
@@ -2003,7 +2013,7 @@ local function BattlefieldUpdateTargets(forceUpdate)
 
 	if not forceUpdate then
 		local curTime = GetTime()
-		if scoreUpdateThrottle + BattlegroundTargets_Options.UpdateFrequency > curTime then return end
+		if scoreUpdateThrottle + scoreUpdateFrequency > curTime then return end
 		scoreUpdateThrottle = curTime
 	end
 
@@ -2022,7 +2032,7 @@ local function BattlefieldUpdateTargets(forceUpdate)
 		if name then
 			if faction == oppositeFaction then
 
-				-- workaround to avoid empty enemy table
+				-- workaround to avoid empty enemy table     ---> SetBattlefieldScoreFaction() should fix this. really?
 				-- clear table only if at least one opposite player was found
 				--if not cleared then
 				--		table_wipe(ENEMY_Data)
@@ -2101,8 +2111,13 @@ function BattlegroundTargets:BattlefieldCheck()
 					currentSize = bgSize[ BGN[zone] ]
 					reSizeCheck = 3
 				else
-					Print(bgName, "is not localized! Please contact author!")
-					Print("10 vs 10 layout used.")
+					if reSizeCheck == 0 then
+						Print("Unknown battleground name:", bgName)
+						Print("Another check is done after the next 'out of combat' phase.")
+						Print("Set to '10 vs 10' layout.")
+					elseif reSizeCheck == 2 then
+						Print(bgName, "is not localized! Please contact author. Thanks.")
+					end
 					currentSize = 10
 					reSizeCheck = reSizeCheck + 1
 				end
@@ -2198,10 +2213,15 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowCrosshairs)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortByTitlePullDown)
+		GVAR.OptionsFrame.SortByTitle:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontPullDown)
+		GVAR.OptionsFrame.FontTitle:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.ScaleSlider)
+		GVAR.OptionsFrame.Scale:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.WidthSlider)
+		GVAR.OptionsFrame.Width:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.HeightSlider)
+		GVAR.OptionsFrame.Height:SetTextColor(1, 1, 1, 1)
 	else
 		if bracketSize == 10 then
 			GVAR.OptionsFrame.TestRaidSize10.Text:SetTextColor(1, 0, 0, 1)
@@ -2216,10 +2236,15 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowCrosshairs)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByTitlePullDown)
+		GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontPullDown)
+		GVAR.OptionsFrame.FontTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.ScaleSlider)
+		GVAR.OptionsFrame.Scale:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.WidthSlider)
+		GVAR.OptionsFrame.Width:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.HeightSlider)
+		GVAR.OptionsFrame.Height:SetTextColor(0.5, 0.5, 0.5, 1)
 	end
 end
 
@@ -2227,9 +2252,9 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	GVAR.OptionsFrame.TitleWarning:SetText(L["In combat: Configuration locked!"])
 	GVAR.OptionsFrame.TitleWarning:SetTextColor(0.8, 0.2, 0.2, 1)
 	
-	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.TestRaidSize10) -- not necessary, because it's anyway checked, but it's better for look & feel
-	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.TestRaidSize15) -- not necessary, because it's anyway checked, but it's better for look & feel
-	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.TestRaidSize40) -- not necessary, because it's anyway checked, but it's better for look & feel
+	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.TestRaidSize10)
+	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.TestRaidSize15)
+	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.TestRaidSize40)
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.EnableBracket)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
@@ -2237,19 +2262,24 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowCrosshairs)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByTitlePullDown)
+	GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontPullDown)
+	GVAR.OptionsFrame.FontTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.ScaleSlider)
+	GVAR.OptionsFrame.Scale:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.WidthSlider)
+	GVAR.OptionsFrame.Width:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.HeightSlider)
+	GVAR.OptionsFrame.Height:SetTextColor(0.5, 0.5, 0.5, 1)
 end
 
 function BattlegroundTargets:EnableInsecureConfigWidges()
 	GVAR.OptionsFrame.TitleWarning:SetText(L["Out of combat: Configuration enabled."])
 	GVAR.OptionsFrame.TitleWarning:SetTextColor(0, 0.75, 0, 1)
 
-	TEMPLATE.EnableTabButton(GVAR.OptionsFrame.TestRaidSize10, BattlegroundTargets_Options.ButtonEnableBracket[10]) -- not necessary, because it's anyway checked, but it's better for look & feel
-	TEMPLATE.EnableTabButton(GVAR.OptionsFrame.TestRaidSize15, BattlegroundTargets_Options.ButtonEnableBracket[15]) -- not necessary, because it's anyway checked, but it's better for look & feel
-	TEMPLATE.EnableTabButton(GVAR.OptionsFrame.TestRaidSize40, BattlegroundTargets_Options.ButtonEnableBracket[40]) -- not necessary, because it's anyway checked, but it's better for look & feel
+	TEMPLATE.EnableTabButton(GVAR.OptionsFrame.TestRaidSize10, BattlegroundTargets_Options.ButtonEnableBracket[10])
+	TEMPLATE.EnableTabButton(GVAR.OptionsFrame.TestRaidSize15, BattlegroundTargets_Options.ButtonEnableBracket[15])
+	TEMPLATE.EnableTabButton(GVAR.OptionsFrame.TestRaidSize40, BattlegroundTargets_Options.ButtonEnableBracket[40])
 
 	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.EnableBracket)
 
