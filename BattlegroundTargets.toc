@@ -1,0 +1,20 @@
+## Interface: 40200
+## Author: kunda
+## Title: BattlegroundTargets
+## Notes: Shows battleground targets.
+## Version: 40200-1
+## SavedVariables: BattlegroundTargets_Options
+
+BattlegroundTargets-localized-bgnames.lua
+BattlegroundTargets-localized-talents.lua
+
+BattlegroundTargets-localization-enUS.lua
+BattlegroundTargets-localization-deDE.lua
+BattlegroundTargets-localization-esES.lua
+BattlegroundTargets-localization-frFR.lua
+BattlegroundTargets-localization-koKR.lua
+BattlegroundTargets-localization-ruRU.lua
+BattlegroundTargets-localization-zhCN.lua
+BattlegroundTargets-localization-zhTW.lua
+
+BattlegroundTargets.lua
