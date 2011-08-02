@@ -29,7 +29,7 @@ elseif locale == "frFR" then
 	BattlegroundTargets_BGNames = {
 		["Vallée d'Alterac"] = "Alterac Valley",
 		["Goulet des Chanteguerres"] = "Warsong Gulch",
-		["Bassin d'Arathi"] = "Arathi Basin",
+		["Bassin Arathi"] = "Arathi Basin",
 		["L'Œil du cyclone"] = "Eye of the Storm",
 		["Rivage des Anciens"] = "Strand of the Ancients",
 		["Île des Conquérants"] = "Isle of Conquest",
