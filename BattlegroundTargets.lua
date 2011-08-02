@@ -7,7 +7,7 @@
 -- Features:                                                                  --
 -- - Shows all battleground enemies with role, class and name.                --
 -- - Click on button to target an enemy.                                      --
--- - Independent settings for '10 vs 10', '15 vs 15' and '40 vs 40' brackets. --
+-- - Independent settings for '10 vs 10', '15 vs 15' and '40 vs 40'.          --
 -- - Target Indicator                                                         --
 -- - Target Count                                                             --
 -- - It should be impossible to produce an ADDON_ACTION_BLOCKED error message --
@@ -56,7 +56,7 @@ local inWorld
 local inBattleground
 local inCombat
 local reCheckBG
-local reSizeCheck = 0 -- check bgname max. 3 times if we are out of combat and normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
+local reSizeCheck = 0 -- check bgname max. 2 times if we are out of combat and normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
 local reSetLayout
 local isConfig
 local scoreUpdateThrottle = GetTime()
@@ -897,8 +897,6 @@ function BattlegroundTargets:CreateFrames()
 		GVAR.TargetButton[i]:SetHeight(buttonHeight)
 		if i == 1 then
 			GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, 0)
-		--elseif i == 21 then
-		--	GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[1], "TOPRIGHT", 0, 0)
 		else
 			GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
 		end
@@ -1020,7 +1018,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame:SetScript("OnMouseWheel", NOOP)
 	GVAR.OptionsFrame:Hide()
 
-	-- Base Frame START
 	GVAR.OptionsFrame.Base = CreateFrame("Frame", nil, GVAR.OptionsFrame)
 	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.Base)
 	GVAR.OptionsFrame.Base:SetWidth(frameWidth)
@@ -1052,7 +1049,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TitleTexture2:SetHeight(32)
 	GVAR.OptionsFrame.TitleTexture2:SetPoint("TOPRIGHT", -12, -12)
 	GVAR.OptionsFrame.TitleTexture2:SetTexture(AddonIcon)
-
 
 	-- - tabs
 	local w1 = ( frameWidth-(3*tabWidth)-(2*3) ) / 2
@@ -2003,13 +1999,7 @@ end
 local function BattlefieldUpdateTargets(forceUpdate)
 	if not inWorld then return end
 	if not inBattleground then return end
-	-- function WorldStateScoreFrameTab_OnClick (WorldStateFrame.lua)
-	-- function PanelTemplates_SetTab (UIPanelTemplates.lua)
-	-- WorldStateScoreFrame.selectedTab can have:
-	-- WorldStateScoreFrame.selectedTab = 1 (ALL)               -- Button name="WorldStateScoreFrameTab1" (WorldStateFrame.xml)
-	-- WorldStateScoreFrame.selectedTab = 2 (FACTION_ALLIANCE)  -- Button name="WorldStateScoreFrameTab2" (WorldStateFrame.xml)
-	-- WorldStateScoreFrame.selectedTab = 3 (FACTION_HORDE)     -- Button name="WorldStateScoreFrameTab3" (WorldStateFrame.xml)
-	if WorldStateScoreFrame:IsShown() and WorldStateScoreFrame.selectedTab and WorldStateScoreFrame.selectedTab > 1 then return end
+	if WorldStateScoreFrame:IsShown() and WorldStateScoreFrame.selectedTab and WorldStateScoreFrame.selectedTab > 1 then return end -- WorldStateScoreFrameTab_OnClick (WorldStateFrame.lua) | PanelTemplates_SetTab (UIPanelTemplates.lua) | Button WorldStateScoreFrameTab1/2/3 (WorldStateFrame.xml)
 
 	if not forceUpdate then
 		local curTime = GetTime()
@@ -2023,21 +2013,11 @@ local function BattlefieldUpdateTargets(forceUpdate)
 	table_wipe(FRIEND_Names)
 
 	local x = 1
-	--local cleared
 	local numScores = GetNumBattlefieldScores()
 	for index = 1, numScores do
-		--  name, killingBlows, honorableKills, deaths, honorGained, faction, race, class, classToken, damageDone, healingDone, bgRating, ratingChange, preMatchMMR, mmrChange, talentSpec
 		local name, _, _, _, _, faction, _, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
-		--print(numScores, index, name, faction, classToken, talentSpec)
 		if name then
 			if faction == oppositeFaction then
-
-				-- workaround to avoid empty enemy table     ---> SetBattlefieldScoreFaction() should fix this. really?
-				-- clear table only if at least one opposite player was found
-				--if not cleared then
-				--		table_wipe(ENEMY_Data)
-				--		cleared = true
-				--	end
 
 				local role = 4
 				local class = "ZZZFAILURE"
@@ -2094,7 +2074,6 @@ function BattlegroundTargets:BattlefieldCheck()
 			local queueStatus, queueMapName, bgName
 			for i=1, MAX_BATTLEFIELD_QUEUES do
 				queueStatus, queueMapName = GetBattlefieldStatus(i)
-				--print("GetBattlefieldStatus:", queueStatus, queueMapName)--TEST
 				if queueStatus == "active" then
 					bgName = queueMapName
 					break
@@ -2105,18 +2084,16 @@ function BattlegroundTargets:BattlefieldCheck()
 				currentSize = bgSize[ BGN[bgName] ]
 				reSizeCheck = 3
 			else
-				local zone = GetRealZoneText() -- try this once
-				--print("GetRealZoneText:", zone)--TEST
+				local zone = GetRealZoneText()
 				if zone and BGN[zone] then
 					currentSize = bgSize[ BGN[zone] ]
 					reSizeCheck = 3
 				else
 					if reSizeCheck == 0 then
-						Print("Unknown battleground name:", bgName)
-						Print("Another check is done after the next 'out of combat' phase.")
-						Print("Set to '10 vs 10' layout.")
+						Print(L["Unknown battleground:"], bgName)
+						Print(L["Temporarily used setting: 10 vs 10"])
 					elseif reSizeCheck == 2 then
-						Print(bgName, "is not localized! Please contact author. Thanks.")
+						Print(bgName, L["is not localized! Please contact addon author. Thanks."])
 					end
 					currentSize = 10
 					reSizeCheck = reSizeCheck + 1
@@ -2298,7 +2275,6 @@ local function OnEvent(self, event, arg1)
 		BattlegroundTargets:EnableInsecureConfigWidges()
 		if reCheckBG or reSizeCheck < 3 then
 			BattlegroundTargets:BattlefieldCheck()
-			reSizeCheck = 0
 		end
 		if reSetLayout then
 			BattlegroundTargets:SetupButtonLayout()

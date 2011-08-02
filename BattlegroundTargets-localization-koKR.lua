@@ -31,4 +31,8 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["'Esc -> Interface -> AddOns -> BattlegroundTargets' to change Options!"] = true,
 ["Close Configuration (or press 'Esc')"] = true,
+
+["Unknown battleground:"] = true,
+["Temporarily used setting: 10 vs 10"] = true,
+["is not localized! Please contact addon author. Thanks."] = true,
 })

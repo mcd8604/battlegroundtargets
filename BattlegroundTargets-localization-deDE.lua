@@ -27,8 +27,12 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Show Minimap-Button"] = "Zeige Minikarte-Button",
 
 ["click & move"] = "klicken & bewegen",
-["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets aktualisiert sich nicht, wenn dieser Tab geöffnet ist.",
+["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets aktualisiert sich nicht wenn dieser Tab geöffnet ist.",
 
 ["'Esc -> Interface -> AddOns -> BattlegroundTargets' to change Options!"] = "'Esc -> Interface -> AddOns -> BattlegroundTargets' um Optionen zu ändern!",
 ["Close Configuration (or press 'Esc')"] = "Konfiguration schließen (oder 'Esc' drücken)",
+
+["Unknown battleground:"] = "Unbekanntes Schlachtfeld:",
+["Temporarily used setting: 10 vs 10"] = "Vorübergehend benutzte Einstellung: 10 vs 10",
+["is not localized! Please contact addon author. Thanks."] = "ist nicht übersetzt! Bitte Addonautor benachrichtigen. Danke.",
 })
