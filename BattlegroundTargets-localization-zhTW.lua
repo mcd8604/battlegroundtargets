@@ -13,10 +13,12 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["15 vs 15"] = true,
 ["40 vs 40"] = true,
 ["Enable"] = true,
+["Independent Positioning"] = true,
 ["Show Class Icon"] = true,
 ["Show Realm"] = true,
 ["Show Target Indicator"] = true,
 ["Show Target Count"] = true,
+["Show Focus Indicator"] = true,
 ["Sort By"] = true,
 ["Text Size"] = true,
 ["Scale"] = true,
@@ -32,7 +34,8 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["'Esc -> Interface -> AddOns -> BattlegroundTargets' to change Options!"] = true,
 ["Close Configuration (or press 'Esc')"] = true,
 
-["Unknown battleground:"] = true,
+["Battleground name found:"] = true,
+["Unknown battleground name:"] = true,
 ["Temporarily used setting: 10 vs 10"] = true,
 ["is not localized! Please contact addon author. Thanks."] = true,
 })

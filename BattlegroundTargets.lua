@@ -6,10 +6,13 @@
 --                                                                            --
 -- Features:                                                                  --
 -- - Shows all battleground enemies with role, class and name.                --
--- - Click on button to target an enemy.                                      --
+-- - Left-click to target an enemy.                                           --
+-- - Right-click to set focus to your current target.                         --
 -- - Independent settings for '10 vs 10', '15 vs 15' and '40 vs 40'.          --
 -- - Target Indicator                                                         --
 -- - Target Count                                                             --
+-- - Focus Indicator                                                          --
+--                                                                            --
 -- - It should be impossible to produce an ADDON_ACTION_BLOCKED error message --
 --   by tainting the used secure templates. This includes configuration.      --
 --                                                                            --
@@ -24,8 +27,8 @@
 -- -------------------------------------------------------------------------- --
 
 -- ---------------------------------------------------------------------------------------------------------------------
-BattlegroundTargets_Options = {}           -- SavedVariable options table
-BattlegroundTargets = CreateFrame("Frame") -- event container
+BattlegroundTargets_Options = {} -- SavedVariable options table
+local BattlegroundTargets = CreateFrame("Frame") -- container
 
 local L   = BattlegroundTargets_Localization -- localization table
 local T   = BattlegroundTargets_Talents      -- localized talents
@@ -56,17 +59,16 @@ local inWorld
 local inBattleground
 local inCombat
 local reCheckBG
-local reSizeCheck = 0 -- check bgname max. 2 times if we are out of combat and normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
+local reSizeCheck = 0 -- check bgname max. 9 times if we are out of combat and normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
 local reSetLayout
 local isConfig
 local scoreUpdateThrottle = GetTime()
 local scoreUpdateFrequency = 1
 
-local playerFaction = ""  -- player Faction  : 'Horde' or 'Alliance' (set after event PLAYER_LOGIN)
-local oppositeFaction = 0 -- opposite Faction: 0 = 'Horde' or 1 = 'Alliance' (set after event PLAYER_LOGIN)
+local playerFaction   = 0 -- player Faction
+local oppositeFaction = 0 -- opposite Faction
 
 local ENEMY_Data = {}     -- numerical | all data
-local FRIEND_Names = {}   -- key/value | key = friendName, value = 0
 local ENEMY_Names = {}    -- key/value | key = enemyName, value = count
 local TARGET_Names = {}   -- key/value | key = friendName, value = enemyName
 
@@ -183,27 +185,23 @@ local classes = {
 	                          [3] = 4}},
 }
 
-local roleimg = "Interface\\LFGFrame\\LFGRole"
-local roles = {
-	[1] = {48/64, 64/64, 0/16, 16/16}, -- HEAL
-	[2] = {32/64, 48/64, 0/16, 16/16}, -- TANK
-	[3] = {16/64, 32/64, 0/16, 16/16}, -- DAMAGE
-	[4] = {0, 0, 0, 0},                -- UNKNWON
-}
-
 local function rt(H,E,M,P) return E,P,E,M,H,P,H,M end -- magical 180 degree texture cut center rotation
 
 local Textures = {
 	BattlegroundTargetsIcons = {path= "Interface\\Addons\\BattlegroundTargets\\BattlegroundTargets-texture-icons.tga"}, -- Textures.BattlegroundTargetsIcons.path
-	SliderKnob       = {coords     =    { 19/64, 36/64,  8/32, 25/32}},
-	SliderBG         = {coordsL    =    { 19/64, 24/64,  1/32,  7/32},
-	                    coordsM    =    { 27/64, 28/64,  1/32,  7/32},
-	                    coordsR    =    { 31/64, 36/64,  1/32,  7/32},
-	                    coordsLdis =    {  1/64,  6/64,  1/32,  7/32},
-	                    coordsMdis =    {  9/64, 10/64,  1/32,  7/32},
-	                    coordsRdis =    { 13/64, 18/64,  1/32,  7/32}},
-	Expand           = {coords     =    {  1/64, 18/64,  8/32, 25/32}},
-	Collapse         = {coords     = {rt(  1/64, 18/64,  8/32, 25/32)}}, -- 180 degree rota
+	SliderKnob       = {coords     =    {19/64, 30/64,  8/32, 25/32}},
+	SliderBG         = {coordsL    =    { 1/64,  6/64, 26/32, 32/32},
+	                    coordsM    =    { 9/64, 10/64, 26/32, 32/32},
+	                    coordsR    =    {13/64, 18/64, 26/32, 32/32},
+	                    coordsLdis =    { 1/64,  6/64,  1/32,  7/32},
+	                    coordsMdis =    { 9/64, 10/64,  1/32,  7/32},
+	                    coordsRdis =    {13/64, 18/64,  1/32,  7/32}},
+	Expand           = {coords     =    { 1/64, 18/64,  8/32, 25/32}},
+	Collapse         = {coords     = {rt( 1/64, 18/64,  8/32, 25/32)}}, -- 180 degree rota
+	RoleIcon         = {[1]        =    {32/64, 48/64, 16/32, 32/32},  -- HEAL
+	                    [2]        =    {48/64, 64/64,  0/32, 16/32},  -- TANK
+	                    [3]        =    {32/64, 48/64,  0/32, 16/32},  -- DAMAGE
+	                    [4]        =    {48/64, 64/64, 16/32, 32/32}}, -- UNKNOWN
 }
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -588,7 +586,7 @@ TEMPLATE.Slider = function(slider, width, step, minVal, maxVal, curVal, func, me
 	slider.sliderBGR:SetTexCoord(unpack(Textures.SliderBG.coordsR))
 
 	slider.thumb = slider:CreateTexture(nil, "BORDER")
-	slider.thumb:SetWidth(17)
+	slider.thumb:SetWidth(11)
 	slider.thumb:SetHeight(17)
 	slider.thumb:SetTexture(Textures.BattlegroundTargetsIcons.path)
 	slider.thumb:SetTexCoord(unpack(Textures.SliderKnob.coords))
@@ -747,53 +745,63 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS2 = "/bgtargets"
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
-	if BattlegroundTargets_Options.version                   == nil then BattlegroundTargets_Options.version                   = 1     end
-	if BattlegroundTargets_Options.MinimapButton             == nil then BattlegroundTargets_Options.MinimapButton             = false end
-	if BattlegroundTargets_Options.MinimapButtonPos          == nil then BattlegroundTargets_Options.MinimapButtonPos          = -90   end
+	if BattlegroundTargets_Options.version                      == nil then BattlegroundTargets_Options.version                      = 1     end
+	if BattlegroundTargets_Options.pos                          == nil then BattlegroundTargets_Options.pos                          = {}    end
+	if BattlegroundTargets_Options.MinimapButton                == nil then BattlegroundTargets_Options.MinimapButton                = false end
+	if BattlegroundTargets_Options.MinimapButtonPos             == nil then BattlegroundTargets_Options.MinimapButtonPos             = -90   end
 
-	if BattlegroundTargets_Options.ButtonEnableBracket       == nil then BattlegroundTargets_Options.ButtonEnableBracket       = {}    end
-	if BattlegroundTargets_Options.ButtonClassIcon           == nil then BattlegroundTargets_Options.ButtonClassIcon           = {}    end
-	if BattlegroundTargets_Options.ButtonShowRealm           == nil then BattlegroundTargets_Options.ButtonShowRealm           = {}    end
-	if BattlegroundTargets_Options.ButtonShowCrosshairs      == nil then BattlegroundTargets_Options.ButtonShowCrosshairs      = {}    end
-	if BattlegroundTargets_Options.ButtonShowTargetCount     == nil then BattlegroundTargets_Options.ButtonShowTargetCount     = {}    end
-	if BattlegroundTargets_Options.ButtonSortBySize          == nil then BattlegroundTargets_Options.ButtonSortBySize          = {}    end
-	if BattlegroundTargets_Options.ButtonFontSize            == nil then BattlegroundTargets_Options.ButtonFontSize            = {}    end
-	if BattlegroundTargets_Options.ButtonScale               == nil then BattlegroundTargets_Options.ButtonScale               = {}    end
-	if BattlegroundTargets_Options.ButtonWidth               == nil then BattlegroundTargets_Options.ButtonWidth               = {}    end
-	if BattlegroundTargets_Options.ButtonHeight              == nil then BattlegroundTargets_Options.ButtonHeight              = {}    end
+	if BattlegroundTargets_Options.IndependentPositioning       == nil then BattlegroundTargets_Options.IndependentPositioning       = {}    end
+	if BattlegroundTargets_Options.IndependentPositioning[10]   == nil then BattlegroundTargets_Options.IndependentPositioning[10]   = false end
+	if BattlegroundTargets_Options.IndependentPositioning[15]   == nil then BattlegroundTargets_Options.IndependentPositioning[15]   = false end
+	if BattlegroundTargets_Options.IndependentPositioning[40]   == nil then BattlegroundTargets_Options.IndependentPositioning[40]   = false end
 
-	if BattlegroundTargets_Options.ButtonEnableBracket[10]   == nil then BattlegroundTargets_Options.ButtonEnableBracket[10]   = false end
-	if BattlegroundTargets_Options.ButtonClassIcon[10]       == nil then BattlegroundTargets_Options.ButtonClassIcon[10]       = false end
-	if BattlegroundTargets_Options.ButtonShowRealm[10]       == nil then BattlegroundTargets_Options.ButtonShowRealm[10]       = true  end
-	if BattlegroundTargets_Options.ButtonShowCrosshairs[10]  == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[10]  = true  end
-	if BattlegroundTargets_Options.ButtonShowTargetCount[10] == nil then BattlegroundTargets_Options.ButtonShowTargetCount[10] = true  end
-	if BattlegroundTargets_Options.ButtonSortBySize[10]      == nil then BattlegroundTargets_Options.ButtonSortBySize[10]      = 1     end
-	if BattlegroundTargets_Options.ButtonFontSize[10]        == nil then BattlegroundTargets_Options.ButtonFontSize[10]        = 2     end
-	if BattlegroundTargets_Options.ButtonScale[10]           == nil then BattlegroundTargets_Options.ButtonScale[10]           = 1     end
-	if BattlegroundTargets_Options.ButtonWidth[10]           == nil then BattlegroundTargets_Options.ButtonWidth[10]           = 150   end
-	if BattlegroundTargets_Options.ButtonHeight[10]          == nil then BattlegroundTargets_Options.ButtonHeight[10]          = 20    end
+	if BattlegroundTargets_Options.ButtonEnableBracket          == nil then BattlegroundTargets_Options.ButtonEnableBracket          = {}    end
+	if BattlegroundTargets_Options.ButtonClassIcon              == nil then BattlegroundTargets_Options.ButtonClassIcon              = {}    end
+	if BattlegroundTargets_Options.ButtonShowRealm              == nil then BattlegroundTargets_Options.ButtonShowRealm              = {}    end
+	if BattlegroundTargets_Options.ButtonShowCrosshairs         == nil then BattlegroundTargets_Options.ButtonShowCrosshairs         = {}    end
+	if BattlegroundTargets_Options.ButtonShowTargetCount        == nil then BattlegroundTargets_Options.ButtonShowTargetCount        = {}    end
+	if BattlegroundTargets_Options.ButtonShowFocusIndicator     == nil then BattlegroundTargets_Options.ButtonShowFocusIndicator     = {}    end
+	if BattlegroundTargets_Options.ButtonSortBySize             == nil then BattlegroundTargets_Options.ButtonSortBySize             = {}    end
+	if BattlegroundTargets_Options.ButtonFontSize               == nil then BattlegroundTargets_Options.ButtonFontSize               = {}    end
+	if BattlegroundTargets_Options.ButtonScale                  == nil then BattlegroundTargets_Options.ButtonScale                  = {}    end
+	if BattlegroundTargets_Options.ButtonWidth                  == nil then BattlegroundTargets_Options.ButtonWidth                  = {}    end
+	if BattlegroundTargets_Options.ButtonHeight                 == nil then BattlegroundTargets_Options.ButtonHeight                 = {}    end
 
-	if BattlegroundTargets_Options.ButtonEnableBracket[15]   == nil then BattlegroundTargets_Options.ButtonEnableBracket[15]   = false end
-	if BattlegroundTargets_Options.ButtonClassIcon[15]       == nil then BattlegroundTargets_Options.ButtonClassIcon[15]       = false end
-	if BattlegroundTargets_Options.ButtonShowRealm[15]       == nil then BattlegroundTargets_Options.ButtonShowRealm[15]       = true  end
-	if BattlegroundTargets_Options.ButtonShowCrosshairs[15]  == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[15]  = true  end
-	if BattlegroundTargets_Options.ButtonShowTargetCount[15] == nil then BattlegroundTargets_Options.ButtonShowTargetCount[15] = true  end
-	if BattlegroundTargets_Options.ButtonSortBySize[15]      == nil then BattlegroundTargets_Options.ButtonSortBySize[15]      = 1     end
-	if BattlegroundTargets_Options.ButtonFontSize[15]        == nil then BattlegroundTargets_Options.ButtonFontSize[15]        = 2     end
-	if BattlegroundTargets_Options.ButtonScale[15]           == nil then BattlegroundTargets_Options.ButtonScale[15]           = 1     end
-	if BattlegroundTargets_Options.ButtonWidth[15]           == nil then BattlegroundTargets_Options.ButtonWidth[15]           = 150   end
-	if BattlegroundTargets_Options.ButtonHeight[15]          == nil then BattlegroundTargets_Options.ButtonHeight[15]          = 20    end
+	if BattlegroundTargets_Options.ButtonEnableBracket[10]      == nil then BattlegroundTargets_Options.ButtonEnableBracket[10]      = false end
+	if BattlegroundTargets_Options.ButtonClassIcon[10]          == nil then BattlegroundTargets_Options.ButtonClassIcon[10]          = false end
+	if BattlegroundTargets_Options.ButtonShowRealm[10]          == nil then BattlegroundTargets_Options.ButtonShowRealm[10]          = true  end
+	if BattlegroundTargets_Options.ButtonShowCrosshairs[10]     == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[10]     = true  end
+	if BattlegroundTargets_Options.ButtonShowTargetCount[10]    == nil then BattlegroundTargets_Options.ButtonShowTargetCount[10]    = true  end
+	if BattlegroundTargets_Options.ButtonShowFocusIndicator[10] == nil then BattlegroundTargets_Options.ButtonShowFocusIndicator[10] = true  end
+	if BattlegroundTargets_Options.ButtonSortBySize[10]         == nil then BattlegroundTargets_Options.ButtonSortBySize[10]         = 1     end
+	if BattlegroundTargets_Options.ButtonFontSize[10]           == nil then BattlegroundTargets_Options.ButtonFontSize[10]           = 2     end
+	if BattlegroundTargets_Options.ButtonScale[10]              == nil then BattlegroundTargets_Options.ButtonScale[10]              = 1     end
+	if BattlegroundTargets_Options.ButtonWidth[10]              == nil then BattlegroundTargets_Options.ButtonWidth[10]              = 150   end
+	if BattlegroundTargets_Options.ButtonHeight[10]             == nil then BattlegroundTargets_Options.ButtonHeight[10]             = 20    end
 
-	if BattlegroundTargets_Options.ButtonEnableBracket[40]   == nil then BattlegroundTargets_Options.ButtonEnableBracket[40]   = false end
-	if BattlegroundTargets_Options.ButtonClassIcon[40]       == nil then BattlegroundTargets_Options.ButtonClassIcon[40]       = false end
-	if BattlegroundTargets_Options.ButtonShowRealm[40]       == nil then BattlegroundTargets_Options.ButtonShowRealm[40]       = false end
-	if BattlegroundTargets_Options.ButtonShowCrosshairs[40]  == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[40]  = true  end
-	if BattlegroundTargets_Options.ButtonShowTargetCount[40] == nil then BattlegroundTargets_Options.ButtonShowTargetCount[40] = false end
-	if BattlegroundTargets_Options.ButtonSortBySize[40]      == nil then BattlegroundTargets_Options.ButtonSortBySize[40]      = 1     end
-	if BattlegroundTargets_Options.ButtonFontSize[40]        == nil then BattlegroundTargets_Options.ButtonFontSize[40]        = 1     end
-	if BattlegroundTargets_Options.ButtonScale[40]           == nil then BattlegroundTargets_Options.ButtonScale[40]           = 0.9   end
-	if BattlegroundTargets_Options.ButtonWidth[40]           == nil then BattlegroundTargets_Options.ButtonWidth[40]           = 100   end
-	if BattlegroundTargets_Options.ButtonHeight[40]          == nil then BattlegroundTargets_Options.ButtonHeight[40]          = 14    end
+	if BattlegroundTargets_Options.ButtonEnableBracket[15]      == nil then BattlegroundTargets_Options.ButtonEnableBracket[15]      = false end
+	if BattlegroundTargets_Options.ButtonClassIcon[15]          == nil then BattlegroundTargets_Options.ButtonClassIcon[15]          = false end
+	if BattlegroundTargets_Options.ButtonShowRealm[15]          == nil then BattlegroundTargets_Options.ButtonShowRealm[15]          = true  end
+	if BattlegroundTargets_Options.ButtonShowCrosshairs[15]     == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[15]     = true  end
+	if BattlegroundTargets_Options.ButtonShowTargetCount[15]    == nil then BattlegroundTargets_Options.ButtonShowTargetCount[15]    = true  end
+	if BattlegroundTargets_Options.ButtonShowFocusIndicator[15] == nil then BattlegroundTargets_Options.ButtonShowFocusIndicator[15] = true  end
+	if BattlegroundTargets_Options.ButtonSortBySize[15]         == nil then BattlegroundTargets_Options.ButtonSortBySize[15]         = 1     end
+	if BattlegroundTargets_Options.ButtonFontSize[15]           == nil then BattlegroundTargets_Options.ButtonFontSize[15]           = 2     end
+	if BattlegroundTargets_Options.ButtonScale[15]              == nil then BattlegroundTargets_Options.ButtonScale[15]              = 1     end
+	if BattlegroundTargets_Options.ButtonWidth[15]              == nil then BattlegroundTargets_Options.ButtonWidth[15]              = 150   end
+	if BattlegroundTargets_Options.ButtonHeight[15]             == nil then BattlegroundTargets_Options.ButtonHeight[15]             = 20    end
+
+	if BattlegroundTargets_Options.ButtonEnableBracket[40]      == nil then BattlegroundTargets_Options.ButtonEnableBracket[40]      = false end
+	if BattlegroundTargets_Options.ButtonClassIcon[40]          == nil then BattlegroundTargets_Options.ButtonClassIcon[40]          = false end
+	if BattlegroundTargets_Options.ButtonShowRealm[40]          == nil then BattlegroundTargets_Options.ButtonShowRealm[40]          = false end
+	if BattlegroundTargets_Options.ButtonShowCrosshairs[40]     == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[40]     = true  end
+	if BattlegroundTargets_Options.ButtonShowTargetCount[40]    == nil then BattlegroundTargets_Options.ButtonShowTargetCount[40]    = false end
+	if BattlegroundTargets_Options.ButtonShowFocusIndicator[40] == nil then BattlegroundTargets_Options.ButtonShowFocusIndicator[40] = false  end
+	if BattlegroundTargets_Options.ButtonSortBySize[40]         == nil then BattlegroundTargets_Options.ButtonSortBySize[40]         = 1     end
+	if BattlegroundTargets_Options.ButtonFontSize[40]           == nil then BattlegroundTargets_Options.ButtonFontSize[40]           = 1     end
+	if BattlegroundTargets_Options.ButtonScale[40]              == nil then BattlegroundTargets_Options.ButtonScale[40]              = 0.9   end
+	if BattlegroundTargets_Options.ButtonWidth[40]              == nil then BattlegroundTargets_Options.ButtonWidth[40]              = 100   end
+	if BattlegroundTargets_Options.ButtonHeight[40]             == nil then BattlegroundTargets_Options.ButtonHeight[40]             = 14    end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -918,7 +926,7 @@ function BattlegroundTargets:CreateFrames()
 		GVAR.TargetButton[i].SpecTexture:SetWidth(buttonHeight-2)
 		GVAR.TargetButton[i].SpecTexture:SetHeight(buttonHeight-2)
 		GVAR.TargetButton[i].SpecTexture:SetPoint("LEFT", GVAR.TargetButton[i], "LEFT", 1, 0)
-		GVAR.TargetButton[i].SpecTexture:SetTexture(roleimg)
+		GVAR.TargetButton[i].SpecTexture:SetTexture(Textures.BattlegroundTargetsIcons.path)
 
 		GVAR.TargetButton[i].ClassTexture = GVAR.TargetButton[i]:CreateTexture(nil, "ARTWORK")
 		GVAR.TargetButton[i].ClassTexture:SetWidth(buttonHeight-2)
@@ -958,8 +966,16 @@ function BattlegroundTargets:CreateFrames()
 		GVAR.TargetButton[i].TargetTexture:SetTexture(AddonIcon)
 		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
 
-		GVAR.TargetButton[i]:RegisterForClicks("LeftButtonUp")
+		GVAR.TargetButton[i].FocusTexture = GVAR.TargetButton[i]:CreateTexture(nil, "OVERLAY")
+		GVAR.TargetButton[i].FocusTexture:SetWidth(buttonHeight-2)
+		GVAR.TargetButton[i].FocusTexture:SetHeight(buttonHeight-2)
+		GVAR.TargetButton[i].FocusTexture:SetPoint("RIGHT", GVAR.TargetButton[i].TargetTexture, "LEFT", 0, 0)
+		GVAR.TargetButton[i].FocusTexture:SetTexture("Interface\\Minimap\\Tracking\\Focus")
+		GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
+
+		GVAR.TargetButton[i]:RegisterForClicks("AnyUp")
 		GVAR.TargetButton[i]:SetAttribute("type1", "macro")
+		GVAR.TargetButton[i]:SetAttribute("type2", "focus")
 		GVAR.TargetButton[i]:SetAttribute("macrotext", "")
 		GVAR.TargetButton[i]:SetScript("OnEnter", OnEnter)
 		GVAR.TargetButton[i]:SetScript("OnLeave", OnLeave)
@@ -1001,7 +1017,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	if BattlegroundTargets_OptionsFrame then return end
 
 	local frameWidth  = 400
-	local frameHeight = 520
+	local frameHeight = 540
 	local tabWidth = floor( (frameWidth/3)-10 )
 
 	GVAR.OptionsFrame = CreateFrame("Frame", "BattlegroundTargets_OptionsFrame", UIParent)
@@ -1147,6 +1163,25 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:SetupButtonLayout()
 	end)
 
+	-- - independent positioning
+	GVAR.OptionsFrame.IndependentPos = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.IndependentPos, 16, 4, L["Independent Positioning"])
+	GVAR.OptionsFrame.IndependentPos:SetPoint("LEFT", GVAR.OptionsFrame.EnableBracket.Text, "RIGHT", 40, 0)
+	GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options.IndependentPositioning[currentSize])
+	GVAR.OptionsFrame.IndependentPos:SetScript("OnClick", function(self)
+		BattlegroundTargets_Options.IndependentPositioning[currentSize] = not BattlegroundTargets_Options.IndependentPositioning[currentSize]
+		GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options.IndependentPositioning[currentSize])
+		if not BattlegroundTargets_Options.IndependentPositioning[currentSize] then
+			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize.."_posX"] = nil
+			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize.."_posY"] = nil
+			if inCombat or InCombatLockdown() then
+				reCheckBG = true
+				return
+			end
+			BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
+		end
+	end)
+
 	-- - class icon
 	GVAR.OptionsFrame.ClassIcon = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ClassIcon, 16, 4, L["Show Class Icon"])
@@ -1199,11 +1234,24 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:SetupButtonLayout()
 	end)
 
+	-- - show focus indicator
+	GVAR.OptionsFrame.ShowFocusIndicator = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowFocusIndicator, 16, 4, L["Show Focus Indicator"])
+	GVAR.OptionsFrame.ShowFocusIndicator:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.ShowFocusIndicator:SetPoint("TOP", GVAR.OptionsFrame.ShowTargetCount, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowFocusIndicator:SetChecked(BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize])
+	GVAR.OptionsFrame.ShowFocusIndicator:SetScript("OnClick", function(self)
+		BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize] = not BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize]
+		GVAR.OptionsFrame.ShowFocusIndicator:SetChecked(BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize])
+		BattlegroundTargets:EnableConfigMode()
+		BattlegroundTargets:SetupButtonLayout()
+	end)
+
 	-- - sort by
 	GVAR.OptionsFrame.SortByTitle = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.SortByTitle:SetHeight(20)
 	GVAR.OptionsFrame.SortByTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.SortByTitle:SetPoint("TOP", GVAR.OptionsFrame.ShowTargetCount, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.SortByTitle:SetPoint("TOP", GVAR.OptionsFrame.ShowFocusIndicator, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.SortByTitle:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.SortByTitle:SetText(L["Sort By"]..":")
 	GVAR.OptionsFrame.SortByTitle:SetTextColor(1, 1, 1, 1)
@@ -1384,10 +1432,13 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:SetOptions()
 	GVAR.OptionsFrame.EnableBracket:SetChecked(BattlegroundTargets_Options.ButtonEnableBracket[currentSize])
+	GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options.IndependentPositioning[currentSize])
+
 	GVAR.OptionsFrame.ClassIcon:SetChecked(BattlegroundTargets_Options.ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options.ButtonShowRealm[currentSize])
 	GVAR.OptionsFrame.ShowCrosshairs:SetChecked(BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize])
 	GVAR.OptionsFrame.ShowTargetCount:SetChecked(BattlegroundTargets_Options.ButtonShowTargetCount[currentSize])
+	GVAR.OptionsFrame.ShowFocusIndicator:SetChecked(BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize])
 
 	GVAR.OptionsFrame.FontPullDown.PullDownButtonText:SetText(fonts[ BattlegroundTargets_Options.ButtonFontSize[currentSize] ].text)
 
@@ -1599,6 +1650,28 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR.TargetButton[i].TargetTexture:Hide()
 		end
 
+		if BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize] then
+			if BattlegroundTargets_Options.ButtonShowTargetCount[currentSize] then
+				if BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize] then
+					GVAR.TargetButton[i].FocusTexture:SetPoint("RIGHT", GVAR.TargetButton[i].TargetTexture, "LEFT", 0, 0)
+				else
+					GVAR.TargetButton[i].FocusTexture:SetPoint("RIGHT", GVAR.TargetButton[i].TargetCountBackground, "LEFT", 0, 0)
+				end
+			else
+				if BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize] then
+					GVAR.TargetButton[i].FocusTexture:SetPoint("RIGHT", GVAR.TargetButton[i].TargetTexture, "LEFT", 0, 0)
+				else
+					GVAR.TargetButton[i].FocusTexture:SetPoint("RIGHT", GVAR.TargetButton[i].ClassColorBackground, "RIGHT", 0, 0)
+				end
+			end
+			GVAR.TargetButton[i].FocusTexture:SetWidth(height-2)
+			GVAR.TargetButton[i].FocusTexture:SetHeight(height-2)
+			GVAR.TargetButton[i].FocusTexture:Show()
+		else
+			GVAR.TargetButton[i].FocusTexture:Hide()
+		end
+
+
 	end
 	reSetLayout = false
 end
@@ -1618,14 +1691,22 @@ function BattlegroundTargets:Frame_Toggle(frame, show)
 end
 
 function BattlegroundTargets:Frame_SetupPosition(frameName)
-	if BattlegroundTargets_Options.pos and BattlegroundTargets_Options.pos[frameName.."_posX"] then
-		_G[frameName]:ClearAllPoints()
-		_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
-	else
-		if frameName == "BattlegroundTargets_MainFrame" then
+	if frameName == "BattlegroundTargets_MainFrame" then
+		if BattlegroundTargets_Options.IndependentPositioning[currentSize] and BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"] then
+			_G[frameName]:ClearAllPoints()
+			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"], BattlegroundTargets_Options.pos[frameName..currentSize.."_posY"])
+		elseif BattlegroundTargets_Options.pos[frameName.."_posX"] then
+			_G[frameName]:ClearAllPoints()
+			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
+		else
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("TOPRIGHT", GVAR.OptionsFrame, "TOPLEFT", -40, 20)
-		elseif frameName == "BattlegroundTargets_OptionsFrame" then
+		end
+	elseif frameName == "BattlegroundTargets_OptionsFrame" then
+		if BattlegroundTargets_Options.pos[frameName.."_posX"] then
+			_G[frameName]:ClearAllPoints()
+			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
+		else
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("CENTER", UIParent, "CENTER", 0, 50)
 		end
@@ -1633,13 +1714,18 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 end
 
 function BattlegroundTargets:Frame_SavePosition(frameName)
-	if not BattlegroundTargets_Options.pos then BattlegroundTargets_Options.pos = {} end
-
-	BattlegroundTargets_Options.pos[frameName.."_posX"] = _G[frameName]:GetLeft()
-	BattlegroundTargets_Options.pos[frameName.."_posY"] = _G[frameName]:GetTop()
-
+	local x,y
+	if frameName == "BattlegroundTargets_MainFrame" and BattlegroundTargets_Options.IndependentPositioning[currentSize] then
+		x = frameName..currentSize.."_posX"
+		y = frameName..currentSize.."_posY"
+	else
+		x = frameName.."_posX"
+		y = frameName.."_posY"
+	end
+	BattlegroundTargets_Options.pos[x] = _G[frameName]:GetLeft()
+	BattlegroundTargets_Options.pos[y] = _G[frameName]:GetTop()
 	_G[frameName]:ClearAllPoints()
-	_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
+	_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[x], BattlegroundTargets_Options.pos[y])
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -1859,7 +1945,7 @@ function BattlegroundTargets:EnableConfigMode()
 	ENEMY_Data[40] = {}
 	ENEMY_Data[40].name = "Notest-Drak'thul"
 	ENEMY_Data[40].classToken = "ROGUE"
-	ENEMY_Data[40].talentSpec = T.ROGUE[2]
+	ENEMY_Data[40].talentSpec = nil
 	-- Test Data END
 
 	for i = 1, 40 do
@@ -1877,6 +1963,7 @@ function BattlegroundTargets:EnableConfigMode()
 	end
 
 	currentSize = testSize
+	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
 	BattlegroundTargets:SetOptions()
 	
 	GVAR.MainFrame:Show()
@@ -1896,8 +1983,10 @@ function BattlegroundTargets:EnableConfigMode()
 	for i = 1, currentSize do
 		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
 		GVAR.TargetButton[i].TargetCount:SetText("0")
+		GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
 	end
 	GVAR.TargetButton[2].TargetTexture:SetAlpha(1)
+	GVAR.TargetButton[5].FocusTexture:SetAlpha(1)
 
 	BattlegroundTargets:UpdateLayout()
 end
@@ -1920,8 +2009,11 @@ function BattlegroundTargets:DisableConfigMode()
 		GVAR.TargetButton[i]:Hide()
 		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
 		GVAR.TargetButton[i].TargetCount:SetText("0")
+		GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
 	end
 	BattlegroundTargets:BattlefieldCheck()
+	BattlegroundTargets:CheckPlayerFocus()
+	BattlegroundTargets:CheckPlayerTarget()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -1971,7 +2063,7 @@ function BattlegroundTargets:UpdateLayout()
 				GVAR.TargetButton[i].ClassTexture:SetTexCoord(classes[ ENEMY_Data[i].classToken ].icon[1], classes[ ENEMY_Data[i].classToken ].icon[2], classes[ ENEMY_Data[i].classToken ].icon[3], classes[ ENEMY_Data[i].classToken ].icon[4])
 			end
 
-			GVAR.TargetButton[i].SpecTexture:SetTexCoord(roles[ENEMY_Data[i].talentSpec][1], roles[ENEMY_Data[i].talentSpec][2], roles[ENEMY_Data[i].talentSpec][3], roles[ENEMY_Data[i].talentSpec][4])
+			GVAR.TargetButton[i].SpecTexture:SetTexCoord(Textures.RoleIcon[ENEMY_Data[i].talentSpec][1], Textures.RoleIcon[ENEMY_Data[i].talentSpec][2], Textures.RoleIcon[ENEMY_Data[i].talentSpec][3], Textures.RoleIcon[ENEMY_Data[i].talentSpec][4])
 			local name = ENEMY_Data[i].name
 			if not BattlegroundTargets_Options.ButtonShowRealm[currentSize] then
 				if string_find(name, "-", 1, true) then
@@ -1980,7 +2072,7 @@ function BattlegroundTargets:UpdateLayout()
 			end
 			GVAR.TargetButton[i].Name:SetText(name)
 			if not inCombat or not InCombatLockdown() then
-				GVAR.TargetButton[i]:SetAttribute("macrotext", string_format("/target %s", ENEMY_Data[i].name))
+				GVAR.TargetButton[i]:SetAttribute("macrotext", "/target "..ENEMY_Data[i].name)
 			end
 		else
 			GVAR.TargetButton[i].ClassColorBackground:SetTexture(0.5, 0.5, 0.5, 0.5)
@@ -2008,9 +2100,8 @@ local function BattlefieldUpdateTargets(forceUpdate)
 	end
 
 	SetBattlefieldScoreFaction()
-	
+
 	table_wipe(ENEMY_Data)
-	table_wipe(FRIEND_Names)
 
 	local x = 1
 	local numScores = GetNumBattlefieldScores()
@@ -2046,15 +2137,34 @@ local function BattlefieldUpdateTargets(forceUpdate)
 					ENEMY_Names[name] = 0
 				end
 
-			elseif faction == playerFaction then
-
-				FRIEND_Names[name] = 0
-
 			end
 		end
 	end
 
 	BattlegroundTargets:UpdateLayout()
+
+	if reSizeCheck < 10 then
+		local queueStatus, queueMapName, bgName
+		for i=1, MAX_BATTLEFIELD_QUEUES do
+			queueStatus, queueMapName = GetBattlefieldStatus(i)
+			if queueStatus == "active" then
+				bgName = queueMapName
+				break
+			end
+		end
+
+		if bgName and BGN[bgName] then
+			BattlegroundTargets:BattlefieldCheck()
+		else
+			local zone = GetRealZoneText()
+			if zone and BGN[zone] then
+				BattlegroundTargets:BattlefieldCheck()
+			else
+				reSizeCheck = reSizeCheck + 1
+			end
+		end
+	end
+
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -2082,22 +2192,39 @@ function BattlegroundTargets:BattlefieldCheck()
 
 			if bgName and BGN[bgName] then
 				currentSize = bgSize[ BGN[bgName] ]
-				reSizeCheck = 3
+				if reSizeCheck < 10 and reSizeCheck > 0 then
+					Print(L["Battleground name found:"], BGN[bgName])
+				end
+				reSizeCheck = 10
 			else
 				local zone = GetRealZoneText()
 				if zone and BGN[zone] then
 					currentSize = bgSize[ BGN[zone] ]
-					reSizeCheck = 3
+					if reSizeCheck < 10 and reSizeCheck > 0 then
+						Print(L["Battleground name found:"], BGN[zone])
+					end
+					reSizeCheck = 10
 				else
 					if reSizeCheck == 0 then
-						Print(L["Unknown battleground:"], bgName)
+						Print(L["Unknown battleground name:"], bgName)
 						Print(L["Temporarily used setting: 10 vs 10"])
-					elseif reSizeCheck == 2 then
+					elseif reSizeCheck >= 10 then
 						Print(bgName, L["is not localized! Please contact addon author. Thanks."])
 					end
 					currentSize = 10
 					reSizeCheck = reSizeCheck + 1
 				end
+			end
+		end
+
+		local faction = GetBattlefieldArenaFaction()
+		if faction then
+			if faction == 0 then
+				playerFaction   = 0 -- Horde
+				oppositeFaction = 1 -- Alliance
+			elseif faction == 1 then
+				playerFaction   = 1 -- Alliance
+				oppositeFaction = 0 -- Horde
 			end
 		end
 
@@ -2144,6 +2271,9 @@ function BattlegroundTargets:BattlefieldCheck()
 			if BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize] then
 				BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
 			end
+			if BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize] then
+				BattlegroundTargets:RegisterEvent("PLAYER_FOCUS_CHANGED")
+			end
 			BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
 		end
 	else
@@ -2152,10 +2282,10 @@ function BattlegroundTargets:BattlefieldCheck()
 
 		BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
 		BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
+		BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
 		BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
 
 		table_wipe(ENEMY_Data)
-		table_wipe(FRIEND_Names)
 		table_wipe(ENEMY_Names)
 		table_wipe(TARGET_Names)
 
@@ -2175,6 +2305,67 @@ function BattlegroundTargets:BattlefieldCheck()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CheckPlayerTarget()
+	if isConfig then return end
+	if not BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize] then return end
+	if not inWorld then return end
+	if not inBattleground then return end
+
+	local name, realm = UnitName("target")
+	if realm and realm ~= "" then
+		name = name.."-"..realm
+	end
+		
+	if name then
+		for i = 1, currentSize do
+			if ENEMY_Data[i] then
+				if ENEMY_Data[i].name == name then
+					GVAR.TargetButton[i].TargetTexture:SetAlpha(1)
+				else
+					GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
+				end
+			end
+		end
+	else
+		for i = 1, currentSize do
+			GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
+		end
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CheckPlayerFocus()
+	if isConfig then return end
+	if not BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize] then return end
+	if not inWorld then return end
+	if not inBattleground then return end
+
+	local focusName, focusRealm = UnitName("focus")
+	if focusRealm and focusRealm ~= "" then
+		focusName = focusName.."-"..focusRealm
+	end
+
+	if focusName then
+		for i = 1, currentSize do
+			if ENEMY_Data[i] then
+				if ENEMY_Data[i].name == focusName then
+					GVAR.TargetButton[i].FocusTexture:SetAlpha(1)
+				else
+					GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
+				end
+			end
+		end
+	else
+		for i = 1, currentSize do
+			GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
+		end
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 	if BattlegroundTargets_Options.ButtonEnableBracket[bracketSize] then
 		if bracketSize == 10 then
@@ -2185,10 +2376,13 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 			GVAR.OptionsFrame.TestRaidSize40.Text:SetTextColor(0, 0.75, 0, 1)
 		end
 
+		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.IndependentPos)
+
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowRealm)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowCrosshairs)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
+		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowFocusIndicator)
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortByTitlePullDown)
 		GVAR.OptionsFrame.SortByTitle:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontPullDown)
@@ -2208,10 +2402,13 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 			GVAR.OptionsFrame.TestRaidSize40.Text:SetTextColor(1, 0, 0, 1)
 		end
 
+		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.IndependentPos)
+
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRealm)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowCrosshairs)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
+		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowFocusIndicator)
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByTitlePullDown)
 		GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontPullDown)
@@ -2234,10 +2431,13 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.TestRaidSize40)
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.EnableBracket)
+	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.IndependentPos)
+
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRealm)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowCrosshairs)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
+	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowFocusIndicator)
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByTitlePullDown)
 	GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontPullDown)
@@ -2262,6 +2462,7 @@ function BattlegroundTargets:EnableInsecureConfigWidges()
 
 	BattlegroundTargets:CheckForEnabledBracket(testSize)
 end
+-- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
 local function OnEvent(self, event, arg1)
@@ -2273,7 +2474,7 @@ local function OnEvent(self, event, arg1)
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		inCombat = false
 		BattlegroundTargets:EnableInsecureConfigWidges()
-		if reCheckBG or reSizeCheck < 3 then
+		if reCheckBG then
 			BattlegroundTargets:BattlefieldCheck()
 		end
 		if reSetLayout then
@@ -2344,38 +2545,17 @@ local function OnEvent(self, event, arg1)
 			end
 		end
 
+	elseif event == "PLAYER_FOCUS_CHANGED" then
+		BattlegroundTargets:CheckPlayerFocus()
 	elseif event == "PLAYER_TARGET_CHANGED" then
-		if isConfig then return end
-		if not BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize] then return end
-		if not inWorld then return end
-		if not inBattleground then return end
-
-		local name, realm = UnitName("target")
-		if realm and realm ~= "" then
-			name = name.."-"..realm
-		end
-		
-		if name then
-			for i = 1, currentSize do
-				if ENEMY_Data[i] then
-					if ENEMY_Data[i].name == name then
-						GVAR.TargetButton[i].TargetTexture:SetAlpha(1)
-					else
-						GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
-					end
-				end
-			end
-		else
-			for i = 1, currentSize do
-				GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
-			end
-		end
-
+		BattlegroundTargets:CheckPlayerTarget()
 	elseif event == "PLAYER_LOGIN" then
-		playerFaction = UnitFactionGroup("player")
-		oppositeFaction = 0 -- "Horde"
-		if playerFaction == "Horde" then
-			oppositeFaction = 1 -- "Alliance"
+		if UnitFactionGroup("player") == "Horde" then
+			playerFaction   = 0 -- Horde
+			oppositeFaction = 1 -- Alliance
+		else
+			playerFaction   = 1 -- Alliance
+			oppositeFaction = 0 -- Horde
 		end
 
 		BattlegroundTargets:InitOptions()
