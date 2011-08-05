@@ -2193,7 +2193,7 @@ function BattlegroundTargets:BattlefieldCheck()
 			if bgName and BGN[bgName] then
 				currentSize = bgSize[ BGN[bgName] ]
 				if reSizeCheck < 10 and reSizeCheck > 0 then
-					Print(L["Battleground name found:"], BGN[bgName])
+					Print(L["Battleground name found:"], bgName)
 				end
 				reSizeCheck = 10
 			else
@@ -2201,7 +2201,7 @@ function BattlegroundTargets:BattlefieldCheck()
 				if zone and BGN[zone] then
 					currentSize = bgSize[ BGN[zone] ]
 					if reSizeCheck < 10 and reSizeCheck > 0 then
-						Print(L["Battleground name found:"], BGN[zone])
+						Print(L["Battleground name found:"], zone)
 					end
 					reSizeCheck = 10
 				else
