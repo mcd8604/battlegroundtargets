@@ -9,6 +9,7 @@
 -- - Left-click to target an enemy.                                           --
 -- - Right-click to set focus to your current target.                         --
 -- - Independent settings for '10 vs 10', '15 vs 15' and '40 vs 40'.          --
+-- - Specialization                                                           --
 -- - Target Indicator                                                         --
 -- - Target Count                                                             --
 -- - Focus Indicator                                                          --
@@ -59,11 +60,14 @@ local inWorld
 local inBattleground
 local inCombat
 local reCheckBG
-local reSizeCheck = 0 -- check bgname max. 9 times if we are out of combat and normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
+local reSizeCheck = 0 -- check bgname max. 9 times if normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
 local reSetLayout
 local isConfig
 local scoreUpdateThrottle = GetTime()
 local scoreUpdateFrequency = 1
+
+local targetName, targetRealm
+local focusName, focusRealm
 
 local playerFaction   = 0 -- player Faction
 local oppositeFaction = 0 -- opposite Faction
@@ -79,15 +83,6 @@ local buttonHeight = 20
 local sizeOffset     = 5
 local sizeBarHeight = 14
 
-local color = { -- e.g.: color.Gold.hex | color.Orange.rgb[1]...[3]
-	LightYellow = {hex = "ffff7f", rgb = {1,    1,    0.49 }},
-	Orange      = {hex = "ff9900", rgb = {1,    0.6,  0    }},
-	Grey        = {hex = "cccccc", rgb = {0.8,  0.8,  0.8  }},
-	White       = {hex = "ffffff", rgb = {1,    1,    1    }},
-	Gold        = {hex = "ffd100", rgb = {1,    0.82, 0    }},
-	Rselect     = {                rgb = {1,    1,    1,   0.35 }}
-}
-
 local fonts = {
 	[1] = {name = "GameFontBlackTiny"},
 	[2] = {name = "GameFontBlackSmall"},
@@ -96,13 +91,20 @@ local fonts = {
 	[5] = {name = "GameFontNormalLarge"},
 }
 for key, value in pairs(fonts) do
-	local _, fontHeight = _G[value.name]:GetFont()
-	value.height = math_floor(fontHeight+0.5)
-	if value.height then
-		value.text = value.height.."px"
+	if _G[value.name] then
+		local _, fontHeight = _G[value.name]:GetFont()
+		if fontHeight then
+			value.height = math_floor(fontHeight+0.5)
+			value.text   = value.height.."px"
+		else
+			value.height = 12
+			value.text   = "?px"
+		end
 	else
-		value.text = "?px"
-	end
+		fonts[key].name   = "GameFontNormal"
+		fonts[key].height = 12
+		fonts[key].text   = "?px"
+	end		
 end
 
 local currentSize = 10
@@ -137,52 +139,67 @@ for class, color in pairs(RAID_CLASS_COLORS) do
 	classcolors[class] = {r = color.r, g = color.g, b = color.b}
 end
 
+local _HEAL    = 1
+local _TANK    = 2
+local _DAMAGE  = 3
+local _UNKNOWN = 4
 local classimg = "Interface\\WorldStateFrame\\Icons-Classes"
 local classes = {
-	DEATHKNIGHT = {icon = {0.265625, 0.484375, 0.515625, 0.734375}, -- (68/256, 124/256, 132/256, 188/256)
-	               roleNum = {[1] = 2,   -- TANK   | Blood
-	                          [2] = 3,   -- DAMAGE | Frost
-	                          [3] = 3}}, -- DAMAGE | Unholy
-	DRUID       = {icon = {0.7578125, 0.9765625, 0.015625, 0.234375}, -- (194/256, 250/256, 4/256, 60/256)
-	               roleNum = {[1] = 3,   -- DAMAGE | Balance
-	                          [2] = 2,   -- TANK   | FeralCombat --> maybe DAMAGE
-	                          [3] = 1}}, -- HEAL   | Restoration
-	HUNTER      = {icon = {0.01953125, 0.23828125, 0.265625, 0.484375}, -- (5/256, 61/256, 68/256, 124/256)
-	               roleNum = {[1] = 3,   -- DAMAGE | BeastMastery
-	                          [2] = 3,   -- DAMAGE | Marksmanship
-	                          [3] = 3}}, -- DAMAGE | Survival
-	MAGE        = {icon = {0.265625, 0.484375, 0.015625, 0.234375}, -- (68/256, 124/256, 4/256, 60/256)
-	               roleNum = {[1] = 3,   -- DAMAGE | Arcane
-	                          [2] = 3,   -- DAMAGE | Fire
-	                          [3] = 3}}, -- DAMAGE | Frost
-	PALADIN     = {icon = {0.01953125, 0.23828125, 0.515625, 0.734375}, -- (5/256, 61/256, 132/256, 188/256)
-	               roleNum = {[1] = 1,   -- HEAL   | Holy
-	                          [2] = 2,   -- TANK   | Protection
-	                          [3] = 3}}, -- DAMAGE | Combat
-	PRIEST      = {icon = {0.51171875, 0.73046875, 0.265625, 0.484375}, -- (131/256, 187/256, 68/256, 124/256)
-	               roleNum = {[1] = 1,   -- HEAL   | Discipline
-	                          [2] = 1,   -- HEAL   | Holy
-	                          [3] = 3}}, -- DAMAGE | Shadow
-	ROGUE       = {icon = {0.51171875, 0.73046875, 0.015625, 0.234375}, -- (131/256, 187/256, 4/256, 60/256)
-	               roleNum = {[1] = 3,   -- DAMAGE | Assassination
-	                          [2] = 3,   -- DAMAGE | Combat
-	                          [3] = 3}}, -- DAMAGE | Subtlety
-	SHAMAN      = {icon = {0.265625, 0.484375, 0.265625, 0.484375}, -- (68/256, 124/256, 68/256, 124/256)
-	               roleNum = {[1] = 3,   -- DAMAGE | ElementalCombat
-	                          [2] = 3,   -- DAMAGE | Enhancement
-	                          [3] = 1}}, -- HEAL   | Restoration
-	WARLOCK     = {icon = {0.7578125, 0.9765625, 0.265625, 0.484375}, -- (194/256, 250/256, 68/256, 124/256)
-	               roleNum = {[1] = 3,   -- DAMAGE | Curses
-	                          [2] = 3,   -- DAMAGE | Summoning
-	                          [3] = 3}}, -- DAMAGE | Destruction
-	WARRIOR     = {icon = {0.01953125, 0.23828125, 0.015625, 0.234375}, -- (5/256, 61/256, 4/256, 60/256)
-	               roleNum = {[1] = 3,   -- DAMAGE | Arms
-	                          [2] = 3,   -- DAMAGE | Fury
-	                          [3] = 2}}, -- TANK   | Protection
+	DEATHKNIGHT = {icon = {0.26562500, 0.48437500, 0.51562500, 0.73437500}, -- ( 68/256, 124/256, 132/256, 188/256)
+	               spec = {[1] = {role = _TANK,    icon = "Interface\\Icons\\Spell_Deathknight_BloodPresence"},    -- Blood
+	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Deathknight_FrostPresence"},    -- Frost
+	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Deathknight_UnholyPresence"},   -- Unholy
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
+	DRUID       = {icon = {0.75781250, 0.97656250, 0.01562500, 0.23437500}, -- (194/256, 250/256,   4/256,  60/256)
+	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_StarFall"},              -- Balance
+	                       [2] = {role = _TANK,    icon = "Interface\\Icons\\Ability_Racial_BearForm"},            -- Feral Combat
+	                       [3] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Nature_HealingTouch"},          -- Restoration
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
+	HUNTER      = {icon = {0.01953125, 0.23828125, 0.26562500, 0.48437500}, -- (  5/256,  61/256,  68/256, 124/256)
+	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_BestialDiscipline"},   -- Beast Mastery
+	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_FocusedAim"},          -- Marksmanship
+	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_Camouflage"},          -- Survival
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
+	MAGE        = {icon = {0.26562500, 0.48437500, 0.01562500, 0.23437500}, -- ( 68/256, 124/256,   4/256,  60/256)
+	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Holy_MagicalSentry"},           -- Arcane
+	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Fire_FireBolt02"},              -- Fire
+	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Frost_FrostBolt02"},            -- Frost
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
+	PALADIN     = {icon = {0.01953125, 0.23828125, 0.51562500, 0.73437500}, -- (  5/256,  61/256, 132/256, 188/256)
+	               spec = {[1] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Holy_HolyBolt"},                -- Holy
+	                       [2] = {role = _TANK,    icon = "Interface\\Icons\\Ability_Paladin_ShieldoftheTemplar"}, -- Protection
+	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Holy_AuraOfLight"},             -- Retribution
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
+	PRIEST      = {icon = {0.51171875, 0.73046875, 0.26562500, 0.48437500}, -- (131/256, 187/256,  68/256, 124/256)
+	               spec = {[1] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Holy_PowerWordShield"},         -- Discipline
+	                       [2] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Holy_GuardianSpirit"},          -- Holy
+	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_ShadowWordPain"},        -- Shadow
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
+	ROGUE       = {icon = {0.51171875, 0.73046875, 0.01562500, 0.23437500}, -- (131/256, 187/256,   4/256,  60/256)
+	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Rogue_Eviscerate"},           -- Assassination
+	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_BackStab"},                   -- Combat
+	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Stealth"},                    -- Subtlety
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
+	SHAMAN      = {icon = {0.26562500, 0.48437500, 0.26562500, 0.48437500}, -- ( 68/256, 124/256,  68/256, 124/256)
+	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_Lightning"},             -- Elemental
+	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_LightningShield"},       -- Enhancement
+	                       [3] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Nature_MagicImmunity"},         -- Restoration
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
+	WARLOCK     = {icon = {0.75781250, 0.97656250, 0.26562500, 0.48437500}, -- (194/256, 250/256,  68/256, 124/256)
+	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_DeathCoil"},             -- Affliction
+	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_Metamorphosis"},         -- Demonology
+	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_RainOfFire"},            -- Destruction
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
+	WARRIOR     = {icon = {0.01953125, 0.23828125, 0.01562500, 0.23437500}, -- (  5/256,  61/256,   4/256,  60/256)
+	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Warrior_SavageBlow"},         -- Arms
+	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Warrior_InnerRage"},          -- Fury
+	                       [3] = {role = _TANK,    icon = "Interface\\Icons\\Ability_Warrior_DefensiveStance"},    -- Protection
+	                       [4] = {role = _UNKNOWN, icon = nil}}},
 	ZZZFAILURE  = {icon = {0, 0, 0, 0},
-	               roleNum = {[1] = 4,
-	                          [2] = 4,
-	                          [3] = 4}},
+	               spec = {[1] = {role = _UNKNOWN, icon = nil},   -- unknown
+	                       [2] = {role = _UNKNOWN, icon = nil},   -- unknown
+	                       [3] = {role = _UNKNOWN, icon = nil},   -- unknown
+	                       [4] = {role = _UNKNOWN, icon = nil}}}, -- unknown
 }
 
 local function rt(H,E,M,P) return E,P,E,M,H,P,H,M end -- magical 180 degree texture cut center rotation
@@ -207,17 +224,6 @@ local Textures = {
 
 -- ---------------------------------------------------------------------------------------------------------------------
 local function NOOP() end
-
-local function Desaturation(texture, desaturation)
-	local shaderSupported = texture:SetDesaturated(desaturation)
-	if not shaderSupported then
-		if desaturation then
-			texture:SetVertexColor(0.5, 0.5, 0.5)
-		else
-			texture:SetVertexColor(1.0, 1.0, 1.0)
-		end
-	end
-end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 local function FontPullDownFunc(value)
@@ -334,7 +340,7 @@ TEMPLATE.IconButton = function(button, cut)
 	button.Border = button:CreateTexture(nil, "BACKGROUND")
 	button.Border:SetPoint("TOPLEFT", 0, 0)
 	button.Border:SetPoint("BOTTOMRIGHT", 0, 0)
-	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
+	button.Border:SetTexture(0.8, 0.2, 0.2, 1)
 
 	if cut == 1 then
 		button.Normal = button:CreateTexture(nil, "ARTWORK")
@@ -648,7 +654,7 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 	button.PullDownButtonText:SetPoint("LEFT", sizeOffset+2, 0)
 	button.PullDownButtonText:SetJustifyH("LEFT")
 	button.PullDownButtonText:SetText(buttonText)
-	--button.PullDownButtonText:SetTextColor(1, 1, 0.5, 1)
+	button.PullDownButtonText:SetTextColor(1, 1, 0.5, 1)
 
 	button.PullDownMenu = CreateFrame("Frame", nil, button)
 	TEMPLATE.BorderTRBL(button.PullDownMenu)
@@ -732,7 +738,7 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 local function Print(...)
-	print("|cff"..color.LightYellow.hex.."BattlegroundTargets:|r", ...)
+	print("|cffffff7fBattlegroundTargets:|r", ...)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -756,6 +762,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.IndependentPositioning[40]   == nil then BattlegroundTargets_Options.IndependentPositioning[40]   = false end
 
 	if BattlegroundTargets_Options.ButtonEnableBracket          == nil then BattlegroundTargets_Options.ButtonEnableBracket          = {}    end
+	if BattlegroundTargets_Options.ButtonShowSpec               == nil then BattlegroundTargets_Options.ButtonShowSpec               = {}    end
 	if BattlegroundTargets_Options.ButtonClassIcon              == nil then BattlegroundTargets_Options.ButtonClassIcon              = {}    end
 	if BattlegroundTargets_Options.ButtonShowRealm              == nil then BattlegroundTargets_Options.ButtonShowRealm              = {}    end
 	if BattlegroundTargets_Options.ButtonShowCrosshairs         == nil then BattlegroundTargets_Options.ButtonShowCrosshairs         = {}    end
@@ -768,6 +775,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonHeight                 == nil then BattlegroundTargets_Options.ButtonHeight                 = {}    end
 
 	if BattlegroundTargets_Options.ButtonEnableBracket[10]      == nil then BattlegroundTargets_Options.ButtonEnableBracket[10]      = false end
+	if BattlegroundTargets_Options.ButtonShowSpec[10]           == nil then BattlegroundTargets_Options.ButtonShowSpec[10]           = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[10]          == nil then BattlegroundTargets_Options.ButtonClassIcon[10]          = false end
 	if BattlegroundTargets_Options.ButtonShowRealm[10]          == nil then BattlegroundTargets_Options.ButtonShowRealm[10]          = true  end
 	if BattlegroundTargets_Options.ButtonShowCrosshairs[10]     == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[10]     = true  end
@@ -780,6 +788,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonHeight[10]             == nil then BattlegroundTargets_Options.ButtonHeight[10]             = 20    end
 
 	if BattlegroundTargets_Options.ButtonEnableBracket[15]      == nil then BattlegroundTargets_Options.ButtonEnableBracket[15]      = false end
+	if BattlegroundTargets_Options.ButtonShowSpec[15]           == nil then BattlegroundTargets_Options.ButtonShowSpec[15]           = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[15]          == nil then BattlegroundTargets_Options.ButtonClassIcon[15]          = false end
 	if BattlegroundTargets_Options.ButtonShowRealm[15]          == nil then BattlegroundTargets_Options.ButtonShowRealm[15]          = true  end
 	if BattlegroundTargets_Options.ButtonShowCrosshairs[15]     == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[15]     = true  end
@@ -792,16 +801,17 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonHeight[15]             == nil then BattlegroundTargets_Options.ButtonHeight[15]             = 20    end
 
 	if BattlegroundTargets_Options.ButtonEnableBracket[40]      == nil then BattlegroundTargets_Options.ButtonEnableBracket[40]      = false end
+	if BattlegroundTargets_Options.ButtonShowSpec[40]           == nil then BattlegroundTargets_Options.ButtonShowSpec[40]           = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[40]          == nil then BattlegroundTargets_Options.ButtonClassIcon[40]          = false end
 	if BattlegroundTargets_Options.ButtonShowRealm[40]          == nil then BattlegroundTargets_Options.ButtonShowRealm[40]          = false end
 	if BattlegroundTargets_Options.ButtonShowCrosshairs[40]     == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[40]     = true  end
 	if BattlegroundTargets_Options.ButtonShowTargetCount[40]    == nil then BattlegroundTargets_Options.ButtonShowTargetCount[40]    = false end
-	if BattlegroundTargets_Options.ButtonShowFocusIndicator[40] == nil then BattlegroundTargets_Options.ButtonShowFocusIndicator[40] = false  end
+	if BattlegroundTargets_Options.ButtonShowFocusIndicator[40] == nil then BattlegroundTargets_Options.ButtonShowFocusIndicator[40] = false end
 	if BattlegroundTargets_Options.ButtonSortBySize[40]         == nil then BattlegroundTargets_Options.ButtonSortBySize[40]         = 1     end
-	if BattlegroundTargets_Options.ButtonFontSize[40]           == nil then BattlegroundTargets_Options.ButtonFontSize[40]           = 1     end
+	if BattlegroundTargets_Options.ButtonFontSize[40]           == nil then BattlegroundTargets_Options.ButtonFontSize[40]           = 2     end
 	if BattlegroundTargets_Options.ButtonScale[40]              == nil then BattlegroundTargets_Options.ButtonScale[40]              = 0.9   end
-	if BattlegroundTargets_Options.ButtonWidth[40]              == nil then BattlegroundTargets_Options.ButtonWidth[40]              = 100   end
-	if BattlegroundTargets_Options.ButtonHeight[40]             == nil then BattlegroundTargets_Options.ButtonHeight[40]             = 14    end
+	if BattlegroundTargets_Options.ButtonWidth[40]              == nil then BattlegroundTargets_Options.ButtonWidth[40]              = 80    end
+	if BattlegroundTargets_Options.ButtonHeight[40]             == nil then BattlegroundTargets_Options.ButtonHeight[40]             = 16    end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -842,7 +852,7 @@ function BattlegroundTargets:CreateInterfaceOptions()
 	end)
 
 	GVAR.InterfaceOptions.SlashCommandText = GVAR.InterfaceOptions:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-	GVAR.InterfaceOptions.SlashCommandText:SetText("|cff"..color.LightYellow.hex.."/bgt|r - |cff"..color.LightYellow.hex.."/bgtargets|r - |cff"..color.LightYellow.hex.."/battlegroundtargets|r")
+	GVAR.InterfaceOptions.SlashCommandText:SetText("|cffffff7f/bgt|r - |cffffff7f/bgtargets|r - |cffffff7f/battlegroundtargets|r")
 	GVAR.InterfaceOptions.SlashCommandText:SetNonSpaceWrap(true)
 	GVAR.InterfaceOptions.SlashCommandText:SetPoint("LEFT", GVAR.InterfaceOptions.CONFIG, "RIGHT", 10, 0)
 
@@ -916,17 +926,23 @@ function BattlegroundTargets:CreateFrames()
 		GVAR.TargetButton[i].HighlightBackground:SetPoint("TOPLEFT", 0, 0)
 		GVAR.TargetButton[i].HighlightBackground:SetTexture(0, 0, 0, 1)
 
-		GVAR.TargetButton[i].SpecTextureBackground = GVAR.TargetButton[i]:CreateTexture(nil, "BORDER")
-		GVAR.TargetButton[i].SpecTextureBackground:SetWidth((buttonHeight-2)*2)
-		GVAR.TargetButton[i].SpecTextureBackground:SetHeight(buttonHeight-2)
-		GVAR.TargetButton[i].SpecTextureBackground:SetPoint("LEFT", GVAR.TargetButton[i], "LEFT", 1, 0)
-		GVAR.TargetButton[i].SpecTextureBackground:SetTexture(0, 0, 0, 1)
+		GVAR.TargetButton[i].RoleTextureBackground = GVAR.TargetButton[i]:CreateTexture(nil, "BORDER")
+		GVAR.TargetButton[i].RoleTextureBackground:SetWidth((buttonHeight-2)*3)
+		GVAR.TargetButton[i].RoleTextureBackground:SetHeight(buttonHeight-2)
+		GVAR.TargetButton[i].RoleTextureBackground:SetPoint("LEFT", GVAR.TargetButton[i], "LEFT", 1, 0)
+		GVAR.TargetButton[i].RoleTextureBackground:SetTexture(0, 0, 0, 1)
+
+		GVAR.TargetButton[i].RoleTexture = GVAR.TargetButton[i]:CreateTexture(nil, "ARTWORK")
+		GVAR.TargetButton[i].RoleTexture:SetWidth(buttonHeight-2)
+		GVAR.TargetButton[i].RoleTexture:SetHeight(buttonHeight-2)
+		GVAR.TargetButton[i].RoleTexture:SetPoint("LEFT", GVAR.TargetButton[i], "LEFT", 1, 0)
+		GVAR.TargetButton[i].RoleTexture:SetTexture(Textures.BattlegroundTargetsIcons.path)
 
 		GVAR.TargetButton[i].SpecTexture = GVAR.TargetButton[i]:CreateTexture(nil, "ARTWORK")
 		GVAR.TargetButton[i].SpecTexture:SetWidth(buttonHeight-2)
 		GVAR.TargetButton[i].SpecTexture:SetHeight(buttonHeight-2)
-		GVAR.TargetButton[i].SpecTexture:SetPoint("LEFT", GVAR.TargetButton[i], "LEFT", 1, 0)
-		GVAR.TargetButton[i].SpecTexture:SetTexture(Textures.BattlegroundTargetsIcons.path)
+		GVAR.TargetButton[i].SpecTexture:SetPoint("LEFT", GVAR.TargetButton[i].RoleTexture, "RIGHT", 0, 0)
+		GVAR.TargetButton[i].SpecTexture:SetTexCoord(5/64, 59/64, 5/64, 59/64)
 
 		GVAR.TargetButton[i].ClassTexture = GVAR.TargetButton[i]:CreateTexture(nil, "ARTWORK")
 		GVAR.TargetButton[i].ClassTexture:SetWidth(buttonHeight-2)
@@ -1016,8 +1032,8 @@ end
 function BattlegroundTargets:CreateOptionsFrame()
 	if BattlegroundTargets_OptionsFrame then return end
 
-	local frameWidth  = 400
-	local frameHeight = 540
+	local frameWidth  = 420
+	local frameHeight = 565
 	local tabWidth = floor( (frameWidth/3)-10 )
 
 	GVAR.OptionsFrame = CreateFrame("Frame", "BattlegroundTargets_OptionsFrame", UIParent)
@@ -1182,11 +1198,24 @@ function BattlegroundTargets:CreateOptionsFrame()
 		end
 	end)
 
+	-- - show spec
+	GVAR.OptionsFrame.ShowSpec = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowSpec, 16, 4, L["Show Specialization"])
+	GVAR.OptionsFrame.ShowSpec:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.ShowSpec:SetPoint("TOP", GVAR.OptionsFrame.EnableBracket, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowSpec:SetChecked(BattlegroundTargets_Options.ButtonShowSpec[currentSize])
+	GVAR.OptionsFrame.ShowSpec:SetScript("OnClick", function(self)
+		BattlegroundTargets_Options.ButtonShowSpec[currentSize] = not BattlegroundTargets_Options.ButtonShowSpec[currentSize]
+		GVAR.OptionsFrame.ShowSpec:SetChecked(BattlegroundTargets_Options.ButtonShowSpec[currentSize])
+		BattlegroundTargets:UpdateLayout()
+		BattlegroundTargets:SetupButtonLayout()
+	end)
+
 	-- - class icon
 	GVAR.OptionsFrame.ClassIcon = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ClassIcon, 16, 4, L["Show Class Icon"])
 	GVAR.OptionsFrame.ClassIcon:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ClassIcon:SetPoint("TOP", GVAR.OptionsFrame.EnableBracket, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ClassIcon:SetPoint("TOP", GVAR.OptionsFrame.ShowSpec, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.ClassIcon:SetChecked(BattlegroundTargets_Options.ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ClassIcon:SetScript("OnClick", function(self)
 		BattlegroundTargets_Options.ButtonClassIcon[currentSize] = not BattlegroundTargets_Options.ButtonClassIcon[currentSize]
@@ -1324,7 +1353,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- - height
 	GVAR.OptionsFrame.Height = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.Height:SetHeight(20)
-	GVAR.OptionsFrame.Height:SetPoint("LEFT", GVAR.OptionsFrame.WidthSlider, "RIGHT", 20, 0)
+	GVAR.OptionsFrame.Height:SetPoint("LEFT", GVAR.OptionsFrame.WidthSlider, "RIGHT", 40, 0)
 	GVAR.OptionsFrame.Height:SetPoint("TOP", GVAR.OptionsFrame.Width, "TOP", 0, 0)
 	GVAR.OptionsFrame.Height:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.Height:SetText(L["Height"]..": |cffffff99"..(BattlegroundTargets_Options.ButtonHeight[currentSize]).."|r")
@@ -1382,9 +1411,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.CloseConfig:SetPoint("BOTTOM", GVAR.OptionsFrame.CloseConfigText, "TOP", 0, 10)
 	GVAR.OptionsFrame.CloseConfig:SetWidth(frameWidth-20)
 	GVAR.OptionsFrame.CloseConfig:SetHeight(30)
-	GVAR.OptionsFrame.CloseConfig:SetScript("OnClick", function()
-		GVAR.OptionsFrame:Hide()
-	end)
+	GVAR.OptionsFrame.CloseConfig:SetScript("OnClick", function() GVAR.OptionsFrame:Hide() end)
 
 
 
@@ -1402,6 +1429,13 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.MoverTopText:SetJustifyH("CENTER")
 	GVAR.OptionsFrame.MoverTopText:SetTextColor(0.3, 0.3, 0.3, 1)
 	GVAR.OptionsFrame.MoverTopText:SetText(L["click & move"])
+
+	GVAR.OptionsFrame.Close = CreateFrame("Button", nil, GVAR.OptionsFrame.MoverTop)
+	TEMPLATE.IconButton(GVAR.OptionsFrame.Close, 1)
+	GVAR.OptionsFrame.Close:SetWidth(20)
+	GVAR.OptionsFrame.Close:SetHeight(20)
+	GVAR.OptionsFrame.Close:SetPoint("RIGHT", GVAR.OptionsFrame.MoverTop, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.Close:SetScript("OnClick", function() GVAR.OptionsFrame:Hide() end)
 
 	GVAR.OptionsFrame.MoverBottom = CreateFrame("Frame", nil, GVAR.OptionsFrame)
 	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.MoverBottom)
@@ -1434,6 +1468,7 @@ function BattlegroundTargets:SetOptions()
 	GVAR.OptionsFrame.EnableBracket:SetChecked(BattlegroundTargets_Options.ButtonEnableBracket[currentSize])
 	GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options.IndependentPositioning[currentSize])
 
+	GVAR.OptionsFrame.ShowSpec:SetChecked(BattlegroundTargets_Options.ButtonShowSpec[currentSize])
 	GVAR.OptionsFrame.ClassIcon:SetChecked(BattlegroundTargets_Options.ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options.ButtonShowRealm[currentSize])
 	GVAR.OptionsFrame.ShowCrosshairs:SetChecked(BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize])
@@ -1576,10 +1611,12 @@ function BattlegroundTargets:SetupButtonLayout()
 	end
 
 	local withIconWidth
-	if BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
-		withIconWidth = width
+	if BattlegroundTargets_Options.ButtonShowSpec[currentSize] and BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
+		withIconWidth = (width - ((height-2)*3)) - 2
+	elseif BattlegroundTargets_Options.ButtonShowSpec[currentSize] or BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
+		withIconWidth = (width - ((height-2)*2)) - 2
 	else
-		withIconWidth = width + (height-2)
+		withIconWidth = (width - ((height-2)*1)) - 2
 	end
 
 	for i = 1, 40 do
@@ -1590,36 +1627,56 @@ function BattlegroundTargets:SetupButtonLayout()
 		GVAR.TargetButton[i].HighlightBackground:SetWidth(width)
 		GVAR.TargetButton[i].HighlightBackground:SetHeight(height)
 
-		if BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
-			GVAR.TargetButton[i].SpecTextureBackground:SetWidth((height-2)*2)
-			GVAR.TargetButton[i].SpecTextureBackground:SetHeight(height-2)
+		if BattlegroundTargets_Options.ButtonShowSpec[currentSize] and BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
+			GVAR.TargetButton[i].RoleTextureBackground:SetWidth((height-2)*3)
+			GVAR.TargetButton[i].RoleTextureBackground:SetHeight(height-2)
+		elseif BattlegroundTargets_Options.ButtonShowSpec[currentSize] or BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
+			GVAR.TargetButton[i].RoleTextureBackground:SetWidth((height-2)*2)
+			GVAR.TargetButton[i].RoleTextureBackground:SetHeight(height-2)
 		else
-			GVAR.TargetButton[i].SpecTextureBackground:SetWidth(height-2)
-			GVAR.TargetButton[i].SpecTextureBackground:SetHeight(height-2)
+			GVAR.TargetButton[i].RoleTextureBackground:SetWidth(height-2)
+			GVAR.TargetButton[i].RoleTextureBackground:SetHeight(height-2)
 		end
 
+		GVAR.TargetButton[i].RoleTexture:SetWidth(height-2)
+		GVAR.TargetButton[i].RoleTexture:SetHeight(height-2)
 		GVAR.TargetButton[i].SpecTexture:SetWidth(height-2)
 		GVAR.TargetButton[i].SpecTexture:SetHeight(height-2)
 		GVAR.TargetButton[i].ClassTexture:SetWidth(height-2)
 		GVAR.TargetButton[i].ClassTexture:SetHeight(height-2)
-		GVAR.TargetButton[i].ClassColorBackground:SetWidth((withIconWidth-2) - (height-2) - (height-2))
+
+		GVAR.TargetButton[i].ClassColorBackground:SetWidth(withIconWidth)
 		GVAR.TargetButton[i].ClassColorBackground:SetHeight(height-2)
 
-		if BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
+		if BattlegroundTargets_Options.ButtonShowSpec[currentSize] and BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
+			GVAR.TargetButton[i].SpecTexture:Show()
 			GVAR.TargetButton[i].ClassTexture:Show()
+			GVAR.TargetButton[i].ClassTexture:SetPoint("LEFT", GVAR.TargetButton[i].SpecTexture, "RIGHT", 0, 0)
 			GVAR.TargetButton[i].ClassColorBackground:SetPoint("LEFT", GVAR.TargetButton[i].ClassTexture, "RIGHT", 0, 0)
 			GVAR.TargetButton[i].Name:SetPoint("LEFT", GVAR.TargetButton[i].ClassTexture, "RIGHT", 2, 0)
-		else
+		elseif BattlegroundTargets_Options.ButtonShowSpec[currentSize] then
+			GVAR.TargetButton[i].SpecTexture:Show()
 			GVAR.TargetButton[i].ClassTexture:Hide()
 			GVAR.TargetButton[i].ClassColorBackground:SetPoint("LEFT", GVAR.TargetButton[i].SpecTexture, "RIGHT", 0, 0)
 			GVAR.TargetButton[i].Name:SetPoint("LEFT", GVAR.TargetButton[i].SpecTexture, "RIGHT", 2, 0)
+		elseif BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
+			GVAR.TargetButton[i].SpecTexture:Hide()
+			GVAR.TargetButton[i].ClassTexture:Show()
+			GVAR.TargetButton[i].ClassTexture:SetPoint("LEFT", GVAR.TargetButton[i].RoleTexture, "RIGHT", 0, 0)
+			GVAR.TargetButton[i].ClassColorBackground:SetPoint("LEFT", GVAR.TargetButton[i].ClassTexture, "RIGHT", 0, 0)
+			GVAR.TargetButton[i].Name:SetPoint("LEFT", GVAR.TargetButton[i].ClassTexture, "RIGHT", 2, 0)
+		else
+			GVAR.TargetButton[i].SpecTexture:Hide()
+			GVAR.TargetButton[i].ClassTexture:Hide()
+			GVAR.TargetButton[i].ClassColorBackground:SetPoint("LEFT", GVAR.TargetButton[i].RoleTexture, "RIGHT", 0, 0)
+			GVAR.TargetButton[i].Name:SetPoint("LEFT", GVAR.TargetButton[i].RoleTexture, "RIGHT", 2, 0)
 		end
 		
 		GVAR.TargetButton[i].Name:SetFontObject(fonts[ BattlegroundTargets_Options.ButtonFontSize[currentSize] ].name)
 		GVAR.TargetButton[i].Name:SetShadowOffset(0, 0)
 		GVAR.TargetButton[i].Name:SetShadowColor(0, 0, 0, 0)
 		GVAR.TargetButton[i].Name:SetTextColor(0, 0, 0, 1)
-		GVAR.TargetButton[i].Name:SetWidth((withIconWidth-2) - (height-2) - (height-2) -2)
+		GVAR.TargetButton[i].Name:SetWidth(withIconWidth-2)
 		GVAR.TargetButton[i].Name:SetHeight(fontHeight)
 		
 		if BattlegroundTargets_Options.ButtonShowTargetCount[currentSize] then
@@ -1950,15 +2007,20 @@ function BattlegroundTargets:EnableConfigMode()
 
 	for i = 1, 40 do
 		local role = 4
+		local spec = 4
 		if ENEMY_Data[i].talentSpec and ENEMY_Data[i].classToken and T[ ENEMY_Data[i].classToken ] then
 			if ENEMY_Data[i].talentSpec == T[ ENEMY_Data[i].classToken ][1] then
-				role = classes[ ENEMY_Data[i].classToken ].roleNum[1]
+				role = classes[ ENEMY_Data[i].classToken ].spec[1].role
+				spec = 1
 			elseif ENEMY_Data[i].talentSpec == T[ ENEMY_Data[i].classToken ][2] then
-				role = classes[ ENEMY_Data[i].classToken ].roleNum[2]
+				role = classes[ ENEMY_Data[i].classToken ].spec[2].role
+				spec = 2
 			elseif ENEMY_Data[i].talentSpec == T[ ENEMY_Data[i].classToken ][3] then
-				role = classes[ ENEMY_Data[i].classToken ].roleNum[3]
+				role = classes[ ENEMY_Data[i].classToken ].spec[3].role
+				spec = 3
 			end
 		end
+		ENEMY_Data[i].specNum = spec
 		ENEMY_Data[i].talentSpec = role
 	end
 
@@ -2058,12 +2120,16 @@ function BattlegroundTargets:UpdateLayout()
 	for i = 1, currentSize do
 		if ENEMY_Data[i] then
 			GVAR.TargetButton[i].ClassColorBackground:SetTexture(classcolors[ ENEMY_Data[i].classToken ].r, classcolors[ ENEMY_Data[i].classToken ].g, classcolors[ ENEMY_Data[i].classToken ].b, 1)
-			
+
+			if BattlegroundTargets_Options.ButtonShowSpec[currentSize] then
+				GVAR.TargetButton[i].SpecTexture:SetTexture(classes[ ENEMY_Data[i].classToken ].spec[ ENEMY_Data[i].specNum ].icon)
+			end
+
 			if BattlegroundTargets_Options.ButtonClassIcon[currentSize] then
 				GVAR.TargetButton[i].ClassTexture:SetTexCoord(classes[ ENEMY_Data[i].classToken ].icon[1], classes[ ENEMY_Data[i].classToken ].icon[2], classes[ ENEMY_Data[i].classToken ].icon[3], classes[ ENEMY_Data[i].classToken ].icon[4])
 			end
 
-			GVAR.TargetButton[i].SpecTexture:SetTexCoord(Textures.RoleIcon[ENEMY_Data[i].talentSpec][1], Textures.RoleIcon[ENEMY_Data[i].talentSpec][2], Textures.RoleIcon[ENEMY_Data[i].talentSpec][3], Textures.RoleIcon[ENEMY_Data[i].talentSpec][4])
+			GVAR.TargetButton[i].RoleTexture:SetTexCoord(Textures.RoleIcon[ENEMY_Data[i].talentSpec][1], Textures.RoleIcon[ENEMY_Data[i].talentSpec][2], Textures.RoleIcon[ENEMY_Data[i].talentSpec][3], Textures.RoleIcon[ENEMY_Data[i].talentSpec][4])
 			local name = ENEMY_Data[i].name
 			if not BattlegroundTargets_Options.ButtonShowRealm[currentSize] then
 				if string_find(name, "-", 1, true) then
@@ -2074,10 +2140,28 @@ function BattlegroundTargets:UpdateLayout()
 			if not inCombat or not InCombatLockdown() then
 				GVAR.TargetButton[i]:SetAttribute("macrotext", "/target "..ENEMY_Data[i].name)
 			end
+
+			if targetName and BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize] then
+				if ENEMY_Data[i].name == targetName then
+					GVAR.TargetButton[i].TargetTexture:SetAlpha(1)
+				else
+					GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
+				end
+			end
+
+			if focusName and BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize] then
+				if ENEMY_Data[i].name == focusName then
+					GVAR.TargetButton[i].FocusTexture:SetAlpha(1)
+				else
+					GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
+				end
+			end
+
 		else
 			GVAR.TargetButton[i].ClassColorBackground:SetTexture(0.5, 0.5, 0.5, 0.5)
+			GVAR.TargetButton[i].SpecTexture:SetTexture(nil)
 			GVAR.TargetButton[i].ClassTexture:SetTexCoord(0, 0, 0, 0)
-			GVAR.TargetButton[i].SpecTexture:SetTexCoord(0, 0, 0, 0)
+			GVAR.TargetButton[i].RoleTexture:SetTexCoord(0, 0, 0, 0)
 			GVAR.TargetButton[i].Name:SetText("")
 			if not inCombat or not InCombatLockdown() then
 				GVAR.TargetButton[i]:SetAttribute("macrotext", "")
@@ -2111,17 +2195,21 @@ local function BattlefieldUpdateTargets(forceUpdate)
 			if faction == oppositeFaction then
 
 				local role = 4
+				local spec = 4
 				local class = "ZZZFAILURE"
 				if classToken then
 					class = classToken
 					if talentSpec then
 						if T[classToken] then
 							if talentSpec == T[classToken][1] then
-								role = classes[classToken].roleNum[1]
+								role = classes[classToken].spec[1].role
+								spec = 1
 							elseif talentSpec == T[classToken][2] then
-								role = classes[classToken].roleNum[2]
+								role = classes[classToken].spec[2].role
+								spec = 2
 							elseif talentSpec == T[classToken][3] then
-								role = classes[classToken].roleNum[3]
+								role = classes[classToken].spec[3].role
+								spec = 3
 							end
 						end
 					end
@@ -2130,6 +2218,7 @@ local function BattlefieldUpdateTargets(forceUpdate)
 				ENEMY_Data[x] = {}
 				ENEMY_Data[x].name = name
 				ENEMY_Data[x].classToken = class
+				ENEMY_Data[x].specNum = spec
 				ENEMY_Data[x].talentSpec = role
 				x = x + 1
 
@@ -2312,15 +2401,15 @@ function BattlegroundTargets:CheckPlayerTarget()
 	if not inWorld then return end
 	if not inBattleground then return end
 
-	local name, realm = UnitName("target")
-	if realm and realm ~= "" then
-		name = name.."-"..realm
+	targetName, targetRealm = UnitName("target")
+	if targetRealm and targetRealm ~= "" then
+		targetName = targetName.."-"..targetRealm
 	end
 		
-	if name then
+	if targetName then
 		for i = 1, currentSize do
 			if ENEMY_Data[i] then
-				if ENEMY_Data[i].name == name then
+				if ENEMY_Data[i].name == targetName then
 					GVAR.TargetButton[i].TargetTexture:SetAlpha(1)
 				else
 					GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
@@ -2342,7 +2431,7 @@ function BattlegroundTargets:CheckPlayerFocus()
 	if not inWorld then return end
 	if not inBattleground then return end
 
-	local focusName, focusRealm = UnitName("focus")
+	focusName, focusRealm = UnitName("focus")
 	if focusRealm and focusRealm ~= "" then
 		focusName = focusName.."-"..focusRealm
 	end
@@ -2378,6 +2467,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.IndependentPos)
 
+		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowSpec)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowRealm)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowCrosshairs)
@@ -2404,6 +2494,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.IndependentPos)
 
+		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowSpec)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRealm)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowCrosshairs)
@@ -2433,6 +2524,7 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.EnableBracket)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.IndependentPos)
 
+	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowSpec)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRealm)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowCrosshairs)

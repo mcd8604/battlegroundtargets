@@ -14,6 +14,7 @@ BattlegroundTargets_Localization = {
 ["40 vs 40"] = true,
 ["Enable"] = true,
 ["Independent Positioning"] = true,
+["Show Specialization"] = true,
 ["Show Class Icon"] = true,
 ["Show Realm"] = true,
 ["Show Target Indicator"] = true,

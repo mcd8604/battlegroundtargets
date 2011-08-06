@@ -14,6 +14,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["40 vs 40"] = "40 vs 40",
 ["Enable"] = "Aktivieren",
 ["Independent Positioning"] = "Unabhängige Positionierung",
+["Show Specialization"] = "Zeige Spezialisierung",
 ["Show Class Icon"] = "Zeige Klassensymbol",
 ["Show Realm"] = "Zeige Realm",
 ["Show Target Indicator"] = "Zeige Zielanzeige",
