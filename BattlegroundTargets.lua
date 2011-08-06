@@ -1175,8 +1175,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		else
 			BattlegroundTargets:DisableConfigMode()
 		end
-		BattlegroundTargets:UpdateLayout()
-		BattlegroundTargets:SetupButtonLayout()
 	end)
 
 	-- - independent positioning
@@ -1234,7 +1232,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.ButtonShowRealm[currentSize] = not BattlegroundTargets_Options.ButtonShowRealm[currentSize]
 		GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options.ButtonShowRealm[currentSize])
 		BattlegroundTargets:EnableConfigMode()
-		BattlegroundTargets:SetupButtonLayout()
 	end)
 
 	-- - show crosshairs
@@ -1247,7 +1244,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize] = not BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize]
 		GVAR.OptionsFrame.ShowCrosshairs:SetChecked(BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize])
 		BattlegroundTargets:EnableConfigMode()
-		BattlegroundTargets:SetupButtonLayout()
 	end)
 
 	-- - show targetcount
@@ -1260,7 +1256,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.ButtonShowTargetCount[currentSize] = not BattlegroundTargets_Options.ButtonShowTargetCount[currentSize]
 		GVAR.OptionsFrame.ShowTargetCount:SetChecked(BattlegroundTargets_Options.ButtonShowTargetCount[currentSize])
 		BattlegroundTargets:EnableConfigMode()
-		BattlegroundTargets:SetupButtonLayout()
 	end)
 
 	-- - show focus indicator
@@ -1273,7 +1268,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize] = not BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize]
 		GVAR.OptionsFrame.ShowFocusIndicator:SetChecked(BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize])
 		BattlegroundTargets:EnableConfigMode()
-		BattlegroundTargets:SetupButtonLayout()
 	end)
 
 	-- - sort by
@@ -2035,22 +2029,20 @@ function BattlegroundTargets:EnableConfigMode()
 	GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, 0)
 
 	for i = 1, 40 do
+		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
+		GVAR.TargetButton[i].TargetCount:SetText("0")
+		GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
 		if i < currentSize+1 then
 			GVAR.TargetButton[i]:Show()
 		else
 			GVAR.TargetButton[i]:Hide()
 		end
 	end
-
-	for i = 1, currentSize do
-		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
-		GVAR.TargetButton[i].TargetCount:SetText("0")
-		GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
-	end
 	GVAR.TargetButton[2].TargetTexture:SetAlpha(1)
 	GVAR.TargetButton[5].FocusTexture:SetAlpha(1)
 
 	BattlegroundTargets:UpdateLayout()
+	BattlegroundTargets:SetupButtonLayout()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
