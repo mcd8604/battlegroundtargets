@@ -60,7 +60,7 @@ local inWorld
 local inBattleground
 local inCombat
 local reCheckBG
-local reSizeCheck = 0 -- check bgname max. 9 times if normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
+local reSizeCheck = 0 -- check bgname if normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
 local reSetLayout
 local isConfig
 local scoreUpdateThrottle = GetTime()
@@ -116,7 +116,7 @@ local bgSize = {
 	["Eye of the Storm"] = 15,
 	["Strand of the Ancients"] = 15,
 	["Isle of Conquest"] = 40,
-	["Battle for Gilneas"] = 10,
+	["The Battle for Gilneas"] = 10,
 	["Twin Peaks"] = 10, 
 }
 
@@ -2273,23 +2273,14 @@ function BattlegroundTargets:BattlefieldCheck()
 
 			if bgName and BGN[bgName] then
 				currentSize = bgSize[ BGN[bgName] ]
-				if reSizeCheck < 10 and reSizeCheck > 0 then
-					Print(L["Battleground name found:"], bgName)
-				end
 				reSizeCheck = 10
 			else
 				local zone = GetRealZoneText()
 				if zone and BGN[zone] then
 					currentSize = bgSize[ BGN[zone] ]
-					if reSizeCheck < 10 and reSizeCheck > 0 then
-						Print(L["Battleground name found:"], zone)
-					end
 					reSizeCheck = 10
 				else
-					if reSizeCheck == 0 then
-						Print(L["Unknown battleground name:"], bgName)
-						Print(L["Temporarily used setting: 10 vs 10"])
-					elseif reSizeCheck >= 10 then
+					if reSizeCheck >= 10 then
 						Print(bgName, L["is not localized! Please contact addon author. Thanks."])
 					end
 					currentSize = 10

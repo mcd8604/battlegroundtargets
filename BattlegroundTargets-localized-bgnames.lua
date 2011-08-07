@@ -11,7 +11,7 @@ if locale == "deDE" then
 		["Auge des Sturms"] = "Eye of the Storm",
 		["Strand der Uralten"] = "Strand of the Ancients",
 		["Insel der Eroberung"] = "Isle of Conquest",
-		["Die Schlacht um Gilneas"] = "Battle for Gilneas",
+		["Die Schlacht um Gilneas"] = "The Battle for Gilneas",
 		["Zwillingsgipfel"] = "Twin Peaks", 
 	}
 elseif locale == "esES" then
@@ -22,7 +22,7 @@ elseif locale == "esES" then
 		["Ojo de la Tormenta"] = "Eye of the Storm",
 		["Playa de los Ancestros"] = "Strand of the Ancients",
 		["Isla de la Conquista"] = "Isle of Conquest",
-		["La Batalla por Gilneas"] = "Battle for Gilneas",
+		["La Batalla por Gilneas"] = "The Battle for Gilneas",
 		["Cumbres Gemelas"] = "Twin Peaks",
 	}
 elseif locale == "frFR" then
@@ -33,7 +33,7 @@ elseif locale == "frFR" then
 		["L'Œil du cyclone"] = "Eye of the Storm",
 		["Rivage des Anciens"] = "Strand of the Ancients",
 		["Île des Conquérants"] = "Isle of Conquest",
-		["La bataille de Gilnéas"] = "Battle for Gilneas",
+		["La bataille de Gilnéas"] = "The Battle for Gilneas",
 		["Pics-Jumeaux"] = "Twin Peaks",
 	}
 elseif locale == "koKR" then
@@ -44,7 +44,7 @@ elseif locale == "koKR" then
 		["폭풍의 눈"] = "Eye of the Storm",
 		["고대의 해안"] = "Strand of the Ancients",
 		["정복의 섬"] = "Isle of Conquest",
-		["길니아스 전투"] = "Battle for Gilneas",
+		["길니아스 전투"] = "The Battle for Gilneas",
 		["쌍둥이 봉우리"] = "Twin Peaks",
 	}
 elseif locale == "ruRU" then
@@ -55,7 +55,7 @@ elseif locale == "ruRU" then
 		["Око Бури"] = "Eye of the Storm",
 		["Берег Древних"] = "Strand of the Ancients",
 		["Остров Завоеваний"] = "Isle of Conquest",
-		["Битва за Гилнеас"] = "Battle for Gilneas",
+		["Битва за Гилнеас"] = "The Battle for Gilneas",
 		["Два Пика"] = "Twin Peaks",
 	}
 elseif locale == "zhCN" then
@@ -66,7 +66,7 @@ elseif locale == "zhCN" then
 		["风暴之眼"] = "Eye of the Storm",
 		["远古海滩"] = "Strand of the Ancients",
 		["征服之岛"] = "Isle of Conquest",
-		["吉尔尼斯之战"] = "Battle for Gilneas",
+		["吉尔尼斯之战"] = "The Battle for Gilneas",
 		["双子峰"] = "Twin Peaks",
 	}
 elseif locale == "zhTW" then
@@ -77,7 +77,7 @@ elseif locale == "zhTW" then
 		["暴風之眼"] = "Eye of the Storm",
 		["遠祖灘頭"] = "Strand of the Ancients",
 		["征服之島"] = "Isle of Conquest",
-		["吉爾尼斯之戰"] = "Battle for Gilneas",
+		["吉爾尼斯之戰"] = "The Battle for Gilneas",
 		["雙子峰"] = "Twin Peaks",
 	}
 else
@@ -88,7 +88,7 @@ else
 		["Eye of the Storm"] = "Eye of the Storm",
 		["Strand of the Ancients"] = "Strand of the Ancients",
 		["Isle of Conquest"] = "Isle of Conquest",
-		["Battle for Gilneas"] = "Battle for Gilneas",
+		["The Battle for Gilneas"] = "The Battle for Gilneas",
 		["Twin Peaks"] = "Twin Peaks",
 	}
 end
