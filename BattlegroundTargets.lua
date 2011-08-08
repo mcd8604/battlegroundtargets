@@ -2261,6 +2261,7 @@ function BattlegroundTargets:BattlefieldCheck()
 
 		if isRatedBG then
 			currentSize = rbgSize
+			reSizeCheck = 10
 		else
 			local queueStatus, queueMapName, bgName
 			for i=1, MAX_BATTLEFIELD_QUEUES do
