@@ -26,6 +26,11 @@
 -- - Talented from Jerry (for a list of all localized talent specs)           --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
+--                                                                            --
+-- Download: http://www.wowace.com/addons/battlegroundtargets/                --
+-- Forum   : http://forums.wowace.com/showthread.php?t=19618                  --
+--                                                                            --
+-- -------------------------------------------------------------------------- --
 
 -- ---------------------------------------------------------------------------------------------------------------------
 BattlegroundTargets_Options = {} -- SavedVariable options table
@@ -991,8 +996,9 @@ function BattlegroundTargets:CreateFrames()
 
 		GVAR.TargetButton[i]:RegisterForClicks("AnyUp")
 		GVAR.TargetButton[i]:SetAttribute("type1", "macro")
-		GVAR.TargetButton[i]:SetAttribute("type2", "focus")
-		GVAR.TargetButton[i]:SetAttribute("macrotext", "")
+		GVAR.TargetButton[i]:SetAttribute("type2", "macro")
+		GVAR.TargetButton[i]:SetAttribute("macrotext1", "")
+		GVAR.TargetButton[i]:SetAttribute("macrotext2", "")
 		GVAR.TargetButton[i]:SetScript("OnEnter", OnEnter)
 		GVAR.TargetButton[i]:SetScript("OnLeave", OnLeave)
 	end
@@ -1807,14 +1813,29 @@ function BattlegroundTargets:OptionsFrameShow()
 	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_OptionsFrame")
 	GVAR.OptionsFrame:StartMoving()
 	GVAR.OptionsFrame:StopMovingOrSizing()
+
+	if inBattleground then
+		testSize = currentSize
+	end
+
+	if testSize == 10 then
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TestRaidSize10, true)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TestRaidSize15, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TestRaidSize40, nil)
+	elseif testSize == 15 then
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TestRaidSize10, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TestRaidSize15, true)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TestRaidSize40, nil)
+	elseif testSize == 40 then
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TestRaidSize10, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TestRaidSize15, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TestRaidSize40, true)
+	end
+
 	if inCombat or InCombatLockdown() then
 		BattlegroundTargets:DisableInsecureConfigWidges()
 	else
 		BattlegroundTargets:EnableInsecureConfigWidges()
-	end
-
-	if inBattleground then
-		testSize = currentSize
 	end
 
 	if BattlegroundTargets_Options.ButtonEnableBracket[testSize] then
@@ -2021,7 +2042,7 @@ function BattlegroundTargets:EnableConfigMode()
 	currentSize = testSize
 	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
 	BattlegroundTargets:SetOptions()
-	
+
 	GVAR.MainFrame:Show()
 	GVAR.MainFrame:EnableMouse(true)
 	GVAR.MainFrame:SetHeight(20)
@@ -2130,7 +2151,8 @@ function BattlegroundTargets:UpdateLayout()
 			end
 			GVAR.TargetButton[i].Name:SetText(name)
 			if not inCombat or not InCombatLockdown() then
-				GVAR.TargetButton[i]:SetAttribute("macrotext", "/target "..ENEMY_Data[i].name)
+				GVAR.TargetButton[i]:SetAttribute("macrotext1", "/target "..ENEMY_Data[i].name)
+				GVAR.TargetButton[i]:SetAttribute("macrotext2", "/target "..ENEMY_Data[i].name.."\n/focus")
 			end
 
 			if targetName and BattlegroundTargets_Options.ButtonShowCrosshairs[currentSize] then
@@ -2156,7 +2178,8 @@ function BattlegroundTargets:UpdateLayout()
 			GVAR.TargetButton[i].RoleTexture:SetTexCoord(0, 0, 0, 0)
 			GVAR.TargetButton[i].Name:SetText("")
 			if not inCombat or not InCombatLockdown() then
-				GVAR.TargetButton[i]:SetAttribute("macrotext", "")
+				GVAR.TargetButton[i]:SetAttribute("macrotext1", "")
+				GVAR.TargetButton[i]:SetAttribute("macrotext2", "")
 			end
 		end
 	end
