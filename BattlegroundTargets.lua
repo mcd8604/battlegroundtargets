@@ -812,7 +812,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonEnableBracket[10]      == nil then BattlegroundTargets_Options.ButtonEnableBracket[10]      = false end
 	if BattlegroundTargets_Options.ButtonShowSpec[10]           == nil then BattlegroundTargets_Options.ButtonShowSpec[10]           = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[10]          == nil then BattlegroundTargets_Options.ButtonClassIcon[10]          = false end
-	if BattlegroundTargets_Options.ButtonShowRealm[10]          == nil then BattlegroundTargets_Options.ButtonShowRealm[10]          = true  end
+	if BattlegroundTargets_Options.ButtonShowRealm[10]          == nil then BattlegroundTargets_Options.ButtonShowRealm[10]          = false end
 	if BattlegroundTargets_Options.ButtonShowCrosshairs[10]     == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[10]     = true  end
 	if BattlegroundTargets_Options.ButtonShowTargetCount[10]    == nil then BattlegroundTargets_Options.ButtonShowTargetCount[10]    = true  end
 	if BattlegroundTargets_Options.ButtonShowFocusIndicator[10] == nil then BattlegroundTargets_Options.ButtonShowFocusIndicator[10] = true  end
@@ -825,7 +825,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonEnableBracket[15]      == nil then BattlegroundTargets_Options.ButtonEnableBracket[15]      = false end
 	if BattlegroundTargets_Options.ButtonShowSpec[15]           == nil then BattlegroundTargets_Options.ButtonShowSpec[15]           = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[15]          == nil then BattlegroundTargets_Options.ButtonClassIcon[15]          = false end
-	if BattlegroundTargets_Options.ButtonShowRealm[15]          == nil then BattlegroundTargets_Options.ButtonShowRealm[15]          = true  end
+	if BattlegroundTargets_Options.ButtonShowRealm[15]          == nil then BattlegroundTargets_Options.ButtonShowRealm[15]          = false end
 	if BattlegroundTargets_Options.ButtonShowCrosshairs[15]     == nil then BattlegroundTargets_Options.ButtonShowCrosshairs[15]     = true  end
 	if BattlegroundTargets_Options.ButtonShowTargetCount[15]    == nil then BattlegroundTargets_Options.ButtonShowTargetCount[15]    = true  end
 	if BattlegroundTargets_Options.ButtonShowFocusIndicator[15] == nil then BattlegroundTargets_Options.ButtonShowFocusIndicator[15] = true  end
