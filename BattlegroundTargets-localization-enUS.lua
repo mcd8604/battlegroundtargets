@@ -32,8 +32,7 @@ BattlegroundTargets_Localization = {
 ["click & move"] = true,
 ["BattlegroundTargets does not update if this Tab is opened."] = true,
 
-["'Esc -> Interface -> AddOns -> BattlegroundTargets' to change Options!"] = true,
-["Close Configuration (or press 'Esc')"] = true,
+["Close Configuration"] = true,
 
 ["is not localized! Please contact addon author. Thanks."] = true,
 }

@@ -11,6 +11,7 @@ BattlegroundTargets-localized-talents.lua
 BattlegroundTargets-localization-enUS.lua
 BattlegroundTargets-localization-deDE.lua
 BattlegroundTargets-localization-esES.lua
+BattlegroundTargets-localization-esMX.lua
 BattlegroundTargets-localization-frFR.lua
 BattlegroundTargets-localization-koKR.lua
 BattlegroundTargets-localization-ruRU.lua

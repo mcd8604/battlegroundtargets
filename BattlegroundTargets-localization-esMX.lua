@@ -1,8 +1,8 @@
 -- -------------------------------------------------------------------------- --
--- BattlegroundTargets esES Localization                                      --
+-- BattlegroundTargets esMX Localization                                      --
 -- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
-if GetLocale() ~= "esES" then return end
+if GetLocale() ~= "esMX" then return end
 BattlegroundTargets_Localization:CreateLocaleTable({
 ["Open Configuration"] = true,
 

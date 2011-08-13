@@ -32,8 +32,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["click & move"] = "klicken & bewegen",
 ["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets aktualisiert sich nicht wenn dieser Tab geöffnet ist.",
 
-["'Esc -> Interface -> AddOns -> BattlegroundTargets' to change Options!"] = "'Esc -> Interface -> AddOns -> BattlegroundTargets' um Optionen zu ändern!",
-["Close Configuration (or press 'Esc')"] = "Konfiguration schließen (oder 'Esc' drücken)",
+["Close Configuration"] = "Konfiguration schließen",
 
 ["is not localized! Please contact addon author. Thanks."] = "ist nicht übersetzt! Bitte Addonautor benachrichtigen. Danke.",
 })

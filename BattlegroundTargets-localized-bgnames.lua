@@ -25,6 +25,17 @@ elseif locale == "esES" then
 		["La Batalla por Gilneas"] = "The Battle for Gilneas",
 		["Cumbres Gemelas"] = "Twin Peaks",
 	}
+elseif locale == "esMX" then
+	BattlegroundTargets_BGNames = {
+		["Valle de Alterac"] = "Alterac Valley",
+		["Garganta Grito de Guerra"] = "Warsong Gulch",
+		["Cuenca de Arathi"] = "Arathi Basin",
+		["Ojo de la Tormenta"] = "Eye of the Storm",
+		["Playa de los Ancestros"] = "Strand of the Ancients",
+		["Isla de la Conquista"] = "Isle of Conquest",
+		["La Batalla por Gilneas"] = "The Battle for Gilneas",
+		["Cumbres Gemelas"] = "Twin Peaks",
+	}
 elseif locale == "frFR" then
 	BattlegroundTargets_BGNames = {
 		["Vallée d'Alterac"] = "Alterac Valley",
