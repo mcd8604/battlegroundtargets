@@ -2,7 +2,7 @@
 ## Author: kunda
 ## Title: BattlegroundTargets
 ## Notes: Shows all battleground enemies. Simple 'Enemy Unit Frame' for battlegrounds.
-## Version: 40200-8
+## Version: 40200-9
 ## SavedVariables: BattlegroundTargets_Options
 
 BattlegroundTargets-localized-bgnames.lua

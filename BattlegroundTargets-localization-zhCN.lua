@@ -20,6 +20,8 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Show Target Indicator"] = "显示目标追踪",
 ["Show Target Count"] = "显示目标计数",
 ["Show Focus Indicator"] = "显示焦点追踪",
+["Show Health Bar"] = true,
+["Show Percent"] = true,
 ["Sort By"] = "排序",
 ["Text Size"] = "字体大小",
 ["Scale"] = "比例",

@@ -20,6 +20,8 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Show Target Indicator"] = "Zeige Zielanzeige",
 ["Show Target Count"] = "Zeige Zielzähler",
 ["Show Focus Indicator"] = "Zeige Fokusanzeige",
+["Show Health Bar"] = "Zeige Gesundheitsbalken",
+["Show Percent"] = "Zeige Prozent",
 ["Sort By"] = "Sortiert nach",
 ["Text Size"] = "Textgröße",
 ["Scale"] = "Skalierung",
