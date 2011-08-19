@@ -2832,6 +2832,7 @@ function BattlegroundTargets:CheckPlayerTarget()
 
 	for i = 1, currentSize do
 		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
+		GVAR.TargetButton[i].HighlightBackground:SetTexture(0, 0, 0, 1)
 		GVAR.TargetButton[i].isTarget = nil
 	end
 
