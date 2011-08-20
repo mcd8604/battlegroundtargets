@@ -2454,6 +2454,8 @@ function BattlegroundTargets:DisableConfigMode()
 	for i = 1, 40 do
 		GVAR.TargetButton[i]:Hide()
 		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
+		GVAR.TargetButton[i].HighlightBackground:SetTexture(0, 0, 0, 1)
+		GVAR.TargetButton[i].isTarget = nil
 		GVAR.TargetButton[i].TargetCount:SetText("0")
 		GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
 		GVAR.TargetButton[i].HealthBar:SetWidth(healthBarWidth)
