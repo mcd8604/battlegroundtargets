@@ -108,6 +108,7 @@ local reSizeCheck = 0 -- check bgname if normal bgname check fails (reason: some
 local reSetLayout
 local isConfig
 local testDataLoaded
+local isTarget = 0
 
 local scoreUpdateThrottle = GetTime()
 local scoreUpdateFrequency = 1
@@ -1031,7 +1032,7 @@ function BattlegroundTargets:CreateFrames()
 		self.HighlightBackground:SetTexture(1, 1, 0.49, 1)
 	end
 	local function OnLeave(self)
-		if self.isTarget then
+		if isTarget == self.buttonNum then
 			self.HighlightBackground:SetTexture(0.5, 0.5, 0.5, 1)
 		else
 			self.HighlightBackground:SetTexture(0, 0, 0, 1)
@@ -2406,7 +2407,6 @@ function BattlegroundTargets:EnableConfigMode()
 	for i = 1, 40 do
 		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
 		GVAR.TargetButton[i].HighlightBackground:SetTexture(0, 0, 0, 1)
-		GVAR.TargetButton[i].isTarget = nil
 		GVAR.TargetButton[i].TargetCount:SetText("0")
 		GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
 		GVAR.TargetButton[i].HealthBar:SetWidth(healthBarWidth)
@@ -2426,10 +2426,11 @@ function BattlegroundTargets:EnableConfigMode()
 			GVAR.TargetButton[i]:Hide()
 		end
 	end
+	isTarget = 0
 	if BattlegroundTargets_Options.ButtonShowTargetIndicator[currentSize] then
 		GVAR.TargetButton[2].TargetTexture:SetAlpha(1)
 		GVAR.TargetButton[2].HighlightBackground:SetTexture(0.5, 0.5, 0.5, 1)
-		GVAR.TargetButton[2].isTarget = 1
+		isTarget = 2
 	end
 	if BattlegroundTargets_Options.ButtonShowFocusIndicator[currentSize] then
 		GVAR.TargetButton[5].FocusTexture:SetAlpha(1)
@@ -2455,12 +2456,12 @@ function BattlegroundTargets:DisableConfigMode()
 		GVAR.TargetButton[i]:Hide()
 		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
 		GVAR.TargetButton[i].HighlightBackground:SetTexture(0, 0, 0, 1)
-		GVAR.TargetButton[i].isTarget = nil
 		GVAR.TargetButton[i].TargetCount:SetText("0")
 		GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
 		GVAR.TargetButton[i].HealthBar:SetWidth(healthBarWidth)
 		GVAR.TargetButton[i].HealthText:SetText("")
 	end
+	isTarget = 0
 	BattlegroundTargets:BattlefieldCheck()
 	BattlegroundTargets:CheckPlayerFocus()
 	BattlegroundTargets:CheckPlayerTarget()
@@ -2517,6 +2518,7 @@ function BattlegroundTargets:UpdateLayout()
 	for i = 1, currentSize do
 		if ENEMY_Data[i] then
 			ENEMY_Name2Button[ ENEMY_Data[i].name ] = i
+			GVAR.TargetButton[i].buttonNum = i
 
 			local r = classcolors[ ENEMY_Data[i].classToken ].r
 			local g = classcolors[ ENEMY_Data[i].classToken ].g
@@ -2835,13 +2837,13 @@ function BattlegroundTargets:CheckPlayerTarget()
 	for i = 1, currentSize do
 		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
 		GVAR.TargetButton[i].HighlightBackground:SetTexture(0, 0, 0, 1)
-		GVAR.TargetButton[i].isTarget = nil
 	end
+	isTarget = 0
 
 	if targetName and ENEMY_Names[targetName] and GVAR.TargetButton[ ENEMY_Name2Button[targetName] ] then
 		GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].TargetTexture:SetAlpha(1)
 		GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].HighlightBackground:SetTexture(0.5, 0.5, 0.5, 1)
-		GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].isTarget = 1
+		isTarget = ENEMY_Name2Button[targetName]
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
