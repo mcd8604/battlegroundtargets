@@ -3,7 +3,8 @@
 -- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
--- Credits: Talented from Jerry                                               --
+-- Credits:                                                                   --
+-- - Talented from Jerry (Thanks for some localized talent specs)             --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 BattlegroundTargets_Talents = {
