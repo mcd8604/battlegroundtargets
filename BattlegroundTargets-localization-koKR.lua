@@ -14,13 +14,13 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["40 vs 40"] = "40 V 40",
 ["Enable"] = "사용",
 ["Independent Positioning"] = "독립적 위치",
-["Copy this settings to '%s'"] = true,
+["Copy this settings to '%s'"] = "'%s'에 대한 설정을 복사합니다.",
 ["Show Specialization"] = "특성 표시",
 ["Show Class Icon"] = "직업 아이콘 표시",
 ["Show Realm"] = "서버 표시",
 ["Show Target Indicator"] = "대상 지시기 표시",
 ["Show Focus Indicator"] = "주시 대상 지시기 표시",
-["Show Flag Carrier"] = true,
+["Show Flag Carrier"] = "깃발 운반자 표시",
 ["Show Target Count"] = "대상 카운트 표시",
 ["Show Health Bar"] = "생명력 바 표시",
 ["Show Percent"] = "백분율 표시",
@@ -38,5 +38,5 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["Close Configuration"] = "설정 창 닫기",
 
-["is not localized! Please contact addon author. Thanks."] = "지역화가 되지 않았습니다! 애드온 제작자에게 연락주세요. 감사합니다.",
+["is not localized! Please contact addon author. Thanks."] = "지역화가 되어 있지 않습니다! 애드온 제작자에게 연락주세요. 감사합니다.",
 })
