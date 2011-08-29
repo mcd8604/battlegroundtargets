@@ -75,7 +75,7 @@ local BattlegroundTargets = CreateFrame("Frame") -- container
 local L   = BattlegroundTargets_Localization -- localization table
 local T   = BattlegroundTargets_Talents      -- localized talents
 local BGN = BattlegroundTargets_BGNames      -- localized battleground names
-local FL  = BattlegroundTargets_Flag         -- localized flag picked/dropped/capured
+local FL  = BattlegroundTargets_Flag         -- localized flag picked/dropped/captured
 
 local GVAR = {}     -- UI Widgets
 local TEMPLATE = {} -- Templates
@@ -137,12 +137,10 @@ local rnd1 = 2
 local rnd2 = 5
 local rnd3 = 3
 local testSize = 10
-local buttonWidth = 150
-local buttonHeight = 20
 
 local healthBarWidth = 0.01
 
-local sizeOffset     = 5
+local sizeOffset    = 5
 local sizeBarHeight = 14
 
 local fontPath = _G["GameFontNormal"]:GetFont()
@@ -1118,6 +1116,9 @@ function BattlegroundTargets:CreateFrames()
 			self.HighlightBackground:SetTexture(0, 0, 0, 1)
 		end
 	end
+
+	local buttonWidth = 150
+	local buttonHeight = 20
 
 	GVAR.TargetButton = {}
 	for i = 1, 40 do

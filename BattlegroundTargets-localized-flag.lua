@@ -15,7 +15,7 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 	-- ### enUS: last TESTED with Patch 4.2.0.14480 (LIVE) ###
 	-- # Warsong Gulch & Twink Peaks:
 	["WSG_TP_REGEX_PICKED1"] = "was picked up by (.+)!",
-	["WSG_TP_REGEX_PICKED2"] = "was picked up by (.+)!2",
+	["WSG_TP_REGEX_PICKED2"] = "was picked up by (.+)!",
 	["WSG_TP_MATCH_DROPPED"] = "dropped",
 	["WSG_TP_MATCH_CAPTURED"] = "captured the",
 	-- # Eye of the Storm:
