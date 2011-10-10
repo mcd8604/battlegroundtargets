@@ -17,7 +17,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Copy this settings to '%s'"] = true,
 ["Show Specialization"] = "显示天赋",
 ["Show Class Icon"] = "显示职业图标",
-["Show Realm"] = "显示区域",
+["Hide Realm"] = true,--["Show Realm"] = "显示区域",
 ["Show Leader"] = true,
 ["Show Target"] = true,--["Show Target Indicator"] = "显示目标追踪",
 ["Show Focus"] = true,--["Show Focus Indicator"] = "显示焦点追踪",

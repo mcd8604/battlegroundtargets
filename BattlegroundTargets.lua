@@ -1006,7 +1006,7 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if BattlegroundTargets_Options.version == nil then
-		BattlegroundTargets_Options.version = 4
+		BattlegroundTargets_Options.version = 5
 	end
 
 	if BattlegroundTargets_Options.version == 1 then
@@ -1068,6 +1068,18 @@ function BattlegroundTargets:InitOptions()
 		end
 		BattlegroundTargets_Options.version = 4
 	end
+	
+	if BattlegroundTargets_Options.version == 4 then
+		if BattlegroundTargets_Options.ButtonShowRealm then -- rename ButtonShowRealm to ButtonHideRealm
+			BattlegroundTargets_Options.ButtonHideRealm = {}
+			if BattlegroundTargets_Options.ButtonShowRealm[10] then BattlegroundTargets_Options.ButtonHideRealm[10] = false else BattlegroundTargets_Options.ButtonHideRealm[10] = true end
+			if BattlegroundTargets_Options.ButtonShowRealm[15] then BattlegroundTargets_Options.ButtonHideRealm[15] = false else BattlegroundTargets_Options.ButtonHideRealm[15] = true end
+			if BattlegroundTargets_Options.ButtonShowRealm[40] then BattlegroundTargets_Options.ButtonHideRealm[40] = false else BattlegroundTargets_Options.ButtonHideRealm[40] = true end
+			BattlegroundTargets_Options.ButtonShowRealm = nil
+		end
+		BattlegroundTargets_Options.version = 5
+	end
+	
 
 	if BattlegroundTargets_Options.pos                           == nil then BattlegroundTargets_Options.pos                           = {}    end
 	if BattlegroundTargets_Options.MinimapButton                 == nil then BattlegroundTargets_Options.MinimapButton                 = false end
@@ -1085,7 +1097,7 @@ function BattlegroundTargets:InitOptions()
 
 	if BattlegroundTargets_Options.ButtonShowSpec                == nil then BattlegroundTargets_Options.ButtonShowSpec                = {}    end
 	if BattlegroundTargets_Options.ButtonClassIcon               == nil then BattlegroundTargets_Options.ButtonClassIcon               = {}    end
-	if BattlegroundTargets_Options.ButtonShowRealm               == nil then BattlegroundTargets_Options.ButtonShowRealm               = {}    end
+	if BattlegroundTargets_Options.ButtonHideRealm               == nil then BattlegroundTargets_Options.ButtonHideRealm               = {}    end
 	if BattlegroundTargets_Options.ButtonShowLeader              == nil then BattlegroundTargets_Options.ButtonShowLeader              = {}    end
 	if BattlegroundTargets_Options.ButtonShowTarget              == nil then BattlegroundTargets_Options.ButtonShowTarget              = {}    end
 	if BattlegroundTargets_Options.ButtonTargetScale             == nil then BattlegroundTargets_Options.ButtonTargetScale             = {}    end
@@ -1114,7 +1126,7 @@ function BattlegroundTargets:InitOptions()
 
 	if BattlegroundTargets_Options.ButtonShowSpec[10]            == nil then BattlegroundTargets_Options.ButtonShowSpec[10]            = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[10]           == nil then BattlegroundTargets_Options.ButtonClassIcon[10]           = false end
-	if BattlegroundTargets_Options.ButtonShowRealm[10]           == nil then BattlegroundTargets_Options.ButtonShowRealm[10]           = true  end
+	if BattlegroundTargets_Options.ButtonHideRealm[10]           == nil then BattlegroundTargets_Options.ButtonHideRealm[10]           = false end
 	if BattlegroundTargets_Options.ButtonShowLeader[10]          == nil then BattlegroundTargets_Options.ButtonShowLeader[10]          = false end
 	if BattlegroundTargets_Options.ButtonShowTarget[10]          == nil then BattlegroundTargets_Options.ButtonShowTarget[10]          = true  end
 	if BattlegroundTargets_Options.ButtonTargetScale[10]         == nil then BattlegroundTargets_Options.ButtonTargetScale[10]         = 1.5   end
@@ -1143,7 +1155,7 @@ function BattlegroundTargets:InitOptions()
 
 	if BattlegroundTargets_Options.ButtonShowSpec[15]            == nil then BattlegroundTargets_Options.ButtonShowSpec[15]            = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[15]           == nil then BattlegroundTargets_Options.ButtonClassIcon[15]           = false end
-	if BattlegroundTargets_Options.ButtonShowRealm[15]           == nil then BattlegroundTargets_Options.ButtonShowRealm[15]           = true  end
+	if BattlegroundTargets_Options.ButtonHideRealm[15]           == nil then BattlegroundTargets_Options.ButtonHideRealm[15]           = false end
 	if BattlegroundTargets_Options.ButtonShowLeader[15]          == nil then BattlegroundTargets_Options.ButtonShowLeader[15]          = false end
 	if BattlegroundTargets_Options.ButtonShowTarget[15]          == nil then BattlegroundTargets_Options.ButtonShowTarget[15]          = true  end
 	if BattlegroundTargets_Options.ButtonTargetScale[15]         == nil then BattlegroundTargets_Options.ButtonTargetScale[15]         = 1.5   end
@@ -1172,7 +1184,7 @@ function BattlegroundTargets:InitOptions()
 
 	if BattlegroundTargets_Options.ButtonShowSpec[40]            == nil then BattlegroundTargets_Options.ButtonShowSpec[40]            = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[40]           == nil then BattlegroundTargets_Options.ButtonClassIcon[40]           = false end
-	if BattlegroundTargets_Options.ButtonShowRealm[40]           == nil then BattlegroundTargets_Options.ButtonShowRealm[40]           = true  end
+	if BattlegroundTargets_Options.ButtonHideRealm[40]           == nil then BattlegroundTargets_Options.ButtonHideRealm[40]           = false end
 	if BattlegroundTargets_Options.ButtonShowLeader[40]          == nil then BattlegroundTargets_Options.ButtonShowLeader[40]          = false end
 	if BattlegroundTargets_Options.ButtonShowTarget[40]          == nil then BattlegroundTargets_Options.ButtonShowTarget[40]          = true  end
 	if BattlegroundTargets_Options.ButtonTargetScale[40]         == nil then BattlegroundTargets_Options.ButtonTargetScale[40]         = 1     end
@@ -1712,13 +1724,13 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	-- show realm
 	GVAR.OptionsFrame.ShowRealm = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowRealm, 16, 4, L["Show Realm"])
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowRealm, 16, 4, L["Hide Realm"])
 	GVAR.OptionsFrame.ShowRealm:SetPoint("LEFT", GVAR.OptionsFrame.ShowLeader, "LEFT", 0, 0)
 	GVAR.OptionsFrame.ShowRealm:SetPoint("TOP", GVAR.OptionsFrame.ShowLeader, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options.ButtonShowRealm[currentSize])
+	GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options.ButtonHideRealm[currentSize])
 	GVAR.OptionsFrame.ShowRealm:SetScript("OnClick", function(self)
-		BattlegroundTargets_Options.ButtonShowRealm[currentSize] = not BattlegroundTargets_Options.ButtonShowRealm[currentSize]
-		GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options.ButtonShowRealm[currentSize])
+		BattlegroundTargets_Options.ButtonHideRealm[currentSize] = not BattlegroundTargets_Options.ButtonHideRealm[currentSize]
+		GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options.ButtonHideRealm[currentSize])
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
@@ -2485,7 +2497,7 @@ function BattlegroundTargets:SetOptions()
 	GVAR.OptionsFrame.ShowSpec:SetChecked(BattlegroundTargets_Options.ButtonShowSpec[currentSize])
 	GVAR.OptionsFrame.ClassIcon:SetChecked(BattlegroundTargets_Options.ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ShowLeader:SetChecked(BattlegroundTargets_Options.ButtonShowLeader[currentSize])
-	GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options.ButtonShowRealm[currentSize])
+	GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options.ButtonHideRealm[currentSize])
 
 	GVAR.OptionsFrame.ShowTargetIndicator:SetChecked(BattlegroundTargets_Options.ButtonShowTarget[currentSize])
 	GVAR.OptionsFrame.TargetScaleSlider:SetValue(BattlegroundTargets_Options.ButtonTargetScale[currentSize]*100)
@@ -3744,7 +3756,7 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	BattlegroundTargets_Options.ButtonShowSpec[destinationSize]          = BattlegroundTargets_Options.ButtonShowSpec[sourceSize]
 	BattlegroundTargets_Options.ButtonClassIcon[destinationSize]         = BattlegroundTargets_Options.ButtonClassIcon[sourceSize]
 	BattlegroundTargets_Options.ButtonShowLeader[destinationSize]        = BattlegroundTargets_Options.ButtonShowLeader[sourceSize]
-	BattlegroundTargets_Options.ButtonShowRealm[destinationSize]         = BattlegroundTargets_Options.ButtonShowRealm[sourceSize]
+	BattlegroundTargets_Options.ButtonHideRealm[destinationSize]         = BattlegroundTargets_Options.ButtonHideRealm[sourceSize]
 	BattlegroundTargets_Options.ButtonShowTarget[destinationSize]        = BattlegroundTargets_Options.ButtonShowTarget[sourceSize]
 	BattlegroundTargets_Options.ButtonTargetScale[destinationSize]       = BattlegroundTargets_Options.ButtonTargetScale[sourceSize]
 	BattlegroundTargets_Options.ButtonTargetPosition[destinationSize]    = BattlegroundTargets_Options.ButtonTargetPosition[sourceSize]
@@ -3837,7 +3849,7 @@ function BattlegroundTargets:UpdateLayout()
 	local ButtonShowSpec        = BattlegroundTargets_Options.ButtonShowSpec[currentSize]
 	local ButtonClassIcon       = BattlegroundTargets_Options.ButtonClassIcon[currentSize]
 	local ButtonShowLeader      = BattlegroundTargets_Options.ButtonShowLeader[currentSize]
-	local ButtonShowRealm       = BattlegroundTargets_Options.ButtonShowRealm[currentSize]
+	local ButtonHideRealm       = BattlegroundTargets_Options.ButtonHideRealm[currentSize]
 	local ButtonShowTargetCount = BattlegroundTargets_Options.ButtonShowTargetCount[currentSize]
 	local ButtonShowHealthBar   = BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]
 	local ButtonShowHealthText  = BattlegroundTargets_Options.ButtonShowHealthText[currentSize]
@@ -3861,7 +3873,7 @@ function BattlegroundTargets:UpdateLayout()
 			GVAR.TargetButton[i].RoleTexture:SetTexCoord(Textures.RoleIcon[ENEMY_Data[i].talentSpec][1], Textures.RoleIcon[ENEMY_Data[i].talentSpec][2], Textures.RoleIcon[ENEMY_Data[i].talentSpec][3], Textures.RoleIcon[ENEMY_Data[i].talentSpec][4])
 
 			local name = ENEMY_Data[i].name
-			if not ButtonShowRealm then
+			if ButtonHideRealm then
 				if string_find(name, "-", 1, true) then
 					name = string_match(name, "(.-)%-(.*)$")
 				end

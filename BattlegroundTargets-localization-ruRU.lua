@@ -17,7 +17,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Copy this settings to '%s'"] = "Копировать эти настройки в '%s'",
 ["Show Specialization"] = "Показывать специализацию",
 ["Show Class Icon"] = "Показывать иконку класса",
-["Show Realm"] = "Показывать сервер",
+["Hide Realm"] = true,--["Show Realm"] = "Показывать сервер",
 ["Show Leader"] = true,
 ["Show Target"] = true,--["Show Target Indicator"] = "Показывать индикатор цели",
 ["Show Focus"] = true,--["Show Focus Indicator"] = "Показывать индикатор фокуса",

@@ -17,7 +17,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Copy this settings to '%s'"] = "'%s'에 대한 설정을 복사합니다.",
 ["Show Specialization"] = "특성 표시",
 ["Show Class Icon"] = "직업 아이콘 표시",
-["Show Realm"] = "서버 표시",
+["Hide Realm"] = true,--["Show Realm"] = "서버 표시",
 ["Show Leader"] = true,
 ["Show Target"] = true,--["Show Target Indicator"] = "대상 지시기 표시",
 ["Show Focus"] = true,--["Show Focus Indicator"] = "주시 대상 지시기 표시",
