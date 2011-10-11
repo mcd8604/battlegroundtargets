@@ -78,8 +78,6 @@
 -- # Enemy Flag Carrier: --------------------------------- VERY LOW CPU USAGE --
 --   - Events:             - CHAT_MSG_BG_SYSTEM_HORDE                         --
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
---   - Eye of the Storm is bugged (or it's intended), because no event is     --
---     triggered if an enemy player pick up the flag.                         --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
@@ -358,6 +356,21 @@ playerUnitID["mouseover"] = 1
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
+-- TODO FIX BUG DEL TEST DELETEwith43Patch - 4.2/4.3compatibilitytest
+local function DELETEwith43Patch_GetMaxBattlefieldID()
+	if GetMaxBattlefieldID then
+		--print("4.2/4.3comptest GetMaxBattlefieldID():", GetMaxBattlefieldID() )
+		return GetMaxBattlefieldID()
+	end
+	if MAX_BATTLEFIELD_QUEUES then
+		--print("4.2/4.3comptest MAX_BATTLEFIELD_QUEUES:", MAX_BATTLEFIELD_QUEUES )
+		return MAX_BATTLEFIELD_QUEUES
+	end
+	return 2
+end
+-- TODO FIX BUG DEL TEST DELETEwith43Patch - 4.2/4.3compatibilitytest
+-- ---------------------------------------------------------------------------------------------------------------------
+
 -- ---------------------------------------------------------------------------------------------------------------------
 local function Print(...)
 	print("|cffffff7fBattlegroundTargets:|r", ...)
@@ -4057,7 +4070,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 
 	if reSizeCheck < 10 then
 		local queueStatus, queueMapName, bgName
-		for i=1, MAX_BATTLEFIELD_QUEUES do
+		for i=1, DELETEwith43Patch_GetMaxBattlefieldID() do
 			queueStatus, queueMapName = GetBattlefieldStatus(i)
 			if queueStatus == "active" then
 				bgName = queueMapName
@@ -4095,7 +4108,7 @@ function BattlegroundTargets:BattlefieldCheck()
 			reSizeCheck = 10
 		else
 			local queueStatus, queueMapName, bgName
-			for i=1, MAX_BATTLEFIELD_QUEUES do
+			for i=1, DELETEwith43Patch_GetMaxBattlefieldID() do
 				queueStatus, queueMapName = GetBattlefieldStatus(i)
 				if queueStatus == "active" then
 					bgName = queueMapName
