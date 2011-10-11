@@ -58,6 +58,17 @@ elseif locale == "koKR" then
 		["길니아스 전투"] = "The Battle for Gilneas",
 		["쌍둥이 봉우리"] = "Twin Peaks",
 	}
+elseif locale == "ptBR" then
+	BattlegroundTargets_BGNames = {
+		["Vale Alterac"] = "Alterac Valley",
+		["Ravina Brado Guerreiro"] = "Warsong Gulch",
+		["Bacia Arathi"] = "Arathi Basin",
+		["Olho da Tormenta"] = "Eye of the Storm",
+		["Baía dos Ancestrais"] = "Strand of the Ancients",
+		["Ilha da Conquista"] = "Isle of Conquest",
+		["A Batalha por Guilnéas"] = "The Battle for Gilneas",
+		["Montes Gêmeos"] = "Twin Peaks",
+	}
 elseif locale == "ruRU" then
 	BattlegroundTargets_BGNames = {
 		["Альтеракская долина"] = "Alterac Valley",

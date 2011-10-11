@@ -96,6 +96,20 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 	["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "얼라이언스가 깃발을 차지했습니다!",
 	["EOTS_STRING_CAPTURED_BY_HORDE"] = "호드가 깃발을 차지했습니다!",
 })
+elseif locale == "ptBR" then
+BattlegroundTargets_Flag:CreateLocaleTable({
+	-- ### ptBR: last TESTED with Patch 4.3.0.14809 (PTR) ###
+	-- # Warsong Gulch & Twink Peaks:
+	["WSG_TP_REGEX_PICKED1"] = "(.+) pegou a Bandeira da (.+)!",
+	["WSG_TP_REGEX_PICKED2"] = "(.+) pegou a Bandeira da (.+)!", -- ...not needed...
+	["WSG_TP_MATCH_DROPPED"] = "largou a Bandeira",
+	["WSG_TP_MATCH_CAPTURED"] = "capturou",
+	-- # Eye of the Storm:
+	["EOTS_REGEX_PICKED"] = "(.+) pegou a bandeira!",
+	["EOTS_STRING_DROPPED"] = "A bandeira foi largada!",
+	["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "A Aliança capturou a bandeira!",
+	["EOTS_STRING_CAPTURED_BY_HORDE"] = "A Horda capturou a bandeira!",
+})
 elseif locale == "ruRU" then
 BattlegroundTargets_Flag:CreateLocaleTable({
 	-- ### ruRU: last TESTED with Patch 4.2.2.14534 (PTR) ###
