@@ -30,7 +30,7 @@
 -- NOTES:                                                                     --
 -- # All CPU intensive events are disabled if you are not in a battleground   --
 --   OR if that feature is disabled.                                          --
---   3 events are always enabled:                                             --
+--   This 3 events are always enabled:                                        --
 --   - PLAYER_REGEN_DISABLED and PLAYER_REGEN_ENABLED                         --
 --   - ZONE_CHANGED_NEW_AREA -> for bg check                                  --
 --                                                                            --
@@ -54,10 +54,6 @@
 --     current WoW API.                                                       --
 --     A raidmember/raidpet MUST target(focus/mouseover) an enemy OR          --
 --     you/yourpet MUST target/focus/mouseover an enemy to get the health!    --
---    -> The use of SendAdd0nMessage() can give better results, I guess 2-10% --
---       in 10vs10/15vs15 and >25% in 40vs40 by transmitting focus/mouseover  --
---       information to other players. I may include (opt-in) this in some    --
---       future release, may be.                                              --
 --                                                                            --
 -- # Target Count: ----------------------------------------- MEDIUM CPU USAGE --
 --   - Event:              - UNIT_TARGET                                      --
@@ -78,6 +74,12 @@
 -- # Enemy Flag Carrier: --------------------------------- VERY LOW CPU USAGE --
 --   - Events:             - CHAT_MSG_BG_SYSTEM_HORDE                         --
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
+--                                                                            --
+-- # No SendAdd0nMessage(): --------------------------------------- PRICELESS --
+--   This AddOn does not use/need SendAdd0nMessage().                         --
+--   The use of SendAdd0nMessage() can give better results by transmitting    --
+--   information to other players. This has certain pros and cons.            --
+--   I may include (opt-in) this in some future release, maybe. idontknow     --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
@@ -1477,7 +1479,8 @@ function BattlegroundTargets:CreateFrames()
 		GVAR.TargetButton[i].AssistTexture:SetWidth(buttonHeight-2)
 		GVAR.TargetButton[i].AssistTexture:SetHeight(buttonHeight-2)
 		GVAR.TargetButton[i].AssistTexture:SetPoint("LEFT", GVAR.TargetButton[i], "RIGHT", 0, 0)
-		GVAR.TargetButton[i].AssistTexture:SetTexture("Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-button2.tga")
+		GVAR.TargetButton[i].AssistTexture:SetTexCoord(0.07812501, 0.92187499, 0.07812501, 0.92187499)--(5/64, 59/64, 5/64, 59/64)
+		GVAR.TargetButton[i].AssistTexture:SetTexture("Interface\\Icons\\Ability_Hunter_SniperShot")
 		GVAR.TargetButton[i].AssistTexture:SetAlpha(0)
 
 		GVAR.TargetButton[i]:RegisterForClicks("AnyUp")
@@ -4876,7 +4879,6 @@ local function OnEvent(self, event, ...)
 	elseif event == "PLAYER_UNGHOST" then
 		if not inBattleground then return end
 		isDead = false
-		BattlegroundTargets:ClearRangeData()
 	elseif event == "PLAYER_ALIVE" then
 		if not inBattleground then return end
 		if UnitIsGhost("player") then
@@ -4895,6 +4897,7 @@ local function OnEvent(self, event, ...)
 		BattlegroundTargets:BattlefieldCheck()
 
 	elseif event == "UNIT_TARGET" then
+		if isDead then return end
 		local arg1 = ...
 		BattlegroundTargets:CheckUnitTarget(arg1)
 	elseif event == "PLAYER_FOCUS_CHANGED" then
