@@ -18,11 +18,11 @@
 -- # Independent settings for '10 vs 10', '15 vs 15' and '40 vs 40'.          --
 -- # Specialization                                                           --
 -- # Target                                                                   --
--- # Main Assist                                                              --
+-- # Main Assist Target                                                       --
 -- # Focus                                                                    --
 -- # Enemy Flag Carrier                                                       --
 -- # Target Count                                                             --
--- # Health Bar and Health Percent                                            --
+-- # Health                                                                   --
 -- # Range Check                                                              --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
@@ -31,7 +31,7 @@
 -- # All CPU intensive events are disabled if you are not in a battleground   --
 --   OR if that feature is disabled.                                          --
 --   3 events are always enabled:                                             --
---   - PLAYER_REGEN_DISABLED/PLAYER_REGEN_ENABLED -> must                     --
+--   - PLAYER_REGEN_DISABLED and PLAYER_REGEN_ENABLED                         --
 --   - ZONE_CHANGED_NEW_AREA -> for bg check                                  --
 --                                                                            --
 -- # Range Check: --------------------------------------- VERY HIGH CPU USAGE --
@@ -46,7 +46,7 @@
 --     bandwidth (no SendAdd0nMessage), fast and easy visual recognition and  --
 --     suitable data.                                                         --
 --                                                                            --
--- # Health Bar and Health Percent: -------------------------- HIGH CPU USAGE --
+-- # Health: ------------------------------------------------- HIGH CPU USAGE --
 --   - Events:             - UNIT_TARGET                                      --
 --                         - UNIT_HEALTH_FREQUENT                             --
 --                         - UPDATE_MOUSEOVER_UNIT                            --
@@ -62,17 +62,17 @@
 -- # Target Count: ----------------------------------------- MEDIUM CPU USAGE --
 --   - Event:              - UNIT_TARGET                                      --
 --                                                                            --
--- # Main Assist: ------------------------------------------ MEDIUM CPU USAGE --
+-- # Main Assist Target: ----------------------------------- MEDIUM CPU USAGE --
 --   - Events:             - RAID_ROSTER_UPDATE                               --
 --                         - UNIT_TARGET                                      --
 --                                                                            --
 -- # Leader: ------------------------------------------- LOW MEDIUM CPU USAGE --
 --   - Event:              - UNIT_TARGET                                      --
 --                                                                            --
--- # Target Indicator: ---------------------------------------- LOW CPU USAGE --
+-- # Target: -------------------------------------------------- LOW CPU USAGE --
 --   - Event:              - PLAYER_TARGET_CHANGED                            --
 --                                                                            --
--- # Focus Indicator: ----------------------------------------- LOW CPU USAGE --
+-- # Focus: --------------------------------------------------- LOW CPU USAGE --
 --   - Event:              - PLAYER_FOCUS_CHANGED                             --
 --                                                                            --
 -- # Enemy Flag Carrier: --------------------------------- VERY LOW CPU USAGE --
@@ -308,16 +308,16 @@ local classesINT = {
 }
 
 local ranges = {}
-ranges.DEATHKNIGHT = 47541 -- Death Coil        (30yd) - Lvl 55
-ranges.DRUID       =  5176 -- Wrath             (40yd) - Lvl  1
-ranges.HUNTER      =    75 -- Auto Shot       (5-40yd) - Lvl  1
-ranges.MAGE        =   133 -- Fireball          (40yd) - Lvl  1
-ranges.PALADIN     = 62124 -- Hand of Reckoning (30yd) - Lvl 14
-ranges.PRIEST      =   589 -- Shadow Word: Pain (40yd) - Lvl  4
-ranges.ROGUE       =  6770 -- Sap               (10yd) - Lvl 10
-ranges.SHAMAN      =   403 -- Lightning Bolt    (30yd) - Lvl  1
-ranges.WARLOCK     =   686 -- Shadow Bolt       (40yd) - Lvl  1
-ranges.WARRIOR     =   100 -- Charge          (8-25yd) - Lvl  3
+ranges.DEATHKNIGHT = 47541 -- Death Coil        (30yd/m) - Lvl 55
+ranges.DRUID       =  5176 -- Wrath             (40yd/m) - Lvl  1
+ranges.HUNTER      =    75 -- Auto Shot       (5-40yd/m) - Lvl  1
+ranges.MAGE        =   133 -- Fireball          (40yd/m) - Lvl  1
+ranges.PALADIN     = 62124 -- Hand of Reckoning (30yd/m) - Lvl 14
+ranges.PRIEST      =   589 -- Shadow Word: Pain (40yd/m) - Lvl  4
+ranges.ROGUE       =  6770 -- Sap               (10yd/m) - Lvl 10
+ranges.SHAMAN      =   403 -- Lightning Bolt    (30yd/m) - Lvl  1
+ranges.WARLOCK     =   686 -- Shadow Bolt       (40yd/m) - Lvl  1
+ranges.WARRIOR     =   100 -- Charge          (8-25yd/m) - Lvl  3
 
 local rangeTypeName = {}
 rangeTypeName[1] = COMBAT_LOG.." |cffffff79(0-73)|r"
@@ -553,12 +553,14 @@ TEMPLATE.IconButton = function(button, cut)
 		button:SetDisabledTexture(button.Disabled)
 		Desaturation(button.Disabled, true)
 	elseif cut == 2 then
+		button.Border:SetAlpha(0.5)
 		button.Normal = button:CreateTexture(nil, "ARTWORK")
 		button.Normal:SetWidth(16)
 		button.Normal:SetHeight(16)
 		button.Normal:SetPoint("CENTER", 0, 0)
 		button.Normal:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Normal:SetTexCoord(unpack(Textures.Shuffler.coords))
+		button.Normal:SetAlpha(0.5)
 		button:SetNormalTexture(button.Normal)
 		button.Push = button:CreateTexture(nil, "ARTWORK")
 		button.Push:SetWidth(12)
@@ -566,6 +568,7 @@ TEMPLATE.IconButton = function(button, cut)
 		button.Push:SetPoint("CENTER", 0, 0)
 		button.Push:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Push:SetTexCoord(unpack(Textures.Shuffler.coords))
+		button.Push:SetAlpha(0.5)
 		button:SetPushedTexture(button.Push)
 		button.Disabled = button:CreateTexture(nil, "ARTWORK")
 		button.Disabled:SetWidth(16)
@@ -573,15 +576,18 @@ TEMPLATE.IconButton = function(button, cut)
 		button.Disabled:SetPoint("CENTER", 0, 0)
 		button.Disabled:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Disabled:SetTexCoord(unpack(Textures.Shuffler.coords))
+		button.Disabled:SetAlpha(0.5)
 		button:SetDisabledTexture(button.Disabled)
 		Desaturation(button.Disabled, true)
 	elseif cut == 3 then
+		button.Border:SetAlpha(0.5)
 		button.Normal = button:CreateTexture(nil, "ARTWORK")
 		button.Normal:SetWidth(11)
 		button.Normal:SetHeight(4)
 		button.Normal:SetPoint("CENTER", 0, 0)
 		button.Normal:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Normal:SetTexCoord(unpack(Textures.ShufflerFlat.coords))
+		button.Normal:SetAlpha(0.5)
 		button:SetNormalTexture(button.Normal)
 		button.Push = button:CreateTexture(nil, "ARTWORK")
 		button.Push:SetWidth(9)
@@ -589,6 +595,7 @@ TEMPLATE.IconButton = function(button, cut)
 		button.Push:SetPoint("CENTER", 0, 0)
 		button.Push:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Push:SetTexCoord(unpack(Textures.ShufflerFlat.coords))
+		button.Push:SetAlpha(0.5)
 		button:SetPushedTexture(button.Push)
 		button.Disabled = button:CreateTexture(nil, "ARTWORK")
 		button.Disabled:SetWidth(11)
@@ -596,6 +603,7 @@ TEMPLATE.IconButton = function(button, cut)
 		button.Disabled:SetPoint("CENTER", 0, 0)
 		button.Disabled:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Disabled:SetTexCoord(unpack(Textures.ShufflerFlat.coords))
+		button.Disabled:SetAlpha(0.5)
 		button:SetDisabledTexture(button.Disabled)
 		Desaturation(button.Disabled, true)
 	end
@@ -1958,7 +1966,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	-- show assist
 	GVAR.OptionsFrame.ShowAssist = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowAssist, 16, 4, L["Show Main Assist"])
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowAssist, 16, 4, L["Show Main Assist Target"])
 	GVAR.OptionsFrame.ShowAssist:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.ShowAssist:SetPoint("TOP", GVAR.OptionsFrame.ShowFlag, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.ShowAssist:SetChecked(BattlegroundTargets_Options.ButtonShowAssist[currentSize])
@@ -2114,7 +2122,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		end
 		local rangeInfoTxt = ""
 		rangeInfoTxt = rangeInfoTxt..rangeTypeName[1]..":\n"
-		rangeInfoTxt = rangeInfoTxt.." |cffffffff"..L["This option uses CombatLog scanning!"].."|r\n\n\n\n"
+		rangeInfoTxt = rangeInfoTxt.." |cffffffff"..L["This option uses CombatLog scanning."].."|r\n\n\n\n"
 		rangeInfoTxt = rangeInfoTxt..rangeTypeName[2]..":\n"
 		rangeInfoTxt = rangeInfoTxt.." |cffffffff"..L["This option uses a pre-defined spell to check range:"].."|r\n"
 		for i = 1, #classesINT do
@@ -2122,7 +2130,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 			if classesINT[i] == playerClassEN then
 				rangeInfoTxt = rangeInfoTxt..">>> "
 			end
-			rangeInfoTxt = rangeInfoTxt.." |cff"..ClassHexColor(classesINT[i])..LOCALIZED_CLASS_NAMES_MALE[ classesINT[i] ].."|r:  "..(minRange or "?").."-"..(maxRange or "?").."yd/m  |cffffffff"..(name or UNKNOWN).."|r  |cffbbbbbb(spellID="..ranges[ classesINT[i] ]..")|r"
+			rangeInfoTxt = rangeInfoTxt.." |cff"..ClassHexColor(classesINT[i])..LOCALIZED_CLASS_NAMES_MALE[ classesINT[i] ].."|r  "..(minRange or "?").."-"..(maxRange or "?").."  |cffffffff"..(name or UNKNOWN).."|r  |cffbbbbbb(spellID="..ranges[ classesINT[i] ]..")|r"
 			if classesINT[i] == playerClassEN then
 				rangeInfoTxt = rangeInfoTxt.." <<<"
 			end
@@ -3567,9 +3575,7 @@ function BattlegroundTargets:DisableConfigMode()
 	BattlegroundTargets:CheckPlayerFocus()
 
 	if BattlegroundTargets_Options.ButtonRangeCheck[currentSize] then
-		if not isDead then
-			BattlegroundTargets:UpdateRange(GetTime())
-		end
+		BattlegroundTargets:UpdateRange(GetTime())
 	end
 
 	if BattlegroundTargets_Options.ButtonShowFlag[currentSize] then
@@ -3996,9 +4002,7 @@ function BattlegroundTargets:UpdateLayout()
 	end
 	
 	if ButtonRangeCheck and not isConfig then
-		if not isDead then
-			BattlegroundTargets:UpdateRange(GetTime())
-		end
+		BattlegroundTargets:UpdateRange(GetTime())
 	end
 	
 end
@@ -4356,7 +4360,7 @@ function BattlegroundTargets:CheckPlayerTarget()
 		isTarget = ENEMY_Name2Button[targetName]
 	end
 
-	-- class_range CheckPlayerTarget
+	-- class_range (Check Player Target)
 	if rangeSpellName and BattlegroundTargets_Options.ButtonClassRangeCheck[currentSize] then
 
 		local curTime = GetTime()
@@ -4454,7 +4458,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID)
 
 	if unitID == "player" then
 		enemyID = "target"
-		if isDead then return end
 		friendName = UnitName("player")
 		enemyName, enemyRealm = UnitName(enemyID)
 		if enemyRealm and enemyRealm ~= "" then
@@ -4547,7 +4550,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID)
 		end
 	end
 
-	-- class_range CheckUnitTarget
+	-- class_range (Check Unit Target)
 	if rangeSpellName and BattlegroundTargets_Options.ButtonClassRangeCheck[currentSize] then
 		if enemyName and ENEMY_Name2Button[enemyName] and GVAR.TargetButton[ ENEMY_Name2Button[enemyName] ] then
 			if raidUnitID[unitID] then -- prevent double event trigger for partyXtarget and player unitIDs (raidXtarget is doing the same)
@@ -4636,7 +4639,7 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 		end
 	end
 
-	-- class_range CheckUnitHealth
+	-- class_range (Check Unit Health)
 	if rangeSpellName and BattlegroundTargets_Options.ButtonClassRangeCheck[currentSize] then
 		if raidUnitID[unitID] or playerUnitID[targetID] then
 
@@ -4869,8 +4872,7 @@ local function OnEvent(self, event, ...)
 
 	elseif event == "PLAYER_DEAD" then
 		if not inBattleground then return end
-		isDead = true
-		BattlegroundTargets:ClearRangeData()
+		isDead = false
 	elseif event == "PLAYER_UNGHOST" then
 		if not inBattleground then return end
 		isDead = false
