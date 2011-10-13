@@ -22,7 +22,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Show Target"] = "대상 표시",
 ["Show Focus"] = "주시 대상 표시",
 ["Show Flag Carrier"] = "깃발 운반자 표시",
-["Show Main Assist Target"] = true,--["Show Main Assist"] = "지원공격 전담 표시",
+["Show Main Assist Target"] = "지원공격 전담 대상 표시",
 ["Show Target Count"] = "대상 카운트 표시",
 ["Show Health Bar"] = "생명력 바 표시",
 ["Show Percent"] = "백분율 표시",
