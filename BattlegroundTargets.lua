@@ -4617,28 +4617,28 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 	-- health
 	if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] then
 		local maxHealth = UnitHealthMax(targetID)
-		if not maxHealth then return end
+		if maxHealth then
+			local health = UnitHealth(targetID)
+			if health then
+				local width = 0.01
+				local percent = 0
+				if maxHealth > 0 and health > 0 then
+					local hvalue = maxHealth / health
+					width = healthBarWidth / hvalue
+					width = math_max(0.01, width)
+					width = math_min(healthBarWidth, width)
+					percent = math_floor( (100/hvalue) + 0.5 )
+					percent = math_max(0, percent)
+					percent = math_min(100, percent)
+				end
 
-		local health = UnitHealth(targetID)
-		if not health then return end
+				ENEMY_Name2Percent[targetName] = percent
 
-		local width = 0.01
-		local percent = 0
-		if maxHealth > 0 and health > 0 then
-			local hvalue = maxHealth / health
-			width = healthBarWidth / hvalue
-			width = math_max(0.01, width)
-			width = math_min(healthBarWidth, width)
-			percent = math_floor( (100/hvalue) + 0.5 )
-			percent = math_max(0, percent)
-			percent = math_min(100, percent)
-		end
-
-		ENEMY_Name2Percent[targetName] = percent
-
-		GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].HealthBar:SetWidth( width )
-		if BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then
-			GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].HealthText:SetText( percent )
+				GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].HealthBar:SetWidth( width )
+				if BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then
+					GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].HealthText:SetText( percent )
+				end
+			end
 		end
 	end
 
