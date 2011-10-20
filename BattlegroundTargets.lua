@@ -221,11 +221,18 @@ local bgSizeINT = {
 }
 
 local sortBy = {
-	[1] = ROLE.." / "..CLASS.." / "..NAME,
+	[1] = ROLE.." / "..CLASS.."* / "..NAME,
 	[2] = ROLE.." / "..NAME,
-	[3] = CLASS.." / "..ROLE.." / "..NAME,
-	[4] = CLASS.." / "..NAME,
+	[3] = CLASS.."* / "..ROLE.." / "..NAME,
+	[4] = CLASS.."* / "..NAME,
 	[5] = NAME,
+}
+
+local locale = GetLocale()
+local sortDetail = {
+	[1] = "*"..CLASS.." ("..locale..")",
+	[2] = "*"..CLASS.." (english)",
+	[3] = "*"..CLASS.." (Blizzard)",
 }
 
 local classcolors = {}
@@ -296,17 +303,25 @@ local classes = {
 	                       [4] = {role = _UNKNOWN, icon = nil}}}, -- unknown
 }
 
-local classesINT = {
- [1] = "DEATHKNIGHT",
- [2] = "DRUID",
- [3] = "HUNTER",
- [4] = "MAGE",
- [5] = "PALADIN",
- [6] = "PRIEST",
- [7] = "ROGUE",
- [8] = "SHAMAN",
- [9] = "WARLOCK",
-[10] = "WARRIOR",
+local classes_LOCALIZED = {}
+FillLocalizedClassList(classes_LOCALIZED, false)
+
+local classes_BLIZZ = {}
+for i = 1, #CLASS_SORT_ORDER do
+	classes_BLIZZ[ CLASS_SORT_ORDER[i] ] = i
+end
+
+local classesINT_LOCALIZED = { -- .cid .loc
+ [1] = {cid = "DEATHKNIGHT", blizz = classes_BLIZZ.DEATHKNIGHT or  2, eng = "Death Knight", loc = classes_LOCALIZED.DEATHKNIGHT or "Death Knight"},
+ [2] = {cid = "DRUID",       blizz = classes_BLIZZ.DRUID       or  6, eng = "Druid",        loc = classes_LOCALIZED.DRUID or "Druid"},
+ [3] = {cid = "HUNTER",      blizz = classes_BLIZZ.HUNTER      or 10, eng = "Hunter",       loc = classes_LOCALIZED.HUNTER or "Hunter"},
+ [4] = {cid = "MAGE",        blizz = classes_BLIZZ.MAGE        or  8, eng = "Mage",         loc = classes_LOCALIZED.MAGE or "Mage"},
+ [5] = {cid = "PALADIN",     blizz = classes_BLIZZ.PALADIN     or  3, eng = "Paladin",      loc = classes_LOCALIZED.PALADIN or "Paladin"},
+ [6] = {cid = "PRIEST",      blizz = classes_BLIZZ.PRIEST      or  4, eng = "Priest",       loc = classes_LOCALIZED.PRIEST or "Priest"},
+ [7] = {cid = "ROGUE",       blizz = classes_BLIZZ.ROGUE       or  7, eng = "Rogue",        loc = classes_LOCALIZED.ROGUE or "Rogue"},
+ [8] = {cid = "SHAMAN",      blizz = classes_BLIZZ.SHAMAN      or  5, eng = "Shaman",       loc = classes_LOCALIZED.SHAMAN or "Shaman"},
+ [9] = {cid = "WARLOCK",     blizz = classes_BLIZZ.WARLOCK     or  9, eng = "Warlock",      loc = classes_LOCALIZED.WARLOCK or "Warlock"},
+[10] = {cid = "WARRIOR",     blizz = classes_BLIZZ.WARRIOR     or  1, eng = "Warrior",      loc = classes_LOCALIZED.WARRIOR or "Warrior"},
 }
 
 local ranges = {}
@@ -397,7 +412,12 @@ local function Desaturation(texture, desaturation)
 end
 
 local function SortByPullDownFunc(value) -- PDFUNC
-	BattlegroundTargets_Options.ButtonSortBySize[currentSize] = value
+	BattlegroundTargets_Options.ButtonSortBy[currentSize] = value
+	BattlegroundTargets:EnableConfigMode()
+end
+
+local function SortDetailPullDownFunc(value) -- PDFUNC
+	BattlegroundTargets_Options.ButtonSortDetail[currentSize] = value
 	BattlegroundTargets:EnableConfigMode()
 end
 
@@ -973,6 +993,9 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 		if contentName == "SortBy" then
 			button.PullDownMenu.Button[i].Text:SetText(sortBy[i])
 			button.PullDownMenu.Button[i].value1 = i
+		elseif contentName == "SortDetail" then
+			button.PullDownMenu.Button[i].Text:SetText(sortDetail[i])
+			button.PullDownMenu.Button[i].value1 = i	
 		elseif contentName == "RangeType" then
 			button.PullDownMenu.Button[i].Text:SetText(rangeTypeName[i])
 			button.PullDownMenu.Button[i].value1 = i
@@ -1029,7 +1052,7 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if BattlegroundTargets_Options.version == nil then
-		BattlegroundTargets_Options.version = 5
+		BattlegroundTargets_Options.version = 6
 	end
 
 	if BattlegroundTargets_Options.version == 1 then
@@ -1102,7 +1125,41 @@ function BattlegroundTargets:InitOptions()
 		end
 		BattlegroundTargets_Options.version = 5
 	end
-	
+
+	if BattlegroundTargets_Options.version == 5 then
+		if BattlegroundTargets_Options.ButtonSortBySize then -- rename ButtonSortBySize to ButtonSortBy
+			BattlegroundTargets_Options.ButtonSortBy = {}
+			if BattlegroundTargets_Options.ButtonSortBySize[10] then BattlegroundTargets_Options.ButtonSortBy[10] = BattlegroundTargets_Options.ButtonSortBySize[10] end
+			if BattlegroundTargets_Options.ButtonSortBySize[15] then BattlegroundTargets_Options.ButtonSortBy[15] = BattlegroundTargets_Options.ButtonSortBySize[15] end
+			if BattlegroundTargets_Options.ButtonSortBySize[40] then BattlegroundTargets_Options.ButtonSortBy[40] = BattlegroundTargets_Options.ButtonSortBySize[40] end
+			BattlegroundTargets_Options.ButtonSortBySize = nil
+		end
+		local x
+		if BattlegroundTargets_Options.ButtonTargetScale then
+			if BattlegroundTargets_Options.ButtonTargetScale[10] > 2 then x=1 BattlegroundTargets_Options.ButtonTargetScale[10] = 2 end
+			if BattlegroundTargets_Options.ButtonTargetScale[15] > 2 then x=1 BattlegroundTargets_Options.ButtonTargetScale[15] = 2 end
+			if BattlegroundTargets_Options.ButtonTargetScale[40] > 2 then x=1 BattlegroundTargets_Options.ButtonTargetScale[40] = 2 end
+		end
+		if BattlegroundTargets_Options.ButtonFocusScale then
+			if BattlegroundTargets_Options.ButtonFocusScale[10] > 2 then x=1 BattlegroundTargets_Options.ButtonFocusScale[10] = 2 end
+			if BattlegroundTargets_Options.ButtonFocusScale[15] > 2 then x=1 BattlegroundTargets_Options.ButtonFocusScale[15] = 2 end
+			if BattlegroundTargets_Options.ButtonFocusScale[40] > 2 then x=1 BattlegroundTargets_Options.ButtonFocusScale[40] = 2 end
+		end
+		if BattlegroundTargets_Options.ButtonFlagScale then
+			if BattlegroundTargets_Options.ButtonFlagScale[10] > 2 then x=1 BattlegroundTargets_Options.ButtonFlagScale[10] = 2 end
+			if BattlegroundTargets_Options.ButtonFlagScale[15] > 2 then x=1 BattlegroundTargets_Options.ButtonFlagScale[15] = 2 end
+			if BattlegroundTargets_Options.ButtonFlagScale[40] > 2 then x=1 BattlegroundTargets_Options.ButtonFlagScale[40] = 2 end
+		end
+		if BattlegroundTargets_Options.ButtonAssistScale then
+			if BattlegroundTargets_Options.ButtonAssistScale[10] > 2 then x=1 BattlegroundTargets_Options.ButtonAssistScale[10] = 2 end
+			if BattlegroundTargets_Options.ButtonAssistScale[15] > 2 then x=1 BattlegroundTargets_Options.ButtonAssistScale[15] = 2 end
+			if BattlegroundTargets_Options.ButtonAssistScale[40] > 2 then x=1 BattlegroundTargets_Options.ButtonAssistScale[40] = 2 end
+		end
+		if x then
+			Print("Icon scale update! 200% is now maximum. Please check Configuration.")
+		end
+		BattlegroundTargets_Options.version = 6
+	end
 
 	if BattlegroundTargets_Options.pos                           == nil then BattlegroundTargets_Options.pos                           = {}    end
 	if BattlegroundTargets_Options.MinimapButton                 == nil then BattlegroundTargets_Options.MinimapButton                 = false end
@@ -1141,7 +1198,8 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonAvgRangeCheck           == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck           = {}    end
 	if BattlegroundTargets_Options.ButtonClassRangeCheck         == nil then BattlegroundTargets_Options.ButtonClassRangeCheck         = {}    end
 	if BattlegroundTargets_Options.ButtonRangeAlpha              == nil then BattlegroundTargets_Options.ButtonRangeAlpha              = {}    end
-	if BattlegroundTargets_Options.ButtonSortBySize              == nil then BattlegroundTargets_Options.ButtonSortBySize              = {}    end
+	if BattlegroundTargets_Options.ButtonSortBy                  == nil then BattlegroundTargets_Options.ButtonSortBy                  = {}    end
+	if BattlegroundTargets_Options.ButtonSortDetail              == nil then BattlegroundTargets_Options.ButtonSortDetail              = {}    end
 	if BattlegroundTargets_Options.ButtonFontSize                == nil then BattlegroundTargets_Options.ButtonFontSize                = {}    end
 	if BattlegroundTargets_Options.ButtonScale                   == nil then BattlegroundTargets_Options.ButtonScale                   = {}    end
 	if BattlegroundTargets_Options.ButtonWidth                   == nil then BattlegroundTargets_Options.ButtonWidth                   = {}    end
@@ -1152,11 +1210,11 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonHideRealm[10]           == nil then BattlegroundTargets_Options.ButtonHideRealm[10]           = false end
 	if BattlegroundTargets_Options.ButtonShowLeader[10]          == nil then BattlegroundTargets_Options.ButtonShowLeader[10]          = false end
 	if BattlegroundTargets_Options.ButtonShowTarget[10]          == nil then BattlegroundTargets_Options.ButtonShowTarget[10]          = true  end
-	if BattlegroundTargets_Options.ButtonTargetScale[10]         == nil then BattlegroundTargets_Options.ButtonTargetScale[10]         = 1.5   end
+	if BattlegroundTargets_Options.ButtonTargetScale[10]         == nil then BattlegroundTargets_Options.ButtonTargetScale[10]         = 1.2   end
 	if BattlegroundTargets_Options.ButtonTargetPosition[10]      == nil then BattlegroundTargets_Options.ButtonTargetPosition[10]      = 100   end
 	if BattlegroundTargets_Options.ButtonShowAssist[10]          == nil then BattlegroundTargets_Options.ButtonShowAssist[10]          = false end
 	if BattlegroundTargets_Options.ButtonAssistScale[10]         == nil then BattlegroundTargets_Options.ButtonAssistScale[10]         = 1.5   end
-	if BattlegroundTargets_Options.ButtonAssistPosition[10]      == nil then BattlegroundTargets_Options.ButtonAssistPosition[10]      = 75    end
+	if BattlegroundTargets_Options.ButtonAssistPosition[10]      == nil then BattlegroundTargets_Options.ButtonAssistPosition[10]      = 100   end
 	if BattlegroundTargets_Options.ButtonShowFocus[10]           == nil then BattlegroundTargets_Options.ButtonShowFocus[10]           = false end
 	if BattlegroundTargets_Options.ButtonFocusScale[10]          == nil then BattlegroundTargets_Options.ButtonFocusScale[10]          = 1     end
 	if BattlegroundTargets_Options.ButtonFocusPosition[10]       == nil then BattlegroundTargets_Options.ButtonFocusPosition[10]       = 65    end
@@ -1170,7 +1228,8 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonAvgRangeCheck[10]       == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[10]       = false end
 	if BattlegroundTargets_Options.ButtonClassRangeCheck[10]     == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[10]     = true  end
 	if BattlegroundTargets_Options.ButtonRangeAlpha[10]          == nil then BattlegroundTargets_Options.ButtonRangeAlpha[10]          = 1     end
-	if BattlegroundTargets_Options.ButtonSortBySize[10]          == nil then BattlegroundTargets_Options.ButtonSortBySize[10]          = 1     end
+	if BattlegroundTargets_Options.ButtonSortBy[10]              == nil then BattlegroundTargets_Options.ButtonSortBy[10]              = 1     end
+	if BattlegroundTargets_Options.ButtonSortDetail[10]          == nil then BattlegroundTargets_Options.ButtonSortDetail[10]          = 3     end
 	if BattlegroundTargets_Options.ButtonFontSize[10]            == nil then BattlegroundTargets_Options.ButtonFontSize[10]            = 12    end
 	if BattlegroundTargets_Options.ButtonScale[10]               == nil then BattlegroundTargets_Options.ButtonScale[10]               = 1     end
 	if BattlegroundTargets_Options.ButtonWidth[10]               == nil then BattlegroundTargets_Options.ButtonWidth[10]               = 160   end
@@ -1181,11 +1240,11 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonHideRealm[15]           == nil then BattlegroundTargets_Options.ButtonHideRealm[15]           = false end
 	if BattlegroundTargets_Options.ButtonShowLeader[15]          == nil then BattlegroundTargets_Options.ButtonShowLeader[15]          = false end
 	if BattlegroundTargets_Options.ButtonShowTarget[15]          == nil then BattlegroundTargets_Options.ButtonShowTarget[15]          = true  end
-	if BattlegroundTargets_Options.ButtonTargetScale[15]         == nil then BattlegroundTargets_Options.ButtonTargetScale[15]         = 1.5   end
+	if BattlegroundTargets_Options.ButtonTargetScale[15]         == nil then BattlegroundTargets_Options.ButtonTargetScale[15]         = 1.2   end
 	if BattlegroundTargets_Options.ButtonTargetPosition[15]      == nil then BattlegroundTargets_Options.ButtonTargetPosition[15]      = 100   end
 	if BattlegroundTargets_Options.ButtonShowAssist[15]          == nil then BattlegroundTargets_Options.ButtonShowAssist[15]          = false end
 	if BattlegroundTargets_Options.ButtonAssistScale[15]         == nil then BattlegroundTargets_Options.ButtonAssistScale[15]         = 1.5   end
-	if BattlegroundTargets_Options.ButtonAssistPosition[15]      == nil then BattlegroundTargets_Options.ButtonAssistPosition[15]      = 75    end
+	if BattlegroundTargets_Options.ButtonAssistPosition[15]      == nil then BattlegroundTargets_Options.ButtonAssistPosition[15]      = 100   end
 	if BattlegroundTargets_Options.ButtonShowFocus[15]           == nil then BattlegroundTargets_Options.ButtonShowFocus[15]           = false end
 	if BattlegroundTargets_Options.ButtonFocusScale[15]          == nil then BattlegroundTargets_Options.ButtonFocusScale[15]          = 1     end
 	if BattlegroundTargets_Options.ButtonFocusPosition[15]       == nil then BattlegroundTargets_Options.ButtonFocusPosition[15]       = 65    end
@@ -1199,7 +1258,8 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonAvgRangeCheck[15]       == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[15]       = false end
 	if BattlegroundTargets_Options.ButtonClassRangeCheck[15]     == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[15]     = true  end
 	if BattlegroundTargets_Options.ButtonRangeAlpha[15]          == nil then BattlegroundTargets_Options.ButtonRangeAlpha[15]          = 1     end
-	if BattlegroundTargets_Options.ButtonSortBySize[15]          == nil then BattlegroundTargets_Options.ButtonSortBySize[15]          = 1     end
+	if BattlegroundTargets_Options.ButtonSortBy[15]              == nil then BattlegroundTargets_Options.ButtonSortBy[15]              = 1     end
+	if BattlegroundTargets_Options.ButtonSortDetail[15]          == nil then BattlegroundTargets_Options.ButtonSortDetail[15]          = 3     end
 	if BattlegroundTargets_Options.ButtonFontSize[15]            == nil then BattlegroundTargets_Options.ButtonFontSize[15]            = 12    end
 	if BattlegroundTargets_Options.ButtonScale[15]               == nil then BattlegroundTargets_Options.ButtonScale[15]               = 1     end
 	if BattlegroundTargets_Options.ButtonWidth[15]               == nil then BattlegroundTargets_Options.ButtonWidth[15]               = 160   end
@@ -1228,7 +1288,8 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonAvgRangeCheck[40]       == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[40]       = false end
 	if BattlegroundTargets_Options.ButtonClassRangeCheck[40]     == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[40]     = true  end
 	if BattlegroundTargets_Options.ButtonRangeAlpha[40]          == nil then BattlegroundTargets_Options.ButtonRangeAlpha[40]          = 1     end
-	if BattlegroundTargets_Options.ButtonSortBySize[40]          == nil then BattlegroundTargets_Options.ButtonSortBySize[40]          = 1     end
+	if BattlegroundTargets_Options.ButtonSortBy[40]              == nil then BattlegroundTargets_Options.ButtonSortBy[40]              = 1     end
+	if BattlegroundTargets_Options.ButtonSortDetail[40]          == nil then BattlegroundTargets_Options.ButtonSortDetail[40]          = 3     end
 	if BattlegroundTargets_Options.ButtonFontSize[40]            == nil then BattlegroundTargets_Options.ButtonFontSize[40]            = 10    end
 	if BattlegroundTargets_Options.ButtonScale[40]               == nil then BattlegroundTargets_Options.ButtonScale[40]               = 0.9   end
 	if BattlegroundTargets_Options.ButtonWidth[40]               == nil then BattlegroundTargets_Options.ButtonWidth[40]               = 80    end
@@ -1800,7 +1861,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- target indicator scale
 	GVAR.OptionsFrame.TargetScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.TargetScaleSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.TargetScaleSlider, 80, 10, 100, 250, BattlegroundTargets_Options.ButtonTargetScale[currentSize]*100,
+	TEMPLATE.Slider(GVAR.OptionsFrame.TargetScaleSlider, 80, 10, 100, 200, BattlegroundTargets_Options.ButtonTargetScale[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonTargetScale[currentSize] = value/100
 		GVAR.OptionsFrame.TargetScaleSliderText:SetText((BattlegroundTargets_Options.ButtonTargetScale[currentSize]*100).."%")
@@ -1868,7 +1929,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- focus indicator scale
 	GVAR.OptionsFrame.FocusScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.FocusScaleSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.FocusScaleSlider, 80, 10, 100, 250, BattlegroundTargets_Options.ButtonFocusScale[currentSize]*100,
+	TEMPLATE.Slider(GVAR.OptionsFrame.FocusScaleSlider, 80, 10, 100, 200, BattlegroundTargets_Options.ButtonFocusScale[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonFocusScale[currentSize] = value/100
 		GVAR.OptionsFrame.FocusScaleSliderText:SetText((BattlegroundTargets_Options.ButtonFocusScale[currentSize]*100).."%")
@@ -1936,7 +1997,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- flag scale
 	GVAR.OptionsFrame.FlagScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.FlagScaleSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.FlagScaleSlider, 80, 10, 100, 250, BattlegroundTargets_Options.ButtonFlagScale[currentSize]*100,
+	TEMPLATE.Slider(GVAR.OptionsFrame.FlagScaleSlider, 80, 10, 100, 200, BattlegroundTargets_Options.ButtonFlagScale[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonFlagScale[currentSize] = value/100
 		GVAR.OptionsFrame.FlagScaleSliderText:SetText((BattlegroundTargets_Options.ButtonFlagScale[currentSize]*100).."%")
@@ -2004,7 +2065,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- assist scale
 	GVAR.OptionsFrame.AssistScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.AssistScaleSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.AssistScaleSlider, 80, 10, 100, 250, BattlegroundTargets_Options.ButtonAssistScale[currentSize]*100,
+	TEMPLATE.Slider(GVAR.OptionsFrame.AssistScaleSlider, 80, 10, 100, 200, BattlegroundTargets_Options.ButtonAssistScale[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonAssistScale[currentSize] = value/100
 		GVAR.OptionsFrame.AssistScaleSliderText:SetText((BattlegroundTargets_Options.ButtonAssistScale[currentSize]*100).."%")
@@ -2128,13 +2189,14 @@ function BattlegroundTargets:CreateOptionsFrame()
 		rangeInfoTxt = rangeInfoTxt.." |cffffffff"..L["This option uses CombatLog scanning."].."|r\n\n\n\n"
 		rangeInfoTxt = rangeInfoTxt..rangeTypeName[2]..":\n"
 		rangeInfoTxt = rangeInfoTxt.." |cffffffff"..L["This option uses a pre-defined spell to check range:"].."|r\n"
-		for i = 1, #classesINT do
-			local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(ranges[ classesINT[i] ])
-			if classesINT[i] == playerClassEN then
+		table_sort(classesINT_LOCALIZED, function(a, b) if a.loc < b.loc then return true end end)
+		for i = 1, #classesINT_LOCALIZED do
+			local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(ranges[ classesINT_LOCALIZED[i].cid ])
+			if classesINT_LOCALIZED[i].cid == playerClassEN then
 				rangeInfoTxt = rangeInfoTxt..">>> "
 			end
-			rangeInfoTxt = rangeInfoTxt.." |cff"..ClassHexColor(classesINT[i])..LOCALIZED_CLASS_NAMES_MALE[ classesINT[i] ].."|r  "..(minRange or "?").."-"..(maxRange or "?").."  |cffffffff"..(name or UNKNOWN).."|r  |cffbbbbbb(spellID="..ranges[ classesINT[i] ]..")|r"
-			if classesINT[i] == playerClassEN then
+			rangeInfoTxt = rangeInfoTxt.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r  "..(minRange or "?").."-"..(maxRange or "?").."  |cffffffff"..(name or UNKNOWN).."|r  |cffbbbbbb(spellID="..ranges[ classesINT_LOCALIZED[i].cid ]..")|r"
+			if classesINT_LOCALIZED[i].cid == playerClassEN then
 				rangeInfoTxt = rangeInfoTxt.." <<<"
 			end
 			rangeInfoTxt = rangeInfoTxt.."\n"
@@ -2178,13 +2240,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.RangeCheckInfo.TextFrame = CreateFrame("Frame", nil, GVAR.OptionsFrame)
 	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.RangeCheckInfo.TextFrame)
 	GVAR.OptionsFrame.RangeCheckInfo.TextFrame:SetToplevel(true)
-	--GVAR.OptionsFrame.RangeCheckInfo.TextFrame:SetWidth(450)
-	--GVAR.OptionsFrame.RangeCheckInfo.TextFrame:SetHeight(300)
 	GVAR.OptionsFrame.RangeCheckInfo.TextFrame:SetPoint("BOTTOM", GVAR.OptionsFrame.RangeCheckInfo.Texture, "TOP", 0, 0)
 	GVAR.OptionsFrame.RangeCheckInfo.TextFrame:Hide()
 	GVAR.OptionsFrame.RangeCheckInfo.Text = GVAR.OptionsFrame.RangeCheckInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	--GVAR.OptionsFrame.RangeCheckInfo.Text:SetWidth(450)
-	--GVAR.OptionsFrame.RangeCheckInfo.Text:SetHeight(300)
 	GVAR.OptionsFrame.RangeCheckInfo.Text:SetPoint("CENTER", 0, 0)
 	GVAR.OptionsFrame.RangeCheckInfo.Text:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.RangeCheckInfo.Text:SetText(rangeInfoTxt)
@@ -2260,7 +2318,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	TEMPLATE.PullDownMenu(
 		GVAR.OptionsFrame.SortByPullDown,
 		"SortBy",
-		sortBy[ BattlegroundTargets_Options.ButtonSortBySize[currentSize] ],
+		sortBy[ BattlegroundTargets_Options.ButtonSortBy[currentSize] ],
 		0,
 		#sortBy,
 		SortByPullDownFunc
@@ -2268,6 +2326,93 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.SortByPullDown:SetPoint("LEFT", GVAR.OptionsFrame.SortByTitle, "RIGHT", 10, 0)
 	GVAR.OptionsFrame.SortByPullDown:SetHeight(18)
 	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
+
+	-- sort detail
+	GVAR.OptionsFrame.SortDetailPullDown = CreateFrame("Button", nil, GVAR.OptionsFrame)
+	TEMPLATE.PullDownMenu(
+		GVAR.OptionsFrame.SortDetailPullDown,
+		"SortDetail",
+		sortBy[ BattlegroundTargets_Options.ButtonSortDetail[currentSize] ],
+		0,
+		#sortDetail,
+		SortDetailPullDownFunc
+	)
+	GVAR.OptionsFrame.SortDetailPullDown:SetPoint("LEFT", GVAR.OptionsFrame.SortByPullDown, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.SortDetailPullDown:SetHeight(18)
+	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
+
+	-- sort info
+		----- text
+		local infoTxt1 = sortDetail[1]..":\n"
+		table_sort(classesINT_LOCALIZED, function(a, b) if a.loc < b.loc then return true end end)
+		for i = 1, #classesINT_LOCALIZED do
+			infoTxt1 = infoTxt1.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r"
+			if i <= #classesINT_LOCALIZED then
+				infoTxt1 = infoTxt1.."\n"
+			end
+		end
+		local infoTxt2 = sortDetail[2]..":\n"
+		table_sort(classesINT_LOCALIZED, function(a, b) if a.eng < b.eng then return true end end)
+		for i = 1, #classesINT_LOCALIZED do
+			infoTxt2 = infoTxt2.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.." ("..classesINT_LOCALIZED[i].eng..")|r"
+			if i <= #classesINT_LOCALIZED then
+				infoTxt2 = infoTxt2.."\n"
+			end
+		end
+		local infoTxt3 = sortDetail[3]..":\n"
+		table_sort(classesINT_LOCALIZED, function(a, b) if a.blizz < b.blizz then return true end end)
+		for i = 1, #classesINT_LOCALIZED do
+			infoTxt3 = infoTxt3.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r"
+			if i <= #classesINT_LOCALIZED then
+				infoTxt3 = infoTxt3.."\n"
+			end
+		end
+		----- text
+	GVAR.OptionsFrame.SortInfo = CreateFrame("Button", nil, GVAR.OptionsFrame)
+	GVAR.OptionsFrame.SortInfo:SetWidth(16)
+	GVAR.OptionsFrame.SortInfo:SetHeight(16)
+	GVAR.OptionsFrame.SortInfo:SetPoint("LEFT", GVAR.OptionsFrame.SortDetailPullDown, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.SortInfo.Texture = GVAR.OptionsFrame.SortInfo:CreateTexture(nil, "ARTWORK")
+	GVAR.OptionsFrame.SortInfo.Texture:SetWidth(16)
+	GVAR.OptionsFrame.SortInfo.Texture:SetHeight(16)
+	GVAR.OptionsFrame.SortInfo.Texture:SetPoint("LEFT", 0, 0)
+	GVAR.OptionsFrame.SortInfo.Texture:SetTexture("Interface\\FriendsFrame\\InformationIcon")
+	GVAR.OptionsFrame.SortInfo.TextFrame = CreateFrame("Frame", nil, GVAR.OptionsFrame.SortInfo)
+	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.SortInfo.TextFrame)
+	GVAR.OptionsFrame.SortInfo.TextFrame:SetToplevel(true)
+	GVAR.OptionsFrame.SortInfo.TextFrame:SetPoint("BOTTOM", GVAR.OptionsFrame.SortInfo.Texture, "TOP", 0, 0)
+	GVAR.OptionsFrame.SortInfo.TextFrame:Hide()
+	GVAR.OptionsFrame.SortInfo.Text1 = GVAR.OptionsFrame.SortInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.SortInfo.Text1:SetPoint("TOPLEFT", GVAR.OptionsFrame.SortInfo.TextFrame, "TOPLEFT", 10, -10)
+	GVAR.OptionsFrame.SortInfo.Text1:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SortInfo.Text1:SetText(infoTxt1)
+	GVAR.OptionsFrame.SortInfo.Text1:SetTextColor(1, 1, 0.49, 1)
+	GVAR.OptionsFrame.SortInfo.Text2 = GVAR.OptionsFrame.SortInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.SortInfo.Text2:SetPoint("LEFT", GVAR.OptionsFrame.SortInfo.Text1, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.SortInfo.Text2:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SortInfo.Text2:SetText(infoTxt2)
+	GVAR.OptionsFrame.SortInfo.Text2:SetTextColor(1, 1, 0.49, 1)
+	GVAR.OptionsFrame.SortInfo.Text3 = GVAR.OptionsFrame.SortInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.SortInfo.Text3:SetPoint("LEFT", GVAR.OptionsFrame.SortInfo.Text2, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.SortInfo.Text3:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SortInfo.Text3:SetText(infoTxt3)
+	GVAR.OptionsFrame.SortInfo.Text3:SetTextColor(1, 1, 0.49, 1)
+	GVAR.OptionsFrame.SortInfo:SetScript("OnEnter", function() GVAR.OptionsFrame.SortInfo.TextFrame:Show() end)
+	GVAR.OptionsFrame.SortInfo:SetScript("OnLeave", function() GVAR.OptionsFrame.SortInfo.TextFrame:Hide() end)
+		-----
+		local txtWidth1 = GVAR.OptionsFrame.SortInfo.Text1:GetStringWidth()
+		local txtWidth2 = GVAR.OptionsFrame.SortInfo.Text2:GetStringWidth()
+		local txtWidth3 = GVAR.OptionsFrame.SortInfo.Text3:GetStringWidth()
+		GVAR.OptionsFrame.SortInfo.Text1:SetWidth(txtWidth1+10)
+		GVAR.OptionsFrame.SortInfo.Text2:SetWidth(txtWidth2+10)
+		GVAR.OptionsFrame.SortInfo.Text3:SetWidth(txtWidth3+10)
+		GVAR.OptionsFrame.SortInfo.TextFrame:SetWidth(10+ txtWidth1+10 + txtWidth2+10 + txtWidth3+10 +10)
+		local txtHeight = GVAR.OptionsFrame.SortInfo.Text1:GetStringHeight()
+		GVAR.OptionsFrame.SortInfo.Text1:SetHeight(txtHeight+10)
+		GVAR.OptionsFrame.SortInfo.Text2:SetHeight(txtHeight+10)
+		GVAR.OptionsFrame.SortInfo.Text3:SetHeight(txtHeight+10)
+		GVAR.OptionsFrame.SortInfo.TextFrame:SetHeight(10+ txtHeight+10 +10)
+		-----
 
 
 
@@ -2560,7 +2705,16 @@ function BattlegroundTargets:SetOptions()
 	GVAR.OptionsFrame.RangeAlphaSlider:SetValue(BattlegroundTargets_Options.ButtonRangeAlpha[currentSize]*100)
 	GVAR.OptionsFrame.RangeAlphaValue:SetText((BattlegroundTargets_Options.ButtonRangeAlpha[currentSize]*100).."%")
 
-	GVAR.OptionsFrame.SortByPullDown.PullDownButtonText:SetText(sortBy[ BattlegroundTargets_Options.ButtonSortBySize[currentSize] ])
+	GVAR.OptionsFrame.SortByPullDown.PullDownButtonText:SetText(sortBy[ BattlegroundTargets_Options.ButtonSortBy[currentSize] ])
+	GVAR.OptionsFrame.SortDetailPullDown.PullDownButtonText:SetText(sortDetail[ BattlegroundTargets_Options.ButtonSortDetail[currentSize] ])
+	local ButtonSortBy = BattlegroundTargets_Options.ButtonSortBy[currentSize]
+	if ButtonSortBy == 1 or ButtonSortBy == 3 or ButtonSortBy == 4 then
+		GVAR.OptionsFrame.SortDetailPullDown:Show()
+		GVAR.OptionsFrame.SortInfo:Show()
+	else
+		GVAR.OptionsFrame.SortDetailPullDown:Hide()
+		GVAR.OptionsFrame.SortInfo:Hide()
+	end
 
 	GVAR.OptionsFrame.FontSlider:SetValue(BattlegroundTargets_Options.ButtonFontSize[currentSize])
 	GVAR.OptionsFrame.FontValue:SetText(BattlegroundTargets_Options.ButtonFontSize[currentSize])
@@ -2664,6 +2818,8 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
 		GVAR.OptionsFrame.SortByTitle:SetTextColor(1, 1, 1, 1)
+		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
+		GVAR.OptionsFrame.SortInfo:Enable() Desaturation(GVAR.OptionsFrame.SortInfo.Texture, false)
 
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontSlider)
 		GVAR.OptionsFrame.FontTitle:SetTextColor(1, 1, 1, 1)
@@ -2737,6 +2893,8 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
 		GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
+		GVAR.OptionsFrame.SortInfo:Disable() Desaturation(GVAR.OptionsFrame.SortInfo.Texture, true)
 
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontSlider)
 		GVAR.OptionsFrame.FontTitle:SetTextColor(0.5, 0.5, 0.5, 1)
@@ -2796,6 +2954,8 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
 	GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
+	GVAR.OptionsFrame.SortInfo:Disable() Desaturation(GVAR.OptionsFrame.SortInfo.Texture, true)
 
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontSlider)
 	GVAR.OptionsFrame.FontTitle:SetTextColor(0.5, 0.5, 0.5, 1)
@@ -3798,7 +3958,8 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	BattlegroundTargets_Options.ButtonAvgRangeCheck[destinationSize]     = BattlegroundTargets_Options.ButtonAvgRangeCheck[sourceSize]
 	BattlegroundTargets_Options.ButtonClassRangeCheck[destinationSize]   = BattlegroundTargets_Options.ButtonClassRangeCheck[sourceSize]
 	BattlegroundTargets_Options.ButtonRangeAlpha[destinationSize]        = BattlegroundTargets_Options.ButtonRangeAlpha[sourceSize]
-	BattlegroundTargets_Options.ButtonSortBySize[destinationSize]        = BattlegroundTargets_Options.ButtonSortBySize[sourceSize]
+	BattlegroundTargets_Options.ButtonSortBy[destinationSize]            = BattlegroundTargets_Options.ButtonSortBy[sourceSize]
+	BattlegroundTargets_Options.ButtonSortDetail[destinationSize]        = BattlegroundTargets_Options.ButtonSortDetail[sourceSize]
 	BattlegroundTargets_Options.ButtonFontSize[destinationSize]          = BattlegroundTargets_Options.ButtonFontSize[sourceSize]
 	BattlegroundTargets_Options.ButtonScale[destinationSize]             = BattlegroundTargets_Options.ButtonScale[sourceSize]
 	BattlegroundTargets_Options.ButtonWidth[destinationSize]             = BattlegroundTargets_Options.ButtonWidth[sourceSize]
@@ -3833,35 +3994,95 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:UpdateLayout()
 	local sortfunc
-	if BattlegroundTargets_Options.ButtonSortBySize[currentSize] == 1 then -- ROLE / CLASS / NAME
+	local ButtonSortBy = BattlegroundTargets_Options.ButtonSortBy[currentSize]
+	local ButtonSortDetail = BattlegroundTargets_Options.ButtonSortDetail[currentSize]
+	if ButtonSortBy == 1 then -- ROLE / CLASS / NAME
+
+		if ButtonSortDetail == 3 then -- ### 3
+			sortfunc = function(a, b)
+				if a.talentSpec == b.talentSpec then
+					if classes_BLIZZ[ a.classToken ] == classes_BLIZZ[ b.classToken ] then
+						if a.name < b.name then return true end
+					elseif classes_BLIZZ[ a.classToken ] < classes_BLIZZ[ b.classToken ] then return true end
+				elseif a.talentSpec < b.talentSpec then return true end
+			end
+		elseif ButtonSortDetail == 1 then -- ### 1
+			sortfunc = function(a, b)
+				if a.talentSpec == b.talentSpec then
+					if classes_LOCALIZED[ a.classToken ] == classes_LOCALIZED[ b.classToken ] then
+						if a.name < b.name then return true end
+					elseif classes_LOCALIZED[ a.classToken ] < classes_LOCALIZED[ b.classToken ] then return true end
+				elseif a.talentSpec < b.talentSpec then return true end
+			end
+		else -- ### 2
+			sortfunc = function(a, b)
+				if a.talentSpec == b.talentSpec then
+					if a.classToken == b.classToken then
+						if a.name < b.name then return true end
+					elseif a.classToken < b.classToken then return true end
+				elseif a.talentSpec < b.talentSpec then return true end
+			end
+		end
+
+	elseif ButtonSortBy == 2 then -- ROLE / NAME
+
 		sortfunc = function(a, b)
 			if a.talentSpec == b.talentSpec then
+				if a.name < b.name then return true end
+			elseif a.talentSpec < b.talentSpec then return true end
+		end
+
+	elseif ButtonSortBy == 3 then -- CLASS / ROLE / NAME
+
+		if ButtonSortDetail == 3 then -- ### 3
+			sortfunc = function(a, b)
+				if classes_BLIZZ[ a.classToken ] == classes_BLIZZ[ b.classToken ] then
+					if a.talentSpec == b.talentSpec then
+						if a.name < b.name then return true end
+					elseif a.talentSpec < b.talentSpec then return true end
+				elseif classes_BLIZZ[ a.classToken ] < classes_BLIZZ[ b.classToken ] then return true end
+			end
+		elseif ButtonSortDetail == 1 then -- ### 1
+			sortfunc = function(a, b)
+				if classes_LOCALIZED[ a.classToken ] == classes_LOCALIZED[ b.classToken ] then
+					if a.talentSpec == b.talentSpec then
+						if a.name < b.name then return true end
+					elseif a.talentSpec < b.talentSpec then return true end
+				elseif classes_LOCALIZED[ a.classToken ] < classes_LOCALIZED[ b.classToken ] then return true end
+			end
+		else -- ### 2
+			sortfunc = function(a, b)
+				if a.classToken == b.classToken then
+					if a.talentSpec == b.talentSpec then
+						if a.name < b.name then return true end
+					elseif a.talentSpec < b.talentSpec then return true end
+				elseif a.classToken < b.classToken then return true end
+			end
+		end
+
+	elseif ButtonSortBy == 4 then -- CLASS / NAME
+
+		if ButtonSortDetail == 3 then -- ### 3
+			sortfunc = function(a, b)
+				if classes_BLIZZ[ a.classToken ] == classes_BLIZZ[ b.classToken ] then
+					if a.name < b.name then return true end
+				elseif classes_BLIZZ[ a.classToken ] < classes_BLIZZ[ b.classToken ] then return true end
+			end
+		elseif ButtonSortDetail == 1 then -- ### 1
+			sortfunc = function(a, b)
+				if classes_LOCALIZED[ a.classToken ] == classes_LOCALIZED[ b.classToken ] then
+					if a.name < b.name then return true end
+				elseif classes_LOCALIZED[ a.classToken ] < classes_LOCALIZED[ b.classToken ] then return true end
+			end
+		else -- ### 2
+			sortfunc = function(a, b)
 				if a.classToken == b.classToken then
 					if a.name < b.name then return true end
 				elseif a.classToken < b.classToken then return true end
-			elseif a.talentSpec < b.talentSpec then return true end
+			end
 		end
-	elseif BattlegroundTargets_Options.ButtonSortBySize[currentSize] == 2 then -- ROLE / NAME
-		sortfunc = function(a, b)
-			if a.talentSpec == b.talentSpec then
-				if a.name < b.name then return true end
-			elseif a.talentSpec < b.talentSpec then return true end
-		end
-	elseif BattlegroundTargets_Options.ButtonSortBySize[currentSize] == 3 then -- CLASS / ROLE / NAME
-		sortfunc = function(a, b)
-			if a.classToken == b.classToken then
-				if a.talentSpec == b.talentSpec then
-					if a.name < b.name then return true end
-				elseif a.talentSpec < b.talentSpec then return true end
-			elseif a.classToken < b.classToken then return true end
-		end
-	elseif BattlegroundTargets_Options.ButtonSortBySize[currentSize] == 4 then -- CLASS / NAME
-		sortfunc = function(a, b)
-			if a.classToken == b.classToken then
-				if a.name < b.name then return true end
-			elseif a.classToken < b.classToken then return true end
-		end
-	elseif BattlegroundTargets_Options.ButtonSortBySize[currentSize] == 5 then -- NAME
+
+	else -- NAME
 		sortfunc = function(a, b)
 			if a.name < b.name then return true end
 		end
