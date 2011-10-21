@@ -75,7 +75,7 @@
 --   - Events:             - CHAT_MSG_BG_SYSTEM_HORDE                         --
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
 --                                                                            --
--- # No SendAdd0nMessage(): --------------------------------------- PRICELESS --
+-- # No SendAdd0nMessage(): ------------------------------------------------- --
 --   This AddOn does not use/need SendAdd0nMessage().                         --
 --   The use of SendAdd0nMessage() can give better results by transmitting    --
 --   information to other players. This has certain pros and cons.            --
@@ -130,7 +130,6 @@ local math_min                = _G.math.min
 local math_max                = _G.math.max
 local math_floor              = _G.math.floor
 local math_random             = _G.math.random
-local string_sub              = _G.string.sub
 local string_find             = _G.string.find
 local string_match            = _G.string.match
 local string_format           = _G.string.format
@@ -1094,7 +1093,7 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if BattlegroundTargets_Options.version == nil then
-		BattlegroundTargets_Options.version = 6
+		BattlegroundTargets_Options.version = 7
 	end
 
 	if BattlegroundTargets_Options.version == 1 then
@@ -1203,6 +1202,21 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 6
 	end
 
+	if BattlegroundTargets_Options.version == 6 then
+		if BattlegroundTargets_Options.ButtonShowHealthBar then -- update for health bar and health text independence
+			if BattlegroundTargets_Options.ButtonShowHealthText[10] == true and BattlegroundTargets_Options.ButtonShowHealthBar[10] == false then
+				BattlegroundTargets_Options.ButtonShowHealthText[10] = false
+			end
+			if BattlegroundTargets_Options.ButtonShowHealthText[15] == true and BattlegroundTargets_Options.ButtonShowHealthBar[15] == false then
+				BattlegroundTargets_Options.ButtonShowHealthText[15] = false
+			end
+			if BattlegroundTargets_Options.ButtonShowHealthText[40] == true and BattlegroundTargets_Options.ButtonShowHealthBar[40] == false then
+				BattlegroundTargets_Options.ButtonShowHealthText[40] = false
+			end
+		end
+		BattlegroundTargets_Options.version = 7
+	end
+
 	if BattlegroundTargets_Options.pos                           == nil then BattlegroundTargets_Options.pos                           = {}    end
 	if BattlegroundTargets_Options.MinimapButton                 == nil then BattlegroundTargets_Options.MinimapButton                 = false end
 	if BattlegroundTargets_Options.MinimapButtonPos              == nil then BattlegroundTargets_Options.MinimapButtonPos              = -90   end
@@ -1265,7 +1279,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonFlagPosition[10]        == nil then BattlegroundTargets_Options.ButtonFlagPosition[10]        = 55    end
 	if BattlegroundTargets_Options.ButtonShowTargetCount[10]     == nil then BattlegroundTargets_Options.ButtonShowTargetCount[10]     = false end
 	if BattlegroundTargets_Options.ButtonShowHealthBar[10]       == nil then BattlegroundTargets_Options.ButtonShowHealthBar[10]       = false end
-	if BattlegroundTargets_Options.ButtonShowHealthText[10]      == nil then BattlegroundTargets_Options.ButtonShowHealthText[10]      = true  end
+	if BattlegroundTargets_Options.ButtonShowHealthText[10]      == nil then BattlegroundTargets_Options.ButtonShowHealthText[10]      = false end
 	if BattlegroundTargets_Options.ButtonRangeCheck[10]          == nil then BattlegroundTargets_Options.ButtonRangeCheck[10]          = false end
 	if BattlegroundTargets_Options.ButtonAvgRangeCheck[10]       == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[10]       = false end
 	if BattlegroundTargets_Options.ButtonClassRangeCheck[10]     == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[10]     = true  end
@@ -1295,7 +1309,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonFlagPosition[15]        == nil then BattlegroundTargets_Options.ButtonFlagPosition[15]        = 55    end
 	if BattlegroundTargets_Options.ButtonShowTargetCount[15]     == nil then BattlegroundTargets_Options.ButtonShowTargetCount[15]     = false end
 	if BattlegroundTargets_Options.ButtonShowHealthBar[15]       == nil then BattlegroundTargets_Options.ButtonShowHealthBar[15]       = false end
-	if BattlegroundTargets_Options.ButtonShowHealthText[15]      == nil then BattlegroundTargets_Options.ButtonShowHealthText[15]      = true  end
+	if BattlegroundTargets_Options.ButtonShowHealthText[15]      == nil then BattlegroundTargets_Options.ButtonShowHealthText[15]      = false end
 	if BattlegroundTargets_Options.ButtonRangeCheck[15]          == nil then BattlegroundTargets_Options.ButtonRangeCheck[15]          = false end
 	if BattlegroundTargets_Options.ButtonAvgRangeCheck[15]       == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[15]       = false end
 	if BattlegroundTargets_Options.ButtonClassRangeCheck[15]     == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[15]     = true  end
@@ -1325,7 +1339,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonFlagPosition[40]        == nil then BattlegroundTargets_Options.ButtonFlagPosition[40]        = 100   end
 	if BattlegroundTargets_Options.ButtonShowTargetCount[40]     == nil then BattlegroundTargets_Options.ButtonShowTargetCount[40]     = false end
 	if BattlegroundTargets_Options.ButtonShowHealthBar[40]       == nil then BattlegroundTargets_Options.ButtonShowHealthBar[40]       = false end
-	if BattlegroundTargets_Options.ButtonShowHealthText[40]      == nil then BattlegroundTargets_Options.ButtonShowHealthText[40]      = true  end
+	if BattlegroundTargets_Options.ButtonShowHealthText[40]      == nil then BattlegroundTargets_Options.ButtonShowHealthText[40]      = false end
 	if BattlegroundTargets_Options.ButtonRangeCheck[40]          == nil then BattlegroundTargets_Options.ButtonRangeCheck[40]          = false end
 	if BattlegroundTargets_Options.ButtonAvgRangeCheck[40]       == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[40]       = false end
 	if BattlegroundTargets_Options.ButtonClassRangeCheck[40]     == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[40]     = true  end
@@ -2175,11 +2189,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ShowHealthBar:SetScript("OnClick", function(self)
 		BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] = not BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]
 		GVAR.OptionsFrame.ShowHealthBar:SetChecked(BattlegroundTargets_Options.ButtonShowHealthBar[currentSize])
-		if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] then
-			TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthText)
+		if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] or BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then
 			GVAR.OptionsFrame.TestShuffler3:Show()
 		else
-			TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
 			GVAR.OptionsFrame.TestShuffler3:Hide()
 		end
 		BattlegroundTargets:EnableConfigMode()
@@ -2193,6 +2205,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ShowHealthText:SetScript("OnClick", function(self)
 		BattlegroundTargets_Options.ButtonShowHealthText[currentSize] = not BattlegroundTargets_Options.ButtonShowHealthText[currentSize]
 		GVAR.OptionsFrame.ShowHealthText:SetChecked(BattlegroundTargets_Options.ButtonShowHealthText[currentSize])
+		if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] or BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then
+			GVAR.OptionsFrame.TestShuffler3:Show()
+		else
+			GVAR.OptionsFrame.TestShuffler3:Hide()
+		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
@@ -2874,11 +2891,10 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
-		if BattlegroundTargets_Options.ButtonShowHealthBar[bracketSize] then
-			TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthText)
+		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthText)
+		if BattlegroundTargets_Options.ButtonShowHealthBar[bracketSize] or BattlegroundTargets_Options.ButtonShowHealthText[bracketSize] then
 			GVAR.OptionsFrame.TestShuffler3:Show()
 		else
-			TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
 			GVAR.OptionsFrame.TestShuffler3:Hide()
 		end
 
@@ -3713,11 +3729,13 @@ function BattlegroundTargets:EnableConfigMode()
 
 		if i < currentSize+1 then
 
-			if ButtonShowHealthBar then
-				local width = healthBarWidth * (testHealth[i] / 100)
-				width = math_max(0.01, width)
-				width = math_min(healthBarWidth, width)
-				GVAR.TargetButton[i].HealthBar:SetWidth( width )
+			if ButtonShowHealthBar or ButtonShowHealthText then
+				if ButtonShowHealthBar then
+					local width = healthBarWidth * (testHealth[i] / 100)
+					width = math_max(0.01, width)
+					width = math_min(healthBarWidth, width)
+					GVAR.TargetButton[i].HealthBar:SetWidth( width )
+				end
 				if ButtonShowHealthText then
 					GVAR.TargetButton[i].HealthText:SetText( testHealth[i] )
 				end
@@ -3880,14 +3898,18 @@ function BattlegroundTargets:TestShuffler(what, multi)
 		for i = 1, 40 do
 			testHealth[i] = math_random(0, 100)
 		end
-		for i = 1, 40 do
-			if i < currentSize+1 then
-				if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] then
-					local width = healthBarWidth * (testHealth[i] / 100)
-					width = math_max(0.01, width)
-					width = math_min(healthBarWidth, width)
-					GVAR.TargetButton[ i ].HealthBar:SetWidth( width )
-					if BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then
+		local ButtonShowHealthBar  = BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]
+		local ButtonShowHealthText = BattlegroundTargets_Options.ButtonShowHealthText[currentSize]
+		if ButtonShowHealthBar or ButtonShowHealthText then
+			for i = 1, 40 do
+				if i < currentSize+1 then
+					if ButtonShowHealthBar then
+						local width = healthBarWidth * (testHealth[i] / 100)
+						width = math_max(0.01, width)
+						width = math_min(healthBarWidth, width)
+						GVAR.TargetButton[ i ].HealthBar:SetWidth( width )
+					end
+					if ButtonShowHealthText then
 						GVAR.TargetButton[ i ].HealthText:SetText( testHealth[i] )
 					end
 				end
@@ -4224,13 +4246,14 @@ function BattlegroundTargets:UpdateLayout()
 				end
 			end
 
-			if ButtonShowHealthBar then
+			if ButtonShowHealthBar or ButtonShowHealthText then
 				if ENEMY_Names[ ENEMY_Data[i].name ] and ENEMY_Name2Percent[ ENEMY_Data[i].name ] then
-					local width = healthBarWidth * (ENEMY_Name2Percent[ ENEMY_Data[i].name ] / 100)
-					width = math_max(0.01, width)
-					width = math_min(healthBarWidth, width)
-					GVAR.TargetButton[ i ].HealthBar:SetWidth( width )
-
+					if ButtonShowHealthBar then
+						local width = healthBarWidth * (ENEMY_Name2Percent[ ENEMY_Data[i].name ] / 100)
+						width = math_max(0.01, width)
+						width = math_min(healthBarWidth, width)
+						GVAR.TargetButton[ i ].HealthBar:SetWidth( width )
+					end
 					if ButtonShowHealthText then
 						GVAR.TargetButton[ i ].HealthText:SetText( ENEMY_Name2Percent[ ENEMY_Data[i].name ] )
 					end
@@ -4525,7 +4548,7 @@ function BattlegroundTargets:BattlefieldCheck()
 			BattlegroundTargets:RegisterEvent("PLAYER_UNGHOST")
 			BattlegroundTargets:RegisterEvent("PLAYER_ALIVE")
 
-			if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] then
+			if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] or BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then
 				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
 				BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
 				BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
@@ -4808,7 +4831,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID)
 	end
 
 	-- health
-	if enemyName and BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] then
+	if enemyName and (BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] or BattlegroundTargets_Options.ButtonShowHealthText[currentSize]) then
 		BattlegroundTargets:CheckUnitHealth(enemyID, enemyName)
 	end
 
@@ -4915,7 +4938,9 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 	if not GVAR.TargetButton[ ENEMY_Name2Button[targetName] ] then return end
 
 	-- health
-	if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] then
+	local ButtonShowHealthBar  = BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]
+	local ButtonShowHealthText = BattlegroundTargets_Options.ButtonShowHealthText[currentSize]
+	if ButtonShowHealthBar or ButtonShowHealthText then
 		local maxHealth = UnitHealthMax(targetID)
 		if maxHealth then
 			local health = UnitHealth(targetID)
@@ -4933,9 +4958,11 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 				end
 
 				ENEMY_Name2Percent[targetName] = percent
-
-				GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].HealthBar:SetWidth( width )
-				if BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then
+				
+				if ButtonShowHealthBar then
+					GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].HealthBar:SetWidth( width )
+				end
+				if ButtonShowHealthText then
 					GVAR.TargetButton[ ENEMY_Name2Button[targetName] ].HealthText:SetText( percent )
 				end
 			end
