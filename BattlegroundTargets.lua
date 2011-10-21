@@ -446,6 +446,56 @@ TEMPLATE.BorderTRBL = function(frame) -- TRBL = Top-Right-Bottom-Left
 end
 -- Template BorderTRBL END ----------------------------------------
 
+-- Template BorderStyle START ----------------------------------------
+TEMPLATE.BorderStyle = function(border, style, bordersize)
+	--      TL     T     TR      --
+	--        -----------        --
+	--      L |         | R      --
+	--        -----------        --
+	--      BL     B     BR      --
+	border:ClearAllPoints()
+	if style == "TRBL" then
+	-- TRBL:  -----------        --
+	--        |         |        --
+	--        -----------        --
+		border:SetPoint("TOPLEFT",     bordersize, -bordersize)
+		border:SetPoint("BOTTOMRIGHT", -bordersize, bordersize)
+	elseif style == "TBL" then
+	-- TBL:   -----------        --
+	--        |                  --
+	--        -----------        --
+		border:SetPoint("TOPLEFT",     bordersize, -bordersize)
+		border:SetPoint("BOTTOMLEFT",  bordersize, bordersize)
+		border:SetPoint("TOPRIGHT",    0, -bordersize)
+		border:SetPoint("BOTTOMRIGHT", 0, bordersize)
+	elseif style == "TRB" then
+	-- TRB:   -----------        --
+	--                  |        --
+	--        -----------        --
+		border:SetPoint("TOPLEFT",     0, -bordersize)
+		border:SetPoint("BOTTOMLEFT",  0, bordersize)
+		border:SetPoint("TOPRIGHT",    -bordersize, -bordersize)
+		border:SetPoint("BOTTOMRIGHT", -bordersize, bordersize)
+	elseif style == "RBL" then
+	-- RBL:                      --
+	--        |         |        --
+	--        -----------        --
+		border:SetPoint("TOPLEFT",     bordersize, 0)
+		border:SetPoint("BOTTOMLEFT",  bordersize, bordersize)
+		border:SetPoint("TOPRIGHT",    -bordersize, 0)
+		border:SetPoint("BOTTOMRIGHT", -bordersize, bordersize)
+	elseif style == "TRL" then
+	-- TRL:   -----------        --
+	--        |         |        --
+	--                           --
+		border:SetPoint("TOPLEFT",     bordersize, -bordersize)
+		border:SetPoint("BOTTOMLEFT",  bordersize, 0)
+		border:SetPoint("TOPRIGHT",    -bordersize, -bordersize)
+		border:SetPoint("BOTTOMRIGHT", -bordersize, 0)
+	end
+end
+-- Template BorderStyle END ----------------------------------------
+
 -- Template TextButton START ----------------------------------------
 TEMPLATE.DisableTextButton = function(button)
 	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
@@ -533,15 +583,15 @@ end
 -- Template TextButton END ----------------------------------------
 
 -- Template IconButton START ----------------------------------------
-TEMPLATE.DisableIconButton = function(button, cut)
-	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
-	button:Disable()
-end
+--TEMPLATE.DisableIconButton = function(button)
+--	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
+--	button:Disable()
+--end
 
-TEMPLATE.EnableIconButton = function(button, cut)
-	button.Border:SetTexture(0.8, 0.2, 0.2, 1)
-	button:Enable()
-end
+--TEMPLATE.EnableIconButton = function(button)
+--	button.Border:SetTexture(0.8, 0.2, 0.2, 1)
+--	button:Enable()
+--end
 
 TEMPLATE.IconButton = function(button, cut)
 	button.Back = button:CreateTexture(nil, "BORDER")
@@ -553,6 +603,12 @@ TEMPLATE.IconButton = function(button, cut)
 	button.Border:SetPoint("TOPLEFT", 0, 0)
 	button.Border:SetPoint("BOTTOMRIGHT", 0, 0)
 	button.Border:SetTexture(0.8, 0.2, 0.2, 1)
+
+	button.Highlight = button:CreateTexture(nil, "OVERLAY")
+	button.Highlight:SetPoint("TOPLEFT", 3, -3)
+	button.Highlight:SetPoint("BOTTOMRIGHT", -3, 3)
+	button.Highlight:SetTexture(0.6, 0.6, 0.6, 0.2)
+	button:SetHighlightTexture(button.Highlight)
 
 	if cut == 1 then
 		button.Normal = button:CreateTexture(nil, "ARTWORK")
@@ -575,66 +631,52 @@ TEMPLATE.IconButton = function(button, cut)
 		button:SetDisabledTexture(button.Disabled)
 		Desaturation(button.Disabled, true)
 	elseif cut == 2 then
-		button.Border:SetAlpha(0.5)
 		button.Normal = button:CreateTexture(nil, "ARTWORK")
-		button.Normal:SetWidth(16)
-		button.Normal:SetHeight(16)
+		button.Normal:SetWidth(12)
+		button.Normal:SetHeight(12)
 		button.Normal:SetPoint("CENTER", 0, 0)
 		button.Normal:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Normal:SetTexCoord(unpack(Textures.Shuffler.coords))
-		button.Normal:SetAlpha(0.5)
 		button:SetNormalTexture(button.Normal)
 		button.Push = button:CreateTexture(nil, "ARTWORK")
-		button.Push:SetWidth(12)
-		button.Push:SetHeight(12)
+		button.Push:SetWidth(10)
+		button.Push:SetHeight(10)
 		button.Push:SetPoint("CENTER", 0, 0)
 		button.Push:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Push:SetTexCoord(unpack(Textures.Shuffler.coords))
-		button.Push:SetAlpha(0.5)
 		button:SetPushedTexture(button.Push)
 		button.Disabled = button:CreateTexture(nil, "ARTWORK")
-		button.Disabled:SetWidth(16)
-		button.Disabled:SetHeight(16)
+		button.Disabled:SetWidth(12)
+		button.Disabled:SetHeight(12)
 		button.Disabled:SetPoint("CENTER", 0, 0)
 		button.Disabled:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Disabled:SetTexCoord(unpack(Textures.Shuffler.coords))
-		button.Disabled:SetAlpha(0.5)
 		button:SetDisabledTexture(button.Disabled)
 		Desaturation(button.Disabled, true)
 	elseif cut == 3 then
-		button.Border:SetAlpha(0.5)
 		button.Normal = button:CreateTexture(nil, "ARTWORK")
-		button.Normal:SetWidth(11)
-		button.Normal:SetHeight(4)
+		button.Normal:SetWidth(9)
+		button.Normal:SetHeight(3)
 		button.Normal:SetPoint("CENTER", 0, 0)
 		button.Normal:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Normal:SetTexCoord(unpack(Textures.ShufflerFlat.coords))
-		button.Normal:SetAlpha(0.5)
 		button:SetNormalTexture(button.Normal)
 		button.Push = button:CreateTexture(nil, "ARTWORK")
-		button.Push:SetWidth(9)
-		button.Push:SetHeight(3)
+		button.Push:SetWidth(7)
+		button.Push:SetHeight(2)
 		button.Push:SetPoint("CENTER", 0, 0)
 		button.Push:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Push:SetTexCoord(unpack(Textures.ShufflerFlat.coords))
-		button.Push:SetAlpha(0.5)
 		button:SetPushedTexture(button.Push)
 		button.Disabled = button:CreateTexture(nil, "ARTWORK")
-		button.Disabled:SetWidth(11)
-		button.Disabled:SetHeight(4)
+		button.Disabled:SetWidth(9)
+		button.Disabled:SetHeight(3)
 		button.Disabled:SetPoint("CENTER", 0, 0)
 		button.Disabled:SetTexture(Textures.BattlegroundTargetsIcons.path)
 		button.Disabled:SetTexCoord(unpack(Textures.ShufflerFlat.coords))
-		button.Disabled:SetAlpha(0.5)
 		button:SetDisabledTexture(button.Disabled)
 		Desaturation(button.Disabled, true)
 	end
-
-	button.Highlight = button:CreateTexture(nil, "OVERLAY")
-	button.Highlight:SetPoint("TOPLEFT", 3, -3)
-	button.Highlight:SetPoint("BOTTOMRIGHT", -3, 3)
-	button.Highlight:SetTexture(0.6, 0.6, 0.6, 0.2)
-	button:SetHighlightTexture(button.Highlight)
 end
 -- Template IconButton END ----------------------------------------
 
@@ -1581,6 +1623,13 @@ function BattlegroundTargets:CreateFrames()
 	GVAR.WorldStateScoreWarning.Text:SetPoint("CENTER", 0, 0)
 	GVAR.WorldStateScoreWarning.Text:SetJustifyH("CENTER")
 	GVAR.WorldStateScoreWarning.Text:SetText(L["BattlegroundTargets does not update if this Tab is opened."])
+
+	GVAR.WorldStateScoreWarning.Close = CreateFrame("Button", nil, GVAR.WorldStateScoreWarning)
+	TEMPLATE.IconButton(GVAR.WorldStateScoreWarning.Close, 1)
+	GVAR.WorldStateScoreWarning.Close:SetWidth(20)
+	GVAR.WorldStateScoreWarning.Close:SetHeight(20)
+	GVAR.WorldStateScoreWarning.Close:SetPoint("TOPRIGHT", GVAR.WorldStateScoreWarning, "TOPRIGHT", 0, 0)
+	GVAR.WorldStateScoreWarning.Close:SetScript("OnClick", function() GVAR.WorldStateScoreWarning:Hide() end)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -1845,11 +1894,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 		   not BattlegroundTargets_Options.ButtonShowFlag[currentSize] and
 		   not BattlegroundTargets_Options.ButtonShowAssist[currentSize]
 		then
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler1)
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler2)
+			GVAR.OptionsFrame.TestShuffler1:Hide()
+			GVAR.OptionsFrame.TestShuffler2:Hide()
 		else
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler1, 2)
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler2, 2)
+			GVAR.OptionsFrame.TestShuffler1:Show()
+			GVAR.OptionsFrame.TestShuffler2:Show()
 		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
@@ -1913,11 +1962,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 		   not BattlegroundTargets_Options.ButtonShowFlag[currentSize] and
 		   not BattlegroundTargets_Options.ButtonShowAssist[currentSize]
 		then
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler1)
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler2)
+			GVAR.OptionsFrame.TestShuffler1:Hide()
+			GVAR.OptionsFrame.TestShuffler2:Hide()
 		else
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler1, 2)
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler2, 2)
+			GVAR.OptionsFrame.TestShuffler1:Show()
+			GVAR.OptionsFrame.TestShuffler2:Show()
 		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
@@ -1981,11 +2030,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 		   not BattlegroundTargets_Options.ButtonShowFlag[currentSize] and
 		   not BattlegroundTargets_Options.ButtonShowAssist[currentSize]
 		then
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler1)
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler2)
+			GVAR.OptionsFrame.TestShuffler1:Hide()
+			GVAR.OptionsFrame.TestShuffler2:Hide()
 		else
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler1, 2)
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler2, 2)
+			GVAR.OptionsFrame.TestShuffler1:Show()
+			GVAR.OptionsFrame.TestShuffler2:Show()
 		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
@@ -2049,11 +2098,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 		   not BattlegroundTargets_Options.ButtonShowFlag[currentSize] and
 		   not BattlegroundTargets_Options.ButtonShowAssist[currentSize]
 		then
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler1)
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler2)
+			GVAR.OptionsFrame.TestShuffler1:Hide()
+			GVAR.OptionsFrame.TestShuffler2:Hide()
 		else
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler1, 2)
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler2, 2)
+			GVAR.OptionsFrame.TestShuffler1:Show()
+			GVAR.OptionsFrame.TestShuffler2:Show()
 		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
@@ -2101,22 +2150,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FocusScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ShowFocusIndicator, "LEFT", iconW+10, 0)
 	GVAR.OptionsFrame.FlagScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ShowFlag, "LEFT", iconW+10, 0)
 	GVAR.OptionsFrame.AssistScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ShowAssist, "LEFT", iconW+10, 0)
-
-	-- testshuffler
-	GVAR.OptionsFrame.TestShuffler1 = CreateFrame("Button", nil, GVAR.OptionsFrame)
-	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler1, 3)
-	GVAR.OptionsFrame.TestShuffler1:SetPoint("BOTTOM", GVAR.OptionsFrame.FocusPositionSlider, "BOTTOM", 0, -5)
-	GVAR.OptionsFrame.TestShuffler1:SetPoint("RIGHT", GVAR.OptionsFrame, "RIGHT", -10, 0)
-	GVAR.OptionsFrame.TestShuffler1:SetWidth(24)
-	GVAR.OptionsFrame.TestShuffler1:SetHeight(24)
-	GVAR.OptionsFrame.TestShuffler1:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("ICONS") end)
-	GVAR.OptionsFrame.TestShuffler2 = CreateFrame("Button", nil, GVAR.OptionsFrame)
-	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler2, 2)
-	GVAR.OptionsFrame.TestShuffler2:SetPoint("LEFT", GVAR.OptionsFrame.TestShuffler1, "LEFT", 0, 0)
-	GVAR.OptionsFrame.TestShuffler2:SetPoint("TOP", GVAR.OptionsFrame.TestShuffler1, "BOTTOM", 0, -2)
-	GVAR.OptionsFrame.TestShuffler2:SetWidth(24)
-	GVAR.OptionsFrame.TestShuffler2:SetHeight(24)
-	GVAR.OptionsFrame.TestShuffler2:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("ICONS", true) end)
 	-- ----- icons ----------------------------------------
 
 
@@ -2144,10 +2177,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.ShowHealthBar:SetChecked(BattlegroundTargets_Options.ButtonShowHealthBar[currentSize])
 		if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] then
 			TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthText)
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler3, 2)
+			GVAR.OptionsFrame.TestShuffler3:Show()
 		else
 			TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler3)
+			GVAR.OptionsFrame.TestShuffler3:Hide()
 		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
@@ -2162,15 +2195,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.ShowHealthText:SetChecked(BattlegroundTargets_Options.ButtonShowHealthText[currentSize])
 		BattlegroundTargets:EnableConfigMode()
 	end)
-
-	-- testshuffler
-	GVAR.OptionsFrame.TestShuffler3 = CreateFrame("Button", nil, GVAR.OptionsFrame)
-	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler3, 2)
-	GVAR.OptionsFrame.TestShuffler3:SetPoint("LEFT", GVAR.OptionsFrame.TestShuffler1, "LEFT", 0, 0)
-	GVAR.OptionsFrame.TestShuffler3:SetPoint("TOP", GVAR.OptionsFrame.ShowHealthText, "TOP", 0, 4)
-	GVAR.OptionsFrame.TestShuffler3:SetWidth(24)
-	GVAR.OptionsFrame.TestShuffler3:SetHeight(24)
-	GVAR.OptionsFrame.TestShuffler3:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("HEALTH") end)
 
 
 
@@ -2216,12 +2240,12 @@ function BattlegroundTargets:CreateOptionsFrame()
 			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 			GVAR.OptionsFrame.RangeCheckInfo:Enable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, false)
 			TEMPLATE.EnableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler4, 2)
+			GVAR.OptionsFrame.TestShuffler4:Show()
 		else
 			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 			GVAR.OptionsFrame.RangeCheckInfo:Disable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, true)
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler4)
+			GVAR.OptionsFrame.TestShuffler4:Hide()
 		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
@@ -2291,16 +2315,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.RangeAlphaValue:SetText((BattlegroundTargets_Options.ButtonRangeAlpha[currentSize]*100).."%")
 	GVAR.OptionsFrame.RangeAlphaValue:SetTextColor(1, 1, 0.49, 1)
 	rangeW = rangeW + 10 + 80 + 50
-
-	-- testshuffler
-	GVAR.OptionsFrame.TestShuffler4 = CreateFrame("Button", nil, GVAR.OptionsFrame)
-	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler4, 2)
-	GVAR.OptionsFrame.TestShuffler4:SetPoint("LEFT", GVAR.OptionsFrame.TestShuffler1, "LEFT", 0, 0)
-	GVAR.OptionsFrame.TestShuffler4:SetPoint("TOP", GVAR.OptionsFrame.RangeCheck, "TOP", 0, 4)
-	GVAR.OptionsFrame.TestShuffler4:SetWidth(24)
-	GVAR.OptionsFrame.TestShuffler4:SetHeight(24)
-	GVAR.OptionsFrame.TestShuffler4:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("RANGE") end)
-	rangeW = rangeW + 24 + 10
 	-- ----- range check ----------------------------------------
 
 
@@ -2579,7 +2593,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 	-- ----- setup width ----------------------------------------
-	frameWidth = 10 + iconW + 10 + GVAR.OptionsFrame.TargetScaleSlider:GetWidth() + 50 + GVAR.OptionsFrame.TargetPositionSlider:GetWidth() + 50 + GVAR.OptionsFrame.TestShuffler1:GetWidth() + 10
+	frameWidth = 10 + iconW + 10 + GVAR.OptionsFrame.TargetScaleSlider:GetWidth() + 50 + GVAR.OptionsFrame.TargetPositionSlider:GetWidth() + 50 + 20-10
 	if rangeW > frameWidth then
 		frameWidth = rangeW
 	end
@@ -2601,6 +2615,71 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy2:SetWidth(frameWidth)
 	GVAR.OptionsFrame.CloseConfig:SetWidth(frameWidth-20)
 	-- ----- setup width ----------------------------------------
+
+
+
+	-- testshuffler
+	GVAR.OptionsFrame.TestShuffler1 = CreateFrame("Button", nil, GVAR.OptionsFrame)
+	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler1, 2)
+	GVAR.OptionsFrame.TestShuffler1:SetPoint("TOP", GVAR.OptionsFrame.TargetPositionSlider, "TOP", 0, 5)
+	GVAR.OptionsFrame.TestShuffler1:SetPoint("RIGHT", GVAR.OptionsFrame, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.TestShuffler1:SetWidth(20)
+	GVAR.OptionsFrame.TestShuffler1:SetHeight(52)
+	GVAR.OptionsFrame.TestShuffler1:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("ICONS", true) end)
+	GVAR.OptionsFrame.TestShuffler1:SetScript("OnEnter", function()
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Back, "TRL", 1)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Back, "RBL", 1)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Highlight, "TRL", 3)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Highlight, "RBL", 3)
+		GVAR.OptionsFrame.TestShuffler2:LockHighlight()
+		GVAR.OptionsFrame.TestShuffler2.Normal:Hide()
+	end)
+	GVAR.OptionsFrame.TestShuffler1:SetScript("OnLeave", function()
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Back, "TRBL", 1)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Back, "TRBL", 1)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Highlight, "TRBL", 3)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Highlight, "TRBL", 3)
+		GVAR.OptionsFrame.TestShuffler2:UnlockHighlight()
+		GVAR.OptionsFrame.TestShuffler2.Normal:Show()
+	end)
+
+	GVAR.OptionsFrame.TestShuffler2 = CreateFrame("Button", nil, GVAR.OptionsFrame)
+	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler2, 3)
+	GVAR.OptionsFrame.TestShuffler2:SetPoint("TOP", GVAR.OptionsFrame.TestShuffler1, "BOTTOM", 0, 0)
+	GVAR.OptionsFrame.TestShuffler2:SetWidth(20)
+	GVAR.OptionsFrame.TestShuffler2:SetHeight(52)
+	GVAR.OptionsFrame.TestShuffler2:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("ICONS") end)
+	GVAR.OptionsFrame.TestShuffler2:SetScript("OnEnter", function()
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Back, "TRL", 1)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Back, "RBL", 1)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Highlight, "TRL", 3)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Highlight, "RBL", 3)
+		GVAR.OptionsFrame.TestShuffler1:LockHighlight()
+		GVAR.OptionsFrame.TestShuffler1.Normal:Hide()
+	end)
+	GVAR.OptionsFrame.TestShuffler2:SetScript("OnLeave", function()
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Back, "TRBL", 1)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Back, "TRBL", 1)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Highlight, "TRBL", 3)
+		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Highlight, "TRBL", 3)
+		GVAR.OptionsFrame.TestShuffler1:UnlockHighlight()
+		GVAR.OptionsFrame.TestShuffler1.Normal:Show()
+	end)
+
+	GVAR.OptionsFrame.TestShuffler3 = CreateFrame("Button", nil, GVAR.OptionsFrame)
+	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler3, 2)
+	GVAR.OptionsFrame.TestShuffler3:SetPoint("TOP", GVAR.OptionsFrame.ShowHealthText, "TOP", 0, 5)
+	GVAR.OptionsFrame.TestShuffler3:SetPoint("LEFT", GVAR.OptionsFrame.TestShuffler1, "LEFT", 0, 0)
+	GVAR.OptionsFrame.TestShuffler3:SetWidth(20)
+	GVAR.OptionsFrame.TestShuffler3:SetHeight(26)
+	GVAR.OptionsFrame.TestShuffler3:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("HEALTH") end)
+
+	GVAR.OptionsFrame.TestShuffler4 = CreateFrame("Button", nil, GVAR.OptionsFrame)
+	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler4, 2)
+	GVAR.OptionsFrame.TestShuffler4:SetPoint("TOP", GVAR.OptionsFrame.TestShuffler3, "BOTTOM", 0, 0)
+	GVAR.OptionsFrame.TestShuffler4:SetWidth(20)
+	GVAR.OptionsFrame.TestShuffler4:SetHeight(26)
+	GVAR.OptionsFrame.TestShuffler4:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("RANGE") end)
 
 
 
@@ -2797,10 +2876,10 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
 		if BattlegroundTargets_Options.ButtonShowHealthBar[bracketSize] then
 			TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthText)
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler3, 2)
+			GVAR.OptionsFrame.TestShuffler3:Show()
 		else
 			TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler3)
+			GVAR.OptionsFrame.TestShuffler3:Hide()
 		end
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.RangeCheck)
@@ -2808,12 +2887,12 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 			GVAR.OptionsFrame.RangeCheckInfo:Enable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, false)
 			TEMPLATE.EnableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler4, 2)
+			GVAR.OptionsFrame.TestShuffler4:Show()
 		else
 			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 			GVAR.OptionsFrame.RangeCheckInfo:Disable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, true)
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler4)
+			GVAR.OptionsFrame.TestShuffler4:Hide()
 		end
 
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
@@ -2834,11 +2913,11 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		   not BattlegroundTargets_Options.ButtonShowFocus[bracketSize] and
 		   not BattlegroundTargets_Options.ButtonShowFlag[bracketSize]
 		then
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler1)
-			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler2)
+			GVAR.OptionsFrame.TestShuffler1:Hide()
+			GVAR.OptionsFrame.TestShuffler2:Hide()
 		else
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler1, 2)
-			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.TestShuffler2, 2)
+			GVAR.OptionsFrame.TestShuffler1:Show()
+			GVAR.OptionsFrame.TestShuffler2:Show()
 		end
 		
 	else
@@ -2876,20 +2955,20 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowAssist)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistScaleSlider)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistPositionSlider)
-		TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler1)
-		TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler2)
+		GVAR.OptionsFrame.TestShuffler1:Hide()
+		GVAR.OptionsFrame.TestShuffler2:Hide()
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
-		TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler3)
+		GVAR.OptionsFrame.TestShuffler3:Hide()
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.RangeCheck)
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 		GVAR.OptionsFrame.RangeCheckInfo:Disable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, true)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-		TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler4)
+		GVAR.OptionsFrame.TestShuffler4:Hide()
 
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
 		GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
@@ -2937,20 +3016,20 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowAssist)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistScaleSlider)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistPositionSlider)
-	TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler1)
-	TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler2)
+	GVAR.OptionsFrame.TestShuffler1:Hide()
+	GVAR.OptionsFrame.TestShuffler2:Hide()
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
-	TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler3)
+	GVAR.OptionsFrame.TestShuffler3:Hide()
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.RangeCheck)
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 	GVAR.OptionsFrame.RangeCheckInfo:Disable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, true)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-	TEMPLATE.DisableIconButton(GVAR.OptionsFrame.TestShuffler4)
+	GVAR.OptionsFrame.TestShuffler4:Hide()
 
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
 	GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
@@ -3410,163 +3489,163 @@ function BattlegroundTargets:EnableConfigMode()
 		table_wipe(ENEMY_Data)
 
 		ENEMY_Data[1] = {}
-		ENEMY_Data[1].name = TARGET.."aa-Alterac Mountains"
+		ENEMY_Data[1].name = TARGET.."_Aa-Alterac Mountains"
 		ENEMY_Data[1].classToken = "DRUID"
 		ENEMY_Data[1].talentSpec = T.DRUID[3]
 		ENEMY_Data[2] = {}
-		ENEMY_Data[2].name = TARGET.."bb-Ragnaros"
+		ENEMY_Data[2].name = TARGET.."_Bb-Ragnaros"
 		ENEMY_Data[2].classToken = "PRIEST"
 		ENEMY_Data[2].talentSpec = T.PRIEST[3]
 		ENEMY_Data[3] = {}
-		ENEMY_Data[3].name = TARGET.."cc-Blackrock"
+		ENEMY_Data[3].name = TARGET.."_Cc-Blackrock"
 		ENEMY_Data[3].classToken = "WARLOCK"
 		ENEMY_Data[3].talentSpec = T.WARLOCK[1]
 		ENEMY_Data[4] = {}
-		ENEMY_Data[4].name = TARGET.."dd-Wildhammer"
+		ENEMY_Data[4].name = TARGET.."_Dd-Wildhammer"
 		ENEMY_Data[4].classToken = "HUNTER"
 		ENEMY_Data[4].talentSpec = T.HUNTER[3]
 		ENEMY_Data[5] = {}
-		ENEMY_Data[5].name = TARGET.."ee-Khaz'goroth"
+		ENEMY_Data[5].name = TARGET.."_Ee-Khaz'goroth"
 		ENEMY_Data[5].classToken = "WARRIOR"
 		ENEMY_Data[5].talentSpec = T.WARRIOR[3]
 		ENEMY_Data[6] = {}
-		ENEMY_Data[6].name = TARGET.."ff-Xavius"
+		ENEMY_Data[6].name = TARGET.."_Ff-Xavius"
 		ENEMY_Data[6].classToken = "ROGUE"
 		ENEMY_Data[6].talentSpec = T.ROGUE[2]
 		ENEMY_Data[7] = {}
-		ENEMY_Data[7].name = TARGET.."gg-Area 52"
+		ENEMY_Data[7].name = TARGET.."_Gg-Area 52"
 		ENEMY_Data[7].classToken = "SHAMAN"
 		ENEMY_Data[7].talentSpec = T.SHAMAN[3]
 		ENEMY_Data[8] = {}
-		ENEMY_Data[8].name = TARGET.."hh-Blackmoore"
+		ENEMY_Data[8].name = TARGET.."_Hh-Blackmoore"
 		ENEMY_Data[8].classToken = "PALADIN"
 		ENEMY_Data[8].talentSpec = T.PALADIN[3]
 		ENEMY_Data[9] = {}
-		ENEMY_Data[9].name = TARGET.."ii-Scarshield Legion"
+		ENEMY_Data[9].name = TARGET.."_Ii-Scarshield Legion"
 		ENEMY_Data[9].classToken = "MAGE"
 		ENEMY_Data[9].talentSpec = T.MAGE[3]
 		ENEMY_Data[10] = {}
-		ENEMY_Data[10].name = TARGET.."jj-Conseil des Ombres"
+		ENEMY_Data[10].name = TARGET.."_Jj-Conseil des Ombres"
 		ENEMY_Data[10].classToken = "DEATHKNIGHT"
 		ENEMY_Data[10].talentSpec = T.DEATHKNIGHT[2]
 		ENEMY_Data[11] = {}
-		ENEMY_Data[11].name = TARGET.."kk-Archimonde"
+		ENEMY_Data[11].name = TARGET.."_Kk-Archimonde"
 		ENEMY_Data[11].classToken = "DRUID"
 		ENEMY_Data[11].talentSpec = T.DRUID[1]
 		ENEMY_Data[12] = {}
-		ENEMY_Data[12].name = TARGET.."ll-Nefarian"
+		ENEMY_Data[12].name = TARGET.."_Ll-Nefarian"
 		ENEMY_Data[12].classToken = "DEATHKNIGHT"
 		ENEMY_Data[12].talentSpec = T.DEATHKNIGHT[3]
 		ENEMY_Data[13] = {}
-		ENEMY_Data[13].name = TARGET.."mm-Trollbane"
+		ENEMY_Data[13].name = TARGET.."_Mm-Trollbane"
 		ENEMY_Data[13].classToken = "PALADIN"
 		ENEMY_Data[13].talentSpec = T.PALADIN[3]
 		ENEMY_Data[14] = {}
-		ENEMY_Data[14].name = TARGET.."nn-Un'Goro"
+		ENEMY_Data[14].name = TARGET.."_Nn-Un'Goro"
 		ENEMY_Data[14].classToken = "MAGE"
 		ENEMY_Data[14].talentSpec = T.MAGE[1]
 		ENEMY_Data[15] = {}
-		ENEMY_Data[15].name = TARGET.."oo-Teldrassil"
+		ENEMY_Data[15].name = TARGET.."_Oo-Teldrassil"
 		ENEMY_Data[15].classToken = "SHAMAN"
 		ENEMY_Data[15].talentSpec = T.SHAMAN[2]
 		ENEMY_Data[16] = {}
-		ENEMY_Data[16].name = TARGET.."pp-Rexxar"
+		ENEMY_Data[16].name = TARGET.."_Pp-Rexxar"
 		ENEMY_Data[16].classToken = "ROGUE"
 		ENEMY_Data[16].talentSpec = T.ROGUE[1]
 		ENEMY_Data[17] = {}
-		ENEMY_Data[17].name = TARGET.."qq-Gilneas"
+		ENEMY_Data[17].name = TARGET.."_Qq-Gilneas"
 		ENEMY_Data[17].classToken = "WARLOCK"
 		ENEMY_Data[17].talentSpec = T.WARLOCK[2]
 		ENEMY_Data[18] = {}
-		ENEMY_Data[18].name = TARGET.."rr-Terokkar"
+		ENEMY_Data[18].name = TARGET.."_Rr-Terokkar"
 		ENEMY_Data[18].classToken = "PRIEST"
 		ENEMY_Data[18].talentSpec = T.PRIEST[3]
 		ENEMY_Data[19] = {}
-		ENEMY_Data[19].name = TARGET.."ss-Zuluhed"
+		ENEMY_Data[19].name = TARGET.."_Ss-Zuluhed"
 		ENEMY_Data[19].classToken = "WARRIOR"
 		ENEMY_Data[19].talentSpec = T.WARRIOR[1]
 		ENEMY_Data[20] = {}
-		ENEMY_Data[20].name = TARGET.."tt-Archimonde"
+		ENEMY_Data[20].name = TARGET.."_Tt-Archimonde"
 		ENEMY_Data[20].classToken = "DRUID"
 		ENEMY_Data[20].talentSpec = T.DRUID[2]
 		ENEMY_Data[21] = {}
-		ENEMY_Data[21].name = TARGET.."uu-Anub'arak"
+		ENEMY_Data[21].name = TARGET.."_Uu-Anub'arak"
 		ENEMY_Data[21].classToken = "PRIEST"
 		ENEMY_Data[21].talentSpec = T.PRIEST[3]
 		ENEMY_Data[22] = {}
-		ENEMY_Data[22].name = TARGET.."vv-Kul Tiras"
+		ENEMY_Data[22].name = TARGET.."_Vv-Kul Tiras"
 		ENEMY_Data[22].classToken = "WARRIOR"
 		ENEMY_Data[22].talentSpec = T.WARRIOR[1]
 		ENEMY_Data[23] = {}
-		ENEMY_Data[23].name = TARGET.."ww-Garrosh"
+		ENEMY_Data[23].name = TARGET.."_Ww-Garrosh"
 		ENEMY_Data[23].classToken = "SHAMAN"
 		ENEMY_Data[23].talentSpec = T.SHAMAN[1]
 		ENEMY_Data[24] = {}
-		ENEMY_Data[24].name = TARGET.."xx-Durotan"
+		ENEMY_Data[24].name = TARGET.."_Xx-Durotan"
 		ENEMY_Data[24].classToken = "HUNTER"
 		ENEMY_Data[24].talentSpec = T.HUNTER[2]
 		ENEMY_Data[25] = {}
-		ENEMY_Data[25].name = TARGET.."yy-Thrall"
+		ENEMY_Data[25].name = TARGET.."_Yy-Thrall"
 		ENEMY_Data[25].classToken = "SHAMAN"
 		ENEMY_Data[25].talentSpec = T.SHAMAN[2]
 		ENEMY_Data[26] = {}
-		ENEMY_Data[26].name = TARGET.."zz-Frostmourne"
+		ENEMY_Data[26].name = TARGET.."_Zz-Frostmourne"
 		ENEMY_Data[26].classToken = "WARLOCK"
 		ENEMY_Data[26].talentSpec = T.WARLOCK[3]
 		ENEMY_Data[27] = {}
-		ENEMY_Data[27].name = TARGET.."ab-Stormrage"
+		ENEMY_Data[27].name = TARGET.."_Ab-Stormrage"
 		ENEMY_Data[27].classToken = "PRIEST"
 		ENEMY_Data[27].talentSpec = T.PRIEST[2]
 		ENEMY_Data[28] = {}
-		ENEMY_Data[28].name = TARGET.."cd-Les Sentinelles"
+		ENEMY_Data[28].name = TARGET.."_Cd-Les Sentinelles"
 		ENEMY_Data[28].classToken = "MAGE"
 		ENEMY_Data[28].talentSpec = T.MAGE[2]
 		ENEMY_Data[29] = {}
-		ENEMY_Data[29].name = TARGET.."ef-Arthas"
+		ENEMY_Data[29].name = TARGET.."_Ef-Arthas"
 		ENEMY_Data[29].classToken = "ROGUE"
 		ENEMY_Data[29].talentSpec = T.ROGUE[3]
 		ENEMY_Data[30] = {}
-		ENEMY_Data[30].name = TARGET.."gh-Bronzebeard"
+		ENEMY_Data[30].name = TARGET.."_Gh-Bronzebeard"
 		ENEMY_Data[30].classToken = "DRUID"
 		ENEMY_Data[30].talentSpec = T.DRUID[1]
 		ENEMY_Data[31] = {}
-		ENEMY_Data[31].name = TARGET.."ij-Forscherliga"
+		ENEMY_Data[31].name = TARGET.."_Ij-Forscherliga"
 		ENEMY_Data[31].classToken = "HUNTER"
 		ENEMY_Data[31].talentSpec = T.HUNTER[3]
 		ENEMY_Data[32] = {}
-		ENEMY_Data[32].name = TARGET.."kl-Deephome"
+		ENEMY_Data[32].name = TARGET.."_Kl-Deephome"
 		ENEMY_Data[32].classToken = "WARRIOR"
 		ENEMY_Data[32].talentSpec = T.WARRIOR[2]
 		ENEMY_Data[33] = {}
-		ENEMY_Data[33].name = TARGET.."mn-Arthas"
+		ENEMY_Data[33].name = TARGET.."_Mn-Arthas"
 		ENEMY_Data[33].classToken = "PALADIN"
 		ENEMY_Data[33].talentSpec = T.PALADIN[1]
 		ENEMY_Data[34] = {}
-		ENEMY_Data[34].name = TARGET.."op-Blade's Edge"
+		ENEMY_Data[34].name = TARGET.."_Op-Blade's Edge"
 		ENEMY_Data[34].classToken = "MAGE"
 		ENEMY_Data[34].talentSpec = T.MAGE[3]
 		ENEMY_Data[35] = {}
-		ENEMY_Data[35].name = TARGET.."qr-Talnivarr"
+		ENEMY_Data[35].name = TARGET.."_Qr-Talnivarr"
 		ENEMY_Data[35].classToken = "DEATHKNIGHT"
 		ENEMY_Data[35].talentSpec =  T.DEATHKNIGHT[3]
 		ENEMY_Data[36] = {}
-		ENEMY_Data[36].name = TARGET.."st-Steamwheedle Cartel"
+		ENEMY_Data[36].name = TARGET.."_St-Steamwheedle Cartel"
 		ENEMY_Data[36].classToken = "MAGE"
 		ENEMY_Data[36].talentSpec = T.MAGE[2]
 		ENEMY_Data[37] = {}
-		ENEMY_Data[37].name = TARGET.."uv-Naxxramas"
+		ENEMY_Data[37].name = TARGET.."_Uv-Naxxramas"
 		ENEMY_Data[37].classToken = "HUNTER"
 		ENEMY_Data[37].talentSpec = T.HUNTER[2]
 		ENEMY_Data[38] = {}
-		ENEMY_Data[38].name = TARGET.."wx-Archimonde"
+		ENEMY_Data[38].name = TARGET.."_Wx-Archimonde"
 		ENEMY_Data[38].classToken = "WARLOCK"
 		ENEMY_Data[38].talentSpec = T.WARLOCK[1]
 		ENEMY_Data[39] = {}
-		ENEMY_Data[39].name = TARGET.."yz-Nazjatar"
+		ENEMY_Data[39].name = TARGET.."_Yz-Nazjatar"
 		ENEMY_Data[39].classToken = "WARLOCK"
 		ENEMY_Data[39].talentSpec = T.WARLOCK[2]
 		ENEMY_Data[40] = {}
-		ENEMY_Data[40].name = TARGET.."zz-Drak'thul"
+		ENEMY_Data[40].name = TARGET.."_Zz-Drak'thul"
 		ENEMY_Data[40].classToken = "ROGUE"
 		ENEMY_Data[40].talentSpec = nil
 
