@@ -445,56 +445,6 @@ TEMPLATE.BorderTRBL = function(frame) -- TRBL = Top-Right-Bottom-Left
 end
 -- Template BorderTRBL END ----------------------------------------
 
--- Template BorderStyle START ----------------------------------------
-TEMPLATE.BorderStyle = function(border, style, bordersize)
-	--      TL     T     TR      --
-	--        -----------        --
-	--      L |         | R      --
-	--        -----------        --
-	--      BL     B     BR      --
-	border:ClearAllPoints()
-	if style == "TRBL" then
-	-- TRBL:  -----------        --
-	--        |         |        --
-	--        -----------        --
-		border:SetPoint("TOPLEFT",     bordersize, -bordersize)
-		border:SetPoint("BOTTOMRIGHT", -bordersize, bordersize)
-	elseif style == "TBL" then
-	-- TBL:   -----------        --
-	--        |                  --
-	--        -----------        --
-		border:SetPoint("TOPLEFT",     bordersize, -bordersize)
-		border:SetPoint("BOTTOMLEFT",  bordersize, bordersize)
-		border:SetPoint("TOPRIGHT",    0, -bordersize)
-		border:SetPoint("BOTTOMRIGHT", 0, bordersize)
-	elseif style == "TRB" then
-	-- TRB:   -----------        --
-	--                  |        --
-	--        -----------        --
-		border:SetPoint("TOPLEFT",     0, -bordersize)
-		border:SetPoint("BOTTOMLEFT",  0, bordersize)
-		border:SetPoint("TOPRIGHT",    -bordersize, -bordersize)
-		border:SetPoint("BOTTOMRIGHT", -bordersize, bordersize)
-	elseif style == "RBL" then
-	-- RBL:                      --
-	--        |         |        --
-	--        -----------        --
-		border:SetPoint("TOPLEFT",     bordersize, 0)
-		border:SetPoint("BOTTOMLEFT",  bordersize, bordersize)
-		border:SetPoint("TOPRIGHT",    -bordersize, 0)
-		border:SetPoint("BOTTOMRIGHT", -bordersize, bordersize)
-	elseif style == "TRL" then
-	-- TRL:   -----------        --
-	--        |         |        --
-	--                           --
-		border:SetPoint("TOPLEFT",     bordersize, -bordersize)
-		border:SetPoint("BOTTOMLEFT",  bordersize, 0)
-		border:SetPoint("TOPRIGHT",    -bordersize, -bordersize)
-		border:SetPoint("BOTTOMRIGHT", -bordersize, 0)
-	end
-end
--- Template BorderStyle END ----------------------------------------
-
 -- Template TextButton START ----------------------------------------
 TEMPLATE.DisableTextButton = function(button)
 	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
@@ -609,73 +559,27 @@ TEMPLATE.IconButton = function(button, cut)
 	button.Highlight:SetTexture(0.6, 0.6, 0.6, 0.2)
 	button:SetHighlightTexture(button.Highlight)
 
-	if cut == 1 then
-		button.Normal = button:CreateTexture(nil, "ARTWORK")
-		button.Normal:SetPoint("TOPLEFT", 3, -3)
-		button.Normal:SetPoint("BOTTOMRIGHT", -3, 3)
-		button.Normal:SetTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-		button.Normal:SetTexCoord(8/32, 22/32, 10/32, 22/32)
-		button:SetNormalTexture(button.Normal)
-		button.Push = button:CreateTexture(nil, "ARTWORK")
-		button.Push:SetPoint("TOPLEFT", 4, -4)
-		button.Push:SetPoint("BOTTOMRIGHT", -4, 4)
-		button.Push:SetTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-		button.Push:SetTexCoord(8/32, 22/32, 10/32, 22/32)
-		button:SetPushedTexture(button.Push)
-		button.Disabled = button:CreateTexture(nil, "ARTWORK")
-		button.Disabled:SetPoint("TOPLEFT", 3, -3)
-		button.Disabled:SetPoint("BOTTOMRIGHT", -3, 3)
-		button.Disabled:SetTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-		button.Disabled:SetTexCoord(8/32, 22/32, 10/32, 22/32)
-		button:SetDisabledTexture(button.Disabled)
-		Desaturation(button.Disabled, true)
-	elseif cut == 2 then
-		button.Normal = button:CreateTexture(nil, "ARTWORK")
-		button.Normal:SetWidth(12)
-		button.Normal:SetHeight(12)
-		button.Normal:SetPoint("CENTER", 0, 0)
-		button.Normal:SetTexture(Textures.BattlegroundTargetsIcons.path)
-		button.Normal:SetTexCoord(unpack(Textures.Shuffler.coords))
-		button:SetNormalTexture(button.Normal)
-		button.Push = button:CreateTexture(nil, "ARTWORK")
-		button.Push:SetWidth(10)
-		button.Push:SetHeight(10)
-		button.Push:SetPoint("CENTER", 0, 0)
-		button.Push:SetTexture(Textures.BattlegroundTargetsIcons.path)
-		button.Push:SetTexCoord(unpack(Textures.Shuffler.coords))
-		button:SetPushedTexture(button.Push)
-		button.Disabled = button:CreateTexture(nil, "ARTWORK")
-		button.Disabled:SetWidth(12)
-		button.Disabled:SetHeight(12)
-		button.Disabled:SetPoint("CENTER", 0, 0)
-		button.Disabled:SetTexture(Textures.BattlegroundTargetsIcons.path)
-		button.Disabled:SetTexCoord(unpack(Textures.Shuffler.coords))
-		button:SetDisabledTexture(button.Disabled)
-		Desaturation(button.Disabled, true)
-	elseif cut == 3 then
-		button.Normal = button:CreateTexture(nil, "ARTWORK")
-		button.Normal:SetWidth(9)
-		button.Normal:SetHeight(3)
-		button.Normal:SetPoint("CENTER", 0, 0)
-		button.Normal:SetTexture(Textures.BattlegroundTargetsIcons.path)
-		button.Normal:SetTexCoord(unpack(Textures.ShufflerFlat.coords))
-		button:SetNormalTexture(button.Normal)
-		button.Push = button:CreateTexture(nil, "ARTWORK")
-		button.Push:SetWidth(7)
-		button.Push:SetHeight(2)
-		button.Push:SetPoint("CENTER", 0, 0)
-		button.Push:SetTexture(Textures.BattlegroundTargetsIcons.path)
-		button.Push:SetTexCoord(unpack(Textures.ShufflerFlat.coords))
-		button:SetPushedTexture(button.Push)
-		button.Disabled = button:CreateTexture(nil, "ARTWORK")
-		button.Disabled:SetWidth(9)
-		button.Disabled:SetHeight(3)
-		button.Disabled:SetPoint("CENTER", 0, 0)
-		button.Disabled:SetTexture(Textures.BattlegroundTargetsIcons.path)
-		button.Disabled:SetTexCoord(unpack(Textures.ShufflerFlat.coords))
-		button:SetDisabledTexture(button.Disabled)
-		Desaturation(button.Disabled, true)
-	end
+	button.Normal = button:CreateTexture(nil, "ARTWORK")
+	button.Normal:SetPoint("TOPLEFT", 3, -3)
+	button.Normal:SetPoint("BOTTOMRIGHT", -3, 3)
+	button.Normal:SetTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+	button.Normal:SetTexCoord(8/32, 22/32, 10/32, 22/32)
+	button:SetNormalTexture(button.Normal)
+
+	button.Push = button:CreateTexture(nil, "ARTWORK")
+	button.Push:SetPoint("TOPLEFT", 4, -4)
+	button.Push:SetPoint("BOTTOMRIGHT", -4, 4)
+	button.Push:SetTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+	button.Push:SetTexCoord(8/32, 22/32, 10/32, 22/32)
+	button:SetPushedTexture(button.Push)
+
+	button.Disabled = button:CreateTexture(nil, "ARTWORK")
+	button.Disabled:SetPoint("TOPLEFT", 3, -3)
+	button.Disabled:SetPoint("BOTTOMRIGHT", -3, 3)
+	button.Disabled:SetTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+	button.Disabled:SetTexCoord(8/32, 22/32, 10/32, 22/32)
+	button:SetDisabledTexture(button.Disabled)
+	Desaturation(button.Disabled, true)
 end
 -- Template IconButton END ----------------------------------------
 
@@ -1884,6 +1788,19 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
+	-- show targetcount
+	GVAR.OptionsFrame.ShowTargetCount = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowTargetCount, 16, 4, L["Show Target Count"])
+	GVAR.OptionsFrame.ShowTargetCount:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.ShowTargetCount:SetPoint("TOP", GVAR.OptionsFrame.ClassIcon, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowTargetCount:SetChecked(BattlegroundTargets_Options.ButtonShowTargetCount[currentSize])
+	GVAR.OptionsFrame.ShowTargetCount:SetScript("OnClick", function(self)
+		BattlegroundTargets_Options.ButtonShowTargetCount[currentSize] = not BattlegroundTargets_Options.ButtonShowTargetCount[currentSize]
+		GVAR.OptionsFrame.ShowTargetCount:SetChecked(BattlegroundTargets_Options.ButtonShowTargetCount[currentSize])
+		BattlegroundTargets:EnableConfigMode()
+	end)
+
+
 
 	-- ----- icons ----------------------------------------
 	local iconW = 0
@@ -1891,7 +1808,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ShowTargetIndicator = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowTargetIndicator, 16, 4, L["Show Target"])
 	GVAR.OptionsFrame.ShowTargetIndicator:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowTargetIndicator:SetPoint("TOP", GVAR.OptionsFrame.ClassIcon, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowTargetIndicator:SetPoint("TOP", GVAR.OptionsFrame.ShowTargetCount, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.ShowTargetIndicator:SetChecked(BattlegroundTargets_Options.ButtonShowTarget[currentSize])
 	GVAR.OptionsFrame.ShowTargetIndicator:SetScript("OnClick", function(self)
 		BattlegroundTargets_Options.ButtonShowTarget[currentSize] = not BattlegroundTargets_Options.ButtonShowTarget[currentSize]
@@ -1903,17 +1820,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.TargetScaleSlider)
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.TargetPositionSlider)
 		end
-		if not BattlegroundTargets_Options.ButtonShowTarget[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowFocus[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowFlag[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowAssist[currentSize]
-		then
-			GVAR.OptionsFrame.TestShuffler1:Hide()
-			GVAR.OptionsFrame.TestShuffler2:Hide()
-		else
-			GVAR.OptionsFrame.TestShuffler1:Show()
-			GVAR.OptionsFrame.TestShuffler2:Show()
-		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
 	local iw = GVAR.OptionsFrame.ShowTargetIndicator:GetWidth()
@@ -1924,7 +1830,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- target indicator scale
 	GVAR.OptionsFrame.TargetScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.TargetScaleSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.TargetScaleSlider, 80, 10, 100, 200, BattlegroundTargets_Options.ButtonTargetScale[currentSize]*100,
+	TEMPLATE.Slider(GVAR.OptionsFrame.TargetScaleSlider, 85, 10, 100, 200, BattlegroundTargets_Options.ButtonTargetScale[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonTargetScale[currentSize] = value/100
 		GVAR.OptionsFrame.TargetScaleSliderText:SetText((BattlegroundTargets_Options.ButtonTargetScale[currentSize]*100).."%")
@@ -1941,7 +1847,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- target indicator position
 	GVAR.OptionsFrame.TargetPositionSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.TargetPositionSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.TargetPositionSlider, 80, 5, 0, 100, BattlegroundTargets_Options.ButtonTargetPosition[currentSize],
+	TEMPLATE.Slider(GVAR.OptionsFrame.TargetPositionSlider, 85, 5, 0, 100, BattlegroundTargets_Options.ButtonTargetPosition[currentSize],
 	function(self, value)
 		BattlegroundTargets_Options.ButtonTargetPosition[currentSize] = value
 		GVAR.OptionsFrame.TargetPositionSliderText:SetText(BattlegroundTargets_Options.ButtonTargetPosition[currentSize])
@@ -1971,17 +1877,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FocusScaleSlider)
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FocusPositionSlider)
 		end
-		if not BattlegroundTargets_Options.ButtonShowTarget[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowFocus[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowFlag[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowAssist[currentSize]
-		then
-			GVAR.OptionsFrame.TestShuffler1:Hide()
-			GVAR.OptionsFrame.TestShuffler2:Hide()
-		else
-			GVAR.OptionsFrame.TestShuffler1:Show()
-			GVAR.OptionsFrame.TestShuffler2:Show()
-		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
 	local iw = GVAR.OptionsFrame.ShowFocusIndicator:GetWidth()
@@ -1992,7 +1887,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- focus indicator scale
 	GVAR.OptionsFrame.FocusScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.FocusScaleSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.FocusScaleSlider, 80, 10, 100, 200, BattlegroundTargets_Options.ButtonFocusScale[currentSize]*100,
+	TEMPLATE.Slider(GVAR.OptionsFrame.FocusScaleSlider, 85, 10, 100, 200, BattlegroundTargets_Options.ButtonFocusScale[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonFocusScale[currentSize] = value/100
 		GVAR.OptionsFrame.FocusScaleSliderText:SetText((BattlegroundTargets_Options.ButtonFocusScale[currentSize]*100).."%")
@@ -2009,7 +1904,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- focus indicator position
 	GVAR.OptionsFrame.FocusPositionSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.FocusPositionSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.FocusPositionSlider, 80, 5, 0, 100, BattlegroundTargets_Options.ButtonFocusPosition[currentSize],
+	TEMPLATE.Slider(GVAR.OptionsFrame.FocusPositionSlider, 85, 5, 0, 100, BattlegroundTargets_Options.ButtonFocusPosition[currentSize],
 	function(self, value)
 		BattlegroundTargets_Options.ButtonFocusPosition[currentSize] = value
 		GVAR.OptionsFrame.FocusPositionSliderText:SetText(BattlegroundTargets_Options.ButtonFocusPosition[currentSize])
@@ -2039,17 +1934,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FlagScaleSlider)
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FlagPositionSlider)
 		end
-		if not BattlegroundTargets_Options.ButtonShowTarget[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowFocus[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowFlag[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowAssist[currentSize]
-		then
-			GVAR.OptionsFrame.TestShuffler1:Hide()
-			GVAR.OptionsFrame.TestShuffler2:Hide()
-		else
-			GVAR.OptionsFrame.TestShuffler1:Show()
-			GVAR.OptionsFrame.TestShuffler2:Show()
-		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
 	local iw = GVAR.OptionsFrame.ShowFlag:GetWidth()
@@ -2060,7 +1944,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- flag scale
 	GVAR.OptionsFrame.FlagScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.FlagScaleSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.FlagScaleSlider, 80, 10, 100, 200, BattlegroundTargets_Options.ButtonFlagScale[currentSize]*100,
+	TEMPLATE.Slider(GVAR.OptionsFrame.FlagScaleSlider, 85, 10, 100, 200, BattlegroundTargets_Options.ButtonFlagScale[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonFlagScale[currentSize] = value/100
 		GVAR.OptionsFrame.FlagScaleSliderText:SetText((BattlegroundTargets_Options.ButtonFlagScale[currentSize]*100).."%")
@@ -2077,7 +1961,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- flag position
 	GVAR.OptionsFrame.FlagPositionSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.FlagPositionSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.FlagPositionSlider, 80, 5, 0, 100, BattlegroundTargets_Options.ButtonFlagPosition[currentSize],
+	TEMPLATE.Slider(GVAR.OptionsFrame.FlagPositionSlider, 85, 5, 0, 100, BattlegroundTargets_Options.ButtonFlagPosition[currentSize],
 	function(self, value)
 		BattlegroundTargets_Options.ButtonFlagPosition[currentSize] = value
 		GVAR.OptionsFrame.FlagPositionSliderText:SetText(BattlegroundTargets_Options.ButtonFlagPosition[currentSize])
@@ -2107,17 +1991,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistScaleSlider)
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistPositionSlider)
 		end
-		if not BattlegroundTargets_Options.ButtonShowTarget[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowFocus[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowFlag[currentSize] and
-		   not BattlegroundTargets_Options.ButtonShowAssist[currentSize]
-		then
-			GVAR.OptionsFrame.TestShuffler1:Hide()
-			GVAR.OptionsFrame.TestShuffler2:Hide()
-		else
-			GVAR.OptionsFrame.TestShuffler1:Show()
-			GVAR.OptionsFrame.TestShuffler2:Show()
-		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
 	local iw = GVAR.OptionsFrame.ShowAssist:GetWidth()
@@ -2128,7 +2001,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- assist scale
 	GVAR.OptionsFrame.AssistScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.AssistScaleSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.AssistScaleSlider, 80, 10, 100, 200, BattlegroundTargets_Options.ButtonAssistScale[currentSize]*100,
+	TEMPLATE.Slider(GVAR.OptionsFrame.AssistScaleSlider, 85, 10, 100, 200, BattlegroundTargets_Options.ButtonAssistScale[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonAssistScale[currentSize] = value/100
 		GVAR.OptionsFrame.AssistScaleSliderText:SetText((BattlegroundTargets_Options.ButtonAssistScale[currentSize]*100).."%")
@@ -2145,7 +2018,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- assist position
 	GVAR.OptionsFrame.AssistPositionSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.AssistPositionSliderText = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.AssistPositionSlider, 80, 5, 0, 100, BattlegroundTargets_Options.ButtonAssistPosition[currentSize],
+	TEMPLATE.Slider(GVAR.OptionsFrame.AssistPositionSlider, 85, 5, 0, 100, BattlegroundTargets_Options.ButtonAssistPosition[currentSize],
 	function(self, value)
 		BattlegroundTargets_Options.ButtonAssistPosition[currentSize] = value
 		GVAR.OptionsFrame.AssistPositionSliderText:SetText(BattlegroundTargets_Options.ButtonAssistPosition[currentSize])
@@ -2168,32 +2041,15 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
-	-- show targetcount
-	GVAR.OptionsFrame.ShowTargetCount = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowTargetCount, 16, 4, L["Show Target Count"])
-	GVAR.OptionsFrame.ShowTargetCount:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowTargetCount:SetPoint("TOP", GVAR.OptionsFrame.ShowAssist, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.ShowTargetCount:SetChecked(BattlegroundTargets_Options.ButtonShowTargetCount[currentSize])
-	GVAR.OptionsFrame.ShowTargetCount:SetScript("OnClick", function(self)
-		BattlegroundTargets_Options.ButtonShowTargetCount[currentSize] = not BattlegroundTargets_Options.ButtonShowTargetCount[currentSize]
-		GVAR.OptionsFrame.ShowTargetCount:SetChecked(BattlegroundTargets_Options.ButtonShowTargetCount[currentSize])
-		BattlegroundTargets:EnableConfigMode()
-	end)
-
 	-- show healt bar
 	GVAR.OptionsFrame.ShowHealthBar = CreateFrame("CheckButton", nil, GVAR.OptionsFrame)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowHealthBar, 16, 4, L["Show Health Bar"])
 	GVAR.OptionsFrame.ShowHealthBar:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowHealthBar:SetPoint("TOP", GVAR.OptionsFrame.ShowTargetCount, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowHealthBar:SetPoint("TOP", GVAR.OptionsFrame.ShowAssist, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.ShowHealthBar:SetChecked(BattlegroundTargets_Options.ButtonShowHealthBar[currentSize])
 	GVAR.OptionsFrame.ShowHealthBar:SetScript("OnClick", function(self)
 		BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] = not BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]
 		GVAR.OptionsFrame.ShowHealthBar:SetChecked(BattlegroundTargets_Options.ButtonShowHealthBar[currentSize])
-		if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] or BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then
-			GVAR.OptionsFrame.TestShuffler3:Show()
-		else
-			GVAR.OptionsFrame.TestShuffler3:Hide()
-		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
@@ -2205,11 +2061,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ShowHealthText:SetScript("OnClick", function(self)
 		BattlegroundTargets_Options.ButtonShowHealthText[currentSize] = not BattlegroundTargets_Options.ButtonShowHealthText[currentSize]
 		GVAR.OptionsFrame.ShowHealthText:SetChecked(BattlegroundTargets_Options.ButtonShowHealthText[currentSize])
-		if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] or BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then
-			GVAR.OptionsFrame.TestShuffler3:Show()
-		else
-			GVAR.OptionsFrame.TestShuffler3:Hide()
-		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
@@ -2257,12 +2108,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 			GVAR.OptionsFrame.RangeCheckInfo:Enable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, false)
 			TEMPLATE.EnableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-			GVAR.OptionsFrame.TestShuffler4:Show()
 		else
 			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 			GVAR.OptionsFrame.RangeCheckInfo:Disable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, true)
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-			GVAR.OptionsFrame.TestShuffler4:Hide()
 		end
 		BattlegroundTargets:EnableConfigMode()
 	end)
@@ -2318,7 +2167,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- range alpha
 	GVAR.OptionsFrame.RangeAlphaSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame)
 	GVAR.OptionsFrame.RangeAlphaValue = GVAR.OptionsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.RangeAlphaSlider, 80, 5, 20, 100, BattlegroundTargets_Options.ButtonRangeAlpha[currentSize]*100,
+	TEMPLATE.Slider(GVAR.OptionsFrame.RangeAlphaSlider, 85, 5, 0, 100, BattlegroundTargets_Options.ButtonRangeAlpha[currentSize]*100,
 	function(self, value)
 		BattlegroundTargets_Options.ButtonRangeAlpha[currentSize] = value/100
 		GVAR.OptionsFrame.RangeAlphaValue:SetText((BattlegroundTargets_Options.ButtonRangeAlpha[currentSize]*100).."%")
@@ -2331,7 +2180,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.RangeAlphaValue:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.RangeAlphaValue:SetText((BattlegroundTargets_Options.ButtonRangeAlpha[currentSize]*100).."%")
 	GVAR.OptionsFrame.RangeAlphaValue:SetTextColor(1, 1, 0.49, 1)
-	rangeW = rangeW + 10 + 80 + 50
+	rangeW = rangeW + 10 + GVAR.OptionsFrame.RangeAlphaSlider:GetWidth() + 50
 	-- ----- range check ----------------------------------------
 
 
@@ -2610,7 +2459,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 	-- ----- setup width ----------------------------------------
-	frameWidth = 10 + iconW + 10 + GVAR.OptionsFrame.TargetScaleSlider:GetWidth() + 50 + GVAR.OptionsFrame.TargetPositionSlider:GetWidth() + 50 + 20-10
+	frameWidth = 10 + iconW + 10 + GVAR.OptionsFrame.TargetScaleSlider:GetWidth() + 50 + GVAR.OptionsFrame.TargetPositionSlider:GetWidth() + 50
 	if rangeW > frameWidth then
 		frameWidth = rangeW
 	end
@@ -2636,69 +2485,31 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 	-- testshuffler
-	GVAR.OptionsFrame.TestShuffler1 = CreateFrame("Button", nil, GVAR.OptionsFrame)
-	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler1, 2)
-	GVAR.OptionsFrame.TestShuffler1:SetPoint("TOP", GVAR.OptionsFrame.TargetPositionSlider, "TOP", 0, 5)
-	GVAR.OptionsFrame.TestShuffler1:SetPoint("RIGHT", GVAR.OptionsFrame, "RIGHT", 0, 0)
-	GVAR.OptionsFrame.TestShuffler1:SetWidth(20)
-	GVAR.OptionsFrame.TestShuffler1:SetHeight(52)
-	GVAR.OptionsFrame.TestShuffler1:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("ICONS", true) end)
-	GVAR.OptionsFrame.TestShuffler1:SetScript("OnEnter", function()
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Back, "TRL", 1)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Back, "RBL", 1)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Highlight, "TRL", 3)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Highlight, "RBL", 3)
-		GVAR.OptionsFrame.TestShuffler2:LockHighlight()
-		GVAR.OptionsFrame.TestShuffler2.Normal:Hide()
+	GVAR.OptionsFrame.TestShuffler = CreateFrame("Button", nil, GVAR.OptionsFrame)
+	GVAR.OptionsFrame.TestShuffler.shuffleStyle = true
+	GVAR.OptionsFrame.TestShuffler:SetPoint("BOTTOM", GVAR.OptionsFrame.HeightSlider, "BOTTOM", 0, 0)
+	GVAR.OptionsFrame.TestShuffler:SetPoint("RIGHT", GVAR.OptionsFrame, "RIGHT", -10, 0)
+	GVAR.OptionsFrame.TestShuffler:SetWidth(32)
+	GVAR.OptionsFrame.TestShuffler:SetHeight(32)
+	GVAR.OptionsFrame.TestShuffler:Hide()
+	GVAR.OptionsFrame.TestShuffler:SetScript("OnClick", function() BattlegroundTargets:ShuffleFunc("OnClick") end)
+	GVAR.OptionsFrame.TestShuffler:SetScript("OnEnter", function() BattlegroundTargets:ShuffleFunc("OnEnter") end)
+	GVAR.OptionsFrame.TestShuffler:SetScript("OnLeave", function() BattlegroundTargets:ShuffleFunc("OnLeave") end)
+	GVAR.OptionsFrame.TestShuffler:SetScript("OnMouseDown", function(self, button)
+		if button == "LeftButton" then BattlegroundTargets:ShuffleFunc("OnMouseDown") end
 	end)
-	GVAR.OptionsFrame.TestShuffler1:SetScript("OnLeave", function()
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Back, "TRBL", 1)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Back, "TRBL", 1)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Highlight, "TRBL", 3)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Highlight, "TRBL", 3)
-		GVAR.OptionsFrame.TestShuffler2:UnlockHighlight()
-		GVAR.OptionsFrame.TestShuffler2.Normal:Show()
-	end)
-
-	GVAR.OptionsFrame.TestShuffler2 = CreateFrame("Button", nil, GVAR.OptionsFrame)
-	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler2, 3)
-	GVAR.OptionsFrame.TestShuffler2:SetPoint("TOP", GVAR.OptionsFrame.TestShuffler1, "BOTTOM", 0, 0)
-	GVAR.OptionsFrame.TestShuffler2:SetWidth(20)
-	GVAR.OptionsFrame.TestShuffler2:SetHeight(52)
-	GVAR.OptionsFrame.TestShuffler2:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("ICONS") end)
-	GVAR.OptionsFrame.TestShuffler2:SetScript("OnEnter", function()
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Back, "TRL", 1)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Back, "RBL", 1)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Highlight, "TRL", 3)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Highlight, "RBL", 3)
-		GVAR.OptionsFrame.TestShuffler1:LockHighlight()
-		GVAR.OptionsFrame.TestShuffler1.Normal:Hide()
-	end)
-	GVAR.OptionsFrame.TestShuffler2:SetScript("OnLeave", function()
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Back, "TRBL", 1)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Back, "TRBL", 1)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler1.Highlight, "TRBL", 3)
-		TEMPLATE.BorderStyle(GVAR.OptionsFrame.TestShuffler2.Highlight, "TRBL", 3)
-		GVAR.OptionsFrame.TestShuffler1:UnlockHighlight()
-		GVAR.OptionsFrame.TestShuffler1.Normal:Show()
-	end)
-
-	GVAR.OptionsFrame.TestShuffler3 = CreateFrame("Button", nil, GVAR.OptionsFrame)
-	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler3, 2)
-	GVAR.OptionsFrame.TestShuffler3:SetPoint("TOP", GVAR.OptionsFrame.ShowHealthText, "TOP", 0, 5)
-	GVAR.OptionsFrame.TestShuffler3:SetPoint("LEFT", GVAR.OptionsFrame.TestShuffler1, "LEFT", 0, 0)
-	GVAR.OptionsFrame.TestShuffler3:SetWidth(20)
-	GVAR.OptionsFrame.TestShuffler3:SetHeight(26)
-	GVAR.OptionsFrame.TestShuffler3:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("HEALTH") end)
-
-	GVAR.OptionsFrame.TestShuffler4 = CreateFrame("Button", nil, GVAR.OptionsFrame)
-	TEMPLATE.IconButton(GVAR.OptionsFrame.TestShuffler4, 2)
-	GVAR.OptionsFrame.TestShuffler4:SetPoint("TOP", GVAR.OptionsFrame.TestShuffler3, "BOTTOM", 0, 0)
-	GVAR.OptionsFrame.TestShuffler4:SetWidth(20)
-	GVAR.OptionsFrame.TestShuffler4:SetHeight(26)
-	GVAR.OptionsFrame.TestShuffler4:SetScript("OnClick", function() BattlegroundTargets:TestShuffler("RANGE") end)
-
-
+	GVAR.OptionsFrame.TestShuffler.Texture = GVAR.OptionsFrame.TestShuffler:CreateTexture(nil, "ARTWORK")
+	GVAR.OptionsFrame.TestShuffler.Texture:SetWidth(32)
+	GVAR.OptionsFrame.TestShuffler.Texture:SetHeight(32)
+	GVAR.OptionsFrame.TestShuffler.Texture:SetPoint("CENTER", 0, 0)
+	GVAR.OptionsFrame.TestShuffler.Texture:SetTexture("Interface\\Icons\\INV_Sigil_Thorim")
+	GVAR.OptionsFrame.TestShuffler:SetNormalTexture(GVAR.OptionsFrame.TestShuffler.Texture)
+	GVAR.OptionsFrame.TestShuffler.TextureHighlight = GVAR.OptionsFrame.TestShuffler:CreateTexture(nil, "OVERLAY")
+	GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetWidth(32)
+	GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetHeight(32)
+	GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetPoint("CENTER", 0, 0)
+	GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
+	GVAR.OptionsFrame.TestShuffler:SetHighlightTexture(GVAR.OptionsFrame.TestShuffler.TextureHighlight)
 
 	-- Mover
 	GVAR.OptionsFrame.MoverTop = CreateFrame("Frame", nil, GVAR.OptionsFrame)
@@ -2892,23 +2703,16 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthText)
-		if BattlegroundTargets_Options.ButtonShowHealthBar[bracketSize] or BattlegroundTargets_Options.ButtonShowHealthText[bracketSize] then
-			GVAR.OptionsFrame.TestShuffler3:Show()
-		else
-			GVAR.OptionsFrame.TestShuffler3:Hide()
-		end
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.RangeCheck)
 		if BattlegroundTargets_Options.ButtonRangeCheck[bracketSize] then
 			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 			GVAR.OptionsFrame.RangeCheckInfo:Enable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, false)
 			TEMPLATE.EnableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-			GVAR.OptionsFrame.TestShuffler4:Show()
 		else
 			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 			GVAR.OptionsFrame.RangeCheckInfo:Disable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, true)
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-			GVAR.OptionsFrame.TestShuffler4:Hide()
 		end
 
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
@@ -2924,18 +2728,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		GVAR.OptionsFrame.WidthTitle:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.HeightSlider)
 		GVAR.OptionsFrame.HeightTitle:SetTextColor(1, 1, 1, 1)
-
-		if not BattlegroundTargets_Options.ButtonShowTarget[bracketSize] and
-		   not BattlegroundTargets_Options.ButtonShowFocus[bracketSize] and
-		   not BattlegroundTargets_Options.ButtonShowFlag[bracketSize]
-		then
-			GVAR.OptionsFrame.TestShuffler1:Hide()
-			GVAR.OptionsFrame.TestShuffler2:Hide()
-		else
-			GVAR.OptionsFrame.TestShuffler1:Show()
-			GVAR.OptionsFrame.TestShuffler2:Show()
-		end
-		
+		GVAR.OptionsFrame.TestShuffler:Show()
 	else
 		if bracketSize == 10 then
 			GVAR.OptionsFrame.TestRaidSize10.Text:SetTextColor(1, 0, 0, 1)
@@ -2971,20 +2764,16 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowAssist)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistScaleSlider)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistPositionSlider)
-		GVAR.OptionsFrame.TestShuffler1:Hide()
-		GVAR.OptionsFrame.TestShuffler2:Hide()
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
-		GVAR.OptionsFrame.TestShuffler3:Hide()
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.RangeCheck)
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 		GVAR.OptionsFrame.RangeCheckInfo:Disable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, true)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-		GVAR.OptionsFrame.TestShuffler4:Hide()
 
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
 		GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
@@ -2999,6 +2788,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		GVAR.OptionsFrame.WidthTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.HeightSlider)
 		GVAR.OptionsFrame.HeightTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+		GVAR.OptionsFrame.TestShuffler:Hide()
 	end
 end
 
@@ -3032,20 +2822,16 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowAssist)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistScaleSlider)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.AssistPositionSlider)
-	GVAR.OptionsFrame.TestShuffler1:Hide()
-	GVAR.OptionsFrame.TestShuffler2:Hide()
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
-	GVAR.OptionsFrame.TestShuffler3:Hide()
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.RangeCheck)
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.RangeCheckTypePullDown)
 	GVAR.OptionsFrame.RangeCheckInfo:Disable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, true)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.RangeAlphaSlider)
-	GVAR.OptionsFrame.TestShuffler4:Hide()
 
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
 	GVAR.OptionsFrame.SortByTitle:SetTextColor(0.5, 0.5, 0.5, 1)
@@ -3060,6 +2846,7 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	GVAR.OptionsFrame.WidthTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.HeightSlider)
 	GVAR.OptionsFrame.HeightTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+	GVAR.OptionsFrame.TestShuffler:Hide()
 end
 
 function BattlegroundTargets:EnableInsecureConfigWidges()
@@ -3698,6 +3485,7 @@ function BattlegroundTargets:EnableConfigMode()
 	GVAR.MainFrame.Movetext:Show()
 	GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, 0)
 
+	BattlegroundTargets:ShuffleFunc("ShuffleCheck")
 	BattlegroundTargets:SetupButtonLayout()
 
 	local ButtonShowHealthBar   = BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]
@@ -3856,175 +3644,178 @@ end
 function BattlegroundTargets:DefaultShuffle()
 	for i = 1, 40 do
 		testHealth[i] = math_random(0, 100)
+		testRange[i]  = math_random(0, 100)
 	end
-
-	for i = 1, 40 do
-		testRange[i] = math_random(0, 100)
-	end
-
-	testIcon1 = math_random(10)
-	if testIcon1 == 0 then
-		testIcon1 = math_random(10)
-		if testIcon1 == 0 then testIcon1 = 1 end
-	end
-	testIcon2 = math_random(10)
-	if testIcon2 == 0 then
-		testIcon2 = math_random(10)
-		if testIcon2 == 0 then testIcon2 = 1 end
-	end
-	testIcon3 = math_random(10)
-	if testIcon3 == 0 then
-		testIcon3 = math_random(10)
-		if testIcon3 == 0 then testIcon3 = 1 end
-	end
-	testIcon4 = math_random(10)
-	if testIcon4 == 0 then
-		testIcon4 = math_random(10)
-		if testIcon4 == 0 then testIcon4 = 1 end
-	end
-
-	testLeader = math_random(10)
-	if testLeader == 0 then
-		testLeader = math_random(10)
-		if testLeader == 0 then testLeader = 1 end
-	end
+	testIcon1  = math_random(10) if testIcon1  == 0 then testIcon1  = math_random(10) if testIcon1  == 0 then testIcon1  = 1 end end
+	testIcon2  = math_random(10) if testIcon2  == 0 then testIcon2  = math_random(10) if testIcon2  == 0 then testIcon2  = 1 end end
+	testIcon3  = math_random(10) if testIcon3  == 0 then testIcon3  = math_random(10) if testIcon3  == 0 then testIcon3  = 1 end end
+	testIcon4  = math_random(10) if testIcon4  == 0 then testIcon4  = math_random(10) if testIcon4  == 0 then testIcon4  = 1 end end
+	testLeader = math_random(10) if testLeader == 0 then testLeader = math_random(10) if testLeader == 0 then testLeader = 1 end end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:TestShuffler(what, multi)
-	if what == "HEALTH" then
-
-		for i = 1, 40 do
-			testHealth[i] = math_random(0, 100)
-		end
-		local ButtonShowHealthBar  = BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]
-		local ButtonShowHealthText = BattlegroundTargets_Options.ButtonShowHealthText[currentSize]
-		if ButtonShowHealthBar or ButtonShowHealthText then
-			for i = 1, 40 do
-				if i < currentSize+1 then
-					if ButtonShowHealthBar then
-						local width = healthBarWidth * (testHealth[i] / 100)
-						width = math_max(0.01, width)
-						width = math_min(healthBarWidth, width)
-						GVAR.TargetButton[ i ].HealthBar:SetWidth( width )
-					end
-					if ButtonShowHealthText then
-						GVAR.TargetButton[ i ].HealthText:SetText( testHealth[i] )
-					end
-				end
-			end
-		end
-
-	elseif what == "RANGE" then
-
-		for i = 1, 40 do
-			testRange[i] = math_random(0, 100)
-		end
-		if BattlegroundTargets_Options.ButtonRangeCheck[currentSize] then
-			local ButtonAvgRangeCheck   = BattlegroundTargets_Options.ButtonAvgRangeCheck[currentSize]
-			local ButtonClassRangeCheck = BattlegroundTargets_Options.ButtonClassRangeCheck[currentSize]
-			local ButtonRangeAlpha      = BattlegroundTargets_Options.ButtonRangeAlpha[currentSize]
-			for i = 1, 40 do
-				if (ButtonAvgRangeCheck or ButtonClassRangeCheck) and testRange[i] < 40 then
-					GVAR.TargetButton[i].RangeTexture:SetAlpha(1)
-					GVAR.TargetButton[i].HealthBar:SetAlpha(1)
-					GVAR.TargetButton[i].RoleTexture:SetAlpha(1)
-					GVAR.TargetButton[i].SpecTexture:SetAlpha(1)
-					GVAR.TargetButton[i].ClassTexture:SetAlpha(1)
-				else
-					GVAR.TargetButton[i].RangeTexture:SetAlpha(0)
-					GVAR.TargetButton[i].HealthBar:SetAlpha(ButtonRangeAlpha)
-					GVAR.TargetButton[i].RoleTexture:SetAlpha(ButtonRangeAlpha)
-					GVAR.TargetButton[i].SpecTexture:SetAlpha(ButtonRangeAlpha)
-					GVAR.TargetButton[i].ClassTexture:SetAlpha(ButtonRangeAlpha)
-				end
-			end
-		end
-
-	elseif what == "ICONS" then
-
-		if multi then
-			testIcon1 = math_random(10)
-			if testIcon1 == 0 then
-				testIcon1 = math_random(10)
-				if testIcon1 == 0 then testIcon1 = 1 end
-			end
-			testIcon2 = math_random(10)
-			if testIcon2 == 0 then
-				testIcon2 = math_random(10)
-				if testIcon2 == 0 then testIcon2 = 1 end
-			end
-			testIcon3 = math_random(10)
-			if testIcon3 == 0 then
-				testIcon3 = math_random(10)
-				if testIcon3 == 0 then testIcon3 = 1 end
-			end
-			testIcon4 = math_random(10)
-			if testIcon4 == 0 then
-				testIcon4 = math_random(10)
-				if testIcon4 == 0 then testIcon4 = 1 end
-			end
-			testLeader = math_random(10)
-			if testLeader == 0 then
-				testLeader = math_random(10)
-				if testLeader == 0 then testLeader = 1 end
-			end
+function BattlegroundTargets:ShuffleFunc(what)
+	if what == "OnLeave" then
+		GVAR.OptionsFrame:SetScript("OnUpdate", nil)
+		GVAR.OptionsFrame.TestShuffler.Texture:SetWidth(32)
+		GVAR.OptionsFrame.TestShuffler.Texture:SetHeight(32)
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetWidth(32)
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetHeight(32)
+	elseif what == "OnEnter" then
+		GVAR.OptionsFrame.TestShuffler.elapsed = 1
+		GVAR.OptionsFrame.TestShuffler.progBit = true
+		if not GVAR.OptionsFrame.TestShuffler.progNum then GVAR.OptionsFrame.TestShuffler.progNum = 0 end
+		if not GVAR.OptionsFrame.TestShuffler.progModi then GVAR.OptionsFrame.TestShuffler.progModi = 0 end
+		GVAR.OptionsFrame:SetScript("OnUpdate", function(self, elap)
+			if inCombat then GVAR.OptionsFrame:SetScript("OnUpdate", nil) return end
+			GVAR.OptionsFrame.TestShuffler.elapsed = GVAR.OptionsFrame.TestShuffler.elapsed + elap
+			if GVAR.OptionsFrame.TestShuffler.elapsed < 0.4 then return end
+			GVAR.OptionsFrame.TestShuffler.elapsed = 0
+			BattlegroundTargets:Shuffler(GVAR.OptionsFrame.TestShuffler.shuffleStyle)
+		end)
+	elseif what == "OnClick" then
+		GVAR.OptionsFrame.TestShuffler.Texture:SetWidth(32)
+		GVAR.OptionsFrame.TestShuffler.Texture:SetHeight(32)
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetWidth(32)
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetHeight(32)
+		GVAR.OptionsFrame.TestShuffler.shuffleStyle = not GVAR.OptionsFrame.TestShuffler.shuffleStyle
+		if GVAR.OptionsFrame.TestShuffler.shuffleStyle then
+			GVAR.OptionsFrame.TestShuffler.Texture:SetTexture("Interface\\Icons\\INV_Sigil_Thorim")
 		else
-			local rnd = math_random(10)
-			if rnd == 0 then
-				rnd = math_random(10)
-				if rnd == 0 then rnd = 1 end
-				if rnd == testIcon1 then
-					rnd = math_random(10)
-					if rnd == 0 then rnd = 1 end
-					if rnd == testIcon1 then
-						rnd = math_random(10)
-						if rnd == 0 then rnd = 1 end
-					end
+			GVAR.OptionsFrame.TestShuffler.Texture:SetTexture("Interface\\Icons\\INV_Sigil_Mimiron")
+		end
+	elseif what == "OnMouseDown" then
+		GVAR.OptionsFrame.TestShuffler.Texture:SetWidth(30)
+		GVAR.OptionsFrame.TestShuffler.Texture:SetHeight(30)
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetWidth(30)
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetHeight(30)
+	elseif what == "ShuffleCheck" then
+		local num = 0
+		if BattlegroundTargets_Options.ButtonShowLeader[currentSize]     then num = num + 1 end
+		if BattlegroundTargets_Options.ButtonShowTarget[currentSize]     then num = num + 1 end
+		if BattlegroundTargets_Options.ButtonShowFocus[currentSize]      then num = num + 1 end
+		if BattlegroundTargets_Options.ButtonShowFlag[currentSize]       then num = num + 1 end
+		if BattlegroundTargets_Options.ButtonShowAssist[currentSize]     then num = num + 1 end
+		if BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]  then num = num + 1 end
+		if BattlegroundTargets_Options.ButtonShowHealthText[currentSize] then num = num + 1 end
+		if BattlegroundTargets_Options.ButtonRangeCheck[currentSize]     then num = num + 1 end
+		if num > 0 then
+			GVAR.OptionsFrame.TestShuffler:Show()
+		else
+			GVAR.OptionsFrame.TestShuffler:Hide()
+		end
+	end
+end
+
+function BattlegroundTargets:Shuffler(shuffleStyle)
+	GVAR.OptionsFrame.TestShuffler.progBit = not GVAR.OptionsFrame.TestShuffler.progBit
+	if GVAR.OptionsFrame.TestShuffler.progBit then
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetAlpha(0)
+	else
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetAlpha(0.5)
+	end	
+
+	if shuffleStyle then
+		BattlegroundTargets:DefaultShuffle()
+	else
+		if GVAR.OptionsFrame.TestShuffler.progModi == 0 then
+			GVAR.OptionsFrame.TestShuffler.progNum = GVAR.OptionsFrame.TestShuffler.progNum + 1
+		else
+			GVAR.OptionsFrame.TestShuffler.progNum = GVAR.OptionsFrame.TestShuffler.progNum - 1
+		end
+		if GVAR.OptionsFrame.TestShuffler.progNum >= 10 then
+			GVAR.OptionsFrame.TestShuffler.progNum = 10
+			GVAR.OptionsFrame.TestShuffler.progModi = 1
+		elseif GVAR.OptionsFrame.TestShuffler.progNum <= 1 then
+			GVAR.OptionsFrame.TestShuffler.progNum = 1
+			GVAR.OptionsFrame.TestShuffler.progModi = 0
+		end
+		testIcon1  = GVAR.OptionsFrame.TestShuffler.progNum
+		testIcon2  = GVAR.OptionsFrame.TestShuffler.progNum
+		testIcon3  = GVAR.OptionsFrame.TestShuffler.progNum
+		testIcon4  = GVAR.OptionsFrame.TestShuffler.progNum
+		testLeader = GVAR.OptionsFrame.TestShuffler.progNum
+		for i = 1, 40 do
+			testHealth[i] = GVAR.OptionsFrame.TestShuffler.progNum*10
+			testRange[i] = 100
+		end
+		testRange[GVAR.OptionsFrame.TestShuffler.progNum] = 30
+	end
+
+	local ButtonShowHealthBar  = BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]
+	local ButtonShowHealthText = BattlegroundTargets_Options.ButtonShowHealthText[currentSize]
+	local ButtonRangeCheck = BattlegroundTargets_Options.ButtonRangeCheck[currentSize]
+	local ButtonRangeAlpha = BattlegroundTargets_Options.ButtonRangeAlpha[currentSize]
+
+	for i = 1, 40 do
+		-- health
+		if ButtonShowHealthBar or ButtonShowHealthText then
+			if i < currentSize+1 then
+				if ButtonShowHealthBar then
+					local width = healthBarWidth * (testHealth[i] / 100)
+					width = math_max(0.01, width)
+					width = math_min(healthBarWidth, width)
+					GVAR.TargetButton[i].HealthBar:SetWidth(width)
+				end
+				if ButtonShowHealthText then
+					GVAR.TargetButton[i].HealthText:SetText(testHealth[i])
 				end
 			end
-			testIcon1 = rnd
-			testIcon2 = rnd
-			testIcon3 = rnd
-			testIcon4 = rnd
-			testLeader = rnd
 		end
 
-		for i = 1, 40 do
-			GVAR.TargetButton[i].LeaderTexture:SetAlpha(0)
-			GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
-			GVAR.TargetButton[i].HighlightT:SetTexture(0, 0, 0, 1)
-			GVAR.TargetButton[i].HighlightR:SetTexture(0, 0, 0, 1)
-			GVAR.TargetButton[i].HighlightB:SetTexture(0, 0, 0, 1)
-			GVAR.TargetButton[i].HighlightL:SetTexture(0, 0, 0, 1)
-			GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
-			GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
-			GVAR.TargetButton[i].AssistTexture:SetAlpha(0)
-		end
-		isTarget = 0
-		if BattlegroundTargets_Options.ButtonShowTarget[currentSize] then
-			GVAR.TargetButton[testIcon1].TargetTexture:SetAlpha(1)
-			GVAR.TargetButton[testIcon1].HighlightT:SetTexture(0.5, 0.5, 0.5, 1)
-			GVAR.TargetButton[testIcon1].HighlightR:SetTexture(0.5, 0.5, 0.5, 1)
-			GVAR.TargetButton[testIcon1].HighlightB:SetTexture(0.5, 0.5, 0.5, 1)
-			GVAR.TargetButton[testIcon1].HighlightL:SetTexture(0.5, 0.5, 0.5, 1)
-			isTarget = testIcon1
-		end
-		if BattlegroundTargets_Options.ButtonShowFocus[currentSize] then
-			GVAR.TargetButton[testIcon2].FocusTexture:SetAlpha(1)
-		end
-		if BattlegroundTargets_Options.ButtonShowFlag[currentSize] then
-			if currentSize == 10 or currentSize == 15 then
-				GVAR.TargetButton[testIcon3].FlagTexture:SetAlpha(1)
+		-- range
+		if ButtonRangeCheck then
+			if testRange[i] < 40 then
+				GVAR.TargetButton[i].RangeTexture:SetAlpha(1)
+				GVAR.TargetButton[i].HealthBar:SetAlpha(1)
+				GVAR.TargetButton[i].RoleTexture:SetAlpha(1)
+				GVAR.TargetButton[i].SpecTexture:SetAlpha(1)
+				GVAR.TargetButton[i].ClassTexture:SetAlpha(1)
+			else
+				GVAR.TargetButton[i].RangeTexture:SetAlpha(0)
+				GVAR.TargetButton[i].HealthBar:SetAlpha(ButtonRangeAlpha)
+				GVAR.TargetButton[i].RoleTexture:SetAlpha(ButtonRangeAlpha)
+				GVAR.TargetButton[i].SpecTexture:SetAlpha(ButtonRangeAlpha)
+				GVAR.TargetButton[i].ClassTexture:SetAlpha(ButtonRangeAlpha)
 			end
 		end
-		if BattlegroundTargets_Options.ButtonShowAssist[currentSize] then
-			GVAR.TargetButton[testIcon4].AssistTexture:SetAlpha(1)
+
+		-- leader, target, focus, flag, assist
+		GVAR.TargetButton[i].LeaderTexture:SetAlpha(0)
+		GVAR.TargetButton[i].TargetTexture:SetAlpha(0)
+		GVAR.TargetButton[i].HighlightT:SetTexture(0, 0, 0, 1)
+		GVAR.TargetButton[i].HighlightR:SetTexture(0, 0, 0, 1)
+		GVAR.TargetButton[i].HighlightB:SetTexture(0, 0, 0, 1)
+		GVAR.TargetButton[i].HighlightL:SetTexture(0, 0, 0, 1)
+		GVAR.TargetButton[i].FocusTexture:SetAlpha(0)
+		GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
+		GVAR.TargetButton[i].AssistTexture:SetAlpha(0)
+	end
+
+	-- leader, target, focus, flag, assist
+	isTarget = 0
+	if BattlegroundTargets_Options.ButtonShowTarget[currentSize] then
+		GVAR.TargetButton[testIcon1].TargetTexture:SetAlpha(1)
+		GVAR.TargetButton[testIcon1].HighlightT:SetTexture(0.5, 0.5, 0.5, 1)
+		GVAR.TargetButton[testIcon1].HighlightR:SetTexture(0.5, 0.5, 0.5, 1)
+		GVAR.TargetButton[testIcon1].HighlightB:SetTexture(0.5, 0.5, 0.5, 1)
+		GVAR.TargetButton[testIcon1].HighlightL:SetTexture(0.5, 0.5, 0.5, 1)
+		isTarget = testIcon1
+	end
+	if BattlegroundTargets_Options.ButtonShowFocus[currentSize] then
+		GVAR.TargetButton[testIcon2].FocusTexture:SetAlpha(1)
+	end
+	if BattlegroundTargets_Options.ButtonShowFlag[currentSize] then
+		if currentSize == 10 or currentSize == 15 then
+			GVAR.TargetButton[testIcon3].FlagTexture:SetAlpha(1)
 		end
-		if BattlegroundTargets_Options.ButtonShowLeader[currentSize] then
-			GVAR.TargetButton[testLeader].LeaderTexture:SetAlpha(0.75)
-		end
+	end
+	if BattlegroundTargets_Options.ButtonShowAssist[currentSize] then
+		GVAR.TargetButton[testIcon4].AssistTexture:SetAlpha(1)
+	end
+	if BattlegroundTargets_Options.ButtonShowLeader[currentSize] then
+		GVAR.TargetButton[testLeader].LeaderTexture:SetAlpha(0.75)
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
