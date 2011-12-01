@@ -114,6 +114,7 @@ local IsInInstance            = _G.IsInInstance
 local IsRatedBattleground     = _G.IsRatedBattleground
 local GetRealZoneText         = _G.GetRealZoneText
 local GetBattlefieldStatus    = _G.GetBattlefieldStatus
+local GetMaxBattlefieldID     = _G.GetMaxBattlefieldID
 local GetNumBattlefieldScores = _G.GetNumBattlefieldScores
 local GetBattlefieldScore     = _G.GetBattlefieldScore
 local UnitName                = _G.UnitName
@@ -369,22 +370,6 @@ playerUnitID["target"] = 1
 playerUnitID["pettarget"] = 1
 playerUnitID["focus"] = 1
 playerUnitID["mouseover"] = 1
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
--- TODO FIX BUG DEL TEST DELETEwith43Patch - 4.2/4.3compatibilitytest
-local function DELETEwith43Patch_GetMaxBattlefieldID()
-	if GetMaxBattlefieldID then
-		--print("4.2/4.3comptest GetMaxBattlefieldID():", GetMaxBattlefieldID() )
-		return GetMaxBattlefieldID()
-	end
-	if MAX_BATTLEFIELD_QUEUES then
-		--print("4.2/4.3comptest MAX_BATTLEFIELD_QUEUES:", MAX_BATTLEFIELD_QUEUES )
-		return MAX_BATTLEFIELD_QUEUES
-	end
-	return 2
-end
--- TODO FIX BUG DEL TEST DELETEwith43Patch - 4.2/4.3compatibilitytest
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -4191,7 +4176,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 
 	if reSizeCheck < 10 then
 		local queueStatus, queueMapName, bgName
-		for i=1, DELETEwith43Patch_GetMaxBattlefieldID() do
+		for i=1, GetMaxBattlefieldID() do
 			queueStatus, queueMapName = GetBattlefieldStatus(i)
 			if queueStatus == "active" then
 				bgName = queueMapName
@@ -4229,7 +4214,7 @@ function BattlegroundTargets:BattlefieldCheck()
 			reSizeCheck = 10
 		else
 			local queueStatus, queueMapName, bgName
-			for i=1, DELETEwith43Patch_GetMaxBattlefieldID() do
+			for i=1, GetMaxBattlefieldID() do
 				queueStatus, queueMapName = GetBattlefieldStatus(i)
 				if queueStatus == "active" then
 					bgName = queueMapName
