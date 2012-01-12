@@ -70,9 +70,9 @@
 --                                                                            --
 -- # No SendAdd0nMessage(): ------------------------------------------------- --
 --   This AddOn does not use/need SendAdd0nMessage().                         --
---   The use of SendAdd0nMessage() can give better results by transmitting    --
---   information to other players. This has certain pros and cons.            --
---   I may include (opt-in) this in some future release, maybe. idontknow     --
+--   SendAdd0nMessage() can give better results by transmitting information   --
+--   to other players. This has certain pros and cons. I may include (opt-in) --
+--   such functionality in some future release. maybe. dontknow.              --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
@@ -4956,14 +4956,9 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 
 		if string_match(message, FL["WSG_TP_MATCH_CAPTURED"]) or -- Warsong Gulch & Twink Peaks: flag was captured
 		   message == FL["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or  -- Eye of the Storm           : flag was captured
-		   message == FL["EOTS_STRING_CAPTURED_BY_HORDE"]        -- Eye of the Storm           : flag was captured
-		then
-			for i = 1, currentSize do
-				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
-			end
-			hasFlag = nil
-		elseif string_match(message, FL["WSG_TP_MATCH_DROPPED"]) or -- Warsong Gulch & Twink Peaks: flag was dropped
-		       message == FL["EOTS_STRING_DROPPED"]                 -- Eye of the Storm           : flag was dropped
+		   message == FL["EOTS_STRING_CAPTURED_BY_HORDE"] or     -- Eye of the Storm           : flag was captured
+		   string_match(message, FL["WSG_TP_MATCH_DROPPED"]) or  -- Warsong Gulch & Twink Peaks: flag was dropped
+		   message == FL["EOTS_STRING_DROPPED"]                  -- Eye of the Storm           : flag was dropped
 		then
 			for i = 1, currentSize do
 				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
@@ -4986,13 +4981,18 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 					break
 				end
 			end
-			if efc and ENEMY_Names[efc] and GVAR.TargetButton[ ENEMY_Name2Button[efc] ] then
-				GVAR.TargetButton[ ENEMY_Name2Button[efc] ].FlagTexture:SetAlpha(1)
-				hasFlag = efc
+			local button = ENEMY_Name2Button[efc]
+			if button then
+				local targetButton = GVAR.TargetButton[button]
+				if targetButton then
+					targetButton.FlagTexture:SetAlpha(1)
+					hasFlag = efc
+				end
 			end
 		elseif string_match(message, FL["WSG_TP_MATCH_CAPTURED"]) or -- Warsong Gulch & Twink Peaks: flag was captured
 		       message == FL["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or  -- Eye of the Storm           : flag was captured
-		       message == FL["EOTS_STRING_CAPTURED_BY_HORDE"]        -- Eye of the Storm           : flag was captured
+		       message == FL["EOTS_STRING_CAPTURED_BY_HORDE"] or     -- Eye of the Storm           : flag was captured
+		       message == FL["EOTS_STRING_DROPPED"]                  -- Eye of the Storm           : flag was dropped
 		then
 			for i = 1, currentSize do
 				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
