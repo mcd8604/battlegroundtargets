@@ -4593,11 +4593,11 @@ function BattlegroundTargets:BattlefieldCheck()
 				end
 
 				BattlegroundTargets:SummaryPosition() -- SUMMARY
-				if oppositeFactionBG == 0 then -- summary_flag_texture
-					GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
-				else
-					GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-				end
+				--if oppositeFactionBG == 0 then -- summary_flag_texture
+				--	GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+				--else
+				--	GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+				--end
 
 				BattlegroundTargets:BattlefieldScoreUpdate(1)
 				BattlegroundTargets:SetupButtonLayout()
