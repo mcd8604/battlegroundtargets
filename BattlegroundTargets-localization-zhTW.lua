@@ -38,6 +38,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["General Settings"] = "總體設定",
 ["Show Minimap-Button"] = "顯示小地圖圖標",
+["Show Summary"] = true,
 
 ["click & move"] = "點擊移動",
 ["BattlegroundTargets does not update if this Tab is opened."] = "如果此框體打開戰場目標將不會更新。",

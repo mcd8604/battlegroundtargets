@@ -38,6 +38,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["General Settings"] = "Общие настройки",
 ["Show Minimap-Button"] = "Отображать кнопку на мини-карте",
+["Show Summary"] = true,
 
 ["click & move"] = "Нажмите & перемещайте",
 ["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets не обновляет информацию если эта вкладка открыта.",

@@ -38,6 +38,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["General Settings"] = true,
 ["Show Minimap-Button"] = true,
+["Show Summary"] = true,
 
 ["click & move"] = true,
 ["BattlegroundTargets does not update if this Tab is opened."] = true,

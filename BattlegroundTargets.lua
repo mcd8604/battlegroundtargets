@@ -178,6 +178,9 @@ local FRIEND_Names = {}       -- key/value | key = friendName, value = -
 local TARGET_Names = {}       -- key/value | key = friendName, value = enemyName
 local SPELL_Range = {}        -- key/value | key = spellId, value = maxRange
 
+local numENEMY = {0,0,0,0}
+local numFRIEND = {0,0,0,0}
+
 local testSize = 10
 local testIcon1 = 2
 local testIcon2 = 5
@@ -1120,6 +1123,8 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.MinimapButton              == nil then BattlegroundTargets_Options.MinimapButton              = false end
 	if BattlegroundTargets_Options.MinimapButtonPos           == nil then BattlegroundTargets_Options.MinimapButtonPos           = -90   end
 
+	if BattlegroundTargets_Options.Summary                    == nil then BattlegroundTargets_Options.Summary                    = false end
+
 	if BattlegroundTargets_Options.EnableBracket              == nil then BattlegroundTargets_Options.EnableBracket              = {}    end
 	if BattlegroundTargets_Options.EnableBracket[10]          == nil then BattlegroundTargets_Options.EnableBracket[10]          = false end
 	if BattlegroundTargets_Options.EnableBracket[15]          == nil then BattlegroundTargets_Options.EnableBracket[15]          = false end
@@ -1542,6 +1547,87 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton:SetScript("OnLeave", OnLeave)
 	end
 
+
+
+	GVAR.Summary = CreateFrame("Frame", nil, GVAR.TargetButton[1]) -- SUMMARY
+	GVAR.Summary:SetToplevel(true)
+	GVAR.Summary:SetWidth(140)
+	GVAR.Summary:SetHeight(60)
+
+	GVAR.Summary.Healer = GVAR.Summary:CreateTexture(nil, "ARTWORK")
+	GVAR.Summary.Healer:SetWidth(20)
+	GVAR.Summary.Healer:SetHeight(20)
+	GVAR.Summary.Healer:SetPoint("TOPLEFT", GVAR.Summary, "TOPLEFT", 60, 0)
+	GVAR.Summary.Healer:SetTexture(Textures.BattlegroundTargetsIcons.path)
+	GVAR.Summary.Healer:SetTexCoord(unpack(Textures.RoleIcon[1]))
+	GVAR.Summary.Tank = GVAR.Summary:CreateTexture(nil, "ARTWORK")
+	GVAR.Summary.Tank:SetWidth(20)
+	GVAR.Summary.Tank:SetHeight(20)
+	GVAR.Summary.Tank:SetPoint("TOP", GVAR.Summary.Healer, "BOTTOM", 0, 0)
+	GVAR.Summary.Tank:SetTexture(Textures.BattlegroundTargetsIcons.path)
+	GVAR.Summary.Tank:SetTexCoord(unpack(Textures.RoleIcon[2]))
+	GVAR.Summary.Damage = GVAR.Summary:CreateTexture(nil, "ARTWORK")
+	GVAR.Summary.Damage:SetWidth(20)
+	GVAR.Summary.Damage:SetHeight(20)
+	GVAR.Summary.Damage:SetPoint("TOP", GVAR.Summary.Tank, "BOTTOM", 0, 0)
+	GVAR.Summary.Damage:SetTexture(Textures.BattlegroundTargetsIcons.path)
+	GVAR.Summary.Damage:SetTexCoord(unpack(Textures.RoleIcon[3]))
+
+	local function FONT_TEMPLATE(button)
+		button:SetWidth(60)
+		button:SetHeight(20)
+		button:SetJustifyH("CENTER")
+		button:SetFont(fontPath, 20, "OUTLINE")
+		button:SetShadowOffset(0, 0)
+		button:SetShadowColor(0, 0, 0, 0)
+		button:SetTextColor(1, 1, 1, 1)
+		button:SetHeight(20)
+	end
+
+	GVAR.Summary.HealerFriend = GVAR.Summary:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	GVAR.Summary.HealerFriend:SetPoint("RIGHT", GVAR.Summary.Healer, "LEFT", 15, 0)
+	FONT_TEMPLATE(GVAR.Summary.HealerFriend)
+	GVAR.Summary.HealerEnemy = GVAR.Summary:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	GVAR.Summary.HealerEnemy:SetPoint("LEFT", GVAR.Summary.Healer, "RIGHT", -15, 0)
+	FONT_TEMPLATE(GVAR.Summary.HealerEnemy)
+
+	GVAR.Summary.TankFriend = GVAR.Summary:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	GVAR.Summary.TankFriend:SetPoint("RIGHT", GVAR.Summary.Tank, "LEFT", 15, 0)
+	FONT_TEMPLATE(GVAR.Summary.TankFriend)
+	GVAR.Summary.TankEnemy = GVAR.Summary:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	GVAR.Summary.TankEnemy:SetPoint("LEFT", GVAR.Summary.Tank, "RIGHT", -15, 0)
+	FONT_TEMPLATE(GVAR.Summary.TankEnemy)
+
+	GVAR.Summary.DamageFriend = GVAR.Summary:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	GVAR.Summary.DamageFriend:SetPoint("RIGHT", GVAR.Summary.Damage, "LEFT", 15, 0)
+	FONT_TEMPLATE(GVAR.Summary.DamageFriend)
+	GVAR.Summary.DamageEnemy = GVAR.Summary:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	GVAR.Summary.DamageEnemy:SetPoint("LEFT", GVAR.Summary.Damage, "RIGHT", -15, 0)
+	FONT_TEMPLATE(GVAR.Summary.DamageEnemy)
+
+	GVAR.Summary.Logo1 = GVAR.Summary:CreateTexture(nil, "BACKGROUND")
+	GVAR.Summary.Logo1:SetWidth(60)
+	GVAR.Summary.Logo1:SetHeight(60)
+	GVAR.Summary.Logo1:SetPoint("RIGHT", GVAR.Summary.Tank, "LEFT", 0, 0)
+	GVAR.Summary.Logo1:SetAlpha(1)
+	GVAR.Summary.Logo2 = GVAR.Summary:CreateTexture(nil, "BACKGROUND")
+	GVAR.Summary.Logo2:SetWidth(60)
+	GVAR.Summary.Logo2:SetHeight(60)
+	GVAR.Summary.Logo2:SetPoint("LEFT", GVAR.Summary.Tank, "RIGHT", 0, 0)
+	GVAR.Summary.Logo2:SetAlpha(1)
+
+	if playerFactionDEF == 0 then -- summary_flag_texture
+		GVAR.Summary.Logo1:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+		GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+	else
+		GVAR.Summary.Logo1:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+		GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+	end
+
+	BattlegroundTargets:SummaryPosition()
+
+
+
 	GVAR.WorldStateScoreWarning = CreateFrame("Frame", nil, WorldStateScoreFrame)
 	TEMPLATE.BorderTRBL(GVAR.WorldStateScoreWarning)
 	GVAR.WorldStateScoreWarning:SetToplevel(true)
@@ -1581,13 +1667,22 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CreateOptionsFrame()
-	if BattlegroundTargets_OptionsFrame then return end
+function BattlegroundTargets:SummaryPosition()
+	if BattlegroundTargets_Options.Summary then
+		GVAR.Summary:SetPoint("TOP", GVAR.TargetButton[currentSize], "BOTTOM", 0, -10) -- SUMMARY
+		GVAR.Summary:Show()
+	else
+		GVAR.Summary:Hide()
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
 
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CreateOptionsFrame()
 	BattlegroundTargets:DefaultShuffle()
 
 	local frameWidth  = 480
-	local frameHeight = 631
+	local frameHeight = 657
 	local tabWidth = math_floor( (frameWidth/3)-10 )
 
 	GVAR.OptionsFrame = CreateFrame("Frame", "BattlegroundTargets_OptionsFrame", UIParent)
@@ -2501,10 +2596,22 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:CreateMinimapButton()
 	end)
 
+	-- summary button
+	GVAR.OptionsFrame.Summary = CreateFrame("CheckButton", nil, GVAR.OptionsFrame) -- SUMMARY
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.Summary, 16, 4, L["Show Summary"])
+	GVAR.OptionsFrame.Summary:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Summary:SetPoint("TOP", GVAR.OptionsFrame.Minimap, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.Summary:SetChecked(BattlegroundTargets_Options.Summary)
+	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.Summary)
+	GVAR.OptionsFrame.Summary:SetScript("OnClick", function(self)
+		BattlegroundTargets_Options.Summary = not BattlegroundTargets_Options.Summary
+		BattlegroundTargets:EnableConfigMode()
+	end)
+
 	-- close
 	GVAR.OptionsFrame.CloseConfig = CreateFrame("Button", nil, GVAR.OptionsFrame)
 	TEMPLATE.TextButton(GVAR.OptionsFrame.CloseConfig, L["Close Configuration"], 1)
-	GVAR.OptionsFrame.CloseConfig:SetPoint("TOP", GVAR.OptionsFrame.Minimap, "BOTTOM", 0, -15)
+	GVAR.OptionsFrame.CloseConfig:SetPoint("TOP", GVAR.OptionsFrame.Summary, "BOTTOM", 0, -15)
 	GVAR.OptionsFrame.CloseConfig:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.CloseConfig:SetWidth(frameWidth-20)
 	GVAR.OptionsFrame.CloseConfig:SetHeight(30)
@@ -3561,6 +3668,8 @@ function BattlegroundTargets:EnableConfigMode()
 	GVAR.MainFrame.Movetext:Show()
 	GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, 0)
 
+	BattlegroundTargets:SummaryPosition() -- SUMMARY
+
 	BattlegroundTargets:ShufflerFunc("ShuffleCheck")
 	BattlegroundTargets:SetupButtonLayout()
 
@@ -4261,7 +4370,24 @@ function BattlegroundTargets:UpdateLayout()
 	if ButtonRangeCheck and not isConfig then
 		BattlegroundTargets:UpdateRange(GetTime())
 	end
-	
+
+	if BattlegroundTargets_Options.Summary then -- SUMMARY
+		if isConfig then
+			numFRIEND = {0,0,0,0}
+			numENEMY = {0,0,0,0}
+			for i = 1, currentSize do
+				local role = ENEMY_Data[i].talentSpec
+				numENEMY[role] = numENEMY[role] + 1
+			end
+		end
+
+		GVAR.Summary.HealerFriend:SetText(numFRIEND[1]) -- HEAL   FRIEND
+		GVAR.Summary.TankFriend:SetText(numFRIEND[2])   -- TANK   FRIEND
+		GVAR.Summary.DamageFriend:SetText(numFRIEND[3]) -- DAMAGE FRIEND
+		GVAR.Summary.HealerEnemy:SetText(numENEMY[1])   -- HEAL   ENEMY
+		GVAR.Summary.TankEnemy:SetText(numENEMY[2])     -- TANK   ENEMY
+		GVAR.Summary.DamageEnemy:SetText(numENEMY[3])   -- DAMAGE ENEMY
+	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -4279,6 +4405,8 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 
 	table_wipe(ENEMY_Data)
 	table_wipe(FRIEND_Names)
+	numENEMY = {0,0,0,0} -- SUMMARY
+	numFRIEND = {0,0,0,0}
 
 	local x = 1
 	local numScores = GetNumBattlefieldScores()
@@ -4308,6 +4436,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 						end
 					end
 				end
+				numENEMY[role] = numENEMY[role] + 1 -- SUMMARY
 
 				ENEMY_Data[x] = {}
 				ENEMY_Data[x].name = name
@@ -4323,6 +4452,29 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 			else
 
 				FRIEND_Names[name] = 1
+
+				local role = 4
+				--local spec = 4
+				local class = "ZZZFAILURE"
+				if classToken then
+					class = classToken
+					if talentSpec then
+						local token = TLT[classToken]
+						if token then
+							if talentSpec == token[1] then
+								role = classes[classToken].spec[1].role
+								--spec = 1
+							elseif talentSpec == token[2] then
+								role = classes[classToken].spec[2].role
+								--spec = 2
+							elseif talentSpec == token[3] then
+								role = classes[classToken].spec[3].role
+								--spec = 3
+							end
+						end
+					end
+				end
+				numFRIEND[role] = numFRIEND[role] + 1 -- SUMMARY
 
 			end
 		end
@@ -4438,6 +4590,13 @@ function BattlegroundTargets:BattlefieldCheck()
 					else
 						GVAR_TargetButton:Hide()
 					end
+				end
+
+				BattlegroundTargets:SummaryPosition() -- SUMMARY
+				if oppositeFactionBG == 0 then -- summary_flag_texture
+					GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+				else
+					GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
 				end
 
 				BattlegroundTargets:BattlefieldScoreUpdate(1)
@@ -4583,6 +4742,12 @@ function BattlegroundTargets:BattlefieldCheck()
 				for i = 1, 40 do
 					GVAR.TargetButton[i]:Hide()
 				end
+			end
+
+			if playerFactionDEF == 0 then -- summary_flag_texture
+				GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+			else
+				GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
 			end
 
 		end
