@@ -126,17 +126,17 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "zhCN" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### zhCN: NOT TESTED ###
+	-- ### zhCN: last TESTED with Patch 4.3.2.15201 (PTR) ###
 	-- # Warsong Gulch & Twink Peaks:
-	["WSG_TP_REGEX_PICKED1"] = "旗帜被([^%s]+)拔起了！", -----TODO-----
-	["WSG_TP_REGEX_PICKED2"] = "旗帜被([^%s]+)拔起了！", -- ...not needed... -----TODO-----
-	["WSG_TP_MATCH_DROPPED"] = "丢掉了", -----TODO-----
-	["WSG_TP_MATCH_CAPTURED"] = "夺取", -----TODO-----
+	["WSG_TP_REGEX_PICKED1"] = "旗帜被([^%s]+)拔起了！",
+	["WSG_TP_REGEX_PICKED2"] = "旗帜被([^%s]+)拔起了！", -- ...not needed...
+	["WSG_TP_MATCH_DROPPED"] = "丢掉了",
+	["WSG_TP_MATCH_CAPTURED"] = "夺取",
 	-- # Eye of the Storm:
-	["EOTS_REGEX_PICKED"] = "(.+)夺走了旗帜！", -----TODO-----
-	["EOTS_STRING_DROPPED"] = true, -----TODO-----
-	["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = true, -----TODO-----
-	["EOTS_STRING_CAPTURED_BY_HORDE"] = true, -----TODO-----
+	["EOTS_REGEX_PICKED"] = "(.+)夺走了旗帜！",
+	["EOTS_STRING_DROPPED"] = "旗帜被扔掉了！",
+	["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "联盟夺得了旗帜！",
+	["EOTS_STRING_CAPTURED_BY_HORDE"] = "部落夺得了旗帜！",
 })
 elseif locale == "zhTW" then
 BattlegroundTargets_Flag:CreateLocaleTable({
