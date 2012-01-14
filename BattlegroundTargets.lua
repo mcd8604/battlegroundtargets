@@ -2605,7 +2605,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.Summary)
 	GVAR.OptionsFrame.Summary:SetScript("OnClick", function(self)
 		BattlegroundTargets_Options.Summary = not BattlegroundTargets_Options.Summary
-		BattlegroundTargets:EnableConfigMode()
+		if BattlegroundTargets_Options.EnableBracket[currentSize] then
+			BattlegroundTargets:EnableConfigMode()
+		end
 	end)
 
 	-- close
