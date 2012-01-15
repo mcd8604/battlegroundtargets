@@ -38,7 +38,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["General Settings"] = "일반 설정",
 ["Show Minimap-Button"] = "미니맵 버튼 표시",
-["Show Summary"] = true,
+["Show Summary"] = "요약 표시",
 
 ["click & move"] = "클릭 & 이동",
 ["BattlegroundTargets does not update if this Tab is opened."] = "이 탭이 열려있다면 BattlegroundTargets은 업데이트 되지 않습니다.",
