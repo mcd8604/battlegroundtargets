@@ -94,6 +94,7 @@ local L   = BattlegroundTargets_Localization -- localization table
 local TLT = BattlegroundTargets_Talents      -- localized talents
 local BGN = BattlegroundTargets_BGNames      -- localized battleground names
 local FL  = BattlegroundTargets_Flag         -- localized flag picked/dropped/captured
+local RNA = BattlegroundTargets_RaceNames    -- localized race names
 
 local GVAR = {}     -- UI Widgets
 local TEMPLATE = {} -- Templates
@@ -168,6 +169,7 @@ local playerFactionDEF   = 0 -- player Faction (DEFAULT)
 local oppositeFactionDEF = 0 -- opposite Faction (DEFAULT)
 local playerFactionBG    = 0 -- player Faction in Battleground
 local oppositeFactionBG  = 0 -- opposite Faction in Battleground
+local oppositeFactionREAL = nil
 
 local ENEMY_Data = {}         -- numerical | all data
 local ENEMY_Names = {}        -- key/value | key = enemyName, value = count
@@ -1192,7 +1194,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonSortDetail[10]       == nil then BattlegroundTargets_Options.ButtonSortDetail[10]       = 3     end
 	if BattlegroundTargets_Options.ButtonFontSize[10]         == nil then BattlegroundTargets_Options.ButtonFontSize[10]         = 12    end
 	if BattlegroundTargets_Options.ButtonScale[10]            == nil then BattlegroundTargets_Options.ButtonScale[10]            = 1     end
-	if BattlegroundTargets_Options.ButtonWidth[10]            == nil then BattlegroundTargets_Options.ButtonWidth[10]            = 160   end
+	if BattlegroundTargets_Options.ButtonWidth[10]            == nil then BattlegroundTargets_Options.ButtonWidth[10]            = 200   end
 	if BattlegroundTargets_Options.ButtonHeight[10]           == nil then BattlegroundTargets_Options.ButtonHeight[10]           = 20    end
 
 	if BattlegroundTargets_Options.ButtonShowSpec[15]         == nil then BattlegroundTargets_Options.ButtonShowSpec[15]         = false end
@@ -1222,7 +1224,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonSortDetail[15]       == nil then BattlegroundTargets_Options.ButtonSortDetail[15]       = 3     end
 	if BattlegroundTargets_Options.ButtonFontSize[15]         == nil then BattlegroundTargets_Options.ButtonFontSize[15]         = 12    end
 	if BattlegroundTargets_Options.ButtonScale[15]            == nil then BattlegroundTargets_Options.ButtonScale[15]            = 1     end
-	if BattlegroundTargets_Options.ButtonWidth[15]            == nil then BattlegroundTargets_Options.ButtonWidth[15]            = 160   end
+	if BattlegroundTargets_Options.ButtonWidth[15]            == nil then BattlegroundTargets_Options.ButtonWidth[15]            = 200   end
 	if BattlegroundTargets_Options.ButtonHeight[15]           == nil then BattlegroundTargets_Options.ButtonHeight[15]           = 20    end
 
 	if BattlegroundTargets_Options.ButtonShowSpec[40]         == nil then BattlegroundTargets_Options.ButtonShowSpec[40]         = false end
@@ -1252,8 +1254,8 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonSortDetail[40]       == nil then BattlegroundTargets_Options.ButtonSortDetail[40]       = 3     end
 	if BattlegroundTargets_Options.ButtonFontSize[40]         == nil then BattlegroundTargets_Options.ButtonFontSize[40]         = 10    end
 	if BattlegroundTargets_Options.ButtonScale[40]            == nil then BattlegroundTargets_Options.ButtonScale[40]            = 0.9   end
-	if BattlegroundTargets_Options.ButtonWidth[40]            == nil then BattlegroundTargets_Options.ButtonWidth[40]            = 80    end
-	if BattlegroundTargets_Options.ButtonHeight[40]           == nil then BattlegroundTargets_Options.ButtonHeight[40]           = 16    end
+	if BattlegroundTargets_Options.ButtonWidth[40]            == nil then BattlegroundTargets_Options.ButtonWidth[40]            = 100   end
+	if BattlegroundTargets_Options.ButtonHeight[40]           == nil then BattlegroundTargets_Options.ButtonHeight[40]           = 15    end
 
 	for i = 1, #bgSizeINT do
 		if not OPT.ButtonShowSpec        then OPT.ButtonShowSpec        = {} end OPT.ButtonShowSpec[ bgSizeINT[i] ]        = BattlegroundTargets_Options.ButtonShowSpec[ bgSizeINT[i] ]       
@@ -4413,9 +4415,31 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 	local x = 1
 	local numScores = GetNumBattlefieldScores()
 	for index = 1, numScores do
-		local name, _, _, _, _, faction, _, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
+		local name, _, _, _, _, faction, race, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
 		if name then
 			if faction == oppositeFactionBG then
+
+				if oppositeFactionREAL == nil and race then
+					local n = RNA[race]
+					if n then
+						if n == 0 then -- summary_flag_texture
+							GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+						else
+							GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+						end
+						oppositeFactionREAL = n
+					end
+				end
+
+				--if race then -- TEST CODE
+				--	if not BattlegroundTargets_Options.TEST then BattlegroundTargets_Options.TEST = {} end
+				--	if not BattlegroundTargets_Options.TEST[locale] then BattlegroundTargets_Options.TEST[locale] = {} end
+				--	if playerFactionDEF == 0 then
+				--		BattlegroundTargets_Options.TEST[locale][race] = "ALLIANCE"
+				--	else
+				--		BattlegroundTargets_Options.TEST[locale][race] = "HORDE"
+				--	end
+				--end
 
 				local role = 4
 				local spec = 4
@@ -4452,6 +4476,16 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 				end
 
 			else
+
+				--if race then -- TEST CODE
+				--	if not BattlegroundTargets_Options.TEST then BattlegroundTargets_Options.TEST = {} end
+				--	if not BattlegroundTargets_Options.TEST[locale] then BattlegroundTargets_Options.TEST[locale] = {} end
+				--	if playerFactionDEF == 0 then
+				--		BattlegroundTargets_Options.TEST[locale][race] = "zzHORDE"
+				--	else
+				--		BattlegroundTargets_Options.TEST[locale][race] = "zzALLIANCE"
+				--	end
+				--end
 
 				FRIEND_Names[name] = 1
 
@@ -4595,11 +4629,6 @@ function BattlegroundTargets:BattlefieldCheck()
 				end
 
 				BattlegroundTargets:SummaryPosition() -- SUMMARY
-				--if oppositeFactionBG == 0 then -- summary_flag_texture
-				--	GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
-				--else
-				--	GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-				--end
 
 				BattlegroundTargets:BattlefieldScoreUpdate(1)
 				BattlegroundTargets:SetupButtonLayout()
@@ -4696,6 +4725,7 @@ function BattlegroundTargets:BattlefieldCheck()
 	else
 		inBattleground = false
 		reSizeCheck = 0
+		oppositeFactionREAL = nil
 
 		BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
 		BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")

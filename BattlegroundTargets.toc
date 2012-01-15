@@ -8,6 +8,7 @@
 BattlegroundTargets-localized-bgnames.lua
 BattlegroundTargets-localized-talents.lua
 BattlegroundTargets-localized-flag.lua
+BattlegroundTargets-localized-racenames.lua
 
 BattlegroundTargets-localization-enUS.lua
 BattlegroundTargets-localization-deDE.lua
