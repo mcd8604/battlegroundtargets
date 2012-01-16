@@ -165,11 +165,11 @@ local targetName, targetRealm
 local focusName, focusRealm
 local assistTargetName, assistTargetRealm
 
-local playerFactionDEF   = 0 -- player Faction (DEFAULT)
-local oppositeFactionDEF = 0 -- opposite Faction (DEFAULT)
-local playerFactionBG    = 0 -- player Faction in Battleground
-local oppositeFactionBG  = 0 -- opposite Faction in Battleground
-local oppositeFactionREAL = nil
+local playerFactionDEF   = 0 -- player faction (DEFAULT)
+local oppositeFactionDEF = 0 -- opposite faction (DEFAULT)
+local playerFactionBG    = 0 -- player faction (in battleground)
+local oppositeFactionBG  = 0 -- opposite faction (in battleground)
+local oppositeFactionREAL    -- real opposite faction
 
 local ENEMY_Data = {}         -- numerical | all data
 local ENEMY_Names = {}        -- key/value | key = enemyName, value = count
@@ -180,8 +180,8 @@ local FRIEND_Names = {}       -- key/value | key = friendName, value = -
 local TARGET_Names = {}       -- key/value | key = friendName, value = enemyName
 local SPELL_Range = {}        -- key/value | key = spellId, value = maxRange
 
-local numENEMY = {0,0,0,0}
-local numFRIEND = {0,0,0,0}
+local ENEMY_Roles = {0,0,0,0}
+local FRIEND_Roles = {0,0,0,0}
 
 local testSize = 10
 local testIcon1 = 2
@@ -4377,20 +4377,20 @@ function BattlegroundTargets:UpdateLayout()
 
 	if BattlegroundTargets_Options.Summary then -- SUMMARY
 		if isConfig then
-			numFRIEND = {0,0,0,0}
-			numENEMY = {0,0,0,0}
+			FRIEND_Roles = {0,0,0,0}
+			ENEMY_Roles = {0,0,0,0}
 			for i = 1, currentSize do
 				local role = ENEMY_Data[i].talentSpec
-				numENEMY[role] = numENEMY[role] + 1
+				ENEMY_Roles[role] = ENEMY_Roles[role] + 1
 			end
 		end
 
-		GVAR.Summary.HealerFriend:SetText(numFRIEND[1]) -- HEAL   FRIEND
-		GVAR.Summary.TankFriend:SetText(numFRIEND[2])   -- TANK   FRIEND
-		GVAR.Summary.DamageFriend:SetText(numFRIEND[3]) -- DAMAGE FRIEND
-		GVAR.Summary.HealerEnemy:SetText(numENEMY[1])   -- HEAL   ENEMY
-		GVAR.Summary.TankEnemy:SetText(numENEMY[2])     -- TANK   ENEMY
-		GVAR.Summary.DamageEnemy:SetText(numENEMY[3])   -- DAMAGE ENEMY
+		GVAR.Summary.HealerFriend:SetText(FRIEND_Roles[1]) -- HEAL   FRIEND
+		GVAR.Summary.TankFriend:SetText(FRIEND_Roles[2])   -- TANK   FRIEND
+		GVAR.Summary.DamageFriend:SetText(FRIEND_Roles[3]) -- DAMAGE FRIEND
+		GVAR.Summary.HealerEnemy:SetText(ENEMY_Roles[1])   -- HEAL   ENEMY
+		GVAR.Summary.TankEnemy:SetText(ENEMY_Roles[2])     -- TANK   ENEMY
+		GVAR.Summary.DamageEnemy:SetText(ENEMY_Roles[3])   -- DAMAGE ENEMY
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -4409,8 +4409,8 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 
 	table_wipe(ENEMY_Data)
 	table_wipe(FRIEND_Names)
-	numENEMY = {0,0,0,0} -- SUMMARY
-	numFRIEND = {0,0,0,0}
+	ENEMY_Roles = {0,0,0,0} -- SUMMARY
+	FRIEND_Roles = {0,0,0,0}
 
 	local x = 1
 	local numScores = GetNumBattlefieldScores()
@@ -4462,7 +4462,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 						end
 					end
 				end
-				numENEMY[role] = numENEMY[role] + 1 -- SUMMARY
+				ENEMY_Roles[role] = ENEMY_Roles[role] + 1 -- SUMMARY
 
 				ENEMY_Data[x] = {}
 				ENEMY_Data[x].name = name
@@ -4510,7 +4510,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 						end
 					end
 				end
-				numFRIEND[role] = numFRIEND[role] + 1 -- SUMMARY
+				FRIEND_Roles[role] = FRIEND_Roles[role] + 1 -- SUMMARY
 
 			end
 		end
