@@ -23,7 +23,7 @@
 -- NOTES:                                                                     --
 -- # All CPU intensive events are disabled if you are not in a battleground   --
 --   OR if that feature is disabled.                                          --
---   This 3 events are always enabled:                                        --
+--   Three events are always enabled:                                         --
 --   - PLAYER_REGEN_DISABLED and PLAYER_REGEN_ENABLED                         --
 --   - ZONE_CHANGED_NEW_AREA -> for bg check                                  --
 --                                                                            --
@@ -33,8 +33,8 @@
 --                           UNIT_HEALTH_FREQUENT                             --
 --                           UPDATE_MOUSEOVER_UNIT                            --
 --                           UNIT_TARGET                                      --
---   - It's impossible to get 100% precise range data from enemies with the   --
---     current WoW API.                                                       --
+--   - The data to determine the distance to an enemy is not always available.--
+--     This is restricted by the WoW API.                                     --
 --   - This feature is a compromise between CPU usage (FPS), lag/network      --
 --     bandwidth (no SendAdd0nMessage), fast and easy visual recognition and  --
 --     suitable data.                                                         --
@@ -43,9 +43,9 @@
 --   - Events:             - UNIT_TARGET                                      --
 --                         - UNIT_HEALTH_FREQUENT                             --
 --                         - UPDATE_MOUSEOVER_UNIT                            --
---   - It's impossible to get 100% precise health data from enemies with the  --
---     current WoW API.                                                       --
---     A raidmember/raidpet MUST target(focus/mouseover) an enemy OR          --
+--   - The health from an enemy is not always available.                      --
+--     This is restricted by the WoW API.                                     --
+--   - A raidmember/raidpet MUST target(focus/mouseover) an enemy OR          --
 --     you/yourpet MUST target/focus/mouseover an enemy to get the health!    --
 --                                                                            --
 -- # Target Count: ----------------------------------------- MEDIUM CPU USAGE --
@@ -69,10 +69,10 @@
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
 --                                                                            --
 -- # No SendAdd0nMessage(): ------------------------------------------------- --
---   This AddOn does not use/need SendAdd0nMessage().                         --
---   SendAdd0nMessage() can give better results by transmitting information   --
---   to other players. This has certain pros and cons. I may include (opt-in) --
---   such functionality in some future release. maybe. dontknow.              --
+--   This AddOn does not use/need SendAdd0nMessage(). SendAdd0nMessage()      --
+--   increases the available data by transmitting information to other        --
+--   players. This has certain pros and cons. I may include (opt-in) such     --
+--   functionality in some future release. maybe. dontknow.                   --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
@@ -244,52 +244,52 @@ local _DAMAGE  = 3
 local _UNKNOWN = 4
 local classimg = "Interface\\WorldStateFrame\\Icons-Classes"
 local classes = {
-	DEATHKNIGHT = {icon = {0.26562501, 0.48437501, 0.51562501, 0.73437501}, -- ( 68/256, 124/256, 132/256, 188/256)
+	DEATHKNIGHT = {icon = {0.26562501, 0.48437499, 0.51562501, 0.73437499}, -- ( 68/256, 124/256, 132/256, 188/256)
 	               spec = {[1] = {role = _TANK,    icon = "Interface\\Icons\\Spell_Deathknight_BloodPresence"},    -- Blood
 	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Deathknight_FrostPresence"},    -- Frost
 	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Deathknight_UnholyPresence"},   -- Unholy
 	                       [4] = {role = _UNKNOWN, icon = nil}}},
-	DRUID       = {icon = {0.75781251, 0.97656251, 0.01562501, 0.23437501}, -- (194/256, 250/256,   4/256,  60/256)
+	DRUID       = {icon = {0.75781251, 0.97656249, 0.01562501, 0.23437499}, -- (194/256, 250/256,   4/256,  60/256)
 	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_StarFall"},              -- Balance
 	                       [2] = {role = _TANK,    icon = "Interface\\Icons\\Ability_Racial_BearForm"},            -- Feral Combat
 	                       [3] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Nature_HealingTouch"},          -- Restoration
 	                       [4] = {role = _UNKNOWN, icon = nil}}},
-	HUNTER      = {icon = {0.01953125, 0.23828125, 0.26562501, 0.48437501}, -- (  5/256,  61/256,  68/256, 124/256)
+	HUNTER      = {icon = {0.01953125, 0.23828125, 0.26562501, 0.48437499}, -- (  5/256,  61/256,  68/256, 124/256)
 	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_BestialDiscipline"},   -- Beast Mastery
 	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_FocusedAim"},          -- Marksmanship
 	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_Camouflage"},          -- Survival
 	                       [4] = {role = _UNKNOWN, icon = nil}}},
-	MAGE        = {icon = {0.26562501, 0.48437501, 0.01562501, 0.23437501}, -- ( 68/256, 124/256,   4/256,  60/256)
+	MAGE        = {icon = {0.26562501, 0.48437499, 0.01562501, 0.23437499}, -- ( 68/256, 124/256,   4/256,  60/256)
 	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Holy_MagicalSentry"},           -- Arcane
 	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Fire_FireBolt02"},              -- Fire
 	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Frost_FrostBolt02"},            -- Frost
 	                       [4] = {role = _UNKNOWN, icon = nil}}},
-	PALADIN     = {icon = {0.01953125, 0.23828125, 0.51562501, 0.73437501}, -- (  5/256,  61/256, 132/256, 188/256)
+	PALADIN     = {icon = {0.01953125, 0.23828125, 0.51562501, 0.73437499}, -- (  5/256,  61/256, 132/256, 188/256)
 	               spec = {[1] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Holy_HolyBolt"},                -- Holy
 	                       [2] = {role = _TANK,    icon = "Interface\\Icons\\Ability_Paladin_ShieldoftheTemplar"}, -- Protection
 	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Holy_AuraOfLight"},             -- Retribution
 	                       [4] = {role = _UNKNOWN, icon = nil}}},
-	PRIEST      = {icon = {0.51171875, 0.73046875, 0.26562501, 0.48437501}, -- (131/256, 187/256,  68/256, 124/256)
+	PRIEST      = {icon = {0.51171875, 0.73046875, 0.26562501, 0.48437499}, -- (131/256, 187/256,  68/256, 124/256)
 	               spec = {[1] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Holy_PowerWordShield"},         -- Discipline
 	                       [2] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Holy_GuardianSpirit"},          -- Holy
 	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_ShadowWordPain"},        -- Shadow
 	                       [4] = {role = _UNKNOWN, icon = nil}}},
-	ROGUE       = {icon = {0.51171875, 0.73046875, 0.01562501, 0.23437501}, -- (131/256, 187/256,   4/256,  60/256)
+	ROGUE       = {icon = {0.51171875, 0.73046875, 0.01562501, 0.23437499}, -- (131/256, 187/256,   4/256,  60/256)
 	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Rogue_Eviscerate"},           -- Assassination
 	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_BackStab"},                   -- Combat
 	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Stealth"},                    -- Subtlety
 	                       [4] = {role = _UNKNOWN, icon = nil}}},
-	SHAMAN      = {icon = {0.26562501, 0.48437501, 0.26562501, 0.48437501}, -- ( 68/256, 124/256,  68/256, 124/256)
+	SHAMAN      = {icon = {0.26562501, 0.48437499, 0.26562501, 0.48437499}, -- ( 68/256, 124/256,  68/256, 124/256)
 	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_Lightning"},             -- Elemental
 	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_LightningShield"},       -- Enhancement
 	                       [3] = {role = _HEAL,    icon = "Interface\\Icons\\Spell_Nature_MagicImmunity"},         -- Restoration
 	                       [4] = {role = _UNKNOWN, icon = nil}}},
-	WARLOCK     = {icon = {0.75781251, 0.97656251, 0.26562501, 0.48437501}, -- (194/256, 250/256,  68/256, 124/256)
+	WARLOCK     = {icon = {0.75781251, 0.97656249, 0.26562501, 0.48437499}, -- (194/256, 250/256,  68/256, 124/256)
 	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_DeathCoil"},             -- Affliction
 	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_Metamorphosis"},         -- Demonology
 	                       [3] = {role = _DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_RainOfFire"},            -- Destruction
 	                       [4] = {role = _UNKNOWN, icon = nil}}},
-	WARRIOR     = {icon = {0.01953125, 0.23828125, 0.01562501, 0.23437501}, -- (  5/256,  61/256,   4/256,  60/256)
+	WARRIOR     = {icon = {0.01953125, 0.23828125, 0.01562501, 0.23437499}, -- (  5/256,  61/256,   4/256,  60/256)
 	               spec = {[1] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Warrior_SavageBlow"},         -- Arms
 	                       [2] = {role = _DAMAGE,  icon = "Interface\\Icons\\Ability_Warrior_InnerRage"},          -- Fury
 	                       [3] = {role = _TANK,    icon = "Interface\\Icons\\Ability_Warrior_DefensiveStance"},    -- Protection
@@ -327,7 +327,7 @@ ranges.DEATHKNIGHT = 47541 -- Death Coil        (30yd/m) - Lvl 55
 ranges.DRUID       =  5176 -- Wrath             (40yd/m) - Lvl  1
 ranges.HUNTER      =    75 -- Auto Shot       (5-40yd/m) - Lvl  1
 ranges.MAGE        =   133 -- Fireball          (40yd/m) - Lvl  1
-ranges.PALADIN     = 62124 -- Hand of Reckoning (30yd/m) - Lvl 14
+ranges.PALADIN     = 62124 -- Hand of Reckoning (30yd/m) - Lvl 14 -- PAL14
 ranges.PRIEST      =   589 -- Shadow Word: Pain (40yd/m) - Lvl  4
 ranges.ROGUE       =  6770 -- Sap               (10yd/m) - Lvl 10
 ranges.SHAMAN      =   403 -- Lightning Bolt    (30yd/m) - Lvl  1
@@ -4576,7 +4576,8 @@ function BattlegroundTargets:BattlefieldCheck()
 					reSizeCheck = 10
 				else
 					if reSizeCheck >= 10 then
-						Print(bgName, L["is not localized! Please contact addon author. Thanks."])
+						Print("ERROR", locale, bgName, zone)
+						Print("Please contact addon author. Thanks.")
 					end
 					currentSize = 10
 					reSizeCheck = reSizeCheck + 1
@@ -4711,7 +4712,19 @@ function BattlegroundTargets:BattlefieldCheck()
 						rangeSpellName = GetSpellInfo( ranges[playerClassEN] )
 					end
 					if not rangeSpellName then
-						Print(UNKNOWN, "id =", ranges[playerClassEN], rangeSpellName, playerClass, playerClassEN)
+						if playerClassEN == "PALADIN" then
+							local level = UnitLevel("player")
+							if level < 14 then -- PAL14
+								Print("PALADIN: Required level for class-spell based rangecheck is 14.") 
+							end
+						end
+						if ranges[playerClassEN] then
+							local spellName = GetSpellInfo( ranges[playerClassEN] )
+							Print("ERROR", locale, playerClassEN, "id =", ranges[playerClassEN], spellName)
+						else
+							Print("ERROR", locale, playerClassEN)
+							Print("Please contact addon author. Thanks.")
+						end
 					else
 						BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
 						BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
@@ -4826,8 +4839,9 @@ function BattlegroundTargets:CheckPlayerTarget()
 	-- class_range (Check Player Target)
 	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
 		local curTime = GetTime()
-		if ENEMY_Name2Range[targetName] then
-			if ENEMY_Name2Range[targetName] + classRangeFrequency > curTime then return end -- ATTENTION
+		local Name2Range = ENEMY_Name2Range[targetName]
+		if Name2Range then
+			if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
 		end
 		if IsSpellInRange(rangeSpellName, "target") == 1 then
 			ENEMY_Name2Range[targetName] = curTime
@@ -4999,8 +5013,11 @@ function BattlegroundTargets:CheckUnitTarget(unitID)
 			end
 			if assistTargetName then
 				local assistButton = ENEMY_Name2Button[assistTargetName]
-				if assistButton and GVAR.TargetButton[assistButton] then
-					GVAR.TargetButton[assistButton].AssistTexture:SetAlpha(1)
+				if assistButton then
+					local button = GVAR.TargetButton[assistButton]
+					if button then
+						button.AssistTexture:SetAlpha(1)
+					end
 				end
 			end
 		elseif friendName and isAssistName == friendName then
@@ -5034,8 +5051,9 @@ function BattlegroundTargets:CheckUnitTarget(unitID)
 		if GVAR_TargetButton then
 			if raidUnitID[unitID] then -- prevent double event trigger for partyXtarget and player unitIDs (raidXtarget is doing the same)
 				local curTime = GetTime()
-				if ENEMY_Name2Range[enemyName] then
-					if ENEMY_Name2Range[enemyName] + classRangeFrequency > curTime then return end -- ATTENTION
+				local Name2Range = ENEMY_Name2Range[enemyName]
+				if Name2Range then
+					if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
 				end
 				if IsSpellInRange(rangeSpellName, enemyID) == 1 then
 					ENEMY_Name2Range[enemyName] = curTime
@@ -5123,8 +5141,9 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
 		if raidUnitID[unitID] or playerUnitID[targetID] then
 			local curTime = GetTime()
-			if ENEMY_Name2Range[targetName] then
-				if ENEMY_Name2Range[targetName] + classRangeFrequency > curTime then return end -- ATTENTION
+			local Name2Range = ENEMY_Name2Range[targetName]
+			if Name2Range then
+				if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
 			end
 			if IsSpellInRange(rangeSpellName, targetID) == 1 then
 				ENEMY_Name2Range[targetName] = curTime
@@ -5322,21 +5341,23 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 local function OnEvent(self, event, ...)
 	if event == "PLAYER_REGEN_DISABLED" then
-		if not inWorld then return end
 		inCombat = true
 		if isConfig then
+			if not inWorld then return end
 			BattlegroundTargets:DisableInsecureConfigWidges()
 		end
 	elseif event == "PLAYER_REGEN_ENABLED" then
-		if not inWorld then return end
 		inCombat = false
 		if reCheckBG then
+			if not inWorld then return end
 			BattlegroundTargets:BattlefieldCheck()
 		end
 		if reSetLayout then
+			if not inWorld then return end
 			BattlegroundTargets:SetupButtonLayout()
 		end
 		if isConfig then
+			if not inWorld then return end
 			BattlegroundTargets:EnableInsecureConfigWidges()
 			if BattlegroundTargets_Options.EnableBracket[currentSize] then
 				BattlegroundTargets:EnableConfigMode()
@@ -5360,6 +5381,7 @@ local function OnEvent(self, event, ...)
 		if not sourceName then return end
 		if not destName then return end
 		if not spellId then return end
+		if sourceName == destName then return end
 		BattlegroundTargets:CombatLogRangeCheck(sourceName, destName, spellId)
 
 	elseif event == "PLAYER_DEAD" then
