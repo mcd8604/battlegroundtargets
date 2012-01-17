@@ -44,6 +44,4 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets не обновляет информацию если эта вкладка открыта.",
 
 ["Close Configuration"] = "Закрыть настройки",
-
-["is not localized! Please contact addon author. Thanks."] = "не локализовано! Пожалуйста, сообщите автору модификации. Спасибо.",
 })

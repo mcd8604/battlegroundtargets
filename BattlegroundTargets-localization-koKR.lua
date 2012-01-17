@@ -44,6 +44,4 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["BattlegroundTargets does not update if this Tab is opened."] = "이 탭이 열려있다면 BattlegroundTargets은 업데이트 되지 않습니다.",
 
 ["Close Configuration"] = "설정 창 닫기",
-
-["is not localized! Please contact addon author. Thanks."] = "지역화가 되어 있지 않습니다! 애드온 제작자에게 연락주세요. 감사합니다.",
 })
