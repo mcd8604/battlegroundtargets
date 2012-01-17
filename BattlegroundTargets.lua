@@ -1495,7 +1495,8 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.HealthBar:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 0, 0)
 		GVAR_TargetButton.HealthBar:SetTexture(0.7, 0.7, 0.7, 1)
 
-		GVAR_TargetButton.HealthText = GVAR_TargetButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		GVAR_TargetButton.HealthTextButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
+		GVAR_TargetButton.HealthText = GVAR_TargetButton.HealthTextButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		GVAR_TargetButton.HealthText:SetWidth((buttonWidth-2) - (buttonHeight-2) - (buttonHeight-2) -2)
 		GVAR_TargetButton.HealthText:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.HealthText:SetPoint("RIGHT", GVAR_TargetButton.ClassColorBackground, "RIGHT", 0, 0)
@@ -1520,14 +1521,16 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.TargetCount:SetPoint("CENTER", GVAR_TargetButton.TargetCountBackground, "CENTER", 0, 0)
 		GVAR_TargetButton.TargetCount:SetJustifyH("CENTER")
 
-		GVAR_TargetButton.TargetTexture = GVAR_TargetButton:CreateTexture(nil, "OVERLAY")
+		GVAR_TargetButton.TargetTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
+		GVAR_TargetButton.TargetTexture = GVAR_TargetButton.TargetTextureButton:CreateTexture(nil, "OVERLAY")
 		GVAR_TargetButton.TargetTexture:SetWidth(buttonHeight-2)
 		GVAR_TargetButton.TargetTexture:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.TargetTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
 		GVAR_TargetButton.TargetTexture:SetTexture(AddonIcon)
 		GVAR_TargetButton.TargetTexture:SetAlpha(0)
 
-		GVAR_TargetButton.FocusTexture = GVAR_TargetButton:CreateTexture(nil, "OVERLAY")
+		GVAR_TargetButton.FocusTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
+		GVAR_TargetButton.FocusTexture = GVAR_TargetButton.FocusTextureButton:CreateTexture(nil, "OVERLAY")
 		GVAR_TargetButton.FocusTexture:SetWidth(buttonHeight-2)
 		GVAR_TargetButton.FocusTexture:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.FocusTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
@@ -1535,7 +1538,8 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.FocusTexture:SetTexCoord(0.03125001, 0.96874999, 0.03125001, 0.96874999)--(1/32, 31/32, 1/32, 31/32)
 		GVAR_TargetButton.FocusTexture:SetAlpha(0)
 
-		GVAR_TargetButton.FlagTexture = GVAR_TargetButton:CreateTexture(nil, "OVERLAY")
+		GVAR_TargetButton.FlagTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
+		GVAR_TargetButton.FlagTexture = GVAR_TargetButton.FlagTextureButton:CreateTexture(nil, "OVERLAY")
 		GVAR_TargetButton.FlagTexture:SetWidth(buttonHeight-2)
 		GVAR_TargetButton.FlagTexture:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.FlagTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
@@ -1547,7 +1551,8 @@ function BattlegroundTargets:CreateFrames()
 		end
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
 
-		GVAR_TargetButton.AssistTexture = GVAR_TargetButton:CreateTexture(nil, "OVERLAY")
+		GVAR_TargetButton.AssistTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
+		GVAR_TargetButton.AssistTexture = GVAR_TargetButton.AssistTextureButton:CreateTexture(nil, "OVERLAY")
 		GVAR_TargetButton.AssistTexture:SetWidth(buttonHeight-2)
 		GVAR_TargetButton.AssistTexture:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.AssistTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
@@ -2028,9 +2033,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TargetScaleSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	TEMPLATE.Slider(GVAR.OptionsFrame.TargetScaleSlider, 85, 10, 100, 200, OPT.ButtonTargetScale[currentSize]*100,
 	function(self, value)
-		BattlegroundTargets_Options.ButtonTargetScale[currentSize] = value/100
-		                        OPT.ButtonTargetScale[currentSize] = value/100
-		GVAR.OptionsFrame.TargetScaleSliderText:SetText((OPT.ButtonTargetScale[currentSize]*100).."%")
+		local nvalue = value/100
+		if nvalue == BattlegroundTargets_Options.ButtonTargetScale[currentSize] then return end
+		BattlegroundTargets_Options.ButtonTargetScale[currentSize] = nvalue
+		                        OPT.ButtonTargetScale[currentSize] = nvalue
+		GVAR.OptionsFrame.TargetScaleSliderText:SetText(value.."%")
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2046,9 +2053,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TargetPositionSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	TEMPLATE.Slider(GVAR.OptionsFrame.TargetPositionSlider, 85, 5, 0, 100, OPT.ButtonTargetPosition[currentSize],
 	function(self, value)
+		if value == BattlegroundTargets_Options.ButtonTargetPosition[currentSize] then return end
 		BattlegroundTargets_Options.ButtonTargetPosition[currentSize] = value
 		                        OPT.ButtonTargetPosition[currentSize] = value
-		GVAR.OptionsFrame.TargetPositionSliderText:SetText(OPT.ButtonTargetPosition[currentSize])
+		GVAR.OptionsFrame.TargetPositionSliderText:SetText(value)
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2088,9 +2096,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FocusScaleSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	TEMPLATE.Slider(GVAR.OptionsFrame.FocusScaleSlider, 85, 10, 100, 200, OPT.ButtonFocusScale[currentSize]*100,
 	function(self, value)
-		BattlegroundTargets_Options.ButtonFocusScale[currentSize] = value/100
-		                        OPT.ButtonFocusScale[currentSize] = value/100
-		GVAR.OptionsFrame.FocusScaleSliderText:SetText((OPT.ButtonFocusScale[currentSize]*100).."%")
+		local nvalue = value/100
+		if nvalue == BattlegroundTargets_Options.ButtonFocusScale[currentSize] then return end
+		BattlegroundTargets_Options.ButtonFocusScale[currentSize] = nvalue
+		                        OPT.ButtonFocusScale[currentSize] = nvalue
+		GVAR.OptionsFrame.FocusScaleSliderText:SetText(value.."%")
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2106,9 +2116,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FocusPositionSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	TEMPLATE.Slider(GVAR.OptionsFrame.FocusPositionSlider, 85, 5, 0, 100, OPT.ButtonFocusPosition[currentSize],
 	function(self, value)
+		if value == BattlegroundTargets_Options.ButtonFocusPosition[currentSize] then return end
 		BattlegroundTargets_Options.ButtonFocusPosition[currentSize] = value
 		                        OPT.ButtonFocusPosition[currentSize] = value
-		GVAR.OptionsFrame.FocusPositionSliderText:SetText(OPT.ButtonFocusPosition[currentSize])
+		GVAR.OptionsFrame.FocusPositionSliderText:SetText(value)
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2148,9 +2159,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FlagScaleSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	TEMPLATE.Slider(GVAR.OptionsFrame.FlagScaleSlider, 85, 10, 100, 200, OPT.ButtonFlagScale[currentSize]*100,
 	function(self, value)
-		BattlegroundTargets_Options.ButtonFlagScale[currentSize] = value/100
-		                        OPT.ButtonFlagScale[currentSize] = value/100
-		GVAR.OptionsFrame.FlagScaleSliderText:SetText((OPT.ButtonFlagScale[currentSize]*100).."%")
+		local nvalue = value/100
+		if nvalue == BattlegroundTargets_Options.ButtonFlagScale[currentSize] then return end
+		BattlegroundTargets_Options.ButtonFlagScale[currentSize] = nvalue
+		                        OPT.ButtonFlagScale[currentSize] = nvalue
+		GVAR.OptionsFrame.FlagScaleSliderText:SetText(value.."%")
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2166,9 +2179,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FlagPositionSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	TEMPLATE.Slider(GVAR.OptionsFrame.FlagPositionSlider, 85, 5, 0, 100, OPT.ButtonFlagPosition[currentSize],
 	function(self, value)
+		if value == BattlegroundTargets_Options.ButtonFlagPosition[currentSize] then return end
 		BattlegroundTargets_Options.ButtonFlagPosition[currentSize] = value
 		                        OPT.ButtonFlagPosition[currentSize] = value
-		GVAR.OptionsFrame.FlagPositionSliderText:SetText(OPT.ButtonFlagPosition[currentSize])
+		GVAR.OptionsFrame.FlagPositionSliderText:SetText(value)
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2208,9 +2222,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.AssistScaleSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	TEMPLATE.Slider(GVAR.OptionsFrame.AssistScaleSlider, 85, 10, 100, 200, OPT.ButtonAssistScale[currentSize]*100,
 	function(self, value)
-		BattlegroundTargets_Options.ButtonAssistScale[currentSize] = value/100
-		                        OPT.ButtonAssistScale[currentSize] = value/100
-		GVAR.OptionsFrame.AssistScaleSliderText:SetText((OPT.ButtonAssistScale[currentSize]*100).."%")
+		local nvalue = value/100
+		if nvalue == BattlegroundTargets_Options.ButtonAssistScale[currentSize] then return end
+		BattlegroundTargets_Options.ButtonAssistScale[currentSize] = nvalue
+		                        OPT.ButtonAssistScale[currentSize] = nvalue
+		GVAR.OptionsFrame.AssistScaleSliderText:SetText(value.."%")
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2226,9 +2242,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.AssistPositionSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	TEMPLATE.Slider(GVAR.OptionsFrame.AssistPositionSlider, 85, 5, 0, 100, OPT.ButtonAssistPosition[currentSize],
 	function(self, value)
+		if value == BattlegroundTargets_Options.ButtonAssistPosition[currentSize] then return end
 		BattlegroundTargets_Options.ButtonAssistPosition[currentSize] = value
 		                        OPT.ButtonAssistPosition[currentSize] = value
-		GVAR.OptionsFrame.AssistPositionSliderText:SetText(OPT.ButtonAssistPosition[currentSize])
+		GVAR.OptionsFrame.AssistPositionSliderText:SetText(value)
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2379,9 +2396,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.RangeAlphaValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	TEMPLATE.Slider(GVAR.OptionsFrame.RangeAlphaSlider, 85, 5, 0, 100, OPT.ButtonRangeAlpha[currentSize]*100,
 	function(self, value)
-		BattlegroundTargets_Options.ButtonRangeAlpha[currentSize] = value/100
-		                        OPT.ButtonRangeAlpha[currentSize] = value/100
-		GVAR.OptionsFrame.RangeAlphaValue:SetText((OPT.ButtonRangeAlpha[currentSize]*100).."%")
+		local nvalue = value/100
+		if nvalue == BattlegroundTargets_Options.ButtonRangeAlpha[currentSize] then return end
+		BattlegroundTargets_Options.ButtonRangeAlpha[currentSize] = nvalue
+		                        OPT.ButtonRangeAlpha[currentSize] = nvalue
+		GVAR.OptionsFrame.RangeAlphaValue:SetText(value.."%")
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2526,9 +2545,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FontTitle:SetTextColor(1, 1, 1, 1)
 	TEMPLATE.Slider(GVAR.OptionsFrame.FontSlider, 150, 1, 5, 20, OPT.ButtonFontSize[currentSize],
 	function(self, value)
+		if value == BattlegroundTargets_Options.ButtonFontSize[currentSize] then return end
 		BattlegroundTargets_Options.ButtonFontSize[currentSize] = value
 		                        OPT.ButtonFontSize[currentSize] = value
-		GVAR.OptionsFrame.FontValue:SetText(OPT.ButtonFontSize[currentSize])
+		GVAR.OptionsFrame.FontValue:SetText(value)
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2555,9 +2575,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ScaleTitle:SetTextColor(1, 1, 1, 1)
 	TEMPLATE.Slider(GVAR.OptionsFrame.ScaleSlider, 180, 5, 50, 200, OPT.ButtonScale[currentSize]*100,
 	function(self, value)
-		BattlegroundTargets_Options.ButtonScale[currentSize] = value/100
-		                        OPT.ButtonScale[currentSize] = value/100
-		GVAR.OptionsFrame.ScaleValue:SetText((OPT.ButtonScale[currentSize]*100).."%")
+		local nvalue = value/100
+		if nvalue == BattlegroundTargets_Options.ButtonScale[currentSize] then return end
+		BattlegroundTargets_Options.ButtonScale[currentSize] = nvalue
+		                        OPT.ButtonScale[currentSize] = nvalue
+		GVAR.OptionsFrame.ScaleValue:SetText(value.."%")
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2584,9 +2606,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.WidthTitle:SetTextColor(1, 1, 1, 1)
 	TEMPLATE.Slider(GVAR.OptionsFrame.WidthSlider, 180, 5, 50, 300, OPT.ButtonWidth[currentSize],
 	function(self, value)
+		if value == BattlegroundTargets_Options.ButtonWidth[currentSize] then return end
 		BattlegroundTargets_Options.ButtonWidth[currentSize] = value
 		                        OPT.ButtonWidth[currentSize] = value
-		GVAR.OptionsFrame.WidthValue:SetText(OPT.ButtonWidth[currentSize].."px")
+		GVAR.OptionsFrame.WidthValue:SetText(value.."px")
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -2613,9 +2636,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.HeightTitle:SetTextColor(1, 1, 1, 1)
 	TEMPLATE.Slider(GVAR.OptionsFrame.HeightSlider, 180, 1, 10, 30, OPT.ButtonHeight[currentSize],
 	function(self, value)
+		if value == BattlegroundTargets_Options.ButtonHeight[currentSize] then return end
 		BattlegroundTargets_Options.ButtonHeight[currentSize] = value
 		                        OPT.ButtonHeight[currentSize] = value
-		GVAR.OptionsFrame.HeightValue:SetText(OPT.ButtonHeight[currentSize].."px")
+		GVAR.OptionsFrame.HeightValue:SetText(value.."px")
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
@@ -3270,6 +3294,13 @@ function BattlegroundTargets:SetupButtonLayout()
 
 	for i = 1, 40 do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
+		local lvl = GVAR_TargetButton:GetFrameLevel()
+		GVAR_TargetButton.HealthTextButton:SetFrameLevel(lvl+1) -- xBUT
+		GVAR_TargetButton.TargetTextureButton:SetFrameLevel(lvl+2)
+		GVAR_TargetButton.AssistTextureButton:SetFrameLevel(lvl+3)
+		GVAR_TargetButton.FocusTextureButton:SetFrameLevel(lvl+4)
+		GVAR_TargetButton.FlagTextureButton:SetFrameLevel(lvl+5)
+
 		GVAR_TargetButton:SetScale(ButtonScale)
 
 		GVAR_TargetButton:SetWidth(ButtonWidth)
@@ -4501,8 +4532,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 	FRIEND_Roles = {0,0,0,0}
 
 	local x = 1
-	local numScores = GetNumBattlefieldScores()
-	for index = 1, numScores do
+	for index = 1, GetNumBattlefieldScores() do
 		local name, _, _, _, _, faction, race, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
 		if name then
 			if faction == oppositeFactionBG then
@@ -4639,9 +4669,7 @@ function BattlegroundTargets:BattlefieldCheck()
 	if instanceType == "pvp" then
 		inBattleground = true
 
-		local isRatedBG = IsRatedBattleground()
-
-		if isRatedBG then
+		if IsRatedBattleground() then
 			currentSize = rbgSize
 			reSizeCheck = 10
 		else
