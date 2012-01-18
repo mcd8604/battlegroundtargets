@@ -1187,10 +1187,10 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonHideRealm[10]        == nil then BattlegroundTargets_Options.ButtonHideRealm[10]        = false end
 	if BattlegroundTargets_Options.ButtonShowLeader[10]       == nil then BattlegroundTargets_Options.ButtonShowLeader[10]       = false end
 	if BattlegroundTargets_Options.ButtonShowTarget[10]       == nil then BattlegroundTargets_Options.ButtonShowTarget[10]       = true  end
-	if BattlegroundTargets_Options.ButtonTargetScale[10]      == nil then BattlegroundTargets_Options.ButtonTargetScale[10]      = 1.2   end
+	if BattlegroundTargets_Options.ButtonTargetScale[10]      == nil then BattlegroundTargets_Options.ButtonTargetScale[10]      = 1.5   end
 	if BattlegroundTargets_Options.ButtonTargetPosition[10]   == nil then BattlegroundTargets_Options.ButtonTargetPosition[10]   = 100   end
 	if BattlegroundTargets_Options.ButtonShowAssist[10]       == nil then BattlegroundTargets_Options.ButtonShowAssist[10]       = false end
-	if BattlegroundTargets_Options.ButtonAssistScale[10]      == nil then BattlegroundTargets_Options.ButtonAssistScale[10]      = 1.5   end
+	if BattlegroundTargets_Options.ButtonAssistScale[10]      == nil then BattlegroundTargets_Options.ButtonAssistScale[10]      = 1.2   end
 	if BattlegroundTargets_Options.ButtonAssistPosition[10]   == nil then BattlegroundTargets_Options.ButtonAssistPosition[10]   = 100   end
 	if BattlegroundTargets_Options.ButtonShowFocus[10]        == nil then BattlegroundTargets_Options.ButtonShowFocus[10]        = false end
 	if BattlegroundTargets_Options.ButtonFocusScale[10]       == nil then BattlegroundTargets_Options.ButtonFocusScale[10]       = 1     end
@@ -1207,7 +1207,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonRangeAlpha[10]       == nil then BattlegroundTargets_Options.ButtonRangeAlpha[10]       = 1     end
 	if BattlegroundTargets_Options.ButtonSortBy[10]           == nil then BattlegroundTargets_Options.ButtonSortBy[10]           = 1     end
 	if BattlegroundTargets_Options.ButtonSortDetail[10]       == nil then BattlegroundTargets_Options.ButtonSortDetail[10]       = 3     end
-	if BattlegroundTargets_Options.ButtonFontSize[10]         == nil then BattlegroundTargets_Options.ButtonFontSize[10]         = 12    end
+	if BattlegroundTargets_Options.ButtonFontSize[10]         == nil then BattlegroundTargets_Options.ButtonFontSize[10]         = 10    end
 	if BattlegroundTargets_Options.ButtonScale[10]            == nil then BattlegroundTargets_Options.ButtonScale[10]            = 1     end
 	if BattlegroundTargets_Options.ButtonWidth[10]            == nil then BattlegroundTargets_Options.ButtonWidth[10]            = 200   end
 	if BattlegroundTargets_Options.ButtonHeight[10]           == nil then BattlegroundTargets_Options.ButtonHeight[10]           = 20    end
@@ -1217,10 +1217,10 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonHideRealm[15]        == nil then BattlegroundTargets_Options.ButtonHideRealm[15]        = false end
 	if BattlegroundTargets_Options.ButtonShowLeader[15]       == nil then BattlegroundTargets_Options.ButtonShowLeader[15]       = false end
 	if BattlegroundTargets_Options.ButtonShowTarget[15]       == nil then BattlegroundTargets_Options.ButtonShowTarget[15]       = true  end
-	if BattlegroundTargets_Options.ButtonTargetScale[15]      == nil then BattlegroundTargets_Options.ButtonTargetScale[15]      = 1.2   end
+	if BattlegroundTargets_Options.ButtonTargetScale[15]      == nil then BattlegroundTargets_Options.ButtonTargetScale[15]      = 1.5   end
 	if BattlegroundTargets_Options.ButtonTargetPosition[15]   == nil then BattlegroundTargets_Options.ButtonTargetPosition[15]   = 100   end
 	if BattlegroundTargets_Options.ButtonShowAssist[15]       == nil then BattlegroundTargets_Options.ButtonShowAssist[15]       = false end
-	if BattlegroundTargets_Options.ButtonAssistScale[15]      == nil then BattlegroundTargets_Options.ButtonAssistScale[15]      = 1.5   end
+	if BattlegroundTargets_Options.ButtonAssistScale[15]      == nil then BattlegroundTargets_Options.ButtonAssistScale[15]      = 1.2   end
 	if BattlegroundTargets_Options.ButtonAssistPosition[15]   == nil then BattlegroundTargets_Options.ButtonAssistPosition[15]   = 100   end
 	if BattlegroundTargets_Options.ButtonShowFocus[15]        == nil then BattlegroundTargets_Options.ButtonShowFocus[15]        = false end
 	if BattlegroundTargets_Options.ButtonFocusScale[15]       == nil then BattlegroundTargets_Options.ButtonFocusScale[15]       = 1     end
@@ -1237,7 +1237,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonRangeAlpha[15]       == nil then BattlegroundTargets_Options.ButtonRangeAlpha[15]       = 1     end
 	if BattlegroundTargets_Options.ButtonSortBy[15]           == nil then BattlegroundTargets_Options.ButtonSortBy[15]           = 1     end
 	if BattlegroundTargets_Options.ButtonSortDetail[15]       == nil then BattlegroundTargets_Options.ButtonSortDetail[15]       = 3     end
-	if BattlegroundTargets_Options.ButtonFontSize[15]         == nil then BattlegroundTargets_Options.ButtonFontSize[15]         = 12    end
+	if BattlegroundTargets_Options.ButtonFontSize[15]         == nil then BattlegroundTargets_Options.ButtonFontSize[15]         = 10    end
 	if BattlegroundTargets_Options.ButtonScale[15]            == nil then BattlegroundTargets_Options.ButtonScale[15]            = 1     end
 	if BattlegroundTargets_Options.ButtonWidth[15]            == nil then BattlegroundTargets_Options.ButtonWidth[15]            = 200   end
 	if BattlegroundTargets_Options.ButtonHeight[15]           == nil then BattlegroundTargets_Options.ButtonHeight[15]           = 20    end
@@ -1269,7 +1269,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonSortDetail[40]       == nil then BattlegroundTargets_Options.ButtonSortDetail[40]       = 3     end
 	if BattlegroundTargets_Options.ButtonFontSize[40]         == nil then BattlegroundTargets_Options.ButtonFontSize[40]         = 10    end
 	if BattlegroundTargets_Options.ButtonScale[40]            == nil then BattlegroundTargets_Options.ButtonScale[40]            = 0.9   end
-	if BattlegroundTargets_Options.ButtonWidth[40]            == nil then BattlegroundTargets_Options.ButtonWidth[40]            = 100   end
+	if BattlegroundTargets_Options.ButtonWidth[40]            == nil then BattlegroundTargets_Options.ButtonWidth[40]            = 125   end
 	if BattlegroundTargets_Options.ButtonHeight[40]           == nil then BattlegroundTargets_Options.ButtonHeight[40]           = 15    end
 
 	for i = 1, #bgSizeINT do
