@@ -3486,6 +3486,10 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 		else
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("TOPRIGHT", GVAR.OptionsFrame, "TOPLEFT", -80, 19)
+			BattlegroundTargets_Options.pos[frameName.."_posX"] = _G[frameName]:GetLeft()
+			BattlegroundTargets_Options.pos[frameName.."_posY"] = _G[frameName]:GetTop()
+			_G[frameName]:ClearAllPoints()
+			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
 		end
 	elseif frameName == "BattlegroundTargets_OptionsFrame" then
 		if BattlegroundTargets_Options.pos[frameName.."_posX"] then
@@ -3518,8 +3522,6 @@ end
 function BattlegroundTargets:MainFrameShow()
 	if inCombat or InCombatLockdown() then return end
 	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
-	--GVAR.MainFrame:StartMoving()
-	--GVAR.MainFrame:StopMovingOrSizing()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
