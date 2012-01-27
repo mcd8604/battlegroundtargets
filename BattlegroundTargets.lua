@@ -5536,7 +5536,7 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 					local targetButton = GVAR.TargetButton[button]
 					if targetButton then
 						targetButton.FlagTexture:SetAlpha(1)
-						hasFlag = efc
+						hasFlag = ENEMY_Data[button].name
 					end
 					break
 				end
