@@ -7,8 +7,6 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Open Configuration"] = "打開設置面板",
 
 ["Configuration"] = "設置",
-["Out of combat: Configuration enabled."] = "不在戰鬥中: 可改變設置",
-["In combat: Configuration locked!"] = "戰鬥中: 不能改變設置!",
 ["10 vs 10"] = "10 vs 10",
 ["15 vs 15"] = "15 vs 15",
 ["40 vs 40"] = "40 vs 40",

@@ -7,8 +7,6 @@ BattlegroundTargets_Localization = {
 ["Open Configuration"] = true,
 
 ["Configuration"] = true,
-["Out of combat: Configuration enabled."] = true,
-["In combat: Configuration locked!"] = true,
 ["10 vs 10"] = true,
 ["15 vs 15"] = true,
 ["40 vs 40"] = true,

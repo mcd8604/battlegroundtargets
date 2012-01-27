@@ -7,8 +7,6 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Open Configuration"] = "설정 창 열기",
 
 ["Configuration"] = "설정",
-["Out of combat: Configuration enabled."] = "전투 종료: 설정 창이 활성화 되었습니다.",
-["In combat: Configuration locked!"] = "전투 시작: 설정 창이 잠깁니다!",
 ["10 vs 10"] = "10 V 10",
 ["15 vs 15"] = "15 V 15",
 ["40 vs 40"] = "40 V 40",

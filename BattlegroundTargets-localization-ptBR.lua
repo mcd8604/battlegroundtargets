@@ -7,8 +7,6 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Open Configuration"] = "Abrir configuração",
 
 ["Configuration"] = "Configuração",
-["Out of combat: Configuration enabled."] = "Fora de combate: Configuração disponível.",
-["In combat: Configuration locked!"] = "Em combate: Configuração não disponível!",
 ["10 vs 10"] = "10 vs 10",
 ["15 vs 15"] = "15 vs 15",
 ["40 vs 40"] = "40 vs 40",
