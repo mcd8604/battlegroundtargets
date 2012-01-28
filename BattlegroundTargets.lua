@@ -4772,12 +4772,11 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 
 				if oppositeFactionREAL == nil and race then
 					local n = RNA[race]
-					if n then
-						if n == 0 then -- summary_flag_texture
-							GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
-						else
-							GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-						end
+					if n == 0 then -- summary_flag_texture
+						GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+						oppositeFactionREAL = n
+					elseif n == 1 then
+						GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
 						oppositeFactionREAL = n
 					end
 				end
