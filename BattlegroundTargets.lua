@@ -67,6 +67,7 @@
 -- # Enemy Flag Carrier: --------------------------------- VERY LOW CPU USAGE --
 --   - Events:             - CHAT_MSG_BG_SYSTEM_HORDE                         --
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
+--                         - CHAT_MSG_BG_SYSTEM_NEUTRAL                       --
 --                                                                            --
 -- # No SendAdd0nMessage(): ------------------------------------------------- --
 --   This AddOn does not use/need SendAdd0nMessage(). SendAdd0nMessage()      --
@@ -148,6 +149,7 @@ local isLeader
 local isAssistName
 local isAssistUnitId
 local rangeSpellName -- for class-spell based range check
+local flagDebuff = 0
 
 local scoreUpdateThrottle  = GetTime() -- UPDATE_BATTLEFIELD_SCORE BattlefieldScoreUpdate()
 local scoreUpdateFrequency = 1
@@ -1589,6 +1591,13 @@ function BattlegroundTargets:CreateFrames()
 			GVAR_TargetButton.FlagTexture:SetTexture("Interface\\WorldStateFrame\\AllianceFlag")
 		end
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
+
+		GVAR_TargetButton.FlagDebuffButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT -- FLAGDEBUFF
+		GVAR_TargetButton.FlagDebuff = GVAR_TargetButton.FlagDebuffButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		GVAR_TargetButton.FlagDebuff:SetWidth(40)
+		GVAR_TargetButton.FlagDebuff:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.FlagDebuff:SetPoint("CENTER", GVAR_TargetButton.FlagTexture, "CENTER", 0, 0)
+		GVAR_TargetButton.FlagDebuff:SetJustifyH("CENTER")
 
 		GVAR_TargetButton.AssistTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.AssistTexture = GVAR_TargetButton.AssistTextureButton:CreateTexture(nil, "OVERLAY")
@@ -3524,6 +3533,7 @@ function BattlegroundTargets:SetupButtonLayout()
 		GVAR_TargetButton.AssistTextureButton:SetFrameLevel(lvl+3)
 		GVAR_TargetButton.FocusTextureButton:SetFrameLevel(lvl+4)
 		GVAR_TargetButton.FlagTextureButton:SetFrameLevel(lvl+5)
+		GVAR_TargetButton.FlagDebuffButton:SetFrameLevel(lvl+6)
 
 		GVAR_TargetButton:SetScale(ButtonScale)
 
@@ -3662,8 +3672,17 @@ function BattlegroundTargets:SetupButtonLayout()
 			end
 			GVAR_TargetButton.FlagTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", leftPos, 0)
 			GVAR_TargetButton.FlagTexture:Show()
+			GVAR_TargetButton.FlagDebuff:SetFont(fontPath, ButtonFontSize, "OUTLINE")
+			GVAR_TargetButton.FlagDebuff:SetShadowOffset(0, 0)
+			GVAR_TargetButton.FlagDebuff:SetShadowColor(0, 0, 0, 0)
+			GVAR_TargetButton.FlagDebuff:SetTextColor(1, 1, 1, 1)
+			GVAR_TargetButton.FlagDebuff:SetHeight(backfallFontSize)
+			GVAR_TargetButton.FlagDebuff:SetAlpha(1)
+			GVAR_TargetButton.FlagDebuff:SetPoint("CENTER", GVAR_TargetButton.FlagTexture, "CENTER", 0, 0)
+			GVAR_TargetButton.FlagDebuff:Show()
 		else
 			GVAR_TargetButton.FlagTexture:Hide()
+			GVAR_TargetButton.FlagDebuff:Hide()
 		end
 
 		if ButtonShowAssist then
@@ -3817,163 +3836,163 @@ function BattlegroundTargets:EnableConfigMode()
 		table_wipe(ENEMY_Data)
 
 		ENEMY_Data[1] = {}
-		ENEMY_Data[1].name = TARGET.."_Aa-Alterac Mountains"
+		ENEMY_Data[1].name = TARGET.."_Aa-servername"
 		ENEMY_Data[1].classToken = "DRUID"
 		ENEMY_Data[1].talentSpec = TLT.DRUID[3]
 		ENEMY_Data[2] = {}
-		ENEMY_Data[2].name = TARGET.."_Bb-Ragnaros"
+		ENEMY_Data[2].name = TARGET.."_Bb-servername"
 		ENEMY_Data[2].classToken = "PRIEST"
 		ENEMY_Data[2].talentSpec = TLT.PRIEST[3]
 		ENEMY_Data[3] = {}
-		ENEMY_Data[3].name = TARGET.."_Cc-Blackrock"
+		ENEMY_Data[3].name = TARGET.."_Cc-servername"
 		ENEMY_Data[3].classToken = "WARLOCK"
 		ENEMY_Data[3].talentSpec = TLT.WARLOCK[1]
 		ENEMY_Data[4] = {}
-		ENEMY_Data[4].name = TARGET.."_Dd-Wildhammer"
+		ENEMY_Data[4].name = TARGET.."_Dd-servername"
 		ENEMY_Data[4].classToken = "HUNTER"
 		ENEMY_Data[4].talentSpec = TLT.HUNTER[3]
 		ENEMY_Data[5] = {}
-		ENEMY_Data[5].name = TARGET.."_Ee-Khaz'goroth"
+		ENEMY_Data[5].name = TARGET.."_Ee-servername"
 		ENEMY_Data[5].classToken = "WARRIOR"
 		ENEMY_Data[5].talentSpec = TLT.WARRIOR[3]
 		ENEMY_Data[6] = {}
-		ENEMY_Data[6].name = TARGET.."_Ff-Xavius"
+		ENEMY_Data[6].name = TARGET.."_Ff-servername"
 		ENEMY_Data[6].classToken = "ROGUE"
 		ENEMY_Data[6].talentSpec = TLT.ROGUE[2]
 		ENEMY_Data[7] = {}
-		ENEMY_Data[7].name = TARGET.."_Gg-Area 52"
+		ENEMY_Data[7].name = TARGET.."_Gg-servername"
 		ENEMY_Data[7].classToken = "SHAMAN"
 		ENEMY_Data[7].talentSpec = TLT.SHAMAN[3]
 		ENEMY_Data[8] = {}
-		ENEMY_Data[8].name = TARGET.."_Hh-Blackmoore"
+		ENEMY_Data[8].name = TARGET.."_Hh-servername"
 		ENEMY_Data[8].classToken = "PALADIN"
 		ENEMY_Data[8].talentSpec = TLT.PALADIN[3]
 		ENEMY_Data[9] = {}
-		ENEMY_Data[9].name = TARGET.."_Ii-Scarshield Legion"
+		ENEMY_Data[9].name = TARGET.."_Ii-servername"
 		ENEMY_Data[9].classToken = "MAGE"
 		ENEMY_Data[9].talentSpec = TLT.MAGE[3]
 		ENEMY_Data[10] = {}
-		ENEMY_Data[10].name = TARGET.."_Jj-Conseil des Ombres"
+		ENEMY_Data[10].name = TARGET.."_Jj-servername"
 		ENEMY_Data[10].classToken = "DEATHKNIGHT"
 		ENEMY_Data[10].talentSpec = TLT.DEATHKNIGHT[2]
 		ENEMY_Data[11] = {}
-		ENEMY_Data[11].name = TARGET.."_Kk-Archimonde"
+		ENEMY_Data[11].name = TARGET.."_Kk-servername"
 		ENEMY_Data[11].classToken = "DRUID"
 		ENEMY_Data[11].talentSpec = TLT.DRUID[1]
 		ENEMY_Data[12] = {}
-		ENEMY_Data[12].name = TARGET.."_Ll-Nefarian"
+		ENEMY_Data[12].name = TARGET.."_Ll-servername"
 		ENEMY_Data[12].classToken = "DEATHKNIGHT"
 		ENEMY_Data[12].talentSpec = TLT.DEATHKNIGHT[3]
 		ENEMY_Data[13] = {}
-		ENEMY_Data[13].name = TARGET.."_Mm-Trollbane"
+		ENEMY_Data[13].name = TARGET.."_Mm-servername"
 		ENEMY_Data[13].classToken = "PALADIN"
 		ENEMY_Data[13].talentSpec = TLT.PALADIN[3]
 		ENEMY_Data[14] = {}
-		ENEMY_Data[14].name = TARGET.."_Nn-Un'Goro"
+		ENEMY_Data[14].name = TARGET.."_Nn-servername"
 		ENEMY_Data[14].classToken = "MAGE"
 		ENEMY_Data[14].talentSpec = TLT.MAGE[1]
 		ENEMY_Data[15] = {}
-		ENEMY_Data[15].name = TARGET.."_Oo-Teldrassil"
+		ENEMY_Data[15].name = TARGET.."_Oo-servername"
 		ENEMY_Data[15].classToken = "SHAMAN"
 		ENEMY_Data[15].talentSpec = TLT.SHAMAN[2]
 		ENEMY_Data[16] = {}
-		ENEMY_Data[16].name = TARGET.."_Pp-Rexxar"
+		ENEMY_Data[16].name = TARGET.."_Pp-servername"
 		ENEMY_Data[16].classToken = "ROGUE"
 		ENEMY_Data[16].talentSpec = TLT.ROGUE[1]
 		ENEMY_Data[17] = {}
-		ENEMY_Data[17].name = TARGET.."_Qq-Gilneas"
+		ENEMY_Data[17].name = TARGET.."_Qq-servername"
 		ENEMY_Data[17].classToken = "WARLOCK"
 		ENEMY_Data[17].talentSpec = TLT.WARLOCK[2]
 		ENEMY_Data[18] = {}
-		ENEMY_Data[18].name = TARGET.."_Rr-Terokkar"
+		ENEMY_Data[18].name = TARGET.."_Rr-servername"
 		ENEMY_Data[18].classToken = "PRIEST"
 		ENEMY_Data[18].talentSpec = TLT.PRIEST[3]
 		ENEMY_Data[19] = {}
-		ENEMY_Data[19].name = TARGET.."_Ss-Zuluhed"
+		ENEMY_Data[19].name = TARGET.."_Ss-servername"
 		ENEMY_Data[19].classToken = "WARRIOR"
 		ENEMY_Data[19].talentSpec = TLT.WARRIOR[1]
 		ENEMY_Data[20] = {}
-		ENEMY_Data[20].name = TARGET.."_Tt-Archimonde"
+		ENEMY_Data[20].name = TARGET.."_Tt-servername"
 		ENEMY_Data[20].classToken = "DRUID"
 		ENEMY_Data[20].talentSpec = TLT.DRUID[2]
 		ENEMY_Data[21] = {}
-		ENEMY_Data[21].name = TARGET.."_Uu-Anub'arak"
+		ENEMY_Data[21].name = TARGET.."_Uu-servername"
 		ENEMY_Data[21].classToken = "PRIEST"
 		ENEMY_Data[21].talentSpec = TLT.PRIEST[3]
 		ENEMY_Data[22] = {}
-		ENEMY_Data[22].name = TARGET.."_Vv-Kul Tiras"
+		ENEMY_Data[22].name = TARGET.."_Vv-servername"
 		ENEMY_Data[22].classToken = "WARRIOR"
 		ENEMY_Data[22].talentSpec = TLT.WARRIOR[1]
 		ENEMY_Data[23] = {}
-		ENEMY_Data[23].name = TARGET.."_Ww-Garrosh"
+		ENEMY_Data[23].name = TARGET.."_Ww-servername"
 		ENEMY_Data[23].classToken = "SHAMAN"
 		ENEMY_Data[23].talentSpec = TLT.SHAMAN[1]
 		ENEMY_Data[24] = {}
-		ENEMY_Data[24].name = TARGET.."_Xx-Durotan"
+		ENEMY_Data[24].name = TARGET.."_Xx-servername"
 		ENEMY_Data[24].classToken = "HUNTER"
 		ENEMY_Data[24].talentSpec = TLT.HUNTER[2]
 		ENEMY_Data[25] = {}
-		ENEMY_Data[25].name = TARGET.."_Yy-Thrall"
+		ENEMY_Data[25].name = TARGET.."_Yy-servername"
 		ENEMY_Data[25].classToken = "SHAMAN"
 		ENEMY_Data[25].talentSpec = TLT.SHAMAN[2]
 		ENEMY_Data[26] = {}
-		ENEMY_Data[26].name = TARGET.."_Zz-Frostmourne"
+		ENEMY_Data[26].name = TARGET.."_Zz-servername"
 		ENEMY_Data[26].classToken = "WARLOCK"
 		ENEMY_Data[26].talentSpec = TLT.WARLOCK[3]
 		ENEMY_Data[27] = {}
-		ENEMY_Data[27].name = TARGET.."_Ab-Stormrage"
+		ENEMY_Data[27].name = TARGET.."_Ab-servername"
 		ENEMY_Data[27].classToken = "PRIEST"
 		ENEMY_Data[27].talentSpec = TLT.PRIEST[2]
 		ENEMY_Data[28] = {}
-		ENEMY_Data[28].name = TARGET.."_Cd-Les Sentinelles"
+		ENEMY_Data[28].name = TARGET.."_Cd-servername"
 		ENEMY_Data[28].classToken = "MAGE"
 		ENEMY_Data[28].talentSpec = TLT.MAGE[2]
 		ENEMY_Data[29] = {}
-		ENEMY_Data[29].name = TARGET.."_Ef-Arthas"
+		ENEMY_Data[29].name = TARGET.."_Ef-servername"
 		ENEMY_Data[29].classToken = "ROGUE"
 		ENEMY_Data[29].talentSpec = TLT.ROGUE[3]
 		ENEMY_Data[30] = {}
-		ENEMY_Data[30].name = TARGET.."_Gh-Bronzebeard"
+		ENEMY_Data[30].name = TARGET.."_Gh-servername"
 		ENEMY_Data[30].classToken = "DRUID"
 		ENEMY_Data[30].talentSpec = TLT.DRUID[1]
 		ENEMY_Data[31] = {}
-		ENEMY_Data[31].name = TARGET.."_Ij-Forscherliga"
+		ENEMY_Data[31].name = TARGET.."_Ij-servername"
 		ENEMY_Data[31].classToken = "HUNTER"
 		ENEMY_Data[31].talentSpec = TLT.HUNTER[3]
 		ENEMY_Data[32] = {}
-		ENEMY_Data[32].name = TARGET.."_Kl-Deephome"
+		ENEMY_Data[32].name = TARGET.."_Kl-servername"
 		ENEMY_Data[32].classToken = "WARRIOR"
 		ENEMY_Data[32].talentSpec = TLT.WARRIOR[2]
 		ENEMY_Data[33] = {}
-		ENEMY_Data[33].name = TARGET.."_Mn-Arthas"
+		ENEMY_Data[33].name = TARGET.."_Mn-servername"
 		ENEMY_Data[33].classToken = "PALADIN"
 		ENEMY_Data[33].talentSpec = TLT.PALADIN[1]
 		ENEMY_Data[34] = {}
-		ENEMY_Data[34].name = TARGET.."_Op-Blade's Edge"
+		ENEMY_Data[34].name = TARGET.."_Op-servername"
 		ENEMY_Data[34].classToken = "MAGE"
 		ENEMY_Data[34].talentSpec = TLT.MAGE[3]
 		ENEMY_Data[35] = {}
-		ENEMY_Data[35].name = TARGET.."_Qr-Talnivarr"
+		ENEMY_Data[35].name = TARGET.."_Qr-servername"
 		ENEMY_Data[35].classToken = "DEATHKNIGHT"
 		ENEMY_Data[35].talentSpec = TLT.DEATHKNIGHT[3]
 		ENEMY_Data[36] = {}
-		ENEMY_Data[36].name = TARGET.."_St-Steamwheedle Cartel"
+		ENEMY_Data[36].name = TARGET.."_St-servername"
 		ENEMY_Data[36].classToken = "MAGE"
 		ENEMY_Data[36].talentSpec = TLT.MAGE[2]
 		ENEMY_Data[37] = {}
-		ENEMY_Data[37].name = TARGET.."_Uv-Naxxramas"
+		ENEMY_Data[37].name = TARGET.."_Uv-servername"
 		ENEMY_Data[37].classToken = "HUNTER"
 		ENEMY_Data[37].talentSpec = TLT.HUNTER[2]
 		ENEMY_Data[38] = {}
-		ENEMY_Data[38].name = TARGET.."_Wx-Archimonde"
+		ENEMY_Data[38].name = TARGET.."_Wx-servername"
 		ENEMY_Data[38].classToken = "WARLOCK"
 		ENEMY_Data[38].talentSpec = TLT.WARLOCK[1]
 		ENEMY_Data[39] = {}
-		ENEMY_Data[39].name = TARGET.."_Yz-Nazjatar"
+		ENEMY_Data[39].name = TARGET.."_Yz-servername"
 		ENEMY_Data[39].classToken = "WARLOCK"
 		ENEMY_Data[39].talentSpec = TLT.WARLOCK[2]
 		ENEMY_Data[40] = {}
-		ENEMY_Data[40].name = TARGET.."_Zz-Drak'thul"
+		ENEMY_Data[40].name = TARGET.."_Zz-servername"
 		ENEMY_Data[40].classToken = "ROGUE"
 		ENEMY_Data[40].talentSpec = nil
 
@@ -4043,6 +4062,7 @@ function BattlegroundTargets:EnableConfigMode()
 		GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
 		GVAR_TargetButton.HealthText:SetText("")
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
+		GVAR_TargetButton.FlagDebuff:SetText("")
 		GVAR_TargetButton.AssistTexture:SetAlpha(0)
 
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
@@ -4103,6 +4123,7 @@ function BattlegroundTargets:EnableConfigMode()
 	if OPT.ButtonShowFlag[currentSize] then
 		if currentSize == 10 or currentSize == 15 then
 			GVAR.TargetButton[testIcon3].FlagTexture:SetAlpha(1)
+			GVAR.TargetButton[testIcon3].FlagDebuff:SetText(testLeader)
 		end
 	end
 	if OPT.ButtonShowAssist[currentSize] then
@@ -4165,14 +4186,27 @@ function BattlegroundTargets:DisableConfigMode()
 	end
 
 	if OPT.ButtonShowFlag[currentSize] then
-		if hasFlag and ENEMY_Name2Button[hasFlag] and GVAR.TargetButton[ ENEMY_Name2Button[hasFlag] ] then
-			GVAR.TargetButton[ ENEMY_Name2Button[hasFlag] ].FlagTexture:SetAlpha(1)
+		if hasFlag then
+			local Name2Button = ENEMY_Name2Button[hasFlag]
+			if Name2Button then
+				local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
+				if GVAR_TargetButton then
+					GVAR_TargetButton.FlagTexture:SetAlpha(1)
+					GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
+				end
+			end
 		end
 	end
 
 	if OPT.ButtonShowLeader[currentSize] then
-		if isLeader and ENEMY_Name2Button[isLeader] and GVAR.TargetButton[ ENEMY_Name2Button[isLeader] ] then
-			GVAR.TargetButton[ ENEMY_Name2Button[isLeader] ].LeaderTexture:SetAlpha(0.75)
+		if isLeader then
+			local Name2Button = ENEMY_Name2Button[isLeader]
+			if Name2Button then
+				local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
+				if GVAR_TargetButton then
+					GVAR_TargetButton.LeaderTexture:SetAlpha(0.75)
+				end
+			end
 		end
 	end
 	BattlegroundTargets:ScoreWarningCheck()
@@ -4347,6 +4381,7 @@ function BattlegroundTargets:Shuffle(shuffleStyle)
 		GVAR_TargetButton.HighlightL:SetTexture(0, 0, 0, 1)
 		GVAR_TargetButton.FocusTexture:SetAlpha(0)
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
+		GVAR_TargetButton.FlagDebuff:SetText("")
 		GVAR_TargetButton.AssistTexture:SetAlpha(0)
 	end
 
@@ -4367,6 +4402,7 @@ function BattlegroundTargets:Shuffle(shuffleStyle)
 	if OPT.ButtonShowFlag[currentSize] then
 		if currentSize == 10 or currentSize == 15 then
 			GVAR.TargetButton[testIcon3].FlagTexture:SetAlpha(1)
+			GVAR.TargetButton[testIcon3].FlagDebuff:SetText(testLeader)
 		end
 	end
 	if OPT.ButtonShowAssist[currentSize] then
@@ -4713,6 +4749,7 @@ function BattlegroundTargets:UpdateLayout()
 			GVAR_TargetButton.RoleTexture:SetTexCoord(0, 0, 0, 0)
 			GVAR_TargetButton.Name:SetText("")
 			GVAR_TargetButton.FlagTexture:SetAlpha(0)
+			GVAR_TargetButton.FlagDebuff:SetText("")
 			GVAR_TargetButton.AssistTexture:SetAlpha(0)
 			GVAR_TargetButton.RangeTexture:SetTexture(0, 0, 0, 0)
 			GVAR_TargetButton.LeaderTexture:SetAlpha(0)
@@ -4913,7 +4950,6 @@ function BattlegroundTargets:BattlefieldCheck()
 					break
 				end
 			end
-
 			if bgName and BGN[bgName] then
 				currentSize = bgSize[ BGN[bgName] ]
 				reSizeCheck = 10
@@ -4924,7 +4960,7 @@ function BattlegroundTargets:BattlefieldCheck()
 					reSizeCheck = 10
 				else
 					if reSizeCheck >= 10 then
-						Print("ERROR", locale, bgName, zone)
+						Print("ERROR", "unknown bg name", locale, bgName, zone)
 						Print("Please contact addon author. Thanks.")
 					end
 					currentSize = 10
@@ -4956,7 +4992,6 @@ function BattlegroundTargets:BattlefieldCheck()
 				GVAR.MainFrame:SetHeight(0.001)
 				GVAR.MainFrame.Movetext:Hide()
 				GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, -(20 / OPT.ButtonScale[currentSize]))
-
 				for i = 1, 40 do
 					local GVAR_TargetButton = GVAR.TargetButton[i]
 					if i < currentSize+1 then
@@ -4969,6 +5004,7 @@ function BattlegroundTargets:BattlefieldCheck()
 						GVAR_TargetButton.TargetTexture:SetAlpha(0)
 						GVAR_TargetButton.FocusTexture:SetAlpha(0)
 						GVAR_TargetButton.FlagTexture:SetAlpha(0)
+						GVAR_TargetButton.FlagDebuff:SetText("")
 						GVAR_TargetButton.AssistTexture:SetAlpha(0)
 						GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 						GVAR_TargetButton:Show()
@@ -4976,12 +5012,9 @@ function BattlegroundTargets:BattlefieldCheck()
 						GVAR_TargetButton:Hide()
 					end
 				end
-
 				BattlegroundTargets:SummaryPosition() -- SUMMARY
-
 				BattlegroundTargets:BattlefieldScoreUpdate(1)
 				BattlegroundTargets:SetupButtonLayout()
-
 				if OPT.ButtonShowFlag[currentSize] then
 					if currentSize == 10 or currentSize == 15 then
 						if playerFactionBG ~= playerFactionDEF then -- setup_flag_texture
@@ -5013,6 +5046,7 @@ function BattlegroundTargets:BattlefieldCheck()
 		BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
 		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
 		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
 		BattlegroundTargets:UnregisterEvent("RAID_ROSTER_UPDATE")
 		BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
@@ -5040,6 +5074,7 @@ function BattlegroundTargets:BattlefieldCheck()
 				if currentSize == 10 or currentSize == 15 then
 					BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
 					BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+					BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
 				end
 			end
 			if OPT.ButtonShowAssist[currentSize] then
@@ -5068,9 +5103,9 @@ function BattlegroundTargets:BattlefieldCheck()
 						end
 						if ranges[playerClassEN] then
 							local spellName = GetSpellInfo( ranges[playerClassEN] )
-							Print("ERROR", locale, playerClassEN, "id =", ranges[playerClassEN], spellName)
+							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id =", ranges[playerClassEN], spellName)
 						else
-							Print("ERROR", locale, playerClassEN)
+							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN)
 							Print("Please contact addon author. Thanks.")
 						end
 					else
@@ -5098,6 +5133,7 @@ function BattlegroundTargets:BattlefieldCheck()
 		BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
 		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
 		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
 		BattlegroundTargets:UnregisterEvent("RAID_ROSTER_UPDATE")
 		BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
@@ -5208,8 +5244,7 @@ function BattlegroundTargets:CheckAssist()
 
 	isAssistUnitId = nil
 	isAssistName = nil
-	local raid = GetNumRaidMembers()
-	for i = 1, raid do
+	for i = 1, GetNumRaidMembers() do
 		local name, _, _, _, _, _, _, _, _, role = GetRaidRosterInfo(i)
 		if name and role and role == "MAINASSIST" then
 			isAssistName = name
@@ -5506,14 +5541,38 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:FlagDebuffCheck(message)
+	if message == FL["FLAG_DEBUFF1"] or message == FL["FLAG_DEBUFF2"] then -- FLAGDEBUFF
+		flagDebuff = flagDebuff + 1
+		if hasFlag then
+			local Name2Button = ENEMY_Name2Button[hasFlag]
+			if Name2Button then
+				local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
+				if GVAR_TargetButton then
+					GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
+				end
+			end
+		end
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:FlagCheck(message, messageFaction)
 	if messageFaction == playerFactionBG then
 
-		if string_match(message, FL["WSG_TP_MATCH_CAPTURED"]) or -- Warsong Gulch & Twink Peaks: flag was captured
-		   message == FL["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or  -- Eye of the Storm           : flag was captured
-		   message == FL["EOTS_STRING_CAPTURED_BY_HORDE"] or     -- Eye of the Storm           : flag was captured
-		   string_match(message, FL["WSG_TP_MATCH_DROPPED"]) or  -- Warsong Gulch & Twink Peaks: flag was dropped
-		   message == FL["EOTS_STRING_DROPPED"]                  -- Eye of the Storm           : flag was dropped
+		if string_match(message, FL["WSG_TP_MATCH_CAPTURED"]) or -- Warsong Gulch & Twin Peaks: flag was captured
+		   message == FL["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or  -- Eye of the Storm          : flag was captured
+		   message == FL["EOTS_STRING_CAPTURED_BY_HORDE"]        -- Eye of the Storm          : flag was captured
+		then
+			for i = 1, currentSize do
+				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR.TargetButton[i].FlagDebuff:SetText("")
+			end
+			hasFlag = nil
+			flagDebuff = 0
+		elseif string_match(message, FL["WSG_TP_MATCH_DROPPED"]) or -- Warsong Gulch & Twin Peaks: flag was dropped
+		       message == FL["EOTS_STRING_DROPPED"]                 -- Eye of the Storm          : flag was dropped
 		then
 			for i = 1, currentSize do
 				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
@@ -5523,9 +5582,9 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 
 	else
 
-		local efc = string_match(message, FL["WSG_TP_REGEX_PICKED1"]) or -- Warsong Gulch & Twink Peaks: flag was picked
-		            string_match(message, FL["WSG_TP_REGEX_PICKED2"]) or -- Warsong Gulch & Twink Peaks: flag was picked
-		            string_match(message, FL["EOTS_REGEX_PICKED"])       -- Eye of the Storm           : flag was picked
+		local efc = string_match(message, FL["WSG_TP_REGEX_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
+		            string_match(message, FL["WSG_TP_REGEX_PICKED2"]) or -- Warsong Gulch & Twin Peaks: flag was picked
+		            string_match(message, FL["EOTS_REGEX_PICKED"])       -- Eye of the Storm          : flag was picked
 		if efc then
 			for i = 1, currentSize do
 				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
@@ -5540,11 +5599,17 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 					break
 				end
 			end
-		elseif string_match(message, FL["WSG_TP_MATCH_CAPTURED"]) or -- Warsong Gulch & Twink Peaks: flag was captured
-		       message == FL["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or  -- Eye of the Storm           : flag was captured
-		       message == FL["EOTS_STRING_CAPTURED_BY_HORDE"] or     -- Eye of the Storm           : flag was captured
-		       message == FL["EOTS_STRING_DROPPED"]                  -- Eye of the Storm           : flag was dropped
+		elseif string_match(message, FL["WSG_TP_MATCH_CAPTURED"]) or -- Warsong Gulch & Twin Peaks: flag was captured
+		       message == FL["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or  -- Eye of the Storm          : flag was captured
+		       message == FL["EOTS_STRING_CAPTURED_BY_HORDE"]        -- Eye of the Storm          : flag was captured
 		then
+			for i = 1, currentSize do
+				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR.TargetButton[i].FlagDebuff:SetText("")
+			end
+			hasFlag = nil
+			flagDebuff = 0
+		elseif message == FL["EOTS_STRING_DROPPED"] then -- Eye of the Storm: flag was dropped
 			for i = 1, currentSize do
 				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
 			end
@@ -5767,14 +5832,23 @@ local function OnEvent(self, event, ...)
 	elseif event == "CHAT_MSG_BG_SYSTEM_ALLIANCE" then
 		local arg1 = ...
 		BattlegroundTargets:FlagCheck(arg1, 1) -- 'Alliance'
+	elseif event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
+		local arg1 = ...
+		BattlegroundTargets:FlagDebuffCheck(arg1) -- FLAGDEBUFF
 
 	elseif event == "PLAYER_LOGIN" then
-		if UnitFactionGroup("player") == "Horde" then
+		local faction = UnitFactionGroup("player")
+		if faction == "Horde" then
 			playerFactionDEF   = 0 -- Horde
 			oppositeFactionDEF = 1 -- Alliance
-		else
+		elseif faction == "Alliance" then
 			playerFactionDEF   = 1 -- Alliance
 			oppositeFactionDEF = 0 -- Horde
+		else
+			Print("ERROR", "unknown faction", locale, faction)
+			Print("Please contact addon author. Thanks.")
+			playerFactionDEF   = 1
+			oppositeFactionDEF = 0
 		end
 
 		BattlegroundTargets:InitOptions()

@@ -1,5 +1,5 @@
 -- -------------------------------------------------------------------------- --
--- BattlegroundTargets Localized Flag picked/dropped/captured                 --
+-- BattlegroundTargets Localized Flag picked/dropped/captured/debuff          --
 -- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 
@@ -12,8 +12,10 @@ function BattlegroundTargets_Flag:CreateLocaleTable(t)
 end
 
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### enUS: last TESTED with Patch 4.2.0.14480 (LIVE) ###
-	-- # Warsong Gulch & Twink Peaks:
+	-- ### enUS: tested with Patch 4.3.0.15050 (LIVE) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "The flag carriers have become vulnerable to attack!",
+	["FLAG_DEBUFF2"] = "The flag carriers have become increasingly vulnerable to attack!",
 	["WSG_TP_REGEX_PICKED1"] = "was picked up by (.+)!",
 	["WSG_TP_REGEX_PICKED2"] = "was picked up by (.+)!",
 	["WSG_TP_MATCH_DROPPED"] = "dropped",
@@ -28,10 +30,12 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 local locale = GetLocale()
 if locale == "deDE" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### deDE: last TESTED with Patch 4.2.0.14480 (LIVE) ###
-	-- # Warsong Gulch & Twink Peaks:
+	-- ### deDE: tested with Patch 4.3.0.15050 (LIVE) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "Eure Angriffe verursachen nun schwerere Verletzungen bei Flaggenträgern!",
+	["FLAG_DEBUFF2"] = "Eure Angriffe verursachen nun sehr schwere Verletzungen bei Flaggenträgern!",
 	["WSG_TP_REGEX_PICKED1"] = "(.+) hat die Flagge der (%a+) aufgenommen!",
-	["WSG_TP_REGEX_PICKED2"] = "(.+) hat die Flagge der (%a+) aufgenommen!", -- ...not needed...
+	["WSG_TP_REGEX_PICKED2"] = "(.+) hat die Flagge der (%a+) aufgenommen!",
 	["WSG_TP_MATCH_DROPPED"] = "fallen lassen!",
 	["WSG_TP_MATCH_CAPTURED"] = "errungen!",
 	-- # Eye of the Storm:
@@ -42,10 +46,12 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "esES" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### esES: last TESTED with Patch 4.2.0.14480 (LIVE) ###
-	-- # Warsong Gulch & Twink Peaks:
+	-- ### esES: tested with Patch 4.3.0.15050 (LIVE) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "¡Los portadores de las banderas se han vuelto vulnerables a los ataques!",
+	["FLAG_DEBUFF2"] = "¡Los portadores de las banderas se han vuelto más vulnerables a los ataques!",
 	["WSG_TP_REGEX_PICKED1"] = "¡(.+) ha cogido la bandera",
-	["WSG_TP_REGEX_PICKED2"] = "¡(.+) ha cogido la bandera", -- ...not needed...
+	["WSG_TP_REGEX_PICKED2"] = "¡(.+) ha cogido la bandera",
 	["WSG_TP_MATCH_DROPPED"] = "dejado caer la bandera",
 	["WSG_TP_MATCH_CAPTURED"] = "capturado la bandera",
 	-- # Eye of the Storm:
@@ -56,10 +62,12 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "esMX" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	--- ### esMX: last TESTED with Patch 4.2.2.14534 (PTR) ###
-	-- # Warsong Gulch & Twink Peaks:
+	--- ### esMX: tested with Patch 4.2.2.14534 (PTR) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "¡Los portadores de las banderas se han vuelto vulnerables a los ataques!", -- not tested
+	["FLAG_DEBUFF2"] = "¡Los portadores de las banderas se han vuelto más vulnerables a los ataques!", -- not tested
 	["WSG_TP_REGEX_PICKED1"] = "¡(.+) ha tomado la bandera",
-	["WSG_TP_REGEX_PICKED2"] = "¡(.+) ha tomado la bandera", -- ...not needed...
+	["WSG_TP_REGEX_PICKED2"] = "¡(.+) ha tomado la bandera",
 	["WSG_TP_MATCH_DROPPED"] = "dejado caer la bandera",
 	["WSG_TP_MATCH_CAPTURED"] = "capturado la bandera",
 	-- # Eye of the Storm:
@@ -70,10 +78,12 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "frFR" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### frFR: last TESTED with Patch 4.2.0.14480 (LIVE) ###
-	-- # Warsong Gulch & Twink Peaks:
+	-- ### frFR: tested with Patch 4.3.0.15050 (LIVE) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "Les porteurs de drapeaux sont devenus vulnérables aux attaques !",
+	["FLAG_DEBUFF2"] = "Les porteurs de drapeaux sont devenus encore plus vulnérables aux attaques !",
 	["WSG_TP_REGEX_PICKED1"] = "a été ramassé par (.+) !",
-	["WSG_TP_REGEX_PICKED2"] = "a été ramassé par (.+) !", -- ...not needed...
+	["WSG_TP_REGEX_PICKED2"] = "a été ramassé par (.+) !",
 	["WSG_TP_MATCH_DROPPED"] = "a été lâché",
 	["WSG_TP_MATCH_CAPTURED"] = "a pris le drapeau",
 	-- # Eye of the Storm:
@@ -84,10 +94,12 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "koKR" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### koKR: last TESTED with Patch 4.2.2.14534 (PTR) ###
-	-- # Warsong Gulch & Twink Peaks:
+	-- ### koKR: tested with Patch 4.3.2.15211 (PTR) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "깃발 운반자가 약해져서 쉽게 공격할 수 있습니다!",
+	["FLAG_DEBUFF2"] = "깃발 운반자가 점점 약해져서 더욱 쉽게 공격할 수 있습니다!",
 	["WSG_TP_REGEX_PICKED1"] = "([^ ]*)|1이;가; ([^!]*) 깃발을 손에 넣었습니다!",
-	["WSG_TP_REGEX_PICKED2"] = "([^ ]*)|1이;가; ([^!]*) 깃발을 손에 넣었습니다!", -- ...not needed...
+	["WSG_TP_REGEX_PICKED2"] = "([^ ]*)|1이;가; ([^!]*) 깃발을 손에 넣었습니다!",
 	["WSG_TP_MATCH_DROPPED"] = "깃발을 떨어뜨렸습니다!",
 	["WSG_TP_MATCH_CAPTURED"] = "깃발 쟁탈에 성공했습니다!",
 	-- # Eye of the Storm:
@@ -98,10 +110,12 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "ptBR" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### ptBR: last TESTED with Patch 4.3.0.14809 (PTR) ###
-	-- # Warsong Gulch & Twink Peaks:
+	-- ### ptBR: tested with Patch 4.3.0.15050 (LIVE) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "Os portadores da bandeira estão vulneráveis!",
+	["FLAG_DEBUFF2"] = "Os portadores da bandeira estão ainda mais vulneráveis!",
 	["WSG_TP_REGEX_PICKED1"] = "(.+) pegou a Bandeira da (.+)!",
-	["WSG_TP_REGEX_PICKED2"] = "(.+) pegou a Bandeira da (.+)!", -- ...not needed...
+	["WSG_TP_REGEX_PICKED2"] = "(.+) pegou a Bandeira da (.+)!",
 	["WSG_TP_MATCH_DROPPED"] = "largou a Bandeira",
 	["WSG_TP_MATCH_CAPTURED"] = "capturou",
 	-- # Eye of the Storm:
@@ -112,8 +126,10 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "ruRU" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### ruRU: last TESTED with Patch 4.2.2.14534 (PTR) ###
-	-- # Warsong Gulch & Twink Peaks:
+	-- ### ruRU: tested with Patch 4.2.2.14534 (PTR) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "Персонажи, несущие флаг, стали более уязвимы!", -- not tested
+	["FLAG_DEBUFF2"] = "Персонажи, несущие флаг, стали еще более уязвимы!", -- not tested
 	["WSG_TP_REGEX_PICKED1"] = "(.+) несет флаг Орды!",
 	["WSG_TP_REGEX_PICKED2"] = "Флаг Альянса у |3%-1%((.+)%)!",
 	["WSG_TP_MATCH_DROPPED"] = "роняет",
@@ -126,10 +142,12 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "zhCN" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### zhCN: last TESTED with Patch 4.3.2.15201 (PTR) ###
-	-- # Warsong Gulch & Twink Peaks:
+	-- ### zhCN: tested with Patch 4.3.2.15211 (PTR) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "旗手变得脆弱了！",
+	["FLAG_DEBUFF2"] = "旗手变得更加脆弱了！",
 	["WSG_TP_REGEX_PICKED1"] = "旗帜被([^%s]+)拔起了！",
-	["WSG_TP_REGEX_PICKED2"] = "旗帜被([^%s]+)拔起了！", -- ...not needed...
+	["WSG_TP_REGEX_PICKED2"] = "旗帜被([^%s]+)拔起了！",
 	["WSG_TP_MATCH_DROPPED"] = "丢掉了",
 	["WSG_TP_MATCH_CAPTURED"] = "夺取",
 	-- # Eye of the Storm:
@@ -140,10 +158,12 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "zhTW" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### zhTW: last TESTED with Patch 4.2.2.14534 (PTR) ###
-	-- # Warsong Gulch & Twink Peaks:
+	-- ### zhTW: tested with Patch 4.3.2.15211 (PTR) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "旗幟持有者變得有機可趁了!",
+	["FLAG_DEBUFF2"] = "旗幟持有者變得愈來愈有機可趁!",
 	["WSG_TP_REGEX_PICKED1"] = "被(.+)拔掉了!",
-	["WSG_TP_REGEX_PICKED2"] = "被(.+)拔掉了!", -- ...not needed...
+	["WSG_TP_REGEX_PICKED2"] = "被(.+)拔掉了!",
 	["WSG_TP_MATCH_DROPPED"] = "丟掉了",
 	["WSG_TP_MATCH_CAPTURED"] = "佔據了",
 	-- # Eye of the Storm:
