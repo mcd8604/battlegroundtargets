@@ -5576,6 +5576,7 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 		then
 			for i = 1, currentSize do
 				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR.TargetButton[i].FlagDebuff:SetText("")
 			end
 			hasFlag = nil
 		end
@@ -5591,9 +5592,14 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 			end
 			for name, button in pairs(ENEMY_Names4Flag) do
 				if name == efc then
-					local targetButton = GVAR.TargetButton[button]
-					if targetButton then
-						targetButton.FlagTexture:SetAlpha(1)
+					local GVAR_TargetButton = GVAR.TargetButton[button]
+					if GVAR_TargetButton then
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						if flagDebuff > 0 then
+							GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
+						else
+							GVAR_TargetButton.FlagDebuff:SetText("")
+						end
 						hasFlag = ENEMY_Data[button].name
 					end
 					break
@@ -5612,6 +5618,7 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 		elseif message == FL["EOTS_STRING_DROPPED"] then -- Eye of the Storm: flag was dropped
 			for i = 1, currentSize do
 				GVAR.TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR.TargetButton[i].FlagDebuff:SetText("")
 			end
 			hasFlag = nil
 		end
