@@ -4873,8 +4873,14 @@ function BattlegroundTargets:UpdateLayout()
 			if ButtonShowFlag and hasFlag then
 				if qname == hasFlag then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
+					if flagDebuff > 0 then
+						GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
+					else
+						GVAR_TargetButton.FlagDebuff:SetText("")
+					end
 				else
 					GVAR_TargetButton.FlagTexture:SetAlpha(0)
+					GVAR_TargetButton.FlagDebuff:SetText("")
 				end
 			end
 
