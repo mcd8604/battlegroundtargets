@@ -5278,9 +5278,12 @@ function BattlegroundTargets:BattlefieldCheck()
 			BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
 		end
 	else
+		if not inBattleground then return end
+
 		inBattleground = false
 		reSizeCheck = 0
 		oppositeFactionREAL = nil
+		flagDebuff = 0
 
 		BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
 		BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
