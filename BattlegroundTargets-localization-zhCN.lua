@@ -1,5 +1,5 @@
 -- -------------------------------------------------------------------------- --
--- BattlegroundTargets zhCN Localization                                      --
+-- BattlegroundTargets zhCN Localization (Thanks ananhaid)                    --
 -- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 if GetLocale() ~= "zhCN" then return end
