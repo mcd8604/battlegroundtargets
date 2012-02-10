@@ -5914,7 +5914,7 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 			if flagCHK then
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
-			for name, button in --pairs(ENEMY_Names4Flag) do
+			for name, button in pairs(ENEMY_Names4Flag) do
 				if name == efc then
 					local GVAR_TargetButton = GVAR.TargetButton[button]
 					if GVAR_TargetButton then
