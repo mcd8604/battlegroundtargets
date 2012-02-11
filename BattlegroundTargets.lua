@@ -244,6 +244,13 @@ local bgSizeINT = {
 	[3] = 40,
 }
 
+local flagIDs = {
+	 [23333] = 1, -- Horde Flag
+	 [23335] = 1, -- Alliance Flag
+	 [34976] = 1, -- Netherstorm Flag
+	[100196] = 1  -- Netherstorm Flag
+}
+
 local sortBy = {
 	[1] = ROLE.." / "..CLASS.."* / "..NAME,
 	[2] = ROLE.." / "..NAME,
@@ -4361,16 +4368,14 @@ function BattlegroundTargets:DisableConfigMode()
 				local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
 				if GVAR_TargetButton then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
-					if flagDebuff < 0 then
-						GVAR_TargetButton.FlagDebuff:SetText("?")
-					elseif flagDebuff > 0 then
+					if flagDebuff > 0 then
 						GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
-					else
-						GVAR_TargetButton.FlagDebuff:SetText("")
 					end
 				end
 			end
 		end
+	else
+		BattlegroundTargets:CheckFlagCarrierEND()
 	end
 
 	if OPT.ButtonShowLeader[currentSize] then
@@ -4786,6 +4791,8 @@ function BattlegroundTargets:UpdateLayout()
 	local ButtonShowAssist      = OPT.ButtonShowAssist[currentSize]
 	local ButtonRangeCheck      = OPT.ButtonRangeCheck[currentSize]
 
+	table_wipe(ENEMY_Name2Button)
+	table_wipe(ENEMY_Names4Flag)
 	for i = 1, currentSize do
 		if ENEMY_Data[i] then
 			local GVAR_TargetButton = GVAR.TargetButton[i]
@@ -4893,9 +4900,7 @@ function BattlegroundTargets:UpdateLayout()
 			if ButtonShowFlag and hasFlag then
 				if qname == hasFlag then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
-					if flagDebuff < 0 then
-						GVAR_TargetButton.FlagDebuff:SetText("?")
-					elseif flagDebuff > 0 then
+					if flagDebuff > 0 then
 						GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
 					else
 						GVAR_TargetButton.FlagDebuff:SetText("")
@@ -5124,26 +5129,27 @@ end
 function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 	if not ENEMY_FirstFlagCheck[targetName] then return end
 
-	--print("CHK FLAG CHECK", unit, targetName)
-
-	local count, spellId
+	-- enemy buff & debuff check
 	for i = 1, 40 do
 		local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unit, i) -- name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId, canApplyAura, isBossDebuff, value1, value2, value3 = UnitAura("unit", index or "name"[, "rank"[, "filter"]])
 		if not spellId then break end
-		--x
-		if spellId == 23335 or
-		   spellId == 23333 or
-		   spellId == 34976 or
-		   spellId == 100196
-		then
-			--print("MATCH", unit, targetName)
+		if flagIDs[spellId] then
 
 			hasFlag = targetName
-			flagDebuff = -1 -- DEFFUPD - prevent debuff updates because the (de)buff has no stack count information
+			flagDebuff = 0
+			flags = flags + 1
 
-			--z
-			for i = 1, currentSize do
-				local GVAR_TargetButton = GVAR.TargetButton[i]
+			-- enemy debuff stack count check
+			for j = 1, 40 do
+				local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(unit, j)
+				if not spellId then break end
+				if spellId == 46392 then
+					flagDebuff = count
+				end
+			end
+
+			for j = 1, currentSize do
+				local GVAR_TargetButton = GVAR.TargetButton[j]
 				GVAR_TargetButton.FlagTexture:SetAlpha(0)
 				GVAR_TargetButton.FlagDebuff:SetText("")
 			end
@@ -5152,16 +5158,15 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 				local GVAR_TargetButton = GVAR.TargetButton[button]
 				if GVAR_TargetButton then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
-					GVAR_TargetButton.FlagDebuff:SetText("?")
+					if flagDebuff > 0 then
+						GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
+					end
 				end
 			end
-			--z
 
 			BattlegroundTargets:CheckFlagCarrierEND()
-
 			return
 		end
-		--x
 	end
 
 	ENEMY_FirstFlagCheck[targetName] = nil
@@ -5170,7 +5175,6 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 	for k in pairs(ENEMY_FirstFlagCheck) do
 		x = x + 1
 	end
-	--print("num flagchecks:", x)
 	if x == 0 then
 		BattlegroundTargets:CheckFlagCarrierEND()
 	end
@@ -5179,15 +5183,38 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
-	--print("CHK FLAG START")
 	flagCHK = true
 	flagflag = true
 
 	table_wipe(ENEMY_FirstFlagCheck)
 	for i = 1, #ENEMY_Data do
-		--print("|", i, ENEMY_Data[i].name)
 		ENEMY_FirstFlagCheck[ENEMY_Data[i].name] = 1
 	end
+
+	-- friend buff & debuff check
+	local function chk()
+		for num = 1, GetNumRaidMembers() do
+			local unitID = "raid"..num
+			for i = 1, 40 do
+				local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unitID, i)
+				if not spellId then break end
+				if flagIDs[spellId] then
+					flagDebuff = 0
+					flags = 1
+					for j = 1, 40 do
+						local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(unitID, j)
+						if not spellId then break end
+						if spellId == 46392 then
+							flagDebuff = count
+							return
+						end
+					end
+					return
+				end
+			end
+		end
+	end
+	chk()
 
 	BattlegroundTargets:RegisterEvent("UNIT_TARGET")
 	BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
@@ -5197,7 +5224,6 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckFlagCarrierEND() -- FLAGSPY
-	--print("CHK FLAG END")
 	flagCHK = nil
 	flagflag = true
 	table_wipe(ENEMY_FirstFlagCheck)
@@ -5311,11 +5337,22 @@ function BattlegroundTargets:BattlefieldCheck()
 				BattlegroundTargets:BattlefieldScoreUpdate(1)
 				if OPT.ButtonShowFlag[currentSize] then
 					if currentSize == 10 or currentSize == 15 then
-						if playerFactionBG ~= playerFactionDEF then -- setup_flag_texture
-							for i = 1, currentSize do
-								GVAR.TargetButton[i].FlagTexture:SetTexture("Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2") -- neutral flag
+
+						local flagIcon -- setup_flag_texture
+						if playerFactionBG ~= playerFactionDEF then
+							flagIcon = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral flag
+						else
+							if playerFactionDEF == 0 then
+								flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
+							else
+								flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
 							end
 						end
+						
+						for i = 1, currentSize do
+							GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
+						end
+
 					end
 				end
 
@@ -5422,6 +5459,7 @@ function BattlegroundTargets:BattlefieldCheck()
 		flags = 0
 		isFlagBG = nil
 		flagCHK = nil
+		flagflag = nil
 
 		BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
 		BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
@@ -5837,19 +5875,13 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:FlagDebuffCheck(message)
 	if message == FL["FLAG_DEBUFF1"] or message == FL["FLAG_DEBUFF2"] then -- FLAGDEBUFF
-		if flagDebuff >= 0 then -- DEFFUPD
-			flagDebuff = flagDebuff + 1 --print("1flags:",flags)
-		end
+		flagDebuff = flagDebuff + 1
 		if hasFlag then
 			local Name2Button = ENEMY_Name2Button[hasFlag]
 			if Name2Button then
 				local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
 				if GVAR_TargetButton then
-					if flagDebuff < 0 then
-						GVAR_TargetButton.FlagDebuff:SetText("?")
-					elseif flagDebuff > 0 then
-						GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
-					end
+					GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
 				end
 			end
 		end
@@ -5865,7 +5897,7 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 		           string_match(message, FL["WSG_TP_REGEX_PICKED2"]) or -- Warsong Gulch & Twin Peaks: flag was picked
 		           string_match(message, FL["EOTS_REGEX_PICKED"])       -- Eye of the Storm          : flag was picked
 		if fc then
-			flags = flags + 1 --print("2flags:",flags)
+			flags = flags + 1
 		-- -----------------------------------------------------------------------------------------------------------------
 		elseif string_match(message, FL["WSG_TP_MATCH_CAPTURED"]) or -- Warsong Gulch & Twin Peaks: flag was captured
 		       message == FL["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or  -- Eye of the Storm          : flag was captured
@@ -5878,7 +5910,7 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 			end
 			hasFlag = nil
 			flagDebuff = 0
-			flags = 0 --print("3flags:",flags)
+			flags = 0
 			if flagCHK then
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
@@ -5892,10 +5924,10 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 				GVAR_TargetButton.FlagDebuff:SetText("")
 			end
 			hasFlag = nil
-			flags = flags - 1 --print("4flags:",flags)
+			flags = flags - 1
 			if flags <= 0 then
 				flagDebuff = 0
-				flags = 0 --print("5flags:",flags)
+				flags = 0
 			end
 		end
 		-- -----------------------------------------------------------------------------------------------------------------
@@ -5905,7 +5937,7 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 		            string_match(message, FL["WSG_TP_REGEX_PICKED2"]) or -- Warsong Gulch & Twin Peaks: flag was picked
 		            string_match(message, FL["EOTS_REGEX_PICKED"])       -- Eye of the Storm          : flag was picked
 		if efc then
-			flags = flags + 1 --print("6flags:",flags)
+			flags = flags + 1
 			for i = 1, currentSize do
 				local GVAR_TargetButton = GVAR.TargetButton[i]
 				GVAR_TargetButton.FlagTexture:SetAlpha(0)
@@ -5919,12 +5951,16 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 					local GVAR_TargetButton = GVAR.TargetButton[button]
 					if GVAR_TargetButton then
 						GVAR_TargetButton.FlagTexture:SetAlpha(1)
-						if flagDebuff < 0 then
-							GVAR_TargetButton.FlagDebuff:SetText("?")
-						elseif flagDebuff > 0 then
+						if flagDebuff > 0 then
 							GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
 						end
-						hasFlag = ENEMY_Data[button].name
+						for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Names4Flag have same buttonID
+							if button == fullnameButton then
+								hasFlag = fullname
+								return
+							end
+						end
+
 					end
 					return
 				end
@@ -5941,16 +5977,16 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 			end
 			hasFlag = nil
 			flagDebuff = 0
-			flags = 0 --print("7flags:",flags)
+			flags = 0
 			if flagCHK then
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
 		-- -----------------------------------------------------------------------------------------------------------------
 		elseif string_match(message, FL["WSG_TP_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
-			flags = flags - 1 --print("8flags:",flags)
+			flags = flags - 1
 			if flags <= 0 then
 				flagDebuff = 0
-				flags = 0 --print("9flags:",flags)
+				flags = 0
 			end
 		-- -----------------------------------------------------------------------------------------------------------------
 		elseif message == FL["EOTS_STRING_DROPPED"] then -- Eye of the Storm: flag was dropped
@@ -5960,10 +5996,10 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 				GVAR_TargetButton.FlagDebuff:SetText("")
 			end
 			hasFlag = nil
-			flags = flags - 1 --print("10flags:",flags)
+			flags = flags - 1
 			if flags <= 0 then
 				flagDebuff = 0
-				flags = 0 --print("11flags:",flags)
+				flags = 0
 			end
 		end
 		-- -----------------------------------------------------------------------------------------------------------------
