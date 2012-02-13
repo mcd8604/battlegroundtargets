@@ -169,6 +169,7 @@ local flagflag
 
 local scoreUpdateThrottle  = GetTime() -- UPDATE_BATTLEFIELD_SCORE BattlefieldScoreUpdate()
 local scoreUpdateFrequency = 5
+local latestCharUpdate     = GetTime()
 local rangeUpdateThrottle  = GetTime() -- UpdateRange() display only
 local rangeUpdateFrequency = 0.5
 local classRangeFrequency  = 0.2       -- UNIT_HEALTH_FREQUENT CheckUnitHealth()
@@ -248,7 +249,12 @@ local flagIDs = {
 	 [23333] = 1, -- Horde Flag
 	 [23335] = 1, -- Alliance Flag
 	 [34976] = 1, -- Netherstorm Flag
-	[100196] = 1  -- Netherstorm Flag
+	[100196] = 1, -- Netherstorm Flag
+}
+
+local debuffIDs = {
+	[46392] = 1, -- Focused Assault
+	[46393] = 1, -- Brutal Assault
 }
 
 local sortBy = {
@@ -403,6 +409,7 @@ local Textures = {
 	l40_24           = {coords     =    { 6/64, 15/64, 33/64, 43/64}, width =  9*2, height = 10*2},
 	l40_42           = {coords     =    {15/64, 28/64, 33/64, 40/64}, width = 13*2, height =  7*2},
 	l40_81           = {coords     =    {28/64, 42/64, 33/64, 38/64}, width = 14*2, height =  5*2},
+	UpdateWarning    = {coords     =    { 0/64, 35/64, 47/64, 63/64}, width = 35/1.5, height = 16/1.5},
 }
 
 local raidUnitID = {}
@@ -1806,6 +1813,13 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton:SetScript("OnLeave", OnLeave)
 	end
 
+	GVAR.ScoreUpdateTexture = GVAR.TargetButton[1]:CreateTexture(nil, "OVERLAY")
+	GVAR.ScoreUpdateTexture:SetWidth(Textures.UpdateWarning.width)
+	GVAR.ScoreUpdateTexture:SetHeight(Textures.UpdateWarning.height)
+	GVAR.ScoreUpdateTexture:SetPoint("BOTTOMLEFT", GVAR.TargetButton[1], "TOPLEFT", 1, 1)
+	GVAR.ScoreUpdateTexture:SetTexture(Textures.BattlegroundTargetsIcons.path)
+	GVAR.ScoreUpdateTexture:SetTexCoord(unpack(Textures.UpdateWarning.coords))
+
 
 
 	GVAR.Summary = CreateFrame("Frame", nil, GVAR.TargetButton[1]) -- SUMMARY
@@ -1890,29 +1904,30 @@ function BattlegroundTargets:CreateFrames()
 	TEMPLATE.BorderTRBL(GVAR.WorldStateScoreWarning)
 	GVAR.WorldStateScoreWarning:SetToplevel(true)
 	GVAR.WorldStateScoreWarning:SetWidth(400)
-	GVAR.WorldStateScoreWarning:SetHeight(60)
+	GVAR.WorldStateScoreWarning:SetHeight(50)
 	GVAR.WorldStateScoreWarning:SetPoint("BOTTOM", WorldStateScoreFrame, "TOP", 0, 10)
 	GVAR.WorldStateScoreWarning:Hide()
 
 	GVAR.WorldStateScoreWarning.Texture1 = GVAR.WorldStateScoreWarning:CreateTexture(nil, "ARTWORK")
-	GVAR.WorldStateScoreWarning.Texture1:SetWidth(62)
-	GVAR.WorldStateScoreWarning.Texture1:SetHeight(54)
-	GVAR.WorldStateScoreWarning.Texture1:SetPoint("LEFT", GVAR.WorldStateScoreWarning, "LEFT", 12.5, 0)
+	GVAR.WorldStateScoreWarning.Texture1:SetWidth(31)--62
+	GVAR.WorldStateScoreWarning.Texture1:SetHeight(27)--54
+	GVAR.WorldStateScoreWarning.Texture1:SetPoint("LEFT", GVAR.WorldStateScoreWarning, "LEFT", 22, 0)
 	GVAR.WorldStateScoreWarning.Texture1:SetTexture("Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
 	GVAR.WorldStateScoreWarning.Texture1:SetTexCoord(1/64, 63/64, 1/64, 55/64)
 
 	GVAR.WorldStateScoreWarning.Texture2 = GVAR.WorldStateScoreWarning:CreateTexture(nil, "ARTWORK")
-	GVAR.WorldStateScoreWarning.Texture2:SetWidth(62)
-	GVAR.WorldStateScoreWarning.Texture2:SetHeight(54)
-	GVAR.WorldStateScoreWarning.Texture2:SetPoint("RIGHT", GVAR.WorldStateScoreWarning, "RIGHT", -12.5, 0)
+	GVAR.WorldStateScoreWarning.Texture2:SetWidth(31)--62
+	GVAR.WorldStateScoreWarning.Texture2:SetHeight(27)--54
+	GVAR.WorldStateScoreWarning.Texture2:SetPoint("RIGHT", GVAR.WorldStateScoreWarning, "RIGHT", -22, 0)
 	GVAR.WorldStateScoreWarning.Texture2:SetTexture("Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
 	GVAR.WorldStateScoreWarning.Texture2:SetTexCoord(1/64, 63/64, 1/64, 55/64)
 
 	GVAR.WorldStateScoreWarning.Text = GVAR.WorldStateScoreWarning:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	GVAR.WorldStateScoreWarning.Text:SetWidth(250)
-	GVAR.WorldStateScoreWarning.Text:SetHeight(60)
+	GVAR.WorldStateScoreWarning.Text:SetHeight(50)
 	GVAR.WorldStateScoreWarning.Text:SetPoint("CENTER", 0, 0)
 	GVAR.WorldStateScoreWarning.Text:SetJustifyH("CENTER")
+	GVAR.WorldStateScoreWarning.Text:SetFont(fontPath, 10)
 	GVAR.WorldStateScoreWarning.Text:SetText(L["BattlegroundTargets does not update if this Tab is opened."])
 
 	GVAR.WorldStateScoreWarning.Close = CreateFrame("Button", nil, GVAR.WorldStateScoreWarning)
@@ -4218,6 +4233,7 @@ function BattlegroundTargets:EnableConfigMode()
 	GVAR.MainFrame:SetHeight(20)
 	GVAR.MainFrame.Movetext:Show()
 	GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, 0)
+	GVAR.ScoreUpdateTexture:Hide()
 
 	BattlegroundTargets:ShufflerFunc("ShuffleCheck")
 	BattlegroundTargets:SetupButtonLayout()
@@ -4368,9 +4384,7 @@ function BattlegroundTargets:DisableConfigMode()
 				local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
 				if GVAR_TargetButton then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
-					if flagDebuff > 0 then
-						GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
-					end
+					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 				end
 			end
 		end
@@ -4900,11 +4914,7 @@ function BattlegroundTargets:UpdateLayout()
 			if ButtonShowFlag and hasFlag then
 				if qname == hasFlag then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
-					if flagDebuff > 0 then
-						GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
-					else
-						GVAR_TargetButton.FlagDebuff:SetText("")
-					end
+					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 				else
 					GVAR_TargetButton.FlagTexture:SetAlpha(0)
 					GVAR_TargetButton.FlagDebuff:SetText("")
@@ -4974,13 +4984,26 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
+	local curTime = GetTime()
+	if inCombat or InCombatLockdown() then
+		if curTime - latestCharUpdate >= 60 then
+			GVAR.ScoreUpdateTexture:Show()
+		else
+			GVAR.ScoreUpdateTexture:Hide()
+		end
+		reCheckBG = true
+		return
+	end
+
 	if not forceUpdate then
-		local curTime = GetTime()
 		if scoreUpdateThrottle + scoreUpdateFrequency > curTime then return end
 		scoreUpdateThrottle = curTime
 	end
 
 	if WorldStateScoreFrame and WorldStateScoreFrame:IsShown() and WorldStateScoreFrame.selectedTab and WorldStateScoreFrame.selectedTab > 1 then return end -- WorldStateScoreFrameTab_OnClick (WorldStateFrame.lua) | PanelTemplates_SetTab (UIPanelTemplates.lua) | Button WorldStateScoreFrameTab1/2/3 (WorldStateFrame.xml)
+
+	latestCharUpdate = curTime
+	GVAR.ScoreUpdateTexture:Hide()
 
 	SetBattlefieldScoreFaction()
 
@@ -5143,7 +5166,7 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 			for j = 1, 40 do
 				local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(unit, j)
 				if not spellId then break end
-				if spellId == 46392 then
+				if debuffIDs[spellId] then
 					flagDebuff = count
 				end
 			end
@@ -5158,9 +5181,7 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 				local GVAR_TargetButton = GVAR.TargetButton[button]
 				if GVAR_TargetButton then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
-					if flagDebuff > 0 then
-						GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
-					end
+					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 				end
 			end
 
@@ -5204,7 +5225,7 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 					for j = 1, 40 do
 						local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(unitID, j)
 						if not spellId then break end
-						if spellId == 46392 then
+						if debuffIDs[spellId] then
 							flagDebuff = count
 							return
 						end
@@ -5312,6 +5333,7 @@ function BattlegroundTargets:BattlefieldCheck()
 				GVAR.MainFrame:SetHeight(0.001)
 				GVAR.MainFrame.Movetext:Hide()
 				GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, -(20 / OPT.ButtonScale[currentSize]))
+				GVAR.ScoreUpdateTexture:Hide()
 				for i = 1, 40 do
 					local GVAR_TargetButton = GVAR.TargetButton[i]
 					if i < currentSize+1 then
@@ -5873,6 +5895,14 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
+	if flagDebuff > 0 then
+		GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
+	else
+		GVAR_TargetButton.FlagDebuff:SetText("")
+	end
+end
+
 function BattlegroundTargets:FlagDebuffCheck(message)
 	if message == FL["FLAG_DEBUFF1"] or message == FL["FLAG_DEBUFF2"] then -- FLAGDEBUFF
 		flagDebuff = flagDebuff + 1
@@ -5881,7 +5911,7 @@ function BattlegroundTargets:FlagDebuffCheck(message)
 			if Name2Button then
 				local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
 				if GVAR_TargetButton then
-					GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
+					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 				end
 			end
 		end
@@ -5951,9 +5981,7 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 					local GVAR_TargetButton = GVAR.TargetButton[button]
 					if GVAR_TargetButton then
 						GVAR_TargetButton.FlagTexture:SetAlpha(1)
-						if flagDebuff > 0 then
-							GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
-						end
+						BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 						for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Names4Flag have same buttonID
 							if button == fullnameButton then
 								hasFlag = fullname
@@ -6251,4 +6279,4 @@ BattlegroundTargets:RegisterEvent("PLAYER_REGEN_ENABLED")
 BattlegroundTargets:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 BattlegroundTargets:RegisterEvent("PLAYER_LOGIN")
 BattlegroundTargets:RegisterEvent("PLAYER_ENTERING_WORLD")
-BattlegroundTargets:SetScript("OnEvent", OnEvent) -- start
+BattlegroundTargets:SetScript("OnEvent", OnEvent)
