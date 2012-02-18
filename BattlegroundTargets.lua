@@ -163,16 +163,17 @@ local isAssistUnitId
 local rangeSpellName -- for class-spell based range check
 local flagDebuff = 0
 local flags = 0
-local isFlagBG
+local isFlagBG = 0
 local flagCHK
 local flagflag
 
 local scoreUpdateThrottle  = GetTime() -- UPDATE_BATTLEFIELD_SCORE BattlefieldScoreUpdate()
-local scoreUpdateFrequency = 5
-local latestCharUpdate     = GetTime()
+local scoreUpdateFrequency = 1         -- 0-10 updates = 1 second | 11- updates = 5 seconds
+local scoreUpdateCount     = 0         --
+local latestScoreUpdate    = GetTime()
 local rangeUpdateThrottle  = GetTime() -- UpdateRange() display only
 local rangeUpdateFrequency = 0.5
-local classRangeFrequency  = 0.2       -- UNIT_HEALTH_FREQUENT CheckUnitHealth()
+local classRangeFrequency  = 0.2       --
 local combatlogThrottle    = 0         -- COMBAT_LOG_EVENT_UNFILTERED
 local combatlogFrequency   = math_random(1,3) -- 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% cl msgs filtered
 local assistThrottle       = GetTime() -- UNIT_TARGET (assist only) - the bruteforce part
@@ -235,8 +236,8 @@ local bgSize = {
 
 local flagBG = {
 	["Warsong Gulch"] = 1,
-	["Eye of the Storm"] = 1,
-	["Twin Peaks"] = 1, 
+	["Eye of the Storm"] = 2,
+	["Twin Peaks"] = 3, 
 }
 
 local bgSizeINT = {
@@ -4986,7 +4987,7 @@ end
 function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 	local curTime = GetTime()
 	if inCombat or InCombatLockdown() then
-		if curTime - latestCharUpdate >= 60 then
+		if curTime - latestScoreUpdate >= 60 then
 			GVAR.ScoreUpdateTexture:Show()
 		else
 			GVAR.ScoreUpdateTexture:Hide()
@@ -5002,7 +5003,11 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 
 	if WorldStateScoreFrame and WorldStateScoreFrame:IsShown() and WorldStateScoreFrame.selectedTab and WorldStateScoreFrame.selectedTab > 1 then return end -- WorldStateScoreFrameTab_OnClick (WorldStateFrame.lua) | PanelTemplates_SetTab (UIPanelTemplates.lua) | Button WorldStateScoreFrameTab1/2/3 (WorldStateFrame.xml)
 
-	latestCharUpdate = curTime
+	scoreUpdateCount = scoreUpdateCount + 1
+	if scoreUpdateCount > 10 then
+		scoreUpdateFrequency = 5
+	end
+	latestScoreUpdate = curTime
 	GVAR.ScoreUpdateTexture:Hide()
 
 	SetBattlefieldScoreFaction()
@@ -5114,9 +5119,11 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 		end
 	end
 
-	BattlegroundTargets:UpdateLayout()
+	if ENEMY_Data[1] then
+		BattlegroundTargets:UpdateLayout()
+	end
 
-	if not flagflag and isFlagBG then
+	if not flagflag and isFlagBG > 0 then
 		if OPT.ButtonShowFlag[currentSize] then
 			if ENEMY_Data[1] then
 				BattlegroundTargets:CheckFlagCarrierSTART()
@@ -5157,7 +5164,6 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 		local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unit, i) -- name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId, canApplyAura, isBossDebuff, value1, value2, value3 = UnitAura("unit", index or "name"[, "rank"[, "filter"]])
 		if not spellId then break end
 		if flagIDs[spellId] then
-
 			hasFlag = targetName
 			flagDebuff = 0
 			flags = flags + 1
@@ -5278,7 +5284,7 @@ function BattlegroundTargets:BattlefieldCheck()
 
 	if instanceType == "pvp" then
 		inBattleground = true
-		isFlagBG = nil
+		isFlagBG = 0
 
 		local queueStatus, queueMapName, bgName
 		for i=1, GetMaxBattlefieldID() do
@@ -5288,19 +5294,22 @@ function BattlegroundTargets:BattlefieldCheck()
 				break
 			end
 		end
+
 		if bgName and BGN[bgName] then
 			currentSize = bgSize[ BGN[bgName] ]
 			reSizeCheck = 10
-			if flagBG[ BGN[bgName] ] then
-				isFlagBG = true
+			local flagBGnum = flagBG[ BGN[bgName] ]
+			if flagBGnum then
+				isFlagBG = flagBGnum
 			end
 		else
 			local zone = GetRealZoneText()
 			if zone and BGN[zone] then
 				currentSize = bgSize[ BGN[zone] ]
 				reSizeCheck = 10
-				if flagBG[ BGN[zone] ] then
-					isFlagBG = true
+				local flagBGnum = flagBG[ BGN[zone] ]
+				if flagBGnum then
+					isFlagBG = flagBGnum
 				end
 			else
 				if reSizeCheck >= 10 then
@@ -5361,16 +5370,13 @@ function BattlegroundTargets:BattlefieldCheck()
 					if currentSize == 10 or currentSize == 15 then
 
 						local flagIcon -- setup_flag_texture
-						if playerFactionBG ~= playerFactionDEF then
+						if isFlagBG == 2 or playerFactionBG ~= playerFactionDEF then
 							flagIcon = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral flag
+						elseif playerFactionDEF == 0 then
+							flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
 						else
-							if playerFactionDEF == 0 then
-								flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
-							else
-								flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
-							end
+							flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
 						end
-						
 						for i = 1, currentSize do
 							GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
 						end
@@ -5479,9 +5485,10 @@ function BattlegroundTargets:BattlefieldCheck()
 		oppositeFactionREAL = nil
 		flagDebuff = 0
 		flags = 0
-		isFlagBG = nil
+		isFlagBG = 0
 		flagCHK = nil
 		flagflag = nil
+		scoreUpdateCount = 0
 
 		BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
 		BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
@@ -5514,13 +5521,13 @@ function BattlegroundTargets:BattlefieldCheck()
 			reCheckBG = false
 
 			GVAR.MainFrame:Hide()
-			local flag = "Interface\\WorldStateFrame\\AllianceFlag" -- setup_flag_texture
+			local flagIcon = "Interface\\WorldStateFrame\\AllianceFlag" -- setup_flag_texture
 			if playerFactionDEF == 0 then
-				flag = "Interface\\WorldStateFrame\\HordeFlag"
+				flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
 			end
 			for i = 1, 40 do
 				local GVAR_TargetButton = GVAR.TargetButton[i]
-				GVAR_TargetButton.FlagTexture:SetTexture(flag)
+				GVAR_TargetButton.FlagTexture:SetTexture(flagIcon)
 				GVAR_TargetButton:Hide()
 			end
 
@@ -5571,28 +5578,7 @@ function BattlegroundTargets:CheckPlayerTarget()
 		isTarget = targetButton
 	end
 
-	-- FLAGSPY
-	if isFlagBG and flagCHK then
-		if OPT.ButtonShowFlag[currentSize] then
-			BattlegroundTargets:CheckFlagCarrierCHECK("target", targetName)
-		end
-	end
-
-	-- class_range (Check Player Target)
-	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
-		local curTime = GetTime()
-		local Name2Range = ENEMY_Name2Range[targetName]
-		if Name2Range then
-			if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
-		end
-		if IsSpellInRange(rangeSpellName, "target") == 1 then
-			ENEMY_Name2Range[targetName] = curTime
-			Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-		else
-			ENEMY_Name2Range[targetName] = nil
-			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-		end
-	end
+	BattlegroundTargets:CheckUnitTarget("player", targetName)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -5650,29 +5636,38 @@ function BattlegroundTargets:CheckPlayerFocus()
 	if not focusName then return end
 	local focusButton = ENEMY_Name2Button[focusName]
 	if not focusButton then return end
-	if not GVAR.TargetButton[focusButton] then return end
+	local GVAR_TargetButton = GVAR.TargetButton[focusButton]
+	if not GVAR_TargetButton then return end
 
 	-- focus
 	if OPT.ButtonShowFocus[currentSize] then
-		GVAR.TargetButton[focusButton].FocusTexture:SetAlpha(1)
+		GVAR_TargetButton.FocusTexture:SetAlpha(1)
+	end
+
+	-- class_range (Check Player Focus)
+	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
+		local curTime = GetTime()
+		local Name2Range = ENEMY_Name2Range[focusName]
+		if Name2Range then
+			if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
+		end
+		if IsSpellInRange(rangeSpellName, "focus") == 1 then
+			ENEMY_Name2Range[focusName] = curTime
+			Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+		else
+			ENEMY_Name2Range[focusName] = nil
+			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+		end
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckUnitTarget(unitID)
+function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	if isConfig then return end
 
 	local friendName, friendRealm, enemyID, enemyName, enemyRealm
-
-	if unitID == "player" then
-		enemyID = "target"
-		friendName = UnitName("player")
-		enemyName, enemyRealm = UnitName(enemyID)
-		if enemyRealm and enemyRealm ~= "" then
-			enemyName = enemyName.."-"..enemyRealm
-		end
-	else
+	if not unitName then
 		enemyID = unitID.."target"
 		friendName, friendRealm = UnitName(unitID)
 		if friendRealm and friendRealm ~= "" then
@@ -5682,6 +5677,10 @@ function BattlegroundTargets:CheckUnitTarget(unitID)
 		if enemyRealm and enemyRealm ~= "" then
 			enemyName = enemyName.."-"..enemyRealm
 		end
+	else -- "player"
+		enemyID = "target"
+		friendName = UnitName("player")
+		enemyName = unitName
 	end
 
 	local GVAR_TargetButton
@@ -5693,9 +5692,9 @@ function BattlegroundTargets:CheckUnitTarget(unitID)
 	end
 
 	-- FLAGSPY
-	if isFlagBG and flagCHK then
+	if isFlagBG > 0 and flagCHK then
 		if OPT.ButtonShowFlag[currentSize] then
-			if GVAR_TargetButton and raidUnitID[unitID] then
+			if GVAR_TargetButton then
 				BattlegroundTargets:CheckFlagCarrierCHECK(enemyID, enemyName)
 			end
 		end
@@ -5790,19 +5789,17 @@ function BattlegroundTargets:CheckUnitTarget(unitID)
 	-- class_range (Check Unit Target)
 	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
 		if GVAR_TargetButton then
-			if raidUnitID[unitID] then -- prevent double event trigger for partyXtarget and player unitIDs (raidXtarget is doing the same)
-				local curTime = GetTime()
-				local Name2Range = ENEMY_Name2Range[enemyName]
-				if Name2Range then
-					if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
-				end
-				if IsSpellInRange(rangeSpellName, enemyID) == 1 then
-					ENEMY_Name2Range[enemyName] = curTime
-					Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-				else
-					ENEMY_Name2Range[enemyName] = nil
-					Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-				end
+			local curTime = GetTime()
+			local Name2Range = ENEMY_Name2Range[enemyName]
+			if Name2Range then
+				if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
+			end
+			if IsSpellInRange(rangeSpellName, enemyID) == 1 then
+				ENEMY_Name2Range[enemyName] = curTime
+				Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+			else
+				ENEMY_Name2Range[enemyName] = nil
+				Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
 			end
 		end
 	end
@@ -5838,7 +5835,7 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 	if not GVAR_TargetButton then return end
 
 	-- FLAGSPY
-	if isFlagBG and flagCHK then
+	if isFlagBG > 0 and flagCHK then
 		if OPT.ButtonShowFlag[currentSize] then
 			BattlegroundTargets:CheckFlagCarrierCHECK(targetID, targetName)
 		end
@@ -5988,7 +5985,6 @@ function BattlegroundTargets:FlagCheck(message, messageFaction)
 								return
 							end
 						end
-
 					end
 					return
 				end
@@ -6036,7 +6032,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CombatLogRangeCheck(sourceName, destName, spellId)
+local function CombatLogRangeCheck(sourceName, destName, spellId)
 	if not SPELL_Range[spellId] then
 		local _, _, _, _, _, _, _, _, maxRange = GetSpellInfo(spellId) -- local name, rank, icon, cost, isFunnel, powerType, castTime, minRange, maxRange = GetSpellInfo(spellId)
 		if not maxRange then return end
@@ -6173,9 +6169,9 @@ local function OnEvent(self, event, ...)
 		local _, _, _, _, sourceName, _, _, _, destName, _, _, spellId = ... -- timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, spellSchool = ...
 		if not sourceName then return end
 		if not destName then return end
-		if not spellId then return end
 		if sourceName == destName then return end
-		BattlegroundTargets:CombatLogRangeCheck(sourceName, destName, spellId)
+		if not spellId then return end
+		CombatLogRangeCheck(sourceName, destName, spellId)
 
 	elseif event == "PLAYER_DEAD" then
 		if not inBattleground then return end
@@ -6203,6 +6199,7 @@ local function OnEvent(self, event, ...)
 	elseif event == "UNIT_TARGET" then
 		if isDead then return end
 		local arg1 = ...
+		if not raidUnitID[arg1] then return end
 		BattlegroundTargets:CheckUnitTarget(arg1)
 	elseif event == "PLAYER_FOCUS_CHANGED" then
 		BattlegroundTargets:CheckPlayerFocus()
