@@ -5370,12 +5370,20 @@ function BattlegroundTargets:BattlefieldCheck()
 					if currentSize == 10 or currentSize == 15 then
 
 						local flagIcon -- setup_flag_texture
-						if isFlagBG == 2 or playerFactionBG ~= playerFactionDEF then
+						if playerFactionBG ~= playerFactionDEF then
 							flagIcon = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral flag
 						elseif playerFactionDEF == 0 then
-							flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
+							if isFlagBG == 2 then
+								flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
+							else
+								flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
+							end
 						else
-							flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
+							if isFlagBG == 2 then
+								flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
+							else
+								flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
+							end
 						end
 						for i = 1, currentSize do
 							GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
