@@ -129,6 +129,8 @@ local UnitFactionGroup        = _G.UnitFactionGroup
 local UnitHealthMax           = _G.UnitHealthMax
 local UnitHealth              = _G.UnitHealth
 local UnitIsPartyLeader       = _G.UnitIsPartyLeader
+local UnitBuff                = _G.UnitBuff
+local UnitDebuff              = _G.UnitDebuff
 local GetSpellInfo            = _G.GetSpellInfo
 local IsSpellInRange          = _G.IsSpellInRange
 local CheckInteractDistance   = _G.CheckInteractDistance
@@ -169,15 +171,17 @@ local flagflag
 
 local scoreUpdateThrottle  = GetTime() -- UPDATE_BATTLEFIELD_SCORE BattlefieldScoreUpdate()
 local scoreUpdateFrequency = 1         -- 0-10 updates = 1 second | 11- updates = 5 seconds
-local scoreUpdateCount     = 0         --
+local scoreUpdateCount     = 0
 local latestScoreUpdate    = GetTime()
 local rangeUpdateThrottle  = GetTime() -- UpdateRange() display only
 local rangeUpdateFrequency = 0.5
-local classRangeFrequency  = 0.2       --
-local combatlogThrottle    = 0         -- COMBAT_LOG_EVENT_UNFILTERED
+local classRangeFrequency  = 0.2
+local combatlogThrottle    = 0                -- COMBAT_LOG_EVENT_UNFILTERED
 local combatlogFrequency   = math_random(1,3) -- 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% cl msgs filtered
-local assistThrottle       = GetTime() -- UNIT_TARGET (assist only) - the bruteforce part
+local assistThrottle       = GetTime()
 local assistFrequency      = 0.5
+local targetCountThrottle  = GetTime()
+local targetCountFrequency = 30
 
 local playerName = UnitName("player")
 local playerClass, playerClassEN = UnitClass("player")
@@ -1701,18 +1705,21 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.RoleTexture:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
 		GVAR_TargetButton.RoleTexture:SetTexture(Textures.BattlegroundTargetsIcons.path)
+		GVAR_TargetButton.RoleTexture:SetTexCoord(0, 0, 0, 0)
 
 		GVAR_TargetButton.SpecTexture = GVAR_TargetButton:CreateTexture(nil, "BORDER")
 		GVAR_TargetButton.SpecTexture:SetWidth(buttonHeight-2)
 		GVAR_TargetButton.SpecTexture:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
 		GVAR_TargetButton.SpecTexture:SetTexCoord(0.07812501, 0.92187499, 0.07812501, 0.92187499)--(5/64, 59/64, 5/64, 59/64)
+		GVAR_TargetButton.SpecTexture:SetTexture(nil)
 
 		GVAR_TargetButton.ClassTexture = GVAR_TargetButton:CreateTexture(nil, "BORDER")
 		GVAR_TargetButton.ClassTexture:SetWidth(buttonHeight-2)
 		GVAR_TargetButton.ClassTexture:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
 		GVAR_TargetButton.ClassTexture:SetTexture(classimg)
+		GVAR_TargetButton.ClassTexture:SetTexCoord(0, 0, 0, 0)
 
 		GVAR_TargetButton.LeaderTexture = GVAR_TargetButton:CreateTexture(nil, "ARTWORK")
 		GVAR_TargetButton.LeaderTexture:SetWidth((buttonHeight-2)/1.5)
@@ -5586,6 +5593,7 @@ function BattlegroundTargets:CheckPlayerTarget()
 		isTarget = targetButton
 	end
 
+	if isDead then return end
 	BattlegroundTargets:CheckUnitTarget("player", targetName)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -5691,6 +5699,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		enemyName = unitName
 	end
 
+	local curTime = GetTime()
 	local GVAR_TargetButton
 	if enemyName then
 		local enemyButton = ENEMY_Name2Button[enemyName]
@@ -5700,21 +5709,42 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	end
 
 	-- FLAGSPY
-	if isFlagBG > 0 and flagCHK then
+	if flagCHK and isFlagBG > 0 then
 		if OPT.ButtonShowFlag[currentSize] then
-			if GVAR_TargetButton then
-				BattlegroundTargets:CheckFlagCarrierCHECK(enemyID, enemyName)
-			end
+			BattlegroundTargets:CheckFlagCarrierCHECK(enemyID, enemyName)
 		end
 	end
 
 	-- target count
 	if OPT.ButtonShowTargetCount[currentSize] then
-		if friendName then
-			if enemyName then
-				TARGET_Names[friendName] = enemyName
-			else
-				TARGET_Names[friendName] = nil
+		if curTime > targetCountThrottle + targetCountFrequency then
+			targetCountThrottle = curTime
+			table_wipe(TARGET_Names)
+			for num = 1, GetNumRaidMembers() do
+				local uID = "raid"..num
+				local fName, fRealm = UnitName(uID)
+				if fName then
+					if fRealm and fRealm ~= "" then
+						fName = fName.."-"..fRealm
+					end
+					local eName, eRealm = UnitName(uID.."target")
+					if eName then
+						if eRealm and eRealm ~= "" then
+							eName = eName.."-"..eRealm
+						end
+						if ENEMY_Names[eName] then
+							TARGET_Names[fName] = eName
+						end
+					end
+				end
+			end
+		else
+			if friendName then
+				if enemyName then
+					TARGET_Names[friendName] = enemyName
+				else
+					TARGET_Names[friendName] = nil
+				end
 			end
 		end
 		for eName in pairs(ENEMY_Names) do
@@ -5749,7 +5779,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 	-- assist_
 	if isAssistName and OPT.ButtonShowAssist[currentSize] then
-		local curTime = GetTime()
 		if curTime > assistThrottle + assistFrequency then
 			assistThrottle = curTime
 			assistTargetName, assistTargetRealm = UnitName(isAssistUnitId)
@@ -5797,7 +5826,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	-- class_range (Check Unit Target)
 	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
 		if GVAR_TargetButton then
-			local curTime = GetTime()
 			local Name2Range = ENEMY_Name2Range[enemyName]
 			if Name2Range then
 				if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
@@ -5843,7 +5871,7 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 	if not GVAR_TargetButton then return end
 
 	-- FLAGSPY
-	if isFlagBG > 0 and flagCHK then
+	if flagCHK and isFlagBG > 0 then
 		if OPT.ButtonShowFlag[currentSize] then
 			BattlegroundTargets:CheckFlagCarrierCHECK(targetID, targetName)
 		end
