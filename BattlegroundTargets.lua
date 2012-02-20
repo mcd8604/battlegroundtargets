@@ -158,7 +158,7 @@ local isConfig
 local testDataLoaded
 local isTarget = 0
 local hasFlag
-local isDead
+local isDeadUpdateStop
 local isLeader
 local isAssistName
 local isAssistUnitId
@@ -238,16 +238,16 @@ local bgSize = {
 	["Twin Peaks"] = 10, 
 }
 
-local flagBG = {
-	["Warsong Gulch"] = 1,
-	["Eye of the Storm"] = 2,
-	["Twin Peaks"] = 3, 
-}
-
 local bgSizeINT = {
 	[1] = 10,
 	[2] = 15,
 	[3] = 40,
+}
+
+local flagBG = {
+	["Warsong Gulch"] = 1,
+	["Eye of the Storm"] = 2,
+	["Twin Peaks"] = 3, 
 }
 
 local flagIDs = {
@@ -496,7 +496,6 @@ function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
 		GVAR_TargetButton.ClassTexture:SetAlpha(1)
 		GVAR_TargetButton.ClassColorBackground:SetTexture(GVAR_TargetButton.colR5, GVAR_TargetButton.colG5, GVAR_TargetButton.colB5, 1)
 		GVAR_TargetButton.HealthBar:SetTexture(GVAR_TargetButton.colR, GVAR_TargetButton.colG, GVAR_TargetButton.colB, 1)
-		--GVAR_TargetButton.Name:SetTextColor(0, 0, 0, 1)
 	else
 		if display == 1 then -- Default 100
 			GVAR_TargetButton.Background:SetAlpha(1)
@@ -518,7 +517,6 @@ function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
 			GVAR_TargetButton.ClassTexture:SetAlpha(1)
 			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-			--GVAR_TargetButton.Name:SetTextColor(0.5, 0.5, 0.5, 1)
 		elseif display == 3 then -- Default 50
 			GVAR_TargetButton.Background:SetAlpha(0.5)
 			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
@@ -539,7 +537,6 @@ function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
 			GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
 			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-			--GVAR_TargetButton.Name:SetTextColor(0.5, 0.5, 0.5, 1)
 		elseif display == 5 then -- Default 10
 			GVAR_TargetButton.Background:SetAlpha(0.3)
 			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
@@ -560,7 +557,6 @@ function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
 			GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
 			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-			--GVAR_TargetButton.Name:SetTextColor(0.5, 0.5, 0.5, 1)
  		elseif display == 7 then -- X 100 m
 			GVAR_TargetButton.Background:SetAlpha(1)
 			GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
@@ -572,7 +568,6 @@ function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
 			GVAR_TargetButton.ClassTexture:SetAlpha(1)
 			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-			--GVAR_TargetButton.Name:SetTextColor(0.5, 0.5, 0.5, 1)
  		elseif display == 8 then -- X 50 m
 			GVAR_TargetButton.Background:SetAlpha(0.5)
 			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
@@ -584,7 +579,6 @@ function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
 			GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
 			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-			--GVAR_TargetButton.Name:SetTextColor(0.5, 0.5, 0.5, 1)
 		elseif display == 9 then -- X 10
 			GVAR_TargetButton.Background:SetAlpha(0.3)
 			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
@@ -605,7 +599,6 @@ function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
 			GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
 			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-			--GVAR_TargetButton.Name:SetTextColor(0.5, 0.5, 0.5, 1)
 		end
 	end
 end
@@ -1911,29 +1904,22 @@ function BattlegroundTargets:CreateFrames()
 	GVAR.WorldStateScoreWarning = CreateFrame("Frame", nil, WorldStateScoreFrame)
 	TEMPLATE.BorderTRBL(GVAR.WorldStateScoreWarning)
 	GVAR.WorldStateScoreWarning:SetToplevel(true)
-	GVAR.WorldStateScoreWarning:SetWidth(400)
-	GVAR.WorldStateScoreWarning:SetHeight(50)
+	-- GVAR.WorldStateScoreWarning:SetWidth()
+	GVAR.WorldStateScoreWarning:SetHeight(30)
 	GVAR.WorldStateScoreWarning:SetPoint("BOTTOM", WorldStateScoreFrame, "TOP", 0, 10)
 	GVAR.WorldStateScoreWarning:Hide()
 
-	GVAR.WorldStateScoreWarning.Texture1 = GVAR.WorldStateScoreWarning:CreateTexture(nil, "ARTWORK")
-	GVAR.WorldStateScoreWarning.Texture1:SetWidth(31)--62
-	GVAR.WorldStateScoreWarning.Texture1:SetHeight(27)--54
-	GVAR.WorldStateScoreWarning.Texture1:SetPoint("LEFT", GVAR.WorldStateScoreWarning, "LEFT", 22, 0)
-	GVAR.WorldStateScoreWarning.Texture1:SetTexture("Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
-	GVAR.WorldStateScoreWarning.Texture1:SetTexCoord(1/64, 63/64, 1/64, 55/64)
-
-	GVAR.WorldStateScoreWarning.Texture2 = GVAR.WorldStateScoreWarning:CreateTexture(nil, "ARTWORK")
-	GVAR.WorldStateScoreWarning.Texture2:SetWidth(31)--62
-	GVAR.WorldStateScoreWarning.Texture2:SetHeight(27)--54
-	GVAR.WorldStateScoreWarning.Texture2:SetPoint("RIGHT", GVAR.WorldStateScoreWarning, "RIGHT", -22, 0)
-	GVAR.WorldStateScoreWarning.Texture2:SetTexture("Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
-	GVAR.WorldStateScoreWarning.Texture2:SetTexCoord(1/64, 63/64, 1/64, 55/64)
+	GVAR.WorldStateScoreWarning.Texture = GVAR.WorldStateScoreWarning:CreateTexture(nil, "ARTWORK")
+	GVAR.WorldStateScoreWarning.Texture:SetWidth(20) -- 62
+	GVAR.WorldStateScoreWarning.Texture:SetHeight(17.419) -- 54
+	GVAR.WorldStateScoreWarning.Texture:SetPoint("LEFT", GVAR.WorldStateScoreWarning, "LEFT", 5, 0)
+	GVAR.WorldStateScoreWarning.Texture:SetTexture("Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
+	GVAR.WorldStateScoreWarning.Texture:SetTexCoord(1/64, 63/64, 1/64, 55/64)
 
 	GVAR.WorldStateScoreWarning.Text = GVAR.WorldStateScoreWarning:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	GVAR.WorldStateScoreWarning.Text:SetWidth(250)
-	GVAR.WorldStateScoreWarning.Text:SetHeight(50)
-	GVAR.WorldStateScoreWarning.Text:SetPoint("CENTER", 0, 0)
+	-- GVAR.WorldStateScoreWarning.Text:SetWidth()
+	GVAR.WorldStateScoreWarning.Text:SetHeight(30)
+	GVAR.WorldStateScoreWarning.Text:SetPoint("LEFT", GVAR.WorldStateScoreWarning.Texture, "RIGHT", 5, 0)
 	GVAR.WorldStateScoreWarning.Text:SetJustifyH("CENTER")
 	GVAR.WorldStateScoreWarning.Text:SetFont(fontPath, 10)
 	GVAR.WorldStateScoreWarning.Text:SetText(L["BattlegroundTargets does not update if this Tab is opened."])
@@ -1944,6 +1930,10 @@ function BattlegroundTargets:CreateFrames()
 	GVAR.WorldStateScoreWarning.Close:SetHeight(20)
 	GVAR.WorldStateScoreWarning.Close:SetPoint("TOPRIGHT", GVAR.WorldStateScoreWarning, "TOPRIGHT", 0, 0)
 	GVAR.WorldStateScoreWarning.Close:SetScript("OnClick", function() GVAR.WorldStateScoreWarning:Hide() end)
+
+	local w = GVAR.WorldStateScoreWarning.Text:GetStringWidth() + 20
+	GVAR.WorldStateScoreWarning.Text:SetWidth(w)
+	GVAR.WorldStateScoreWarning:SetWidth(30+w+30)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -3823,7 +3813,7 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR_TargetButton.TargetCount:SetShadowColor(0, 0, 0, 0)
 			GVAR_TargetButton.TargetCount:SetHeight(backfallFontSize)
 			GVAR_TargetButton.TargetCount:SetTextColor(1, 1, 1, 1)
-			GVAR_TargetButton.TargetCount:SetText("0")
+			GVAR_TargetButton.TargetCount:SetText("")
 			GVAR_TargetButton.TargetCount:Show()
 		else
 			healthBarWidth = withIconWidth
@@ -4269,12 +4259,6 @@ function BattlegroundTargets:EnableConfigMode()
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
 		GVAR_TargetButton.FlagDebuff:SetText("")
 		GVAR_TargetButton.AssistTexture:SetAlpha(0)
-
-		GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
-		GVAR_TargetButton.HealthBar:SetAlpha(1)
-		GVAR_TargetButton.RoleTexture:SetAlpha(1)
-		GVAR_TargetButton.SpecTexture:SetAlpha(1)
-		GVAR_TargetButton.ClassTexture:SetAlpha(1)
 		GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 
 		if i < currentSize+1 then
@@ -4346,7 +4330,7 @@ function BattlegroundTargets:DisableConfigMode()
 	currentSize = testSize
 	BattlegroundTargets:SetOptions()
 
-	BattlegroundTargets:Frame_Toggle(GVAR.MainFrame)
+	GVAR.MainFrame:Hide()
 	for i = 1, 40 do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
 		GVAR_TargetButton:Hide()
@@ -4359,7 +4343,7 @@ function BattlegroundTargets:DisableConfigMode()
 		GVAR_TargetButton.FocusTexture:SetAlpha(0)
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
 		GVAR_TargetButton.FlagDebuff:SetText("")
-		GVAR_TargetButton.TargetCount:SetText("0")
+		GVAR_TargetButton.TargetCount:SetText("")
 		GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
 		GVAR_TargetButton.HealthText:SetText("")
 		GVAR_TargetButton.RangeTexture:SetAlpha(0)
@@ -4876,8 +4860,10 @@ function BattlegroundTargets:UpdateLayout()
 			local percentE = ENEMY_Name2Percent[qname]
 
 			if ButtonShowTargetCount then
-				if nameE and GVAR_TargetButton then
+				if nameE then
 					GVAR_TargetButton.TargetCount:SetText(nameE)
+				else
+					GVAR_TargetButton.TargetCount:SetText("0")
 				end
 			end
 
@@ -4947,13 +4933,21 @@ function BattlegroundTargets:UpdateLayout()
 
 		else
 			local GVAR_TargetButton = GVAR.TargetButton[i]
+			GVAR_TargetButton.colR  = 0
+			GVAR_TargetButton.colG  = 0
+			GVAR_TargetButton.colB  = 0
+			GVAR_TargetButton.colR5 = 0
+			GVAR_TargetButton.colG5 = 0
+			GVAR_TargetButton.colB5 = 0
 			GVAR_TargetButton.ClassColorBackground:SetTexture(0, 0, 0, 0)
 			GVAR_TargetButton.HealthBar:SetTexture(0, 0, 0, 0)
+			GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
 			GVAR_TargetButton.HealthText:SetText("")
 			GVAR_TargetButton.SpecTexture:SetTexture(nil)
 			GVAR_TargetButton.ClassTexture:SetTexCoord(0, 0, 0, 0)
 			GVAR_TargetButton.RoleTexture:SetTexCoord(0, 0, 0, 0)
 			GVAR_TargetButton.Name:SetText("")
+			GVAR_TargetButton.TargetCount:SetText("")
 			GVAR_TargetButton.FlagTexture:SetAlpha(0)
 			GVAR_TargetButton.FlagDebuff:SetText("")
 			GVAR_TargetButton.AssistTexture:SetAlpha(0)
@@ -4965,7 +4959,7 @@ function BattlegroundTargets:UpdateLayout()
 			end
 		end
 	end
-	
+
 	if ButtonRangeCheck and not isConfig then
 		BattlegroundTargets:UpdateRange(GetTime())
 	end
@@ -5353,8 +5347,10 @@ function BattlegroundTargets:BattlefieldCheck()
 				for i = 1, 40 do
 					local GVAR_TargetButton = GVAR.TargetButton[i]
 					if i < currentSize+1 then
-						GVAR_TargetButton.TargetCount:SetText("0")
+						GVAR_TargetButton.Name:SetText("")
+						GVAR_TargetButton.TargetCount:SetText("")
 						GVAR_TargetButton.HealthText:SetText("")
+						GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
 						GVAR_TargetButton.HighlightT:SetTexture(0, 0, 0, 1)
 						GVAR_TargetButton.HighlightR:SetTexture(0, 0, 0, 1)
 						GVAR_TargetButton.HighlightB:SetTexture(0, 0, 0, 1)
@@ -5593,7 +5589,7 @@ function BattlegroundTargets:CheckPlayerTarget()
 		isTarget = targetButton
 	end
 
-	if isDead then return end
+	if isDeadUpdateStop then return end
 	BattlegroundTargets:CheckUnitTarget("player", targetName)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -5762,7 +5758,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 			if ENEMY_Data[i] then
 				local count = ENEMY_Names[ ENEMY_Data[i].name ]
 				if count then
-					GVAR.TargetButton[i].TargetCount:SetText( count )
+					GVAR.TargetButton[i].TargetCount:SetText(count)
 				end
 			else
 				GVAR.TargetButton[i].TargetCount:SetText("")
@@ -6126,7 +6122,10 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:UpdateRange(curTime)
-	if isDead then return end
+	if isDeadUpdateStop then
+		BattlegroundTargets:ClearRangeData()
+		return
+	end
 
 	local ButtonRangeDisplay = OPT.ButtonRangeDisplay[currentSize]
 	for i = 1, currentSize do
@@ -6156,7 +6155,7 @@ function BattlegroundTargets:ClearRangeData()
 	if OPT.ButtonRangeCheck[currentSize] then
 		table_wipe(ENEMY_Name2Range)
 		local ButtonRangeDisplay = OPT.ButtonRangeDisplay[currentSize]
-		for i = 1, 40 do
+		for i = 1, currentSize do
 			Range_Display(false, GVAR.TargetButton[i], ButtonRangeDisplay)
 		end
 	end
@@ -6193,7 +6192,7 @@ local function OnEvent(self, event, ...)
 
 	elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
 		if isConfig then return end
-		if isDead then return end
+		if isDeadUpdateStop then return end
 
 		combatlogThrottle = combatlogThrottle + 1
 		if combatlogThrottle > combatlogFrequency then
@@ -6211,17 +6210,17 @@ local function OnEvent(self, event, ...)
 
 	elseif event == "PLAYER_DEAD" then
 		if not inBattleground then return end
-		isDead = false
+		isDeadUpdateStop = false
 	elseif event == "PLAYER_UNGHOST" then
 		if not inBattleground then return end
-		isDead = false
+		isDeadUpdateStop = false
 	elseif event == "PLAYER_ALIVE" then
 		if not inBattleground then return end
 		if UnitIsGhost("player") then
-			isDead = true
+			isDeadUpdateStop = true
 			BattlegroundTargets:ClearRangeData()
 		else
-			isDead = false
+			isDeadUpdateStop = false
 		end
 
 	elseif event == "UPDATE_BATTLEFIELD_SCORE" then
@@ -6233,7 +6232,7 @@ local function OnEvent(self, event, ...)
 		BattlegroundTargets:BattlefieldCheck()
 
 	elseif event == "UNIT_TARGET" then
-		if isDead then return end
+		if isDeadUpdateStop then return end
 		local arg1 = ...
 		if not raidUnitID[arg1] then return end
 		BattlegroundTargets:CheckUnitTarget(arg1)
@@ -6242,11 +6241,11 @@ local function OnEvent(self, event, ...)
 	elseif event == "PLAYER_TARGET_CHANGED" then
 		BattlegroundTargets:CheckPlayerTarget()
 	elseif event == "UNIT_HEALTH_FREQUENT" then
-		if isDead then return end
+		if isDeadUpdateStop then return end
 		local arg1 = ...
 		BattlegroundTargets:CheckUnitHealth(arg1)
 	elseif event == "UPDATE_MOUSEOVER_UNIT" then
-		if isDead then return end
+		if isDeadUpdateStop then return end
 		BattlegroundTargets:CheckUnitHealth("mouseover")
 
 	elseif event == "RAID_ROSTER_UPDATE" then
