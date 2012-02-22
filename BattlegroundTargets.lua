@@ -55,7 +55,7 @@
 --   - A raidmember/raidpet MUST target(focus/mouseover) an enemy OR          --
 --     you/yourpet MUST target/focus/mouseover an enemy to get the health.    --
 --                                                                            --
--- # Target Count: ----------------------------------------- MEDIUM CPU USAGE --
+-- # Target Count: ------------------------------------ HIGH MEDIUM CPU USAGE --
 --   - Event:              - UNIT_TARGET                                      --
 --                                                                            --
 -- # Main Assist Target: ----------------------------------- MEDIUM CPU USAGE --
@@ -115,43 +115,46 @@ local OPT = {}      -- local SavedVariable table (BattlegroundTargets_Options.Bu
 
 local AddonIcon = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-button"
 
-local _G                      = _G
-local GetTime                 = _G.GetTime
-local InCombatLockdown        = _G.InCombatLockdown
-local IsInInstance            = _G.IsInInstance
-local IsRatedBattleground     = _G.IsRatedBattleground
-local GetRealZoneText         = _G.GetRealZoneText
-local GetBattlefieldStatus    = _G.GetBattlefieldStatus
-local GetNumBattlefieldScores = _G.GetNumBattlefieldScores
-local GetBattlefieldScore     = _G.GetBattlefieldScore
-local UnitName                = _G.UnitName
-local UnitFactionGroup        = _G.UnitFactionGroup
-local UnitHealthMax           = _G.UnitHealthMax
-local UnitHealth              = _G.UnitHealth
-local UnitIsPartyLeader       = _G.UnitIsPartyLeader
-local UnitBuff                = _G.UnitBuff
-local UnitDebuff              = _G.UnitDebuff
-local GetSpellInfo            = _G.GetSpellInfo
-local IsSpellInRange          = _G.IsSpellInRange
-local CheckInteractDistance   = _G.CheckInteractDistance
-local GetNumRaidMembers       = _G.GetNumRaidMembers
-local GetRaidRosterInfo       = _G.GetRaidRosterInfo
-local math_min                = _G.math.min
-local math_max                = _G.math.max
-local math_floor              = _G.math.floor
-local math_random             = _G.math.random
-local string_find             = _G.string.find
-local string_match            = _G.string.match
-local string_format           = _G.string.format
-local table_sort              = _G.table.sort
-local table_wipe              = _G.table.wipe
-local pairs                   = _G.pairs
-local tonumber                = _G.tonumber
+local _G                         = _G
+local GetTime                    = _G.GetTime
+local InCombatLockdown           = _G.InCombatLockdown
+local IsInInstance               = _G.IsInInstance
+local IsRatedBattleground        = _G.IsRatedBattleground
+local GetBattlefieldArenaFaction = _G.GetBattlefieldArenaFaction
+local GetRealZoneText            = _G.GetRealZoneText
+local GetMaxBattlefieldID        = _G.GetMaxBattlefieldID
+local GetBattlefieldStatus       = _G.GetBattlefieldStatus
+local GetNumBattlefieldScores    = _G.GetNumBattlefieldScores
+local GetBattlefieldScore        = _G.GetBattlefieldScore
+local SetBattlefieldScoreFaction = _G.SetBattlefieldScoreFaction
+local UnitName                   = _G.UnitName
+local UnitHealthMax              = _G.UnitHealthMax
+local UnitHealth                 = _G.UnitHealth
+local UnitIsPartyLeader          = _G.UnitIsPartyLeader
+local UnitBuff                   = _G.UnitBuff
+local UnitDebuff                 = _G.UnitDebuff
+local GetSpellInfo               = _G.GetSpellInfo
+local IsSpellInRange             = _G.IsSpellInRange
+local CheckInteractDistance      = _G.CheckInteractDistance
+local GetNumRaidMembers          = _G.GetNumRaidMembers
+local GetRaidRosterInfo          = _G.GetRaidRosterInfo
+local math_min                   = _G.math.min
+local math_max                   = _G.math.max
+local math_floor                 = _G.math.floor
+local math_random                = _G.math.random
+local string_find                = _G.string.find
+local string_match               = _G.string.match
+local string_format              = _G.string.format
+local table_sort                 = _G.table.sort
+local table_wipe                 = _G.table.wipe
+local pairs                      = _G.pairs
+local tonumber                   = _G.tonumber
 
 local inWorld
 local inBattleground
 local inCombat
 local reCheckBG
+local reCheckScore
 local reSizeCheck = 0 -- check bgname if normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
 local reSetLayout
 local isConfig
@@ -169,19 +172,27 @@ local isFlagBG = 0
 local flagCHK
 local flagflag
 
-local scoreUpdateThrottle  = GetTime() -- UPDATE_BATTLEFIELD_SCORE BattlefieldScoreUpdate()
-local scoreUpdateFrequency = 1         -- 0-10 updates = 1 second | 11- updates = 5 seconds
-local scoreUpdateCount     = 0
-local latestScoreUpdate    = GetTime()
-local rangeUpdateThrottle  = GetTime() -- UpdateRange() display only
-local rangeUpdateFrequency = 0.5
-local classRangeFrequency  = 0.2
-local combatlogThrottle    = 0                -- COMBAT_LOG_EVENT_UNFILTERED
-local combatlogFrequency   = math_random(1,3) -- 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% cl msgs filtered
-local assistThrottle       = GetTime()
-local assistFrequency      = 0.5
-local targetCountThrottle  = GetTime()
-local targetCountFrequency = 30
+-- THROTTLE (reduce CPU usage) -----------------------------------------------------------------------------------------
+local scoreUpdateThrottle  = GetTime()      -- scoreupdate: B.attlefieldScoreUpdate()
+local scoreUpdateFrequency = 1              -- scoreupdate: 0-10 updates = 1 second | 11+ updates = 5 seconds
+local scoreUpdateCount     = 0              -- scoreupdate: (reason: later score updates are less relevant and 5 seconds is still very high)
+local range_SPELL_Frequency     = 0.2       -- rangecheck: [class-spell]: the 0.2 second freq is per enemy (variable: ENEMY_Name2Range[enemyname]) 
+local range_CL_Throttle         = 0         -- rangecheck: [combatlog] C.ombatLogRangeCheck()
+local range_CL_Frequency        = 3         -- rangecheck: [combatlog] 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% combatlog messages filtered (36% vs overhead: two variables, one addition, one number comparison and if filtered one math_random)
+local range_CL_DisplayThrottle  = GetTime() -- rangecheck: [combatlog] display update
+local range_CL_DisplayFrequency = 0.5       -- rangecheck: [combatlog] display update
+local leaderThrottle  = 0                   -- leader: C.heckUnitTarget()
+local leaderFrequency = 5                   -- leader: if isLeader is true then pause 5 times(events) until next check (reason: leader does not change often in a bg, irrelevant info anyway)
+-- FORCE UPDATE (precise results) --------------------------------------------------------------------------------------
+local assistForceUpdate = GetTime()         -- assist: C.heckUnitTarget()
+local assistFrequency   = 0.5               -- assist: immediate assist target check (reason: sometimes WoW swallows up some targets and I don't know exactly why... -> brute force)
+local targetCountForceUpdate = GetTime()    -- targetcount: C.heckUnitTarget()
+local targetCountFrequency   = 30           -- targetcount: a complete raid/raidtarget check every 30 seconds (reason: sometimes WoW swallows up some targets and I don't know exactly why... -> brute force)
+-- WARNING -------------------------------------------------------------------------------------------------------------
+local latestScoreUpdate  = GetTime()        -- scoreupdate: B.attlefieldScoreUpdate()
+local latestScoreWarning = 60               -- scoreupdate: inCombat-warning icon if latest score update is >= 60 seconds
+-- MISC ----------------------------------------------------------------------------------------------------------------
+local range_DisappearTime = 10              -- rangecheck: display update - clears range display if an enemy was not seen for 10 seconds
 
 local playerName = UnitName("player")
 local playerClass, playerClassEN = UnitClass("player")
@@ -484,7 +495,7 @@ local function RangeDisplayPullDownFunc(value) -- PDFUNC
 	BattlegroundTargets:EnableConfigMode()
 end
 
-function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
+local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
 	if state then
 		GVAR_TargetButton.Background:SetAlpha(1)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
@@ -4988,12 +4999,12 @@ end
 function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 	local curTime = GetTime()
 	if inCombat or InCombatLockdown() then
-		if curTime - latestScoreUpdate >= 60 then
+		if curTime - latestScoreUpdate >= latestScoreWarning then
 			GVAR.ScoreUpdateTexture:Show()
 		else
 			GVAR.ScoreUpdateTexture:Hide()
 		end
-		reCheckBG = true
+		reCheckScore = true
 		return
 	end
 
@@ -5008,6 +5019,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 	if scoreUpdateCount > 10 then
 		scoreUpdateFrequency = 5
 	end
+	reCheckScore = nil
 	latestScoreUpdate = curTime
 	GVAR.ScoreUpdateTexture:Hide()
 
@@ -5322,13 +5334,18 @@ function BattlegroundTargets:BattlefieldCheck()
 			end
 		end
 
-		local faction = GetBattlefieldArenaFaction()
-		if faction == 0 then
-			playerFactionBG   = 0 -- Horde or Alliance
-			oppositeFactionBG = 1 -- Alliance or Horde
-		elseif faction == 1 then
-			playerFactionBG   = 1 -- Alliance or Horde
-			oppositeFactionBG = 0 -- Horde or Alliance
+		if IsRatedBattleground() then
+			local faction = GetBattlefieldArenaFaction()
+			if faction == 0 then
+				playerFactionBG   = 0 -- Horde
+				oppositeFactionBG = 1 -- Alliance
+			elseif faction == 1 then
+				playerFactionBG   = 1 -- Alliance
+				oppositeFactionBG = 0 -- Horde
+			else
+				Print("ERROR", "unknown battleground faction", locale, faction)
+				Print("Please contact addon author. Thanks.")
+			end
 		end
 
 		if inCombat or InCombatLockdown() then
@@ -5500,6 +5517,10 @@ function BattlegroundTargets:BattlefieldCheck()
 		flagCHK = nil
 		flagflag = nil
 		scoreUpdateCount = 0
+		isLeader = nil
+		hasFlag = nil
+		reCheckBG = nil
+		reCheckScore = nil
 
 		BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
 		BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
@@ -5661,7 +5682,7 @@ function BattlegroundTargets:CheckPlayerFocus()
 		local curTime = GetTime()
 		local Name2Range = ENEMY_Name2Range[focusName]
 		if Name2Range then
-			if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
+			if Name2Range + range_SPELL_Frequency > curTime then return end -- ATTENTION
 		end
 		if IsSpellInRange(rangeSpellName, "focus") == 1 then
 			ENEMY_Name2Range[focusName] = curTime
@@ -5691,7 +5712,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		end
 	else -- "player"
 		enemyID = "target"
-		friendName = UnitName("player")
+		friendName = playerName
 		enemyName = unitName
 	end
 
@@ -5713,8 +5734,8 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 	-- target count
 	if OPT.ButtonShowTargetCount[currentSize] then
-		if curTime > targetCountThrottle + targetCountFrequency then
-			targetCountThrottle = curTime
+		if curTime > targetCountForceUpdate + targetCountFrequency then
+			targetCountForceUpdate = curTime
 			table_wipe(TARGET_Names)
 			for num = 1, GetNumRaidMembers() do
 				local uID = "raid"..num
@@ -5736,7 +5757,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 			end
 		else
 			if friendName then
-				if enemyName then
+				if enemyName and ENEMY_Names[enemyName] then
 					TARGET_Names[friendName] = enemyName
 				else
 					TARGET_Names[friendName] = nil
@@ -5775,8 +5796,8 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 	-- assist_
 	if isAssistName and OPT.ButtonShowAssist[currentSize] then
-		if curTime > assistThrottle + assistFrequency then
-			assistThrottle = curTime
+		if curTime > assistForceUpdate + assistFrequency then
+			assistForceUpdate = curTime
 			assistTargetName, assistTargetRealm = UnitName(isAssistUnitId)
 			if assistTargetRealm and assistTargetRealm ~= "" then
 				assistTargetName = assistTargetName.."-"..assistTargetRealm
@@ -5807,14 +5828,30 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	-- leader
 	if OPT.ButtonShowLeader[currentSize] then
 		if GVAR_TargetButton then
-			if UnitIsPartyLeader(enemyID) then
-				isLeader = enemyName
-				for i = 1, currentSize do
-					GVAR.TargetButton[i].LeaderTexture:SetAlpha(0)
+			if isLeader then
+				leaderThrottle = leaderThrottle + 1
+				if leaderThrottle > leaderFrequency then
+					leaderThrottle = 0
+					if UnitIsPartyLeader(enemyID) then
+						isLeader = enemyName
+						for i = 1, currentSize do
+							GVAR.TargetButton[i].LeaderTexture:SetAlpha(0)
+						end
+						GVAR_TargetButton.LeaderTexture:SetAlpha(0.75)
+					else
+						GVAR_TargetButton.LeaderTexture:SetAlpha(0)
+					end
 				end
-				GVAR_TargetButton.LeaderTexture:SetAlpha(0.75)
 			else
-				GVAR_TargetButton.LeaderTexture:SetAlpha(0)
+				if UnitIsPartyLeader(enemyID) then
+					isLeader = enemyName
+					for i = 1, currentSize do
+						GVAR.TargetButton[i].LeaderTexture:SetAlpha(0)
+					end
+					GVAR_TargetButton.LeaderTexture:SetAlpha(0.75)
+				else
+					GVAR_TargetButton.LeaderTexture:SetAlpha(0)
+				end
 			end
 		end
 	end
@@ -5824,7 +5861,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		if GVAR_TargetButton then
 			local Name2Range = ENEMY_Name2Range[enemyName]
 			if Name2Range then
-				if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
+				if Name2Range + range_SPELL_Frequency > curTime then return end -- ATTENTION
 			end
 			if IsSpellInRange(rangeSpellName, enemyID) == 1 then
 				ENEMY_Name2Range[enemyName] = curTime
@@ -5905,19 +5942,17 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 
 	-- class_range (Check Unit Health)
 	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
-		if raidUnitID[unitID] or playerUnitID[targetID] then
-			local curTime = GetTime()
-			local Name2Range = ENEMY_Name2Range[targetName]
-			if Name2Range then
-				if Name2Range + classRangeFrequency > curTime then return end -- ATTENTION
-			end
-			if IsSpellInRange(rangeSpellName, targetID) == 1 then
-				ENEMY_Name2Range[targetName] = curTime
-				Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-			else
-				ENEMY_Name2Range[targetName] = nil
-				Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-			end
+		local curTime = GetTime()
+		local Name2Range = ENEMY_Name2Range[targetName]
+		if Name2Range then
+			if Name2Range + range_SPELL_Frequency > curTime then return end -- ATTENTION
+		end
+		if IsSpellInRange(rangeSpellName, targetID) == 1 then
+			ENEMY_Name2Range[targetName] = curTime
+			Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+		else
+			ENEMY_Name2Range[targetName] = nil
+			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
 		end
 	end
 end
@@ -6089,8 +6124,8 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 			if CheckInteractDistance(destName, 1) then -- 1:Inspect=28
 				ENEMY_Name2Range[sourceName] = curTime
 			end
-			if rangeUpdateThrottle + rangeUpdateFrequency > curTime then return end
-			rangeUpdateThrottle = curTime
+			if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
+			range_CL_DisplayThrottle = curTime
 			BattlegroundTargets:UpdateRange(curTime)
 			return
 		end
@@ -6111,8 +6146,8 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 			if CheckInteractDistance(sourceName, 1) then -- 1:Inspect=28
 				ENEMY_Name2Range[destName] = curTime
 			end
-			if rangeUpdateThrottle + rangeUpdateFrequency > curTime then return end
-			rangeUpdateThrottle = curTime
+			if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
+			range_CL_DisplayThrottle = curTime
 			BattlegroundTargets:UpdateRange(curTime)
 			return
 		end
@@ -6138,7 +6173,7 @@ function BattlegroundTargets:UpdateRange(curTime)
 			ENEMY_Name2Range[name] = nil
 		elseif ENEMY_Name2Percent[name] == 0 then
 			ENEMY_Name2Range[name] = nil
-		elseif timeStamp + 10 < curTime then
+		elseif timeStamp + range_DisappearTime < curTime then
 			ENEMY_Name2Range[name] = nil
 		else
 			local GVAR_TargetButton = GVAR.TargetButton[button]
@@ -6172,6 +6207,10 @@ local function OnEvent(self, event, ...)
 		end
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		inCombat = false
+		if reCheckScore then
+			if not inWorld then return end
+			BattlegroundTargets:BattlefieldScoreUpdate(1)
+		end
 		if reCheckBG then
 			if not inWorld then return end
 			BattlegroundTargets:BattlefieldCheck()
@@ -6194,10 +6233,10 @@ local function OnEvent(self, event, ...)
 		if isConfig then return end
 		if isDeadUpdateStop then return end
 
-		combatlogThrottle = combatlogThrottle + 1
-		if combatlogThrottle > combatlogFrequency then
-			combatlogThrottle = 0
-			combatlogFrequency = math_random(1,3)
+		range_CL_Throttle = range_CL_Throttle + 1
+		if range_CL_Throttle > range_CL_Frequency then
+			range_CL_Throttle = 0
+			range_CL_Frequency = math_random(1,3)
 			return
 		end
 
@@ -6275,6 +6314,8 @@ local function OnEvent(self, event, ...)
 			playerFactionDEF   = 1
 			oppositeFactionDEF = 0
 		end
+		playerFactionBG   = playerFactionDEF
+		oppositeFactionBG = oppositeFactionDEF
 
 		BattlegroundTargets:InitOptions()
 		BattlegroundTargets:CreateInterfaceOptions()
