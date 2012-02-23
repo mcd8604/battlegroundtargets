@@ -174,7 +174,7 @@ local flagflag
 
 -- THROTTLE (reduce CPU usage) -----------------------------------------------------------------------------------------
 local scoreUpdateThrottle  = GetTime()      -- scoreupdate: B.attlefieldScoreUpdate()
-local scoreUpdateFrequency = 1              -- scoreupdate: 0-10 updates = 1 second | 11+ updates = 5 seconds
+local scoreUpdateFrequency = 1              -- scoreupdate: 0-20 updates = 1 second | 21+ updates = 5 seconds
 local scoreUpdateCount     = 0              -- scoreupdate: (reason: later score updates are less relevant and 5 seconds is still very high)
 local range_SPELL_Frequency     = 0.2       -- rangecheck: [class-spell]: the 0.2 second freq is per enemy (variable: ENEMY_Name2Range[enemyname]) 
 local range_CL_Throttle         = 0         -- rangecheck: [combatlog] C.ombatLogRangeCheck()
@@ -5084,7 +5084,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 	if WorldStateScoreFrame and WorldStateScoreFrame:IsShown() and WorldStateScoreFrame.selectedTab and WorldStateScoreFrame.selectedTab > 1 then return end -- WorldStateScoreFrameTab_OnClick (WorldStateFrame.lua) | PanelTemplates_SetTab (UIPanelTemplates.lua) | Button WorldStateScoreFrameTab1/2/3 (WorldStateFrame.xml)
 
 	scoreUpdateCount = scoreUpdateCount + 1
-	if scoreUpdateCount > 10 then
+	if scoreUpdateCount > 20 then
 		scoreUpdateFrequency = 5
 	end
 	reCheckScore = nil
