@@ -126,10 +126,10 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 })
 elseif locale == "ruRU" then
 BattlegroundTargets_Flag:CreateLocaleTable({
-	-- ### ruRU: tested with Patch 4.2.2.14534 (PTR) ###
+	-- ### ruRU: tested with Patch 4.3.3.15354 (PTR) ###
 	-- # Warsong Gulch & Twin Peaks:
-	["FLAG_DEBUFF1"] = "Персонажи, несущие флаг, стали более уязвимы!", -- not tested
-	["FLAG_DEBUFF2"] = "Персонажи, несущие флаг, стали еще более уязвимы!", -- not tested
+	["FLAG_DEBUFF1"] = "Персонажи, несущие флаг, стали более уязвимы!",
+	["FLAG_DEBUFF2"] = "Персонажи, несущие флаг, стали еще более уязвимы!",
 	["WSG_TP_REGEX_PICKED1"] = "(.+) несет флаг Орды!",
 	["WSG_TP_REGEX_PICKED2"] = "Флаг Альянса у |3%-1%((.+)%)!",
 	["WSG_TP_MATCH_DROPPED"] = "роняет",

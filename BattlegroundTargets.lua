@@ -1397,7 +1397,7 @@ function BattlegroundTargets:InitOptions()
 
 	if BattlegroundTargets_Options.TargetIcon                 == nil then BattlegroundTargets_Options.TargetIcon                 = "default" end
 	if BattlegroundTargets_Options.Summary                    == nil then BattlegroundTargets_Options.Summary                    = false end
-	if BattlegroundTargets_Options.SummaryScale               == nil then BattlegroundTargets_Options.SummaryScale               = 1     end
+	if BattlegroundTargets_Options.SummaryScale               == nil then BattlegroundTargets_Options.SummaryScale               = 0.75  end
 
 	if BattlegroundTargets_Options.EnableBracket              == nil then BattlegroundTargets_Options.EnableBracket              = {}    end
 	if BattlegroundTargets_Options.EnableBracket[10]          == nil then BattlegroundTargets_Options.EnableBracket[10]          = false end
@@ -3066,7 +3066,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	GVAR.OptionsFrame.SummaryScale = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigGeneral)
 	GVAR.OptionsFrame.SummaryScaleText = GVAR.OptionsFrame.ConfigGeneral:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.SummaryScale, 85, 5, 50, 150, BattlegroundTargets_Options.SummaryScale,
+	TEMPLATE.Slider(GVAR.OptionsFrame.SummaryScale, 85, 5, 40, 150, BattlegroundTargets_Options.SummaryScale,
 	function(self, value)
 		local nvalue = value/100
 		if nvalue == BattlegroundTargets_Options.SummaryScale then return end
@@ -4326,21 +4326,20 @@ function BattlegroundTargets:EnableConfigMode()
 
 	for i = 1, 40 do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
-		GVAR_TargetButton.TargetTexture:SetAlpha(0)
-		GVAR_TargetButton.HighlightT:SetTexture(0, 0, 0, 1)
-		GVAR_TargetButton.HighlightR:SetTexture(0, 0, 0, 1)
-		GVAR_TargetButton.HighlightB:SetTexture(0, 0, 0, 1)
-		GVAR_TargetButton.HighlightL:SetTexture(0, 0, 0, 1)
-		GVAR_TargetButton.TargetCount:SetText("0")
-		GVAR_TargetButton.FocusTexture:SetAlpha(0)
-		GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
-		GVAR_TargetButton.HealthText:SetText("")
-		GVAR_TargetButton.FlagTexture:SetAlpha(0)
-		GVAR_TargetButton.FlagDebuff:SetText("")
-		GVAR_TargetButton.AssistTexture:SetAlpha(0)
-		GVAR_TargetButton.LeaderTexture:SetAlpha(0)
-
 		if i < currentSize+1 then
+			GVAR_TargetButton.TargetTexture:SetAlpha(0)
+			GVAR_TargetButton.HighlightT:SetTexture(0, 0, 0, 1)
+			GVAR_TargetButton.HighlightR:SetTexture(0, 0, 0, 1)
+			GVAR_TargetButton.HighlightB:SetTexture(0, 0, 0, 1)
+			GVAR_TargetButton.HighlightL:SetTexture(0, 0, 0, 1)
+			GVAR_TargetButton.TargetCount:SetText("0")
+			GVAR_TargetButton.FocusTexture:SetAlpha(0)
+			GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
+			GVAR_TargetButton.HealthText:SetText("")
+			GVAR_TargetButton.FlagTexture:SetAlpha(0)
+			GVAR_TargetButton.FlagDebuff:SetText("")
+			GVAR_TargetButton.AssistTexture:SetAlpha(0)
+			GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 
 			if ButtonShowHealthBar or ButtonShowHealthText then
 				if ButtonShowHealthBar then
