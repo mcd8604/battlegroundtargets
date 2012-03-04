@@ -1450,6 +1450,8 @@ function BattlegroundTargets:InitOptions()
 			BattlegroundTargets_Options.Summary[10] = true
 			BattlegroundTargets_Options.Summary[15] = true
 			BattlegroundTargets_Options.Summary[40] = true
+		else
+			BattlegroundTargets_Options.Summary = nil
 		end
 		if BattlegroundTargets_Options.SummaryScale then -- new summary settings
 			BattlegroundTargets_Options.SummaryScaleRole = {}
