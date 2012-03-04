@@ -2059,7 +2059,7 @@ function BattlegroundTargets:CreateFrames()
 		button:SetTextColor(1, 1, 1, 1)
 	end
 
-	GVAR.GuildGroupSummaryFriend = {}-- GLDGRP
+	GVAR.GuildGroupSummaryFriend = {} -- GLDGRP
 	for i = 1, 7 do -- 7 is the max: | 2: 1x | 3: 1x | 4: 1x | 5: 1x | 6: 1x | 7: 1x | 8: 1x | = 35 another 9size group is not possible in 40s bg
 		GVAR.GuildGroupSummaryFriend[i] = CreateFrame("Button", nil, GVAR.GuildGroupSummary)
 		GVAR.GuildGroupSummaryFriend[i]:Show()
@@ -4768,6 +4768,11 @@ function BattlegroundTargets:DisableConfigMode()
 		BattlegroundTargets:UpdateRange(GetTime())
 	end
 
+	if OPT.ButtonShowGuildGroup[currentSize] then
+		BattlegroundTargets:CheckFriendGuildGroup()
+		BattlegroundTargets:UpdateSummaryEnemyGuildGroup()
+	end
+
 	if OPT.ButtonShowFlag[currentSize] then
 		if hasFlag then
 			local Name2Button = ENEMY_Name2Button[hasFlag]
@@ -5423,13 +5428,11 @@ function BattlegroundTargets:UpdateLayout()
 				end
 			end
 		end
-		BattlegroundTargets:UpdateSummaryEnemyGuildGroup("general update")
+		BattlegroundTargets:UpdateSummaryEnemyGuildGroup()
 
---print("mem", groupMembers, groupMembers)
 		if groupMembers == 0 or groupMemChk < groupMembers then
-			BattlegroundTargets:CheckFriendGuildGroup("scoreupdate")
+			BattlegroundTargets:CheckFriendGuildGroup()
 		end
-
 	end
 
 	if BattlegroundTargets_Options.Summary[currentSize] then -- SUMMARY
@@ -6121,9 +6124,10 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckFriendGuildGroup(www) -- GLDGRP
+function BattlegroundTargets:CheckFriendGuildGroup() -- GLDGRP
 	if isConfig then return end
---print("-START", www)
+	if not BattlegroundTargets_Options.Summary[currentSize] then return end
+
 	-- scan each groupmember
 	local grpSize = GetNumRaidMembers()
 	if groupMembers == 0 then
@@ -6131,9 +6135,6 @@ function BattlegroundTargets:CheckFriendGuildGroup(www) -- GLDGRP
 	end
 	for num = 1, grpSize do
 		local unitID = "raid"..num
-
---print("-friend", unitID, UnitIsVisible(unitID), UnitName(unitID), GetGuildInfo(unitID), isDeadUpdateStop)
-
 		if UnitIsVisible(unitID) then
 			groupMemChk = groupMemChk + 1
 			local guildName = GetGuildInfo(unitID)
@@ -6185,13 +6186,11 @@ function BattlegroundTargets:CheckFriendGuildGroup(www) -- GLDGRP
 	for i = 1, 7 do
 		local count2 = count2[i]
 		if count2 then
---print("-##friends:", count2.count, count2.total)
 			GVAR.GuildGroupSummaryFriend[i].Text:SetText(count2.count..": "..count2.total.."x")
 		else
 			GVAR.GuildGroupSummaryFriend[i].Text:SetText("")
 		end
 	end
-
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -6463,8 +6462,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 						end
 					end
 
---print("| >", enemyID, guildName, "highestNum=", highestNum)
-
 					-- ###############
 					local num = 1
 					for gName, gCount in pairs(ENEMY_GuildCount) do
@@ -6487,8 +6484,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 								num = num2
 							end
 
---print("|", gName, gCount, num)
-
 							for eName2, gName2 in pairs(ENEMY_Guild) do
 								if gName == gName2 then
 									ENEMY_GroupNum[eName2] = num
@@ -6509,7 +6504,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 					end
 					-- ###############
 
-					BattlegroundTargets:UpdateSummaryEnemyGuildGroup("UNIT_TARGET")
+					BattlegroundTargets:UpdateSummaryEnemyGuildGroup()
 
 				end
 
@@ -6620,9 +6615,8 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:UpdateSummaryEnemyGuildGroup(www) -- GLDGRP
+function BattlegroundTargets:UpdateSummaryEnemyGuildGroup() -- GLDGRP
 	if not BattlegroundTargets_Options.Summary[currentSize] then return end
---print("U.pdateSummaryEnemyGuildGroup", www)
 
 	-- build table with guildCount as key and number of groups with same membersize as value
 	local count = {}
@@ -6969,7 +6963,6 @@ local function OnEvent(self, event, ...)
 		if isConfig then return end
 		BattlegroundTargets:BattlefieldScoreUpdate()
 	elseif event == "ZONE_CHANGED_NEW_AREA" then
---print(event, ...)
 		if not inWorld then return end
 		if isConfig then return end
 		BattlegroundTargets:BattlefieldCheck()
@@ -6996,13 +6989,8 @@ local function OnEvent(self, event, ...)
 			BattlegroundTargets:CheckAssist()
 		end
 		if OPT.ButtonShowGuildGroup[currentSize] then
-			BattlegroundTargets:CheckFriendGuildGroup(event)
+			BattlegroundTargets:CheckFriendGuildGroup()
 		end
---print(event, ...)
-
---	elseif event == "PLAYER_ENTERING_BATTLEGROUND" then
---print(event, ...)
-
 
 	elseif event == "CHAT_MSG_BG_SYSTEM_HORDE" then
 		local arg1 = ...
@@ -7061,7 +7049,6 @@ local function OnEvent(self, event, ...)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
---BattlegroundTargets:RegisterEvent("PLAYER_ENTERING_BATTLEGROUND")
 BattlegroundTargets:RegisterEvent("PLAYER_REGEN_DISABLED")
 BattlegroundTargets:RegisterEvent("PLAYER_REGEN_ENABLED")
 BattlegroundTargets:RegisterEvent("ZONE_CHANGED_NEW_AREA")
