@@ -12,11 +12,14 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["40 vs 40"] = true,
 ["Enable"] = true,
 ["Independent Positioning"] = true,
+["Layout"] = true,
+["Summary"] = true,
 ["Copy this settings to '%s'"] = true,
 ["Show Specialization"] = true,
 ["Show Class Icon"] = true,
 ["Hide Realm"] = true,
 ["Show Leader"] = true,
+["Show Guild Groups"] = true,
 ["Show Target"] = true,
 ["Show Focus"] = true,
 ["Show Flag Carrier"] = true,
@@ -36,7 +39,6 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["General Settings"] = true,
 ["Show Minimap-Button"] = true,
-["Show Summary"] = true,
 
 ["click & move"] = true,
 ["BattlegroundTargets does not update if this Tab is opened."] = true,

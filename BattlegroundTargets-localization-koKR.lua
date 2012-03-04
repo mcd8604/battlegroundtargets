@@ -12,11 +12,14 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["40 vs 40"] = "40 V 40",
 ["Enable"] = "사용",
 ["Independent Positioning"] = "독립 위치",
+["Layout"] = true,
+["Summary"] = true,
 ["Copy this settings to '%s'"] = "'%s'에 대한 설정을 복사합니다.",
 ["Show Specialization"] = "특성 표시",
 ["Show Class Icon"] = "직업 아이콘 표시",
 ["Hide Realm"] = "서버 숨김",
 ["Show Leader"] = "전장 지휘관 표시",
+["Show Guild Groups"] = true,
 ["Show Target"] = "대상 표시",
 ["Show Focus"] = "주시 대상 표시",
 ["Show Flag Carrier"] = "깃발 운반자 표시",
@@ -36,7 +39,6 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["General Settings"] = "일반 설정",
 ["Show Minimap-Button"] = "미니맵 버튼 표시",
-["Show Summary"] = "요약 표시",
 
 ["click & move"] = "클릭 & 이동",
 ["BattlegroundTargets does not update if this Tab is opened."] = "이 탭이 열려있다면 BattlegroundTargets은 업데이트 되지 않습니다.",

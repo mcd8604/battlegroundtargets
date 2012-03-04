@@ -12,11 +12,14 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["40 vs 40"] = "40 vs 40",
 ["Enable"] = "Aktivieren",
 ["Independent Positioning"] = "Unabhängige Positionierung",
+["Layout"] = "Anordnung",
+["Summary"] = "Zusammenfassung",
 ["Copy this settings to '%s'"] = "Diese Einstellungen nach '%s' kopieren",
 ["Show Specialization"] = "Zeige Spezialisierung",
 ["Show Class Icon"] = "Zeige Klassensymbol",
 ["Hide Realm"] = "Verstecke Realm",
 ["Show Leader"] = "Zeige Anführer",
+["Show Guild Groups"] = "Zeige Gildengruppen",
 ["Show Target"] = "Zeige Ziel",
 ["Show Focus"] = "Zeige Fokus",
 ["Show Flag Carrier"] = "Zeige Flaggenträger",
@@ -36,7 +39,6 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["General Settings"] = "Allgemeine Einstellungen",
 ["Show Minimap-Button"] = "Zeige Minikarte-Button",
-["Show Summary"] = "Zeige Zusammenfassung",
 
 ["click & move"] = "klicken & bewegen",
 ["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets aktualisiert sich nicht wenn dieser Tab geöffnet ist.",

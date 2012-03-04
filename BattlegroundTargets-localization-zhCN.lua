@@ -12,11 +12,14 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["40 vs 40"] = "40对40",
 ["Enable"] = "启用",
 ["Independent Positioning"] = "独立定位",
+["Layout"] = true,
+["Summary"] = true,
 ["Copy this settings to '%s'"] = "复制此设置到“%s”",
 ["Show Specialization"] = "显示天赋",
 ["Show Class Icon"] = "显示职业图标",
 ["Hide Realm"] = "隐藏服务器",
 ["Show Leader"] = "显示领袖",
+["Show Guild Groups"] = true,
 ["Show Target"] = "显示目标",
 ["Show Focus"] = "显示焦点",
 ["Show Flag Carrier"] = "显示旗帜持有者",
@@ -36,7 +39,6 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 
 ["General Settings"] = "总体设定",
 ["Show Minimap-Button"] = "显示小地图图标",
-["Show Summary"] = "显示摘要",
 
 ["click & move"] = "点击移动",
 ["BattlegroundTargets does not update if this Tab is opened."] = "如果此标签打开 BattlegroundTargets 将不会更新。",
