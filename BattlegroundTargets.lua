@@ -1282,7 +1282,7 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if BattlegroundTargets_Options.version == nil then
-		BattlegroundTargets_Options.version = 12
+		BattlegroundTargets_Options.version = 13
 	end
 
 	if BattlegroundTargets_Options.version == 1 then
@@ -1461,6 +1461,18 @@ function BattlegroundTargets:InitOptions()
 			BattlegroundTargets_Options.SummaryScale = nil
 		end
 		BattlegroundTargets_Options.version = 12
+	end
+
+	if BattlegroundTargets_Options.version == 12 then -- fix mess with .version 12 summary settings (r107 has no false check)
+		if BattlegroundTargets_Options.Summary == true then
+			BattlegroundTargets_Options.Summary = {}
+			BattlegroundTargets_Options.Summary[10] = true
+			BattlegroundTargets_Options.Summary[15] = true
+			BattlegroundTargets_Options.Summary[40] = true
+		else
+			BattlegroundTargets_Options.Summary = nil
+		end
+		BattlegroundTargets_Options.version = 13
 	end
 
 	if BattlegroundTargets_Options.pos                        == nil then BattlegroundTargets_Options.pos                        = {}    end
