@@ -443,27 +443,27 @@ local Textures = {
 	UpdateWarning    = {coords     =    { 0/64, 35/64, 47/64, 63/64}, width = 35/1.5, height = 16/1.5},
 }
 
-local guildGrpTex = { -- PartyRaidBlips
+local guildGrpTex = { -- PartyRaidBlips -- GRP_TEX_CHK
  [1] = {136/256, 154/256,   6/128,  24/128}, -- priest full
  [2] = {200/256, 218/256,   6/128,  24/128}, -- shaman full
- [3] = { 72/256,  90/256,   6/128,  24/128}, -- hunter full
- [4] = {104/256, 122/256,   6/128,  24/128}, -- rogue full
- [5] = {168/256, 186/256,   6/128,  24/128}, -- deathknight full
- [6] = { 72/256,  90/256,  38/128,  56/128}, -- druid full
+ [3] = {104/256, 122/256,  70/128,  88/128}, -- rogue dot
+ [4] = { 72/256,  90/256,  38/128,  56/128}, -- druid full
+ [5] = {232/256, 250/256,  70/128,  88/128}, -- mage dot
+ [6] = {168/256, 186/256,   6/128,  24/128}, -- deathknight full
  [7] = {  8/256,  26/256,   6/128,  24/128}, -- warrior full
  [8] = { 40/256,  58/256,   6/128,  24/128}, -- paladin full
- [9] = {232/256, 250/256,   6/128,  24/128}, -- mage full
-[10] = {  8/256,  26/256,  38/128,  56/128}, -- warlock full
+ [9] = {  8/256,  26/256,  38/128,  56/128}, -- warlock full
+[10] = { 72/256,  90/256,  70/128,  88/128}, -- hunter dot
 [11] = {136/256, 154/256,  70/128,  88/128}, -- priest dot
 [12] = {200/256, 218/256,  70/128,  88/128}, -- shaman dot
-[13] = { 72/256,  90/256,  70/128,  88/128}, -- hunter dot
-[14] = {104/256, 122/256,  70/128,  88/128}, -- rogue dot
-[15] = {168/256, 186/256,  70/128,  88/128}, -- deathknight dot
-[16] = { 72/256,  90/256, 102/128, 120/128}, -- druid dot
+[13] = {104/256, 122/256,   6/128,  24/128}, -- rogue full
+[14] = { 72/256,  90/256, 102/128, 120/128}, -- druid dot
+[15] = {232/256, 250/256,   6/128,  24/128}, -- mage full
+[16] = {168/256, 186/256,  70/128,  88/128}, -- deathknight dot
 [17] = {  8/256,  26/256,  70/128,  88/128}, -- warrior dot
 [18] = { 40/256,  58/256,  70/128,  88/128}, -- paladin dot
-[19] = {232/256, 250/256,  70/128,  88/128}, -- mage dot
-[20] = {  8/256,  26/256, 102/128, 120/128}, -- warlock dot
+[19] = {  8/256,  26/256, 102/128, 120/128}, -- warlock dot
+[20] = { 72/256,  90/256,   6/128,  24/128}, -- hunter full
 }
 
 local raidUnitID = {}
@@ -1633,7 +1633,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonRangeCheck[40]       == nil then BattlegroundTargets_Options.ButtonRangeCheck[40]       = false end
 	if BattlegroundTargets_Options.ButtonAvgRangeCheck[40]    == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[40]    = false end
 	if BattlegroundTargets_Options.ButtonClassRangeCheck[40]  == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[40]  = true  end
-	if BattlegroundTargets_Options.ButtonRangeDisplay[40]     == nil then BattlegroundTargets_Options.ButtonRangeDisplay[40]     = 10    end
+	if BattlegroundTargets_Options.ButtonRangeDisplay[40]     == nil then BattlegroundTargets_Options.ButtonRangeDisplay[40]     = 9     end
 	if BattlegroundTargets_Options.ButtonSortBy[40]           == nil then BattlegroundTargets_Options.ButtonSortBy[40]           = 1     end
 	if BattlegroundTargets_Options.ButtonSortDetail[40]       == nil then BattlegroundTargets_Options.ButtonSortDetail[40]       = 3     end
 	if BattlegroundTargets_Options.ButtonFontSize[40]         == nil then BattlegroundTargets_Options.ButtonFontSize[40]         = 10    end
@@ -5356,9 +5356,11 @@ function BattlegroundTargets:UpdateLayout()
 			end
 
 			if ButtonShowGuildGroup then -- GLDGRP
-				local num = ENEMY_GroupNum[qname]
-				if num and num > 0 then
-					local tex = guildGrpTex[num]
+				local num = ENEMY_GroupNum[qname] or 0
+				if num > 0 then
+					local xnum = num -- GRP_TEX_CHK - more than 20 guildgroup changes in one bg is very unlikely
+					if num > 20 then xnum = 1 end
+					local tex = guildGrpTex[xnum]
 					GVAR_TargetButton.GuildGroup:SetTexCoord(tex[1], tex[2], tex[3], tex[4])
 				else
 					GVAR_TargetButton.GuildGroup:SetTexCoord(0, 0, 0, 0)
@@ -5401,19 +5403,16 @@ function BattlegroundTargets:UpdateLayout()
 
 	-- GLDGRP
 	if ButtonShowGuildGroup and not isConfig then
---do this only ever 10/15/30 seconds, maybe better not, don't know
-		-- check if a guild member left battleground
+		-- check if a guild group member left battleground
 		for enemyName, guildName in pairs(ENEMY_Guild) do
-			if not ENEMY_Names[enemyName] then
---print("|del guildgrp mem", enemyName, guildName, ENEMY_GuildCount[guildName])
+			if not ENEMY_Name2Button[enemyName] and ENEMY_GroupNum[enemyName] > 0 then
 				ENEMY_GuildCount[guildName] = ENEMY_GuildCount[guildName] - 1
 				if ENEMY_GuildCount[guildName] < 2 then
 
 					for enemyName2, guildName2 in pairs(ENEMY_Guild) do
 						if guildName == guildName2 then
-							ENEMY_GroupNum[enemyName2] = 0 -- TODO needs test TODO
+							ENEMY_GroupNum[enemyName2] = 0
 
---print("|del guildgrp mem. del this:", enemyName2, guildName)
 							local ENEMY_Name2Button = ENEMY_Name2Button[enemyName2]
 							if ENEMY_Name2Button then
 								local GVAR_TargetButton = GVAR.TargetButton[ENEMY_Name2Button]
@@ -5853,6 +5852,12 @@ function BattlegroundTargets:BattlefieldCheck()
 				for i = 1, 40 do
 					local GVAR_TargetButton = GVAR.TargetButton[i]
 					if i < currentSize+1 then
+						GVAR_TargetButton.colR  = 0
+						GVAR_TargetButton.colG  = 0
+						GVAR_TargetButton.colB  = 0
+						GVAR_TargetButton.colR5 = 0
+						GVAR_TargetButton.colG5 = 0
+						GVAR_TargetButton.colB5 = 0
 						GVAR_TargetButton.Name:SetText("")
 						GVAR_TargetButton.TargetCount:SetText("")
 						GVAR_TargetButton.ClassColorBackground:SetTexture(0, 0, 0, 0)
@@ -5869,6 +5874,7 @@ function BattlegroundTargets:BattlefieldCheck()
 						GVAR_TargetButton.FlagDebuff:SetText("")
 						GVAR_TargetButton.AssistTexture:SetAlpha(0)
 						GVAR_TargetButton.LeaderTexture:SetAlpha(0)
+						GVAR_TargetButton.GuildGroup:SetTexCoord(0, 0, 0, 0)
 						GVAR_TargetButton:Show()
 					else
 						GVAR_TargetButton:Hide()
@@ -6492,7 +6498,9 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 									if button1 then
 										local button2 = GVAR.TargetButton[button1]
 										if button2 then
-											local tex = guildGrpTex[num]
+											local xnum = num -- GRP_TEX_CHK
+											if num > 20 then xnum = 1 end
+											local tex = guildGrpTex[xnum]
 											button2.GuildGroup:SetTexCoord(tex[1], tex[2], tex[3], tex[4])
 										end
 									end
