@@ -5787,8 +5787,10 @@ function BattlegroundTargets:MainDataUpdate()
 			FRIEND_Roles = {0,0,0,0}
 			ENEMY_Roles = {0,0,0,0}
 			for i = 1, currentSize do
-				local role = ENEMY_Data[i].talentSpec
-				ENEMY_Roles[role] = ENEMY_Roles[role] + 1
+				if ENEMY_Data[i] then
+					local role = ENEMY_Data[i].talentSpec
+					ENEMY_Roles[role] = ENEMY_Roles[role] + 1
+				end
 			end
 			GVAR.Summary.HealerFriend:SetText(FRIEND_Roles[1]) -- HEAL   FRIEND
 			GVAR.Summary.TankFriend:SetText(FRIEND_Roles[2])   -- TANK   FRIEND
@@ -6191,6 +6193,7 @@ function BattlegroundTargets:BattlefieldCheck()
 		end
 
 		if IsRatedBattleground() then
+			currentSize = 10
 			local faction = GetBattlefieldArenaFaction()
 			if faction == 0 then
 				playerFactionBG   = 0 -- Horde
