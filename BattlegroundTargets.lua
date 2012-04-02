@@ -6931,7 +6931,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 				name = name.."-"..realm
 			end
 
-			if name and FRIEND_Names[name] and not FRIEND_GuildName[name] then
+			if name and not FRIEND_GuildName[name] then
 				FRIEND_GuildName[name] = 1
 				if guildName and guildName ~= "" then
 					if not FRIEND_GuildCount[guildName] then
