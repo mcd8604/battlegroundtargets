@@ -15,6 +15,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Layout"] = "佈局",
 ["Summary"] = "摘要",
 ["Copy this settings to '%s'"] = "複製此設定到“%s”",
+["Show Role"] = true,
 ["Show Specialization"] = "顯示天賦",
 ["Show Class Icon"] = "顯示職業圖標",
 ["Hide Realm"] = "隱藏伺服器",

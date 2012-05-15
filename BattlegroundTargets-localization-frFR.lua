@@ -15,6 +15,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Layout"] = true,
 ["Summary"] = true,
 ["Copy this settings to '%s'"] = true,
+["Show Role"] = true,
 ["Show Specialization"] = true,
 ["Show Class Icon"] = true,
 ["Hide Realm"] = true,

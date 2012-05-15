@@ -15,6 +15,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Layout"] = true,
 ["Summary"] = true,
 ["Copy this settings to '%s'"] = "Copiar estas opciones a '%s'",
+["Show Role"] = true,
 ["Show Specialization"] = "Mostrar la rama de talentos",
 ["Show Class Icon"] = "Mostrar el icono de clase",
 ["Hide Realm"] = "Ocultar el reino",

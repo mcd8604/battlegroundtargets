@@ -15,6 +15,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Layout"] = "배치",
 ["Summary"] = "요약",
 ["Copy this settings to '%s'"] = "'%s'에 대한 설정을 복사합니다.",
+["Show Role"] = true,
 ["Show Specialization"] = "특성 표시",
 ["Show Class Icon"] = "직업 아이콘 표시",
 ["Hide Realm"] = "서버 숨김",

@@ -98,9 +98,9 @@
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
--- Credits:                                                                   --
--- - Talented from Jerry (Thanks for some localized talent specs)             --
--- - Thanks to all who helped with the localization.                          --
+-- Thanks to all who helped with the localization.                            --
+--                                                                            --
+-- Special thanks to Roma.                                                    --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 
@@ -1533,6 +1533,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.SummaryScaleGuildGroup[15] == nil then BattlegroundTargets_Options.SummaryScaleGuildGroup[15] = 1.25  end
 	if BattlegroundTargets_Options.SummaryScaleGuildGroup[40] == nil then BattlegroundTargets_Options.SummaryScaleGuildGroup[40] = 1.4   end
 
+	if BattlegroundTargets_Options.ButtonShowRole               == nil then BattlegroundTargets_Options.ButtonShowRole               = {}    end
 	if BattlegroundTargets_Options.ButtonShowSpec               == nil then BattlegroundTargets_Options.ButtonShowSpec               = {}    end
 	if BattlegroundTargets_Options.ButtonClassIcon              == nil then BattlegroundTargets_Options.ButtonClassIcon              = {}    end
 	if BattlegroundTargets_Options.ButtonHideRealm              == nil then BattlegroundTargets_Options.ButtonHideRealm              = {}    end
@@ -1565,6 +1566,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonWidth                  == nil then BattlegroundTargets_Options.ButtonWidth                  = {}    end
 	if BattlegroundTargets_Options.ButtonHeight                 == nil then BattlegroundTargets_Options.ButtonHeight                 = {}    end
 
+	if BattlegroundTargets_Options.ButtonShowRole[10]           == nil then BattlegroundTargets_Options.ButtonShowRole[10]           = true  end
 	if BattlegroundTargets_Options.ButtonShowSpec[10]           == nil then BattlegroundTargets_Options.ButtonShowSpec[10]           = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[10]          == nil then BattlegroundTargets_Options.ButtonClassIcon[10]          = false end
 	if BattlegroundTargets_Options.ButtonHideRealm[10]          == nil then BattlegroundTargets_Options.ButtonHideRealm[10]          = false end
@@ -1597,6 +1599,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonWidth[10]              == nil then BattlegroundTargets_Options.ButtonWidth[10]              = 150   end
 	if BattlegroundTargets_Options.ButtonHeight[10]             == nil then BattlegroundTargets_Options.ButtonHeight[10]             = 18    end
 
+	if BattlegroundTargets_Options.ButtonShowRole[15]           == nil then BattlegroundTargets_Options.ButtonShowRole[15]           = true  end
 	if BattlegroundTargets_Options.ButtonShowSpec[15]           == nil then BattlegroundTargets_Options.ButtonShowSpec[15]           = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[15]          == nil then BattlegroundTargets_Options.ButtonClassIcon[15]          = false end
 	if BattlegroundTargets_Options.ButtonHideRealm[15]          == nil then BattlegroundTargets_Options.ButtonHideRealm[15]          = false end
@@ -1629,6 +1632,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonWidth[15]              == nil then BattlegroundTargets_Options.ButtonWidth[15]              = 150   end
 	if BattlegroundTargets_Options.ButtonHeight[15]             == nil then BattlegroundTargets_Options.ButtonHeight[15]             = 18    end
 
+	if BattlegroundTargets_Options.ButtonShowRole[40]           == nil then BattlegroundTargets_Options.ButtonShowRole[40]           = true  end
 	if BattlegroundTargets_Options.ButtonShowSpec[40]           == nil then BattlegroundTargets_Options.ButtonShowSpec[40]           = false end
 	if BattlegroundTargets_Options.ButtonClassIcon[40]          == nil then BattlegroundTargets_Options.ButtonClassIcon[40]          = false end
 	if BattlegroundTargets_Options.ButtonHideRealm[40]          == nil then BattlegroundTargets_Options.ButtonHideRealm[40]          = true  end
@@ -1663,6 +1667,7 @@ function BattlegroundTargets:InitOptions()
 
 	for i = 1, #bgSizeINT do
 		local sz = bgSizeINT[i]
+		if not OPT.ButtonShowRole           then OPT.ButtonShowRole           = {} end OPT.ButtonShowRole[sz]           = BattlegroundTargets_Options.ButtonShowRole[sz]       
 		if not OPT.ButtonShowSpec           then OPT.ButtonShowSpec           = {} end OPT.ButtonShowSpec[sz]           = BattlegroundTargets_Options.ButtonShowSpec[sz]       
 		if not OPT.ButtonClassIcon          then OPT.ButtonClassIcon          = {} end OPT.ButtonClassIcon[sz]          = BattlegroundTargets_Options.ButtonClassIcon[sz]      
 		if not OPT.ButtonHideRealm          then OPT.ButtonHideRealm          = {} end OPT.ButtonHideRealm[sz]          = BattlegroundTargets_Options.ButtonHideRealm[sz]      
@@ -2598,6 +2603,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.Summary.Highlight:Show()
 		GVAR.OptionsFrame.SummaryScaleRole.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.SummaryScaleGuildGroup.Background:SetTexture(1, 1, 1, 0.1)----------
+		GVAR.OptionsFrame.ShowRole.Highlight:Show()
 		GVAR.OptionsFrame.ShowSpec.Highlight:Show()
 		GVAR.OptionsFrame.ClassIcon.Highlight:Show()
 		GVAR.OptionsFrame.ShowLeader.Highlight:Show()
@@ -2638,6 +2644,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.Summary.Highlight:Hide()
 		GVAR.OptionsFrame.SummaryScaleRole.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.SummaryScaleGuildGroup.Background:SetTexture(0, 0, 0, 0)----------
+		GVAR.OptionsFrame.ShowRole.Highlight:Hide()
 		GVAR.OptionsFrame.ShowSpec.Highlight:Hide()
 		GVAR.OptionsFrame.ClassIcon.Highlight:Hide()
 		GVAR.OptionsFrame.ShowLeader.Highlight:Hide()
@@ -2672,11 +2679,23 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
+	-- show role
+	GVAR.OptionsFrame.ShowRole = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowRole, 16, 4, L["Show Role"])
+	GVAR.OptionsFrame.ShowRole:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.ShowRole:SetPoint("TOP", GVAR.OptionsFrame.CopySettings, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowRole:SetChecked(OPT.ButtonShowRole[currentSize])
+	GVAR.OptionsFrame.ShowRole:SetScript("OnClick", function()
+		BattlegroundTargets_Options.ButtonShowRole[currentSize] = not BattlegroundTargets_Options.ButtonShowRole[currentSize]
+		                        OPT.ButtonShowRole[currentSize] = not                         OPT.ButtonShowRole[currentSize]
+		GVAR.OptionsFrame.ShowRole:SetChecked(OPT.ButtonShowRole[currentSize])
+		BattlegroundTargets:EnableConfigMode()
+	end)
+
 	-- show spec
 	GVAR.OptionsFrame.ShowSpec = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowSpec, 16, 4, L["Show Specialization"])
-	GVAR.OptionsFrame.ShowSpec:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowSpec:SetPoint("TOP", GVAR.OptionsFrame.CopySettings, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowSpec:SetPoint("LEFT", GVAR.OptionsFrame.ShowRole, "RIGHT", 20, 0)
 	GVAR.OptionsFrame.ShowSpec:SetChecked(OPT.ButtonShowSpec[currentSize])
 	GVAR.OptionsFrame.ShowSpec:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonShowSpec[currentSize] = not BattlegroundTargets_Options.ButtonShowSpec[currentSize]
@@ -2688,8 +2707,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- class icon
 	GVAR.OptionsFrame.ClassIcon = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ClassIcon, 16, 4, L["Show Class Icon"])
-	GVAR.OptionsFrame.ClassIcon:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ClassIcon:SetPoint("TOP", GVAR.OptionsFrame.ShowSpec, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ClassIcon:SetPoint("LEFT", GVAR.OptionsFrame.ShowSpec, "RIGHT", 20, 0)
 	GVAR.OptionsFrame.ClassIcon:SetChecked(OPT.ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ClassIcon:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonClassIcon[currentSize] = not BattlegroundTargets_Options.ButtonClassIcon[currentSize]
@@ -2698,24 +2716,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
-	-- show leader
-	GVAR.OptionsFrame.ShowLeader = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowLeader, 16, 4, L["Show Leader"])
-	-- BOOM GVAR.OptionsFrame.ShowLeader:SetPoint()
-	GVAR.OptionsFrame.ShowLeader:SetPoint("TOP", GVAR.OptionsFrame.ShowSpec, "TOP", 0, 0)
-	GVAR.OptionsFrame.ShowLeader:SetChecked(OPT.ButtonShowLeader[currentSize])
-	GVAR.OptionsFrame.ShowLeader:SetScript("OnClick", function()
-		BattlegroundTargets_Options.ButtonShowLeader[currentSize] = not BattlegroundTargets_Options.ButtonShowLeader[currentSize]
-		                        OPT.ButtonShowLeader[currentSize] = not                         OPT.ButtonShowLeader[currentSize]
-		GVAR.OptionsFrame.ShowLeader:SetChecked(OPT.ButtonShowLeader[currentSize])
-		BattlegroundTargets:EnableConfigMode()
-	end)
-
 	-- show realm
 	GVAR.OptionsFrame.ShowRealm = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowRealm, 16, 4, L["Hide Realm"])
-	GVAR.OptionsFrame.ShowRealm:SetPoint("LEFT", GVAR.OptionsFrame.ShowLeader, "LEFT", 0, 0)
-	GVAR.OptionsFrame.ShowRealm:SetPoint("TOP", GVAR.OptionsFrame.ShowLeader, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowRealm:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.ShowRealm:SetPoint("TOP", GVAR.OptionsFrame.ShowRole, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.ShowRealm:SetChecked(OPT.ButtonHideRealm[currentSize])
 	GVAR.OptionsFrame.ShowRealm:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonHideRealm[currentSize] = not BattlegroundTargets_Options.ButtonHideRealm[currentSize]
@@ -2724,11 +2729,24 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
+	-- show leader
+	GVAR.OptionsFrame.ShowLeader = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowLeader, 16, 4, L["Show Leader"])
+	-- BOOM GVAR.OptionsFrame.ShowLeader:SetPoint()
+	GVAR.OptionsFrame.ShowLeader:SetPoint("TOP", GVAR.OptionsFrame.ShowRealm, "TOP", 0, 0)
+	GVAR.OptionsFrame.ShowLeader:SetChecked(OPT.ButtonShowLeader[currentSize])
+	GVAR.OptionsFrame.ShowLeader:SetScript("OnClick", function()
+		BattlegroundTargets_Options.ButtonShowLeader[currentSize] = not BattlegroundTargets_Options.ButtonShowLeader[currentSize]
+		                        OPT.ButtonShowLeader[currentSize] = not                         OPT.ButtonShowLeader[currentSize]
+		GVAR.OptionsFrame.ShowLeader:SetChecked(OPT.ButtonShowLeader[currentSize])
+		BattlegroundTargets:EnableConfigMode()
+	end)
+
 	-- show targetcount
 	GVAR.OptionsFrame.ShowTargetCount = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowTargetCount, 16, 4, L["Show Target Count"])
 	GVAR.OptionsFrame.ShowTargetCount:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowTargetCount:SetPoint("TOP", GVAR.OptionsFrame.ClassIcon, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowTargetCount:SetPoint("TOP", GVAR.OptionsFrame.ShowRealm, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.ShowTargetCount:SetChecked(OPT.ButtonShowTargetCount[currentSize])
 	GVAR.OptionsFrame.ShowTargetCount:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonShowTargetCount[currentSize] = not BattlegroundTargets_Options.ButtonShowTargetCount[currentSize]
@@ -3095,7 +3113,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 			if classesINT_LOCALIZED[i].cid == playerClassEN then
 				rangeInfoTxt = rangeInfoTxt..">>> "
 			end
-			rangeInfoTxt = rangeInfoTxt.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r  "..(minRange or "?").."-"..(maxRange or "?").."  |cffffffff"..(name or UNKNOWN).."|r  |cffbbbbbb(spellID="..ranges[ classesINT_LOCALIZED[i].cid ]..")|r"
+			rangeInfoTxt = rangeInfoTxt.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r  "..(minRange or "?").."-"..(maxRange or "?").."  |cffffffff"..(name or UNKNOWN).."|r  |cffbbbbbb(spell ID = "..ranges[ classesINT_LOCALIZED[i].cid ]..")|r"
 			if classesINT_LOCALIZED[i].cid == playerClassEN then
 				rangeInfoTxt = rangeInfoTxt.." <<<"
 			end
@@ -3523,7 +3541,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.TargetIcon = "bgt"
 		GVAR.OptionsFrame.TargetIcon1:SetChecked(false)
 		if BattlegroundTargets_Options.EnableBracket[currentSize] then
-			BattlegroundTargets:SetupButtonLayout()
+			BattlegroundTargets:EnableConfigMode()
 		end
 	end)
 	if BattlegroundTargets_Options.TargetIcon == "default" then
@@ -3673,6 +3691,7 @@ function BattlegroundTargets:SetOptions()
 	GVAR.OptionsFrame.SummaryScaleGuildGroup:SetValue(BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize]*100)
 	GVAR.OptionsFrame.SummaryScaleGuildGroupText:SetText((BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize]*100).."%")
 
+	GVAR.OptionsFrame.ShowRole:SetChecked(OPT.ButtonShowRole[currentSize])
 	GVAR.OptionsFrame.ShowSpec:SetChecked(OPT.ButtonShowSpec[currentSize])
 	GVAR.OptionsFrame.ClassIcon:SetChecked(OPT.ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ShowLeader:SetChecked(OPT.ButtonShowLeader[currentSize])
@@ -3786,6 +3805,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 			TEMPLATE.EnableTextButton(GVAR.OptionsFrame.CopySettings, 4)
 		end
 
+		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowRole)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowSpec)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowLeader)
@@ -3896,6 +3916,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 			TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings, 4)
 		end
 
+		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRole)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowSpec)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowLeader)
@@ -3972,6 +3993,7 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleRole)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
 
+	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRole)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowSpec)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowLeader)
@@ -4240,6 +4262,7 @@ function BattlegroundTargets:SetupButtonLayout()
 	local ButtonWidth              = OPT.ButtonWidth[currentSize]
 	local ButtonHeight             = OPT.ButtonHeight[currentSize]
 	local ButtonFontSize           = OPT.ButtonFontSize[currentSize]
+	local ButtonShowRole           = OPT.ButtonShowRole[currentSize]
 	local ButtonShowSpec           = OPT.ButtonShowSpec[currentSize]
 	local ButtonClassIcon          = OPT.ButtonClassIcon[currentSize]
 	local ButtonShowTargetCount    = OPT.ButtonShowTargetCount[currentSize]
@@ -4274,24 +4297,18 @@ function BattlegroundTargets:SetupButtonLayout()
 	end
 
 	local withIconWidth
-	if ButtonShowSpec and ButtonClassIcon then
-		if ButtonRangeCheck and ButtonRangeDisplay < 7  then -- RANGE_DISP_LAY
-			withIconWidth = (ButtonWidth - ( (ButtonHeight_2*3) + ((ButtonHeight_2)/2) ) ) - 2
-		else
-			withIconWidth = (ButtonWidth - (ButtonHeight_2*3)) - 2
-		end
-	elseif ButtonShowSpec or ButtonClassIcon then
-		if ButtonRangeCheck and ButtonRangeDisplay < 7  then -- RANGE_DISP_LAY
-			withIconWidth = (ButtonWidth - ( (ButtonHeight_2*2) + (ButtonHeight_2/2) ) ) - 2
-		else
-			withIconWidth = (ButtonWidth - (ButtonHeight_2*2)) - 2
-		end
+	local iconNum = 0
+	if ButtonShowRole and ButtonShowSpec and ButtonClassIcon then
+		iconNum = 3
+	elseif (ButtonShowRole and ButtonShowSpec) or (ButtonShowRole and ButtonClassIcon) or (ButtonShowSpec and ButtonClassIcon) then
+		iconNum = 2
+	elseif ButtonShowRole or ButtonShowSpec or ButtonClassIcon then
+		iconNum = 1
+	end
+	if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+		withIconWidth = (ButtonWidth - ( (ButtonHeight_2*iconNum) + (ButtonHeight_2/2) ) ) - 2
 	else
-		if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
-			withIconWidth = (ButtonWidth - ( (ButtonHeight_2*1) + (ButtonHeight_2/2) ) ) - 2
-		else
-			withIconWidth = (ButtonWidth - (ButtonHeight_2*1)) - 2
-		end
+		withIconWidth = (ButtonWidth - (ButtonHeight_2*iconNum)) - 2
 	end
 	if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
 		withIconWidth = withIconWidth - (ButtonHeight_2*0.4)
@@ -4324,10 +4341,8 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR_TargetButton.RangeTexture:Show()
 			GVAR_TargetButton.RangeTexture:SetWidth(ButtonHeight_2/2)
 			GVAR_TargetButton.RangeTexture:SetHeight(ButtonHeight_2)
-			GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
 		else
 			GVAR_TargetButton.RangeTexture:Hide()
-			GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
 		end
 		GVAR_TargetButton.RoleTexture:SetWidth(ButtonHeight_2)
 		GVAR_TargetButton.RoleTexture:SetHeight(ButtonHeight_2)
@@ -4352,10 +4367,19 @@ function BattlegroundTargets:SetupButtonLayout()
 		GVAR_TargetButton.ClassColorBackground:SetHeight(ButtonHeight_2)
 		GVAR_TargetButton.HealthBar:SetHeight(ButtonHeight_2)
 
-		if ButtonShowSpec and ButtonClassIcon then
+		if ButtonShowRole and ButtonShowSpec and ButtonClassIcon then
+			GVAR_TargetButton.RoleTexture:Show()
 			GVAR_TargetButton.SpecTexture:Show()
 			GVAR_TargetButton.ClassTexture:Show()
+
+			if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
+			end
+			GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
 			GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
+
 			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
 				GVAR_TargetButton.GuildGroup:ClearAllPoints()
 				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
@@ -4363,9 +4387,92 @@ function BattlegroundTargets:SetupButtonLayout()
 			else
 				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
 			end
-		elseif ButtonShowSpec then
+		elseif ButtonShowRole and ButtonShowSpec then
+			GVAR_TargetButton.RoleTexture:Show()
 			GVAR_TargetButton.SpecTexture:Show()
 			GVAR_TargetButton.ClassTexture:Hide()
+
+			if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
+			end
+			GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
+
+			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
+				GVAR_TargetButton.GuildGroup:ClearAllPoints()
+				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
+			end
+		elseif ButtonShowRole and ButtonClassIcon then
+			GVAR_TargetButton.RoleTexture:Show()
+			GVAR_TargetButton.SpecTexture:Hide()
+			GVAR_TargetButton.ClassTexture:Show()
+
+			if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
+			end
+			GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
+
+			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
+				GVAR_TargetButton.GuildGroup:ClearAllPoints()
+				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
+			end
+		elseif ButtonShowSpec and ButtonClassIcon then
+			GVAR_TargetButton.RoleTexture:Hide()
+			GVAR_TargetButton.SpecTexture:Show()
+			GVAR_TargetButton.ClassTexture:Show()
+
+			if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+				GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
+			end
+			GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
+
+			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
+				GVAR_TargetButton.GuildGroup:ClearAllPoints()
+				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
+			end
+		elseif ButtonShowRole then
+			GVAR_TargetButton.RoleTexture:Show()
+			GVAR_TargetButton.SpecTexture:Hide()
+			GVAR_TargetButton.ClassTexture:Hide()
+
+			if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
+			end
+
+			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
+				GVAR_TargetButton.GuildGroup:ClearAllPoints()
+				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
+			end
+		elseif ButtonShowSpec then
+			GVAR_TargetButton.RoleTexture:Hide()
+			GVAR_TargetButton.SpecTexture:Show()
+			GVAR_TargetButton.ClassTexture:Hide()
+
+			if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+				GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
+			end
+
 			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
 				GVAR_TargetButton.GuildGroup:ClearAllPoints()
 				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
@@ -4374,9 +4481,16 @@ function BattlegroundTargets:SetupButtonLayout()
 				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
 			end
 		elseif ButtonClassIcon then
+			GVAR_TargetButton.RoleTexture:Hide()
 			GVAR_TargetButton.SpecTexture:Hide()
 			GVAR_TargetButton.ClassTexture:Show()
-			GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
+
+			if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+				GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
+			else
+				GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
+			end
+
 			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
 				GVAR_TargetButton.GuildGroup:ClearAllPoints()
 				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
@@ -4385,14 +4499,25 @@ function BattlegroundTargets:SetupButtonLayout()
 				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
 			end
 		else
+			GVAR_TargetButton.RoleTexture:Hide()
 			GVAR_TargetButton.SpecTexture:Hide()
 			GVAR_TargetButton.ClassTexture:Hide()
+
 			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
+				if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+					GVAR_TargetButton.GuildGroup:ClearAllPoints()
+					GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
+				else
+					GVAR_TargetButton.GuildGroup:ClearAllPoints()
+					GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
+				end
 				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
 			else
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
+				if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+					GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
+				else
+					GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
+				end
 			end
 		end
 
@@ -5418,6 +5543,8 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	BattlegroundTargets_Options.SummaryScaleRole[destinationSize]         = BattlegroundTargets_Options.SummaryScaleRole[sourceSize]
 	BattlegroundTargets_Options.SummaryScaleGuildGroup[destinationSize]   = BattlegroundTargets_Options.SummaryScaleGuildGroup[sourceSize]
 
+	BattlegroundTargets_Options.ButtonShowRole[destinationSize]           = BattlegroundTargets_Options.ButtonShowRole[sourceSize]
+	                        OPT.ButtonShowRole[destinationSize]           =                         OPT.ButtonShowRole[sourceSize]
 	BattlegroundTargets_Options.ButtonShowSpec[destinationSize]           = BattlegroundTargets_Options.ButtonShowSpec[sourceSize]
 	                        OPT.ButtonShowSpec[destinationSize]           =                         OPT.ButtonShowSpec[sourceSize]
 	BattlegroundTargets_Options.ButtonClassIcon[destinationSize]          = BattlegroundTargets_Options.ButtonClassIcon[sourceSize]
@@ -5809,7 +5936,7 @@ function BattlegroundTargets:MainDataUpdate()
 	-- GLDGRP
 	if ButtonShowGuildGroup then
 		-- check if a guild group member left battleground
-		local doUpdate -- TODO needs check
+		local doUpdate
 		for enemyName, guildName in pairs(ENEMY_Guild) do
 			if not ENEMY_Name2Button[enemyName] and ENEMY_GroupNum[enemyName] > 0 then
 				ENEMY_GuildCount[guildName] = ENEMY_GuildCount[guildName] - 1
@@ -6912,6 +7039,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
+-- TODO: this sometimes does not check the whole group and I don't know why. need check.
 function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 	if isConfig then return end
 	if not BattlegroundTargets_Options.Summary[currentSize] then return end
