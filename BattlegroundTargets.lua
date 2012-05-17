@@ -23,10 +23,11 @@
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
--- Three events are always registered:                                        --
+-- These events are always registered:                                        --
 -- - PLAYER_REGEN_DISABLED                                                    --
 -- - PLAYER_REGEN_ENABLED                                                     --
--- - ZONE_CHANGED_NEW_AREA -> for bg check                                    --
+-- - ZONE_CHANGED_NEW_AREA (to determine if current zone is a battleground)   --
+-- - PLAYER_LEVEL_UP (only registered if player level < level cap)            --
 --                                                                            --
 -- In Battleground:                                                           --
 -- # If enabled: ------------------------------------------------------------ --
@@ -68,6 +69,9 @@
 --                         - UNIT_TARGET                                      --
 --                                                                            --
 -- # Leader: ------------------------------------------- LOW MEDIUM CPU USAGE --
+--   - Event:              - UNIT_TARGET                                      --
+--                                                                            --
+-- # Level: (only if player level < level cap) ---------------- LOW CPU USAGE --
 --   - Event:              - UNIT_TARGET                                      --
 --                                                                            --
 -- # Target: -------------------------------------------------- LOW CPU USAGE --
@@ -6289,7 +6293,8 @@ function BattlegroundTargets:CheckFlagCarrierEND() -- FLAGSPY
 	   not OPT.ButtonShowAssist[currentSize] and
 	   not OPT.ButtonShowLeader[currentSize] and
 	   not OPT.ButtonShowGuildGroup[currentSize] and
-	   not OPT.ButtonClassRangeCheck[currentSize]
+	   not OPT.ButtonClassRangeCheck[currentSize] and
+	   not isLowLevel -- LVLCHK
 	then
 		BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
 	end
@@ -6467,25 +6472,34 @@ function BattlegroundTargets:BattlefieldCheck()
 		BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
 
+		-- ------------------------------------------------------------
 		if BattlegroundTargets_Options.EnableBracket[currentSize] then
 			BattlegroundTargets:RegisterEvent("PLAYER_DEAD")
 			BattlegroundTargets:RegisterEvent("PLAYER_UNGHOST")
 			BattlegroundTargets:RegisterEvent("PLAYER_ALIVE")
+
+			if isLowLevel then -- LVLCHK
+				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+			end
 
 			if OPT.ButtonShowHealthBar[currentSize] or OPT.ButtonShowHealthText[currentSize] then
 				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
 				BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
 				BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 			end
+
 			if OPT.ButtonShowTargetCount[currentSize] then
 				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
 			end
+
 			if OPT.ButtonShowTarget[currentSize] then
 				BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
 			end
+
 			if OPT.ButtonShowFocus[currentSize] then
 				BattlegroundTargets:RegisterEvent("PLAYER_FOCUS_CHANGED")
 			end
+
 			if OPT.ButtonShowFlag[currentSize] then
 				if currentSize == 10 or currentSize == 15 then
 					BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
@@ -6493,6 +6507,7 @@ function BattlegroundTargets:BattlefieldCheck()
 					BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
 				end
 			end
+
 			if OPT.ButtonShowAssist[currentSize] then
 				BattlegroundTargets:RegisterEvent("RAID_ROSTER_UPDATE")
 				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
@@ -6517,9 +6532,8 @@ function BattlegroundTargets:BattlefieldCheck()
 					end
 					if not rangeSpellName then
 						if playerClassEN == "PALADIN" then
-							local level = UnitLevel("player")
-							if level < 14 then -- PAL14
-								Print("PALADIN: Required level for class-spell based rangecheck is 14.") 
+							if playerLevel < 14 then -- PAL14
+								Print("ERROR", "PALADIN: Required level for class-spell based rangecheck is 14.") 
 							end
 						end
 						if ranges[playerClassEN] then
@@ -6537,8 +6551,10 @@ function BattlegroundTargets:BattlefieldCheck()
 					end
 				end
 			end
+
 			BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
 		end
+		-- ------------------------------------------------------------
 	else
 		if not inBattleground and not reCheckBG then return end
 
