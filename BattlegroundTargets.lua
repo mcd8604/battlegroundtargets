@@ -133,6 +133,7 @@ local GetNumBattlefieldScores    = _G.GetNumBattlefieldScores
 local GetBattlefieldScore        = _G.GetBattlefieldScore
 local SetBattlefieldScoreFaction = _G.SetBattlefieldScoreFaction
 local UnitName                   = _G.UnitName
+local UnitLevel                  = _G.UnitLevel
 local UnitHealthMax              = _G.UnitHealthMax
 local UnitHealth                 = _G.UnitHealth
 local UnitIsPartyLeader          = _G.UnitIsPartyLeader
@@ -202,6 +203,16 @@ local latestScoreWarning = 60               -- scoreupdate: inCombat-warning ico
 -- MISC ----------------------------------------------------------------------------------------------------------------
 local range_DisappearTime = 10              -- rangecheck: display update - clears range display if an enemy was not seen for 10 seconds
 
+local playerLevel = UnitLevel("player") -- LVLCHK
+local isLowLevel
+local maxLevel = 90
+-- TODO -> DEL with MoP release
+local _, _, _, tocversion = GetBuildInfo()
+if tocversion < 50000 then
+	maxLevel = 85
+end
+-- TODO -> DEL with MoP release
+
 local playerName = UnitName("player")
 local playerClass, playerClassEN = UnitClass("player")
 local targetName, targetRealm
@@ -220,6 +231,7 @@ local ENEMY_Names4Flag = {}     -- key/value | key = enemyName without realm, va
 local ENEMY_Name2Button = {}    -- key/value | key = enemyName, value = button number
 local ENEMY_Name2Percent = {}   -- key/value | key = enemyName, value = health in percent
 local ENEMY_Name2Range = {}     -- key/value | key = enemyName, value = time of last contact
+local ENEMY_Name2Level = {}     -- key/value | key = enemyName, value = level
 local ENEMY_FirstFlagCheck = {} -- key/value | key = enemyName, value = 1
 local ENEMY_Guild = {}          -- key/value | key = enemyName, value = guild name
 local ENEMY_GuildCount = {}     -- key/value | key = guildName, value = number of guild members
@@ -5789,9 +5801,23 @@ function BattlegroundTargets:MainDataUpdate()
 			end
 
 			if ButtonHideRealm then
-				GVAR_TargetButton.Name:SetText(onlyname)
+				if isLowLevel then -- LVLCHK
+					GVAR_TargetButton.name4button = onlyname
+				end
+				if isLowLevel and ENEMY_Name2Level[qname] then
+					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..onlyname)
+				else
+					GVAR_TargetButton.Name:SetText(onlyname)
+				end
 			else
-				GVAR_TargetButton.Name:SetText(qname)
+				if isLowLevel then
+					GVAR_TargetButton.name4button = qname
+				end
+				if isLowLevel and ENEMY_Name2Level[qname] then
+					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..qname)
+				else
+					GVAR_TargetButton.Name:SetText(qname)
+				end
 			end
 
 			if not inCombat or not InCombatLockdown() then
@@ -5925,6 +5951,12 @@ function BattlegroundTargets:MainDataUpdate()
 			GVAR.Summary.HealerEnemy:SetText(ENEMY_Roles[1])   -- HEAL   ENEMY
 			GVAR.Summary.TankEnemy:SetText(ENEMY_Roles[2])     -- TANK   ENEMY
 			GVAR.Summary.DamageEnemy:SetText(ENEMY_Roles[3])   -- DAMAGE ENEMY
+		end
+		if isLowLevel then -- LVLCHK
+			for i = 1, currentSize do
+				local GVAR_TargetButton = GVAR.TargetButton[i]
+				GVAR_TargetButton.Name:SetText(playerLevel.." "..GVAR_TargetButton.name4button)
+			end
 		end
 		return
 	end
@@ -6334,6 +6366,13 @@ function BattlegroundTargets:BattlefieldCheck()
 			end
 		end
 
+		if playerLevel >= maxLevel then -- LVLCHK
+			isLowLevel = nil
+		else
+			isLowLevel = true
+		end
+		BattlegroundTargets:UnregisterEvent("PLAYER_LEVEL_UP") -- doesn't matter in bg
+
 		if inCombat or InCombatLockdown() then
 			reCheckBG = true
 		else
@@ -6519,6 +6558,8 @@ function BattlegroundTargets:BattlefieldCheck()
 		groupMembers = 0
 		groupMemChk = 0
 
+		BattlegroundTargets:CheckPlayerLevel() -- LVLCHK
+
 		BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
 		BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
 		BattlegroundTargets:UnregisterEvent("PLAYER_ALIVE")
@@ -6542,6 +6583,7 @@ function BattlegroundTargets:BattlefieldCheck()
 		table_wipe(ENEMY_Name2Button)
 		table_wipe(ENEMY_Name2Percent)
 		table_wipe(ENEMY_Name2Range)
+		table_wipe(ENEMY_Name2Level)
 		table_wipe(ENEMY_Guild)
 		table_wipe(ENEMY_GuildCount)
 		table_wipe(ENEMY_GroupNum)
@@ -6717,13 +6759,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	end
 
 	local curTime = GetTime()
-	local GVAR_TargetButton
-	if enemyName then
-		local enemyButton = ENEMY_Name2Button[enemyName]
-		if enemyButton then
-			GVAR_TargetButton = GVAR.TargetButton[enemyButton]
-		end
-	end
 
 	-- FLAGSPY
 	if flagCHK and isFlagBG > 0 then
@@ -6757,7 +6792,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 			end
 		else
 			if friendName then
-				if enemyName and ENEMY_Names[enemyName] then
+				if ENEMY_Names[enemyName] then
 					TARGET_Names[friendName] = enemyName
 				else
 					TARGET_Names[friendName] = nil
@@ -6768,11 +6803,8 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 			ENEMY_Names[eName] = 0
 		end
 		for _, eName in pairs(TARGET_Names) do
-			if eName then
-				local num = ENEMY_Names[eName]
-				if num then
-					ENEMY_Names[eName] = num + 1
-				end
+			if ENEMY_Names[eName] then
+				ENEMY_Names[eName] = ENEMY_Names[eName] + 1
 			end
 		end
 		for i = 1, currentSize do
@@ -6787,10 +6819,20 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		end
 	end
 
+	if not ENEMY_Names[enemyName] then return end
+
+	local GVAR_TargetButton
+	if enemyName then
+		local enemyButton = ENEMY_Name2Button[enemyName]
+		if enemyButton then
+			GVAR_TargetButton = GVAR.TargetButton[enemyButton]
+		end
+	end
+
 	-- health
 	if OPT.ButtonShowHealthBar[currentSize] or OPT.ButtonShowHealthText[currentSize] then
 		if enemyID and enemyName then
-			BattlegroundTargets:CheckUnitHealth(enemyID, enemyName)
+			BattlegroundTargets:CheckUnitHealth(enemyID, enemyName, 1)
 		end
 	end
 
@@ -6858,7 +6900,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 	-- GLDGRP
 	if OPT.ButtonShowGuildGroup[currentSize] then
-		if ENEMY_Names[enemyName] and not ENEMY_Guild[enemyName] then
+		if not ENEMY_Guild[enemyName] then
 			if UnitIsVisible(enemyID) then -- vis
 
 				local guildName = GetGuildInfo(enemyID)
@@ -6936,6 +6978,17 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		end
 	end
 
+	-- level
+	if isLowLevel then -- LVLCHK
+		local level = UnitLevel(enemyID) or 0
+		if level > 0 then
+			ENEMY_Name2Level[enemyName] = level
+			if GVAR_TargetButton then
+				GVAR_TargetButton.Name:SetText(level.." "..GVAR_TargetButton.name4button)
+			end
+		end
+	end
+
 	-- class_range (Check Unit Target)
 	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
 		if GVAR_TargetButton then
@@ -6956,7 +7009,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
+function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 	if isConfig then return end
 
 	local targetID, targetName, targetRealm
@@ -6982,13 +7035,6 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 	if not targetButton then return end
 	local GVAR_TargetButton = GVAR.TargetButton[targetButton]
 	if not GVAR_TargetButton then return end
-
-	-- FLAGSPY
-	if flagCHK and isFlagBG > 0 then
-		if OPT.ButtonShowFlag[currentSize] then
-			BattlegroundTargets:CheckFlagCarrierCHECK(targetID, targetName)
-		end
-	end
 
 	-- health
 	local ButtonShowHealthBar  = OPT.ButtonShowHealthBar[currentSize]
@@ -7017,6 +7063,15 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName)
 					GVAR_TargetButton.HealthText:SetText(percent)
 				end
 			end
+		end
+	end
+
+	if healthonly then return end
+
+	-- FLAGSPY
+	if flagCHK and isFlagBG > 0 then
+		if OPT.ButtonShowFlag[currentSize] then
+			BattlegroundTargets:CheckFlagCarrierCHECK(targetID, targetName)
 		end
 	end
 
@@ -7390,6 +7445,23 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CheckPlayerLevel() -- LVLCHK
+	if playerLevel > maxLevel then
+		isLowLevel = nil
+		BattlegroundTargets:UnregisterEvent("PLAYER_LEVEL_UP")
+		Print("ERROR", "wrong level", locale, playerLevel, maxLevel)
+		Print("Please contact addon author. Thanks.")
+	elseif playerLevel < maxLevel then
+		isLowLevel = true
+		BattlegroundTargets:RegisterEvent("PLAYER_LEVEL_UP")
+	else--if playerLevel == maxLevel then
+		isLowLevel = nil
+		BattlegroundTargets:UnregisterEvent("PLAYER_LEVEL_UP")
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
 local function OnEvent(self, event, ...)
 	if event == "PLAYER_REGEN_DISABLED" then
 		inCombat = true
@@ -7499,6 +7571,13 @@ local function OnEvent(self, event, ...)
 		local arg1 = ...
 		BattlegroundTargets:FlagDebuffCheck(arg1) -- FLAGDEBUFF
 
+	elseif event == "PLAYER_LEVEL_UP" then -- LVLCHK
+		local arg1 = ...
+		if arg1 then
+			playerLevel = arg1
+			BattlegroundTargets:CheckPlayerLevel()
+		end
+
 	elseif event == "PLAYER_LOGIN" then
 		local faction = UnitFactionGroup("player")
 		if faction == "Horde" then
@@ -7532,6 +7611,7 @@ local function OnEvent(self, event, ...)
 		BattlegroundTargets:UnregisterEvent("PLAYER_LOGIN")
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		inWorld = true
+		BattlegroundTargets:CheckPlayerLevel() -- LVLCHK
 		BattlegroundTargets:BattlefieldCheck()
 		BattlegroundTargets:CreateMinimapButton()
 
