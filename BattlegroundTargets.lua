@@ -6380,7 +6380,6 @@ function BattlegroundTargets:BattlefieldCheck()
 		else
 			isLowLevel = true
 		end
-		BattlegroundTargets:UnregisterEvent("PLAYER_LEVEL_UP") -- doesn't matter in bg
 
 		if inCombat or InCombatLockdown() then
 			reCheckBG = true
