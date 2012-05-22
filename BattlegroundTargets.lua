@@ -1683,38 +1683,38 @@ function BattlegroundTargets:InitOptions()
 
 	for i = 1, #bgSizeINT do
 		local sz = bgSizeINT[i]
-		if not OPT.ButtonShowRole           then OPT.ButtonShowRole           = {} end OPT.ButtonShowRole[sz]           = BattlegroundTargets_Options.ButtonShowRole[sz]       
-		if not OPT.ButtonShowSpec           then OPT.ButtonShowSpec           = {} end OPT.ButtonShowSpec[sz]           = BattlegroundTargets_Options.ButtonShowSpec[sz]       
-		if not OPT.ButtonClassIcon          then OPT.ButtonClassIcon          = {} end OPT.ButtonClassIcon[sz]          = BattlegroundTargets_Options.ButtonClassIcon[sz]      
-		if not OPT.ButtonHideRealm          then OPT.ButtonHideRealm          = {} end OPT.ButtonHideRealm[sz]          = BattlegroundTargets_Options.ButtonHideRealm[sz]      
-		if not OPT.ButtonShowLeader         then OPT.ButtonShowLeader         = {} end OPT.ButtonShowLeader[sz]         = BattlegroundTargets_Options.ButtonShowLeader[sz]     
-		if not OPT.ButtonShowGuildGroup     then OPT.ButtonShowGuildGroup     = {} end OPT.ButtonShowGuildGroup[sz]     = BattlegroundTargets_Options.ButtonShowGuildGroup[sz]     
-		if not OPT.ButtonGuildGroupPosition then OPT.ButtonGuildGroupPosition = {} end OPT.ButtonGuildGroupPosition[sz] = BattlegroundTargets_Options.ButtonGuildGroupPosition[sz]     
-		if not OPT.ButtonShowTarget         then OPT.ButtonShowTarget         = {} end OPT.ButtonShowTarget[sz]         = BattlegroundTargets_Options.ButtonShowTarget[sz]     
-		if not OPT.ButtonTargetScale        then OPT.ButtonTargetScale        = {} end OPT.ButtonTargetScale[sz]        = BattlegroundTargets_Options.ButtonTargetScale[sz]    
-		if not OPT.ButtonTargetPosition     then OPT.ButtonTargetPosition     = {} end OPT.ButtonTargetPosition[sz]     = BattlegroundTargets_Options.ButtonTargetPosition[sz] 
-		if not OPT.ButtonShowAssist         then OPT.ButtonShowAssist         = {} end OPT.ButtonShowAssist[sz]         = BattlegroundTargets_Options.ButtonShowAssist[sz]     
-		if not OPT.ButtonAssistScale        then OPT.ButtonAssistScale        = {} end OPT.ButtonAssistScale[sz]        = BattlegroundTargets_Options.ButtonAssistScale[sz]    
-		if not OPT.ButtonAssistPosition     then OPT.ButtonAssistPosition     = {} end OPT.ButtonAssistPosition[sz]     = BattlegroundTargets_Options.ButtonAssistPosition[sz] 
-		if not OPT.ButtonShowFocus          then OPT.ButtonShowFocus          = {} end OPT.ButtonShowFocus[sz]          = BattlegroundTargets_Options.ButtonShowFocus[sz]      
-		if not OPT.ButtonFocusScale         then OPT.ButtonFocusScale         = {} end OPT.ButtonFocusScale[sz]         = BattlegroundTargets_Options.ButtonFocusScale[sz]     
-		if not OPT.ButtonFocusPosition      then OPT.ButtonFocusPosition      = {} end OPT.ButtonFocusPosition[sz]      = BattlegroundTargets_Options.ButtonFocusPosition[sz]  
-		if not OPT.ButtonShowFlag           then OPT.ButtonShowFlag           = {} end OPT.ButtonShowFlag[sz]           = BattlegroundTargets_Options.ButtonShowFlag[sz]       
-		if not OPT.ButtonFlagScale          then OPT.ButtonFlagScale          = {} end OPT.ButtonFlagScale[sz]          = BattlegroundTargets_Options.ButtonFlagScale[sz]      
-		if not OPT.ButtonFlagPosition       then OPT.ButtonFlagPosition       = {} end OPT.ButtonFlagPosition[sz]       = BattlegroundTargets_Options.ButtonFlagPosition[sz]   
+		if not OPT.ButtonShowRole           then OPT.ButtonShowRole           = {} end OPT.ButtonShowRole[sz]           = BattlegroundTargets_Options.ButtonShowRole[sz]
+		if not OPT.ButtonShowSpec           then OPT.ButtonShowSpec           = {} end OPT.ButtonShowSpec[sz]           = BattlegroundTargets_Options.ButtonShowSpec[sz]
+		if not OPT.ButtonClassIcon          then OPT.ButtonClassIcon          = {} end OPT.ButtonClassIcon[sz]          = BattlegroundTargets_Options.ButtonClassIcon[sz]
+		if not OPT.ButtonHideRealm          then OPT.ButtonHideRealm          = {} end OPT.ButtonHideRealm[sz]          = BattlegroundTargets_Options.ButtonHideRealm[sz]
+		if not OPT.ButtonShowLeader         then OPT.ButtonShowLeader         = {} end OPT.ButtonShowLeader[sz]         = BattlegroundTargets_Options.ButtonShowLeader[sz]
+		if not OPT.ButtonShowGuildGroup     then OPT.ButtonShowGuildGroup     = {} end OPT.ButtonShowGuildGroup[sz]     = BattlegroundTargets_Options.ButtonShowGuildGroup[sz]
+		if not OPT.ButtonGuildGroupPosition then OPT.ButtonGuildGroupPosition = {} end OPT.ButtonGuildGroupPosition[sz] = BattlegroundTargets_Options.ButtonGuildGroupPosition[sz]
+		if not OPT.ButtonShowTarget         then OPT.ButtonShowTarget         = {} end OPT.ButtonShowTarget[sz]         = BattlegroundTargets_Options.ButtonShowTarget[sz]
+		if not OPT.ButtonTargetScale        then OPT.ButtonTargetScale        = {} end OPT.ButtonTargetScale[sz]        = BattlegroundTargets_Options.ButtonTargetScale[sz]
+		if not OPT.ButtonTargetPosition     then OPT.ButtonTargetPosition     = {} end OPT.ButtonTargetPosition[sz]     = BattlegroundTargets_Options.ButtonTargetPosition[sz]
+		if not OPT.ButtonShowAssist         then OPT.ButtonShowAssist         = {} end OPT.ButtonShowAssist[sz]         = BattlegroundTargets_Options.ButtonShowAssist[sz]
+		if not OPT.ButtonAssistScale        then OPT.ButtonAssistScale        = {} end OPT.ButtonAssistScale[sz]        = BattlegroundTargets_Options.ButtonAssistScale[sz]
+		if not OPT.ButtonAssistPosition     then OPT.ButtonAssistPosition     = {} end OPT.ButtonAssistPosition[sz]     = BattlegroundTargets_Options.ButtonAssistPosition[sz]
+		if not OPT.ButtonShowFocus          then OPT.ButtonShowFocus          = {} end OPT.ButtonShowFocus[sz]          = BattlegroundTargets_Options.ButtonShowFocus[sz]
+		if not OPT.ButtonFocusScale         then OPT.ButtonFocusScale         = {} end OPT.ButtonFocusScale[sz]         = BattlegroundTargets_Options.ButtonFocusScale[sz]
+		if not OPT.ButtonFocusPosition      then OPT.ButtonFocusPosition      = {} end OPT.ButtonFocusPosition[sz]      = BattlegroundTargets_Options.ButtonFocusPosition[sz]
+		if not OPT.ButtonShowFlag           then OPT.ButtonShowFlag           = {} end OPT.ButtonShowFlag[sz]           = BattlegroundTargets_Options.ButtonShowFlag[sz]
+		if not OPT.ButtonFlagScale          then OPT.ButtonFlagScale          = {} end OPT.ButtonFlagScale[sz]          = BattlegroundTargets_Options.ButtonFlagScale[sz]
+		if not OPT.ButtonFlagPosition       then OPT.ButtonFlagPosition       = {} end OPT.ButtonFlagPosition[sz]       = BattlegroundTargets_Options.ButtonFlagPosition[sz]
 		if not OPT.ButtonShowTargetCount    then OPT.ButtonShowTargetCount    = {} end OPT.ButtonShowTargetCount[sz]    = BattlegroundTargets_Options.ButtonShowTargetCount[sz]
-		if not OPT.ButtonShowHealthBar      then OPT.ButtonShowHealthBar      = {} end OPT.ButtonShowHealthBar[sz]      = BattlegroundTargets_Options.ButtonShowHealthBar[sz]  
-		if not OPT.ButtonShowHealthText     then OPT.ButtonShowHealthText     = {} end OPT.ButtonShowHealthText[sz]     = BattlegroundTargets_Options.ButtonShowHealthText[sz] 
-		if not OPT.ButtonRangeCheck         then OPT.ButtonRangeCheck         = {} end OPT.ButtonRangeCheck[sz]         = BattlegroundTargets_Options.ButtonRangeCheck[sz]     
-		if not OPT.ButtonAvgRangeCheck      then OPT.ButtonAvgRangeCheck      = {} end OPT.ButtonAvgRangeCheck[sz]      = BattlegroundTargets_Options.ButtonAvgRangeCheck[sz]  
+		if not OPT.ButtonShowHealthBar      then OPT.ButtonShowHealthBar      = {} end OPT.ButtonShowHealthBar[sz]      = BattlegroundTargets_Options.ButtonShowHealthBar[sz]
+		if not OPT.ButtonShowHealthText     then OPT.ButtonShowHealthText     = {} end OPT.ButtonShowHealthText[sz]     = BattlegroundTargets_Options.ButtonShowHealthText[sz]
+		if not OPT.ButtonRangeCheck         then OPT.ButtonRangeCheck         = {} end OPT.ButtonRangeCheck[sz]         = BattlegroundTargets_Options.ButtonRangeCheck[sz]
+		if not OPT.ButtonAvgRangeCheck      then OPT.ButtonAvgRangeCheck      = {} end OPT.ButtonAvgRangeCheck[sz]      = BattlegroundTargets_Options.ButtonAvgRangeCheck[sz]
 		if not OPT.ButtonClassRangeCheck    then OPT.ButtonClassRangeCheck    = {} end OPT.ButtonClassRangeCheck[sz]    = BattlegroundTargets_Options.ButtonClassRangeCheck[sz]
-		if not OPT.ButtonRangeDisplay       then OPT.ButtonRangeDisplay       = {} end OPT.ButtonRangeDisplay[sz]       = BattlegroundTargets_Options.ButtonRangeDisplay[sz]     
-		if not OPT.ButtonSortBy             then OPT.ButtonSortBy             = {} end OPT.ButtonSortBy[sz]             = BattlegroundTargets_Options.ButtonSortBy[sz]         
-		if not OPT.ButtonSortDetail         then OPT.ButtonSortDetail         = {} end OPT.ButtonSortDetail[sz]         = BattlegroundTargets_Options.ButtonSortDetail[sz]     
-		if not OPT.ButtonFontSize           then OPT.ButtonFontSize           = {} end OPT.ButtonFontSize[sz]           = BattlegroundTargets_Options.ButtonFontSize[sz]       
-		if not OPT.ButtonScale              then OPT.ButtonScale              = {} end OPT.ButtonScale[sz]              = BattlegroundTargets_Options.ButtonScale[sz]          
-		if not OPT.ButtonWidth              then OPT.ButtonWidth              = {} end OPT.ButtonWidth[sz]              = BattlegroundTargets_Options.ButtonWidth[sz]          
-		if not OPT.ButtonHeight             then OPT.ButtonHeight             = {} end OPT.ButtonHeight[sz]             = BattlegroundTargets_Options.ButtonHeight[sz]         
+		if not OPT.ButtonRangeDisplay       then OPT.ButtonRangeDisplay       = {} end OPT.ButtonRangeDisplay[sz]       = BattlegroundTargets_Options.ButtonRangeDisplay[sz]
+		if not OPT.ButtonSortBy             then OPT.ButtonSortBy             = {} end OPT.ButtonSortBy[sz]             = BattlegroundTargets_Options.ButtonSortBy[sz]
+		if not OPT.ButtonSortDetail         then OPT.ButtonSortDetail         = {} end OPT.ButtonSortDetail[sz]         = BattlegroundTargets_Options.ButtonSortDetail[sz]
+		if not OPT.ButtonFontSize           then OPT.ButtonFontSize           = {} end OPT.ButtonFontSize[sz]           = BattlegroundTargets_Options.ButtonFontSize[sz]
+		if not OPT.ButtonScale              then OPT.ButtonScale              = {} end OPT.ButtonScale[sz]              = BattlegroundTargets_Options.ButtonScale[sz]
+		if not OPT.ButtonWidth              then OPT.ButtonWidth              = {} end OPT.ButtonWidth[sz]              = BattlegroundTargets_Options.ButtonWidth[sz]
+		if not OPT.ButtonHeight             then OPT.ButtonHeight             = {} end OPT.ButtonHeight[sz]             = BattlegroundTargets_Options.ButtonHeight[sz]
 	end	
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -2731,6 +2731,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.ClassIcon:SetChecked(OPT.ButtonClassIcon[currentSize])
 		BattlegroundTargets:EnableConfigMode()
 	end)
+	local generalIconW = 10 + GVAR.OptionsFrame.ShowRole:GetWidth() + 20 +
+	                          GVAR.OptionsFrame.ShowSpec:GetWidth() + 20 +
+	                          GVAR.OptionsFrame.ClassIcon:GetWidth() + 10
 
 	-- show realm
 	GVAR.OptionsFrame.ShowRealm = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -3626,13 +3629,14 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- ####################################################################################################
 	-- xMx width BOOM
 	local frameWidth = 400
+	if generalIconW > frameWidth then frameWidth = generalIconW end
 	if layoutW > frameWidth then frameWidth = layoutW end
 	if summaryW > frameWidth then frameWidth = summaryW end
 	if iconW > frameWidth then frameWidth = iconW end
 	if rangeW > frameWidth then frameWidth = rangeW end
 	if sortW > frameWidth then frameWidth = sortW end
 	if frameWidth < 400 then frameWidth = 400 end
-	if frameWidth > 600 then frameWidth = 600 end
+	if frameWidth > 650 then frameWidth = 650 end
 	-- OptionsFrame
 	GVAR.OptionsFrame:SetClampRectInsets((frameWidth-50)/2, -((frameWidth-50)/2), -(heightTotal-35), heightTotal-35)
 	GVAR.OptionsFrame:SetWidth(frameWidth)
@@ -5146,18 +5150,18 @@ function BattlegroundTargets:SetConfigButtonValues()
 		GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 
 		-- health
-		GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
-		GVAR_TargetButton.HealthText:SetText("")
-		if ButtonShowHealthBar or ButtonShowHealthText then
-			if ButtonShowHealthBar then
-				local width = healthBarWidth * (testHealth[i] / 100)
-				width = math_max(0.01, width)
-				width = math_min(healthBarWidth, width)
-				GVAR_TargetButton.HealthBar:SetWidth(width)
-			end
-			if ButtonShowHealthText then
-				GVAR_TargetButton.HealthText:SetText(testHealth[i])
-			end
+		if ButtonShowHealthBar then
+			local width = healthBarWidth * (testHealth[i] / 100)
+			width = math_max(0.01, width)
+			width = math_min(healthBarWidth, width)
+			GVAR_TargetButton.HealthBar:SetWidth(width)
+		else
+			GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
+		end
+		if ButtonShowHealthText then
+			GVAR_TargetButton.HealthText:SetText(testHealth[i])
+		else
+			GVAR_TargetButton.HealthText:SetText("")
 		end
 
 		-- range
@@ -6348,7 +6352,7 @@ function BattlegroundTargets:BattlefieldCheck()
 				end
 			else
 				if reSizeCheck >= 10 then
-					Print("ERROR", "unknown bg name", locale, bgName, zone)
+					Print("ERROR", "unknown battleground name", locale, bgName, zone)
 					Print("Please contact addon author. Thanks.")
 				end
 				currentSize = 10
