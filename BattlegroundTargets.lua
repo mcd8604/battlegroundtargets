@@ -229,6 +229,8 @@ local playerFactionBG    = 0 -- player faction (in battleground)
 local oppositeFactionBG  = 0 -- opposite faction (in battleground)
 local oppositeFactionREAL    -- real opposite faction
 
+--local eventTest = {} -- TEST event order
+
 local ENEMY_Data = {}           -- numerical | all data
 local ENEMY_Names = {}          -- key/value | key = enemyName, value = count
 local ENEMY_Names4Flag = {}     -- key/value | key = enemyName without realm, value = button number
@@ -6074,13 +6076,13 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 					end
 				end
 
-				--if race then -- TEST CODE
-				--	if not BattlegroundTargets_Options.TEST then BattlegroundTargets_Options.TEST = {} end
-				--	if not BattlegroundTargets_Options.TEST[locale] then BattlegroundTargets_Options.TEST[locale] = {} end
+				--if race then -- TEST
+				--	if not BattlegroundTargets_Options.TesT then BattlegroundTargets_Options.TesT = {} end
+				--	if not BattlegroundTargets_Options.TesT[locale] then BattlegroundTargets_Options.TesT[locale] = {} end
 				--	if playerFactionDEF == 0 then
-				--		BattlegroundTargets_Options.TEST[locale][race] = "ALLIANCE"
+				--		BattlegroundTargets_Options.TesT[locale][race] = "ALLIANCE"
 				--	else
-				--		BattlegroundTargets_Options.TEST[locale][race] = "HORDE"
+				--		BattlegroundTargets_Options.TesT[locale][race] = "HORDE"
 				--	end
 				--end
 
@@ -6120,13 +6122,13 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 
 			else
 
-				--if race then -- TEST CODE
-				--	if not BattlegroundTargets_Options.TEST then BattlegroundTargets_Options.TEST = {} end
-				--	if not BattlegroundTargets_Options.TEST[locale] then BattlegroundTargets_Options.TEST[locale] = {} end
+				--if race then -- TEST
+				--	if not BattlegroundTargets_Options.TesT then BattlegroundTargets_Options.TesT = {} end
+				--	if not BattlegroundTargets_Options.TesT[locale] then BattlegroundTargets_Options.TesT[locale] = {} end
 				--	if playerFactionDEF == 0 then
-				--		BattlegroundTargets_Options.TEST[locale][race] = "zzHORDE"
+				--		BattlegroundTargets_Options.TesT[locale][race] = "zzHORDE"
 				--	else
-				--		BattlegroundTargets_Options.TEST[locale][race] = "zzALLIANCE"
+				--		BattlegroundTargets_Options.TesT[locale][race] = "zzALLIANCE"
 				--	end
 				--end
 
@@ -6560,6 +6562,8 @@ function BattlegroundTargets:BattlefieldCheck()
 		-- ------------------------------------------------------------
 	else
 		if not inBattleground and not reCheckBG then return end
+
+		--for k, v in pairs(eventTest) do print(k, v) end -- TEST
 
 		inBattleground = false
 		reSizeCheck = 0
@@ -7482,6 +7486,7 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 local function OnEvent(self, event, ...)
+	--if not eventTest[event] then eventTest[event] = 1 else eventTest[event] = eventTest[event] + 1 end -- TEST
 	if event == "PLAYER_REGEN_DISABLED" then
 		inCombat = true
 		if isConfig then
@@ -7532,45 +7537,26 @@ local function OnEvent(self, event, ...)
 		if not spellId then return end
 		CombatLogRangeCheck(sourceName, destName, spellId)
 
-	elseif event == "PLAYER_DEAD" then
-		if not inBattleground then return end
-		isDeadUpdateStop = false
-	elseif event == "PLAYER_UNGHOST" then
-		if not inBattleground then return end
-		isDeadUpdateStop = false
-	elseif event == "PLAYER_ALIVE" then
-		if not inBattleground then return end
-		if UnitIsGhost("player") then
-			isDeadUpdateStop = true
-			BattlegroundTargets:ClearRangeData()
-		else
-			isDeadUpdateStop = false
-		end
-
-	elseif event == "UPDATE_BATTLEFIELD_SCORE" then
-		if isConfig then return end
-		BattlegroundTargets:BattlefieldScoreUpdate()
-	elseif event == "ZONE_CHANGED_NEW_AREA" then
-		if not inWorld then return end
-		if isConfig then return end
-		BattlegroundTargets:BattlefieldCheck()
-
+	elseif event == "UNIT_HEALTH_FREQUENT" then
+		if isDeadUpdateStop then return end
+		local arg1 = ...
+		BattlegroundTargets:CheckUnitHealth(arg1)
 	elseif event == "UNIT_TARGET" then
 		if isDeadUpdateStop then return end
 		local arg1 = ...
 		if not raidUnitID[arg1] then return end
 		BattlegroundTargets:CheckUnitTarget(arg1)
-	elseif event == "PLAYER_FOCUS_CHANGED" then
-		BattlegroundTargets:CheckPlayerFocus()
-	elseif event == "PLAYER_TARGET_CHANGED" then
-		BattlegroundTargets:CheckPlayerTarget()
-	elseif event == "UNIT_HEALTH_FREQUENT" then
-		if isDeadUpdateStop then return end
-		local arg1 = ...
-		BattlegroundTargets:CheckUnitHealth(arg1)
 	elseif event == "UPDATE_MOUSEOVER_UNIT" then
 		if isDeadUpdateStop then return end
 		BattlegroundTargets:CheckUnitHealth("mouseover")
+	elseif event == "PLAYER_TARGET_CHANGED" then
+		BattlegroundTargets:CheckPlayerTarget()
+	elseif event == "PLAYER_FOCUS_CHANGED" then
+		BattlegroundTargets:CheckPlayerFocus()
+
+	elseif event == "UPDATE_BATTLEFIELD_SCORE" then
+		if isConfig then return end
+		BattlegroundTargets:BattlefieldScoreUpdate()
 
 	elseif event == "RAID_ROSTER_UPDATE" then
 		if OPT.ButtonShowAssist[currentSize] then
@@ -7589,6 +7575,26 @@ local function OnEvent(self, event, ...)
 	elseif event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
 		local arg1 = ...
 		BattlegroundTargets:FlagDebuffCheck(arg1) -- FLAGDEBUFF
+
+	elseif event == "PLAYER_DEAD" then
+		if not inBattleground then return end
+		isDeadUpdateStop = false
+	elseif event == "PLAYER_UNGHOST" then
+		if not inBattleground then return end
+		isDeadUpdateStop = false
+	elseif event == "PLAYER_ALIVE" then
+		if not inBattleground then return end
+		if UnitIsGhost("player") then
+			isDeadUpdateStop = true
+			BattlegroundTargets:ClearRangeData()
+		else
+			isDeadUpdateStop = false
+		end
+
+	elseif event == "ZONE_CHANGED_NEW_AREA" then
+		if not inWorld then return end
+		if isConfig then return end
+		BattlegroundTargets:BattlefieldCheck()
 
 	elseif event == "PLAYER_LEVEL_UP" then -- LVLCHK
 		local arg1 = ...
