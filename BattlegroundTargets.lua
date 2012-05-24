@@ -5518,7 +5518,7 @@ function BattlegroundTargets:ConfigGuildGroupEnemyUpdate(bracketSize)
 
 	-- build table with guildCount as key and number of groups with same membersize as value
 	local count = {}
-	for guildNum, guildCount in pairs(coun0t) do
+	for _, guildCount in pairs(coun0t) do
 		if not count[guildCount] then
 			count[guildCount] = 1
 		else
@@ -6180,11 +6180,11 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 		end
 	end
 
-	if bgName and BGN[bgName] then
+	if BGN[bgName] then
 		BattlegroundTargets:BattlefieldCheck()
 	else
 		local zone = GetRealZoneText()
-		if zone and BGN[zone] then
+		if BGN[zone] then
 			BattlegroundTargets:BattlefieldCheck()
 		else
 			reSizeCheck = reSizeCheck + 1
@@ -6334,7 +6334,7 @@ function BattlegroundTargets:BattlefieldCheck()
 			end
 		end
 
-		if bgName and BGN[bgName] then
+		if BGN[bgName] then
 			currentSize = bgSize[ BGN[bgName] ]
 			reSizeCheck = 10
 			local flagBGnum = flagBG[ BGN[bgName] ]
@@ -6343,7 +6343,7 @@ function BattlegroundTargets:BattlefieldCheck()
 			end
 		else
 			local zone = GetRealZoneText()
-			if zone and BGN[zone] then
+			if BGN[zone] then
 				currentSize = bgSize[ BGN[zone] ]
 				reSizeCheck = 10
 				local flagBGnum = flagBG[ BGN[zone] ]
@@ -7113,7 +7113,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
--- TODO: this sometimes does not check the whole group and I don't know why. need check.
+-- TODO
 function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 	if isConfig then return end
 	if not BattlegroundTargets_Options.Summary[currentSize] then return end
@@ -7127,7 +7127,6 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 		local unitID = "raid"..num
 		if UnitIsVisible(unitID) then
 			groupMemChk = groupMemChk + 1
-			local guildName = GetGuildInfo(unitID)
 			local name, realm = UnitName(unitID)
 			if realm and realm ~= "" then
 				name = name.."-"..realm
@@ -7135,6 +7134,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 
 			if name and not FRIEND_GuildName[name] then
 				FRIEND_GuildName[name] = 1
+				local guildName = GetGuildInfo(unitID)
 				if guildName and guildName ~= "" then
 					if not FRIEND_GuildCount[guildName] then
 						FRIEND_GuildCount[guildName] = 1
@@ -7149,7 +7149,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 
 	-- build table with guildCount as key and number of groups with same membersize as value
 	local count = {}
-	for guildName, guildCount in pairs(FRIEND_GuildCount) do
+	for _, guildCount in pairs(FRIEND_GuildCount) do
 		if guildCount > 1 then
 			if not count[guildCount] then
 				count[guildCount] = 1
@@ -7190,7 +7190,7 @@ function BattlegroundTargets:GuildGroupEnemyUpdate() -- GLDGRP
 
 	-- build table with guildCount as key and number of groups with same membersize as value
 	local count = {}
-	for guildName, guildCount in pairs(ENEMY_GuildCount) do
+	for _, guildCount in pairs(ENEMY_GuildCount) do
 		if guildCount > 1 then
 			if not count[guildCount] then
 				count[guildCount] = 1
