@@ -37,11 +37,17 @@
 --   - PLAYER_ALIVE                                                           --
 --                                                                            --
 -- # Range Check: --------------------------------------- VERY HIGH CPU USAGE --
---   - Events: Combat Log: - COMBAT_LOG_EVENT_UNFILTERED                      --
---             Class:      - PLAYER_TARGET_CHANGED                            --
---                           UNIT_HEALTH_FREQUENT                             --
---                           UPDATE_MOUSEOVER_UNIT                            --
---                           UNIT_TARGET                                      --
+--   - Events:                                                                --
+--           Combat Log: --- COMBAT_LOG_EVENT_UNFILTERED                      --
+--           Class: -------- PLAYER_TARGET_CHANGED                            --
+--                         - UNIT_HEALTH_FREQUENT                             --
+--                         - UPDATE_MOUSEOVER_UNIT                            --
+--                         - UNIT_TARGET                                      --
+--           Mix: ---------- COMBAT_LOG_EVENT_UNFILTERED                      --
+--                         - PLAYER_TARGET_CHANGED                            --
+--                         - UNIT_HEALTH_FREQUENT                             --
+--                         - UPDATE_MOUSEOVER_UNIT                            --
+--                         - UNIT_TARGET                                      --
 --   - The data to determine the distance to an enemy is not always available.--
 --     This is restricted by the WoW API.                                     --
 --   - This feature is a compromise between CPU usage (FPS), lag/network      --
@@ -176,7 +182,7 @@ local isDeadUpdateStop
 local isLeader
 local isAssistName
 local isAssistUnitId
-local rangeSpellName -- for class-spell based range check
+local rangeSpellName, rangeMin, rangeMax -- for class-spell based range check
 local flagDebuff = 0
 local flags = 0
 local isFlagBG = 0
@@ -193,7 +199,7 @@ local range_SPELL_Frequency     = 0.2       -- rangecheck: [class-spell]: the 0.
 local range_CL_Throttle         = 0         -- rangecheck: [combatlog] C.ombatLogRangeCheck()
 local range_CL_Frequency        = 3         -- rangecheck: [combatlog] 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% combatlog messages filtered (36% vs overhead: two variables, one addition, one number comparison and if filtered one math_random)
 local range_CL_DisplayThrottle  = GetTime() -- rangecheck: [combatlog] display update
-local range_CL_DisplayFrequency = 0.5       -- rangecheck: [combatlog] display update
+local range_CL_DisplayFrequency = 0.33      -- rangecheck: [combatlog] display update
 local leaderThrottle  = 0                   -- leader: C.heckUnitTarget()
 local leaderFrequency = 5                   -- leader: if isLeader is true then pause 5 times(events) until next check (reason: leader does not change often in a bg, irrelevant info anyway)
 -- FORCE UPDATE (precise results) --------------------------------------------------------------------------------------
@@ -205,7 +211,7 @@ local targetCountFrequency   = 30           -- targetcount: a complete raid/raid
 local latestScoreUpdate  = GetTime()        -- scoreupdate: B.attlefieldScoreUpdate()
 local latestScoreWarning = 60               -- scoreupdate: inCombat-warning icon if latest score update is >= 60 seconds
 -- MISC ----------------------------------------------------------------------------------------------------------------
-local range_DisappearTime = 10              -- rangecheck: display update - clears range display if an enemy was not seen for 10 seconds
+local range_DisappearTime = 8               -- rangecheck: display update - clears range display if an enemy was not seen for 8 seconds
 
 local playerLevel = UnitLevel("player") -- LVLCHK
 local isLowLevel
@@ -329,53 +335,58 @@ local x_TANK    = 2
 local x_DAMAGE  = 3
 local x_UNKNOWN = 4
 local classimg = "Interface\\WorldStateFrame\\Icons-Classes"
-local classes = {
-	DEATHKNIGHT = {icon = {0.26562501, 0.48437499, 0.51562501, 0.73437499}, -- ( 68/256, 124/256, 132/256, 188/256)
+local classes = { -- 2 62 66 126 130 190 194 254
+	DEATHKNIGHT = {icon = {0.25781250, 0.49218750, 0.50781250, 0.74218750}, -- ( 66/256, 126/256, 130/256, 190/256)
 	               spec = {[1] = {role = x_TANK,    icon = "Interface\\Icons\\Spell_Deathknight_BloodPresence"},    -- Blood
 	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Deathknight_FrostPresence"},    -- Frost
 	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Deathknight_UnholyPresence"},   -- Unholy
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	DRUID       = {icon = {0.75781251, 0.97656249, 0.01562501, 0.23437499}, -- (194/256, 250/256,   4/256,  60/256)
+	DRUID       = {icon = {0.75781250, 0.99218750, 0.00781250, 0.24218750}, -- (194/256, 254/256,   2/256,  62/256)
 	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_StarFall"},              -- Balance
 	                       [2] = {role = x_TANK,    icon = "Interface\\Icons\\Ability_Racial_BearForm"},            -- Feral Combat
 	                       [3] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Nature_HealingTouch"},          -- Restoration
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	HUNTER      = {icon = {0.01953125, 0.23828125, 0.26562501, 0.48437499}, -- (  5/256,  61/256,  68/256, 124/256)
+	HUNTER      = {icon = {0.00781250, 0.24218750, 0.25781250, 0.49218750}, -- (  2/256,  62/256,  66/256, 126/256)
 	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_BestialDiscipline"},   -- Beast Mastery
 	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_FocusedAim"},          -- Marksmanship
 	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_Camouflage"},          -- Survival
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	MAGE        = {icon = {0.26562501, 0.48437499, 0.01562501, 0.23437499}, -- ( 68/256, 124/256,   4/256,  60/256)
+	MAGE        = {icon = {0.25781250, 0.49218750, 0.00781250, 0.24218750}, -- ( 66/256, 126/256,   2/256,  62/256)
 	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Holy_MagicalSentry"},           -- Arcane
 	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Fire_FireBolt02"},              -- Fire
 	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Frost_FrostBolt02"},            -- Frost
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	PALADIN     = {icon = {0.01953125, 0.23828125, 0.51562501, 0.73437499}, -- (  5/256,  61/256, 132/256, 188/256)
+--	MONK        = {icon = {0.50781250, 0.74218750, 0.50781250, 0.74218750}, -- (130/256, 190/256, 130/256, 190/256) -- TODO
+--	               spec = {[1] = {role = x_TANK,    icon = "Interface\\Icons\\Spell_Monk_Brewmaster_Spec"},         -- Brewmaster
+--	                       [2] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Monk_Mistweaver_Spec"},         -- Mistweaver
+--	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Monk_Windwalker_Spec"},         -- Windwalker
+--	                       [4] = {role = x_UNKNOWN, icon = nil}}},
+	PALADIN     = {icon = {0.00781250, 0.24218750, 0.50781250, 0.74218750}, -- (  2/256,  62/256, 130/256, 190/256)
 	               spec = {[1] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Holy_HolyBolt"},                -- Holy
 	                       [2] = {role = x_TANK,    icon = "Interface\\Icons\\Ability_Paladin_ShieldoftheTemplar"}, -- Protection
 	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Holy_AuraOfLight"},             -- Retribution
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	PRIEST      = {icon = {0.51171875, 0.73046875, 0.26562501, 0.48437499}, -- (131/256, 187/256,  68/256, 124/256)
+	PRIEST      = {icon = {0.50781250, 0.74218750, 0.25781250, 0.49218750}, -- (130/256, 190/256,  66/256, 126/256)
 	               spec = {[1] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Holy_PowerWordShield"},         -- Discipline
 	                       [2] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Holy_GuardianSpirit"},          -- Holy
 	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_ShadowWordPain"},        -- Shadow
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	ROGUE       = {icon = {0.51171875, 0.73046875, 0.01562501, 0.23437499}, -- (131/256, 187/256,   4/256,  60/256)
+	ROGUE       = {icon = {0.50781250, 0.74218750, 0.00781250, 0.24218750}, -- (130/256, 190/256,   2/256,  62/256)
 	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Rogue_Eviscerate"},           -- Assassination
 	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_BackStab"},                   -- Combat
 	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Stealth"},                    -- Subtlety
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	SHAMAN      = {icon = {0.26562501, 0.48437499, 0.26562501, 0.48437499}, -- ( 68/256, 124/256,  68/256, 124/256)
+	SHAMAN      = {icon = {0.25781250, 0.49218750, 0.25781250, 0.49218750}, -- ( 66/256, 126/256,  66/256, 126/256)
 	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_Lightning"},             -- Elemental
 	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_LightningShield"},       -- Enhancement
 	                       [3] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Nature_MagicImmunity"},         -- Restoration
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	WARLOCK     = {icon = {0.75781251, 0.97656249, 0.26562501, 0.48437499}, -- (194/256, 250/256,  68/256, 124/256)
+	WARLOCK     = {icon = {0.75781250, 0.99218750, 0.25781250, 0.49218750}, -- (194/256, 254/256,  66/256, 126/256)
 	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_DeathCoil"},             -- Affliction
 	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_Metamorphosis"},         -- Demonology
 	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_RainOfFire"},            -- Destruction
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	WARRIOR     = {icon = {0.01953125, 0.23828125, 0.01562501, 0.23437499}, -- (  5/256,  61/256,   4/256,  60/256)
+	WARRIOR     = {icon = {0.00781250, 0.24218750, 0.00781250, 0.24218750}, -- (  2/256,  62/256,   2/256,  62/256)
 	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Warrior_SavageBlow"},         -- Arms
 	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Warrior_InnerRage"},          -- Fury
 	                       [3] = {role = x_TANK,    icon = "Interface\\Icons\\Ability_Warrior_DefensiveStance"},    -- Protection
@@ -406,34 +417,37 @@ local classesINT_LOCALIZED = { -- .cid .loc
  [8] = {cid = "SHAMAN",      blizz = classes_BLIZZ.SHAMAN      or  5, eng = "Shaman",       loc = classes_LOCALIZED.SHAMAN or "Shaman"},
  [9] = {cid = "WARLOCK",     blizz = classes_BLIZZ.WARLOCK     or  9, eng = "Warlock",      loc = classes_LOCALIZED.WARLOCK or "Warlock"},
 [10] = {cid = "WARRIOR",     blizz = classes_BLIZZ.WARRIOR     or  1, eng = "Warrior",      loc = classes_LOCALIZED.WARRIOR or "Warrior"},
+--[11] = {cid = "MONK",        blizz = classes_BLIZZ.MONK        or 11, eng = "Monk",         loc = classes_LOCALIZED.MONK or "Monk"}, -- TODO
 }
 
 local ranges = {}
-ranges.DEATHKNIGHT = 47541 -- Death Coil        (30yd/m) - Lvl 55
-ranges.DRUID       =  5176 -- Wrath             (40yd/m) - Lvl  1
-ranges.HUNTER      =    75 -- Auto Shot       (5-40yd/m) - Lvl  1
-ranges.MAGE        =   133 -- Fireball          (40yd/m) - Lvl  1
-ranges.PALADIN     = 62124 -- Hand of Reckoning (30yd/m) - Lvl 14 -- PAL14
-ranges.PRIEST      =   589 -- Shadow Word: Pain (40yd/m) - Lvl  4
-ranges.ROGUE       =  6770 -- Sap               (10yd/m) - Lvl 10
-ranges.SHAMAN      =   403 -- Lightning Bolt    (30yd/m) - Lvl  1
-ranges.WARLOCK     =   686 -- Shadow Bolt       (40yd/m) - Lvl  1
-ranges.WARRIOR     =   100 -- Charge          (8-25yd/m) - Lvl  3
+ranges.DEATHKNIGHT =  47541 -- Death Coil        (30yd/m) - Lvl 55
+ranges.DRUID       =   5176 -- Wrath             (40yd/m) - Lvl  1
+ranges.HUNTER      =     75 -- Auto Shot       (5-40yd/m) - Lvl  1
+ranges.MAGE        =    133 -- Fireball          (40yd/m) - Lvl  1
+--ranges.MONK        = 115546 -- Provoke           (40yd/m) - Lvl 14 MON14 TODO
+ranges.PALADIN     =  62124 -- Hand of Reckoning (30yd/m) - Lvl 14 PAL14
+ranges.PRIEST      =    589 -- Shadow Word: Pain (40yd/m) - Lvl  4
+ranges.ROGUE       =   6770 -- Sap               (10yd/m) - Lvl 10
+ranges.SHAMAN      =    403 -- Lightning Bolt    (30yd/m) - Lvl  1
+ranges.WARLOCK     =    686 -- Shadow Bolt       (40yd/m) - Lvl  1
+ranges.WARRIOR     =    100 -- Charge          (8-25yd/m) - Lvl  3
+--for k,v in pairs(ranges) do local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(v) print(k, v, name, minRange, maxRange) end -- TEST
 
 local rangeTypeName = {}
-rangeTypeName[1] = COMBAT_LOG.." |cffffff79(0-73)|r"
+rangeTypeName[1] = "1) CombatLog |cffffff79(0-73)|r"
 
 local rangeDisplay = {} -- RANGE_DISP_LAY
-rangeDisplay[1]  = DEFAULT.." 100"
-rangeDisplay[2]  = DEFAULT.." 100 m"
-rangeDisplay[3]  = DEFAULT.." 50"
-rangeDisplay[4]  = DEFAULT.." 50 m"
-rangeDisplay[5]  = DEFAULT.." 10"
-rangeDisplay[6]  = DEFAULT.." 10 m"
-rangeDisplay[7]  = "X 100 m"
-rangeDisplay[8]  = "X 50 m"
+rangeDisplay[1]  = "STD 100" -- STD = Standard
+rangeDisplay[2]  = "STD 100 mono"
+rangeDisplay[3]  = "STD 50"
+rangeDisplay[4]  = "STD 50 mono"
+rangeDisplay[5]  = "STD 10"
+rangeDisplay[6]  = "STD 10 mono"
+rangeDisplay[7]  = "X 100 mono" -- X = without block
+rangeDisplay[8]  = "X 50 mono"
 rangeDisplay[9]  = "X 10"
-rangeDisplay[10] = "X 10 m"
+rangeDisplay[10] = "X 10 mono"
 
 local function rt(H,E,M,P) return E,P,E,M,H,P,H,M end -- magical 180 degree texture cut center rotation
 
@@ -551,17 +565,12 @@ local function SortDetailPullDownFunc(value) -- PDFUNC
 end
 
 local function RangeCheckTypePullDownFunc(value) -- PDFUNC
-	if value == 1 then
-		BattlegroundTargets_Options.ButtonAvgRangeCheck[currentSize]   = true
-		                        OPT.ButtonAvgRangeCheck[currentSize]   = true
-		BattlegroundTargets_Options.ButtonClassRangeCheck[currentSize] = false
-		                        OPT.ButtonClassRangeCheck[currentSize] = false
-	elseif value == 2 then
-		BattlegroundTargets_Options.ButtonAvgRangeCheck[currentSize]   = false
-		                        OPT.ButtonAvgRangeCheck[currentSize]   = false
-		BattlegroundTargets_Options.ButtonClassRangeCheck[currentSize] = true
-		                        OPT.ButtonClassRangeCheck[currentSize] = true
-	end
+	-- 1) combatlog
+	-- 2) class-spell based
+	-- 3) mix class-spell based + combatlog (range: 0-45)
+	-- 4) mix class-spell based + combatlog (range: class-spell dependent)
+	BattlegroundTargets_Options.ButtonTypeRangeCheck[currentSize] = value
+	                        OPT.ButtonTypeRangeCheck[currentSize] = value
 end
 
 local function RangeDisplayPullDownFunc(value) -- PDFUNC
@@ -1316,7 +1325,7 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if BattlegroundTargets_Options.version == nil then
-		BattlegroundTargets_Options.version = 13
+		BattlegroundTargets_Options.version = 14
 	end
 
 	if BattlegroundTargets_Options.version == 1 then
@@ -1509,6 +1518,22 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 13
 	end
 
+	if BattlegroundTargets_Options.version == 13 then -- range check option change
+		BattlegroundTargets_Options.ButtonTypeRangeCheck = {}
+		if BattlegroundTargets_Options.ButtonAvgRangeCheck then
+			if BattlegroundTargets_Options.ButtonAvgRangeCheck[10] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[10] = 1 else BattlegroundTargets_Options.ButtonTypeRangeCheck[10] = 2 end
+			if BattlegroundTargets_Options.ButtonAvgRangeCheck[15] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[15] = 1 else BattlegroundTargets_Options.ButtonTypeRangeCheck[15] = 2 end
+			if BattlegroundTargets_Options.ButtonAvgRangeCheck[40] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[40] = 1 else BattlegroundTargets_Options.ButtonTypeRangeCheck[40] = 2 end
+		elseif BattlegroundTargets_Options.ButtonClassRangeCheck then
+			if BattlegroundTargets_Options.ButtonClassRangeCheck[10] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[10] = 2 else BattlegroundTargets_Options.ButtonTypeRangeCheck[10] = 1 end
+			if BattlegroundTargets_Options.ButtonClassRangeCheck[15] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[15] = 2 else BattlegroundTargets_Options.ButtonTypeRangeCheck[15] = 1 end
+			if BattlegroundTargets_Options.ButtonClassRangeCheck[40] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[40] = 2 else BattlegroundTargets_Options.ButtonTypeRangeCheck[40] = 1 end
+		end
+		BattlegroundTargets_Options.ButtonAvgRangeCheck = nil
+		BattlegroundTargets_Options.ButtonClassRangeCheck = nil
+		BattlegroundTargets_Options.version = 14
+	end
+
 	if BattlegroundTargets_Options.pos                        == nil then BattlegroundTargets_Options.pos                        = {}    end
 	if BattlegroundTargets_Options.MinimapButton              == nil then BattlegroundTargets_Options.MinimapButton              = false end
 	if BattlegroundTargets_Options.MinimapButtonPos           == nil then BattlegroundTargets_Options.MinimapButtonPos           = -90   end
@@ -1574,8 +1599,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonShowHealthBar          == nil then BattlegroundTargets_Options.ButtonShowHealthBar          = {}    end
 	if BattlegroundTargets_Options.ButtonShowHealthText         == nil then BattlegroundTargets_Options.ButtonShowHealthText         = {}    end
 	if BattlegroundTargets_Options.ButtonRangeCheck             == nil then BattlegroundTargets_Options.ButtonRangeCheck             = {}    end
-	if BattlegroundTargets_Options.ButtonAvgRangeCheck          == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck          = {}    end
-	if BattlegroundTargets_Options.ButtonClassRangeCheck        == nil then BattlegroundTargets_Options.ButtonClassRangeCheck        = {}    end
+	if BattlegroundTargets_Options.ButtonTypeRangeCheck         == nil then BattlegroundTargets_Options.ButtonTypeRangeCheck         = {}    end
 	if BattlegroundTargets_Options.ButtonRangeDisplay           == nil then BattlegroundTargets_Options.ButtonRangeDisplay           = {}    end
 	if BattlegroundTargets_Options.ButtonSortBy                 == nil then BattlegroundTargets_Options.ButtonSortBy                 = {}    end
 	if BattlegroundTargets_Options.ButtonSortDetail             == nil then BattlegroundTargets_Options.ButtonSortDetail             = {}    end
@@ -1607,8 +1631,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonShowHealthBar[10]      == nil then BattlegroundTargets_Options.ButtonShowHealthBar[10]      = false end
 	if BattlegroundTargets_Options.ButtonShowHealthText[10]     == nil then BattlegroundTargets_Options.ButtonShowHealthText[10]     = false end
 	if BattlegroundTargets_Options.ButtonRangeCheck[10]         == nil then BattlegroundTargets_Options.ButtonRangeCheck[10]         = false end
-	if BattlegroundTargets_Options.ButtonAvgRangeCheck[10]      == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[10]      = false end
-	if BattlegroundTargets_Options.ButtonClassRangeCheck[10]    == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[10]    = true  end
+	if BattlegroundTargets_Options.ButtonTypeRangeCheck[10]     == nil then BattlegroundTargets_Options.ButtonTypeRangeCheck[10]     = 2     end
 	if BattlegroundTargets_Options.ButtonRangeDisplay[10]       == nil then BattlegroundTargets_Options.ButtonRangeDisplay[10]       = 1     end
 	if BattlegroundTargets_Options.ButtonSortBy[10]             == nil then BattlegroundTargets_Options.ButtonSortBy[10]             = 1     end
 	if BattlegroundTargets_Options.ButtonSortDetail[10]         == nil then BattlegroundTargets_Options.ButtonSortDetail[10]         = 3     end
@@ -1640,8 +1663,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonShowHealthBar[15]      == nil then BattlegroundTargets_Options.ButtonShowHealthBar[15]      = false end
 	if BattlegroundTargets_Options.ButtonShowHealthText[15]     == nil then BattlegroundTargets_Options.ButtonShowHealthText[15]     = false end
 	if BattlegroundTargets_Options.ButtonRangeCheck[15]         == nil then BattlegroundTargets_Options.ButtonRangeCheck[15]         = false end
-	if BattlegroundTargets_Options.ButtonAvgRangeCheck[15]      == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[15]      = false end
-	if BattlegroundTargets_Options.ButtonClassRangeCheck[15]    == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[15]    = true  end
+	if BattlegroundTargets_Options.ButtonTypeRangeCheck[15]     == nil then BattlegroundTargets_Options.ButtonTypeRangeCheck[15]     = 2     end
 	if BattlegroundTargets_Options.ButtonRangeDisplay[15]       == nil then BattlegroundTargets_Options.ButtonRangeDisplay[15]       = 1     end
 	if BattlegroundTargets_Options.ButtonSortBy[15]             == nil then BattlegroundTargets_Options.ButtonSortBy[15]             = 1     end
 	if BattlegroundTargets_Options.ButtonSortDetail[15]         == nil then BattlegroundTargets_Options.ButtonSortDetail[15]         = 3     end
@@ -1673,8 +1695,7 @@ function BattlegroundTargets:InitOptions()
 	if BattlegroundTargets_Options.ButtonShowHealthBar[40]      == nil then BattlegroundTargets_Options.ButtonShowHealthBar[40]      = false end
 	if BattlegroundTargets_Options.ButtonShowHealthText[40]     == nil then BattlegroundTargets_Options.ButtonShowHealthText[40]     = false end
 	if BattlegroundTargets_Options.ButtonRangeCheck[40]         == nil then BattlegroundTargets_Options.ButtonRangeCheck[40]         = false end
-	if BattlegroundTargets_Options.ButtonAvgRangeCheck[40]      == nil then BattlegroundTargets_Options.ButtonAvgRangeCheck[40]      = false end
-	if BattlegroundTargets_Options.ButtonClassRangeCheck[40]    == nil then BattlegroundTargets_Options.ButtonClassRangeCheck[40]    = true  end
+	if BattlegroundTargets_Options.ButtonTypeRangeCheck[40]     == nil then BattlegroundTargets_Options.ButtonTypeRangeCheck[40]     = 2     end
 	if BattlegroundTargets_Options.ButtonRangeDisplay[40]       == nil then BattlegroundTargets_Options.ButtonRangeDisplay[40]       = 9     end
 	if BattlegroundTargets_Options.ButtonSortBy[40]             == nil then BattlegroundTargets_Options.ButtonSortBy[40]             = 1     end
 	if BattlegroundTargets_Options.ButtonSortDetail[40]         == nil then BattlegroundTargets_Options.ButtonSortDetail[40]         = 3     end
@@ -1708,8 +1729,7 @@ function BattlegroundTargets:InitOptions()
 		if not OPT.ButtonShowHealthBar      then OPT.ButtonShowHealthBar      = {} end OPT.ButtonShowHealthBar[sz]      = BattlegroundTargets_Options.ButtonShowHealthBar[sz]
 		if not OPT.ButtonShowHealthText     then OPT.ButtonShowHealthText     = {} end OPT.ButtonShowHealthText[sz]     = BattlegroundTargets_Options.ButtonShowHealthText[sz]
 		if not OPT.ButtonRangeCheck         then OPT.ButtonRangeCheck         = {} end OPT.ButtonRangeCheck[sz]         = BattlegroundTargets_Options.ButtonRangeCheck[sz]
-		if not OPT.ButtonAvgRangeCheck      then OPT.ButtonAvgRangeCheck      = {} end OPT.ButtonAvgRangeCheck[sz]      = BattlegroundTargets_Options.ButtonAvgRangeCheck[sz]
-		if not OPT.ButtonClassRangeCheck    then OPT.ButtonClassRangeCheck    = {} end OPT.ButtonClassRangeCheck[sz]    = BattlegroundTargets_Options.ButtonClassRangeCheck[sz]
+		if not OPT.ButtonTypeRangeCheck     then OPT.ButtonTypeRangeCheck     = {} end OPT.ButtonTypeRangeCheck[sz]     = BattlegroundTargets_Options.ButtonTypeRangeCheck[sz]
 		if not OPT.ButtonRangeDisplay       then OPT.ButtonRangeDisplay       = {} end OPT.ButtonRangeDisplay[sz]       = BattlegroundTargets_Options.ButtonRangeDisplay[sz]
 		if not OPT.ButtonSortBy             then OPT.ButtonSortBy             = {} end OPT.ButtonSortBy[sz]             = BattlegroundTargets_Options.ButtonSortBy[sz]
 		if not OPT.ButtonSortDetail         then OPT.ButtonSortDetail         = {} end OPT.ButtonSortDetail[sz]         = BattlegroundTargets_Options.ButtonSortDetail[sz]
@@ -3117,30 +3137,55 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- ----- range check ----------------------------------------
 	local rangeW = 0
 		----- text
-		local _, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(ranges[playerClassEN])
-		rangeTypeName[2] = CLASS.." |cffffff79("..(minRange or "?").."-"..(maxRange or "?")..")|r"
+		local minRange, maxRange
+		if ranges[playerClassEN] then
+			local _, _, _, _, _, _, _, minR, maxR = GetSpellInfo(ranges[playerClassEN])
+			minRange = minR
+			maxRange = maxR
+		end
+		minRange = minRange or "?"
+		maxRange = maxRange or "?"
+		rangeTypeName[2] = "2) "..CLASS.." |cffffff79("..minRange.."-"..maxRange..")|r"
+		rangeTypeName[3] = "3) "..L["Mix"].." 1 |cffffff79("..minRange.."-"..maxRange..") + (0-45)|r"
+		rangeTypeName[4] = "4) "..L["Mix"].." 2 |cffffff79("..minRange.."-"..maxRange..") + ("..minRange.."-"..maxRange..")|r"
 		local buttonName = rangeTypeName[1]
-		if OPT.ButtonClassRangeCheck[currentSize] then
+		if OPT.ButtonTypeRangeCheck[currentSize] == 2 then
 			buttonName = rangeTypeName[2]
+		elseif OPT.ButtonTypeRangeCheck[currentSize] == 3 then
+			buttonName = rangeTypeName[3]
+		elseif OPT.ButtonTypeRangeCheck[currentSize] == 4 then
+			buttonName = rangeTypeName[4]
 		end
 		local rangeInfoTxt = ""
 		rangeInfoTxt = rangeInfoTxt..rangeTypeName[1]..":\n"
-		rangeInfoTxt = rangeInfoTxt.." |cffffffff"..L["This option uses CombatLog scanning."].."|r\n\n\n\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["This option uses the CombatLog to check range."].."|r\n\n\n"
 		rangeInfoTxt = rangeInfoTxt..rangeTypeName[2]..":\n"
-		rangeInfoTxt = rangeInfoTxt.." |cffffffff"..L["This option uses a pre-defined spell to check range:"].."|r\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["This option uses a pre-defined spell to check range:"].."|r\n"
 		table_sort(classesINT_LOCALIZED, function(a, b) if a.loc < b.loc then return true end end)
+		local playerMClass = "?"
 		for i = 1, #classesINT_LOCALIZED do
 			local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(ranges[ classesINT_LOCALIZED[i].cid ])
+			local classStr = "|cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[ classesINT_LOCALIZED[i].cid ]..")|r"
 			if classesINT_LOCALIZED[i].cid == playerClassEN then
-				rangeInfoTxt = rangeInfoTxt..">>> "
-			end
-			rangeInfoTxt = rangeInfoTxt.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r  "..(minRange or "?").."-"..(maxRange or "?").."  |cffffffff"..(name or UNKNOWN).."|r  |cffbbbbbb(spell ID = "..ranges[ classesINT_LOCALIZED[i].cid ]..")|r"
-			if classesINT_LOCALIZED[i].cid == playerClassEN then
-				rangeInfoTxt = rangeInfoTxt.." <<<"
+				playerMClass = "|cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r"
+				rangeInfoTxt = rangeInfoTxt..">>> "..classStr.." <<<"
+			else
+				rangeInfoTxt = rangeInfoTxt.."   "..classStr
 			end
 			rangeInfoTxt = rangeInfoTxt.."\n"
 		end
-		rangeInfoTxt = rangeInfoTxt.."\n\n\n|cffffffff"..L["Disable this option if you have CPU/FPS problems in combat."].."|r"
+		rangeInfoTxt = rangeInfoTxt.."\n\n"..rangeTypeName[3]..":\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..CLASS..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog:|r |cffffff79(0-45)|r\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffaaaaaa(CombatLog: "..L["if you are attacked only"]..")|r\n"
+		rangeInfoTxt = rangeInfoTxt.."\n\n"..rangeTypeName[4]..":\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..CLASS..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog|r |cffaaaaaa"..L["(class dependent)"]..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffaaaaaa(CombatLog: "..L["if you are attacked only"]..")|r\n"
+		rangeInfoTxt = rangeInfoTxt.."\n\n\n"
+		rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:24|t"
+		rangeInfoTxt = rangeInfoTxt.."|cffffffff "..L["Disable this option if you have CPU/FPS problems in combat."].." |r"
+		rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:24|t"
 		----- text
 	-- range check
 	GVAR.OptionsFrame.RangeCheck = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -3191,8 +3236,8 @@ function BattlegroundTargets:CreateOptionsFrame()
 		-----
 		local txtWidth = GVAR.OptionsFrame.RangeCheckInfo.Text:GetStringWidth()
 		local txtHeight = GVAR.OptionsFrame.RangeCheckInfo.Text:GetStringHeight()
-		GVAR.OptionsFrame.RangeCheckInfo.TextFrame:SetWidth(txtWidth+20)
-		GVAR.OptionsFrame.RangeCheckInfo.TextFrame:SetHeight(txtHeight+20)
+		GVAR.OptionsFrame.RangeCheckInfo.TextFrame:SetWidth(txtWidth+30)
+		GVAR.OptionsFrame.RangeCheckInfo.TextFrame:SetHeight(txtHeight+30)
 		GVAR.OptionsFrame.RangeCheckInfo.Text:SetWidth(txtWidth+10)
 		GVAR.OptionsFrame.RangeCheckInfo.Text:SetHeight(txtHeight+10)
 		-----
@@ -3204,7 +3249,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		"RangeType",
 		buttonName,
 		0,
-		2,
+		4,
 		RangeCheckTypePullDownFunc
 	)
 	GVAR.OptionsFrame.RangeCheckTypePullDown:SetPoint("LEFT", GVAR.OptionsFrame.RangeCheckInfo, "RIGHT", 10, 0)
@@ -3752,10 +3797,7 @@ function BattlegroundTargets:SetOptions()
 	GVAR.OptionsFrame.ShowHealthText:SetChecked(OPT.ButtonShowHealthText[currentSize])
 
 	GVAR.OptionsFrame.RangeCheck:SetChecked(OPT.ButtonRangeCheck[currentSize])
-	GVAR.OptionsFrame.RangeCheckTypePullDown.PullDownButtonText:SetText(rangeTypeName[1])
-	if OPT.ButtonClassRangeCheck[currentSize] then
-		GVAR.OptionsFrame.RangeCheckTypePullDown.PullDownButtonText:SetText(rangeTypeName[2])
-	end
+	GVAR.OptionsFrame.RangeCheckTypePullDown.PullDownButtonText:SetText(rangeTypeName[ OPT.ButtonTypeRangeCheck[currentSize] ])
 	GVAR.OptionsFrame.RangeDisplayPullDown.PullDownButtonText:SetText(rangeDisplay[ OPT.ButtonRangeDisplay[currentSize] ])
 
 	GVAR.OptionsFrame.SortByPullDown.PullDownButtonText:SetText(sortBy[ OPT.ButtonSortBy[currentSize] ])
@@ -4834,8 +4876,8 @@ function BattlegroundTargets:EnableConfigMode()
 		ENEMY_Data[2].talentSpec = TLT.PRIEST[3]
 		ENEMY_Data[3] = {}
 		ENEMY_Data[3].name = TARGET.."_Cc-servername"
-		ENEMY_Data[3].classToken = "WARLOCK"
-		ENEMY_Data[3].talentSpec = TLT.WARLOCK[1]
+		ENEMY_Data[3].classToken = "WARLOCK" -- "MONK" TODO
+		ENEMY_Data[3].talentSpec = TLT.WARLOCK[1] -- TLT.MONK[2]
 		ENEMY_Data[4] = {}
 		ENEMY_Data[4].name = TARGET.."_Dd-servername"
 		ENEMY_Data[4].classToken = "HUNTER"
@@ -4910,8 +4952,8 @@ function BattlegroundTargets:EnableConfigMode()
 		ENEMY_Data[21].talentSpec = TLT.PRIEST[3]
 		ENEMY_Data[22] = {}
 		ENEMY_Data[22].name = TARGET.."_Vv-servername"
-		ENEMY_Data[22].classToken = "WARRIOR"
-		ENEMY_Data[22].talentSpec = TLT.WARRIOR[1]
+		ENEMY_Data[22].classToken = "WARRIOR" -- "MONK" TODO
+		ENEMY_Data[22].talentSpec = TLT.WARRIOR[1] -- TLT.MONK[1]
 		ENEMY_Data[23] = {}
 		ENEMY_Data[23].name = TARGET.."_Ww-servername"
 		ENEMY_Data[23].classToken = "SHAMAN"
@@ -4934,8 +4976,8 @@ function BattlegroundTargets:EnableConfigMode()
 		ENEMY_Data[27].talentSpec = TLT.PRIEST[2]
 		ENEMY_Data[28] = {}
 		ENEMY_Data[28].name = TARGET.."_Cd-servername"
-		ENEMY_Data[28].classToken = "MAGE"
-		ENEMY_Data[28].talentSpec = TLT.MAGE[2]
+		ENEMY_Data[28].classToken = "MAGE" -- "MONK" TODO
+		ENEMY_Data[28].talentSpec = TLT.MAGE[2] -- TLT.MONK[3]
 		ENEMY_Data[29] = {}
 		ENEMY_Data[29].name = TARGET.."_Ef-servername"
 		ENEMY_Data[29].classToken = "ROGUE"
@@ -5130,8 +5172,6 @@ function BattlegroundTargets:SetConfigButtonValues()
 	local ButtonShowHealthBar   = OPT.ButtonShowHealthBar[currentSize]
 	local ButtonShowHealthText  = OPT.ButtonShowHealthText[currentSize]
 	local ButtonRangeCheck      = OPT.ButtonRangeCheck[currentSize]
-	local ButtonAvgRangeCheck   = OPT.ButtonAvgRangeCheck[currentSize]
-	local ButtonClassRangeCheck = OPT.ButtonClassRangeCheck[currentSize]
 	local ButtonRangeDisplay    = OPT.ButtonRangeDisplay[currentSize]
 	local ButtonShowGuildGroup  = OPT.ButtonShowGuildGroup[currentSize]
 
@@ -5168,7 +5208,7 @@ function BattlegroundTargets:SetConfigButtonValues()
 
 		-- range
 		if ButtonRangeCheck then
-			if (ButtonAvgRangeCheck or ButtonClassRangeCheck) and testRange[i] < 40 then
+			if testRange[i] < 40 then
 				Range_Display(true, GVAR_TargetButton, ButtonRangeDisplay)
 			else
 				Range_Display(false, GVAR_TargetButton, ButtonRangeDisplay)
@@ -5611,10 +5651,8 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	                        OPT.ButtonShowHealthText[destinationSize]     =                         OPT.ButtonShowHealthText[sourceSize]
 	BattlegroundTargets_Options.ButtonRangeCheck[destinationSize]         = BattlegroundTargets_Options.ButtonRangeCheck[sourceSize]
 	                        OPT.ButtonRangeCheck[destinationSize]         =                         OPT.ButtonRangeCheck[sourceSize]
-	BattlegroundTargets_Options.ButtonAvgRangeCheck[destinationSize]      = BattlegroundTargets_Options.ButtonAvgRangeCheck[sourceSize]
-	                        OPT.ButtonAvgRangeCheck[destinationSize]      =                         OPT.ButtonAvgRangeCheck[sourceSize]
-	BattlegroundTargets_Options.ButtonClassRangeCheck[destinationSize]    = BattlegroundTargets_Options.ButtonClassRangeCheck[sourceSize]
-	                        OPT.ButtonClassRangeCheck[destinationSize]    =                         OPT.ButtonClassRangeCheck[sourceSize]
+	BattlegroundTargets_Options.ButtonTypeRangeCheck[destinationSize]     = BattlegroundTargets_Options.ButtonTypeRangeCheck[sourceSize]
+	                        OPT.ButtonTypeRangeCheck[destinationSize]     =                         OPT.ButtonTypeRangeCheck[sourceSize]
 	BattlegroundTargets_Options.ButtonRangeDisplay[destinationSize]       = BattlegroundTargets_Options.ButtonRangeDisplay[sourceSize]
 	                        OPT.ButtonRangeDisplay[destinationSize]       =                         OPT.ButtonRangeDisplay[sourceSize]
 	BattlegroundTargets_Options.ButtonSortBy[destinationSize]             = BattlegroundTargets_Options.ButtonSortBy[sourceSize]
@@ -5972,7 +6010,10 @@ function BattlegroundTargets:MainDataUpdate()
 	end
 
 	if ButtonRangeCheck then
-		BattlegroundTargets:UpdateRange(GetTime())
+		local curTime = GetTime()
+		if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
+		range_CL_DisplayThrottle = curTime
+		BattlegroundTargets:UpdateRange(curTime)
 	end
 
 	-- GLDGRP
@@ -6299,19 +6340,19 @@ function BattlegroundTargets:CheckFlagCarrierEND() -- FLAGSPY
 	   not OPT.ButtonShowAssist[currentSize] and
 	   not OPT.ButtonShowLeader[currentSize] and
 	   not OPT.ButtonShowGuildGroup[currentSize] and
-	   not OPT.ButtonClassRangeCheck[currentSize] and
+	   (not OPT.ButtonRangeCheck[currentSize] or (OPT.ButtonRangeCheck[currentSize] and not OPT.ButtonTypeRangeCheck[currentSize] >= 2)) and
 	   not isLowLevel -- LVLCHK
 	then
 		BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
 	end
 	if not OPT.ButtonShowHealthBar[currentSize] and
 	   not OPT.ButtonShowHealthText[currentSize] and
-	   not OPT.ButtonClassRangeCheck[currentSize]
+	   (not OPT.ButtonRangeCheck[currentSize] or (OPT.ButtonRangeCheck[currentSize] and not OPT.ButtonTypeRangeCheck[currentSize] >= 2))
 	then
 		BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
 	end
 	if not OPT.ButtonShowTarget[currentSize] and
-	   not OPT.ButtonClassRangeCheck[currentSize]
+	   (not OPT.ButtonRangeCheck[currentSize] or (OPT.ButtonRangeCheck[currentSize] and not OPT.ButtonTypeRangeCheck[currentSize] >= 2))
 	then
 		BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
 	end
@@ -6528,32 +6569,43 @@ function BattlegroundTargets:BattlefieldCheck()
 			end
 
 			rangeSpellName = nil
+			rangeMin = nil
+			rangeMax = nil
 			if OPT.ButtonRangeCheck[currentSize] then
-				if OPT.ButtonAvgRangeCheck[currentSize] then
+				if OPT.ButtonTypeRangeCheck[currentSize] == 1 then
 					BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-				elseif OPT.ButtonClassRangeCheck[currentSize] then
-					if ranges[playerClassEN] and IsSpellKnown( ranges[playerClassEN] ) then
-						rangeSpellName = GetSpellInfo( ranges[playerClassEN] )
-					end
-					if not rangeSpellName then
-						if playerClassEN == "PALADIN" then
-							if playerLevel < 14 then -- PAL14
-								Print("ERROR", "PALADIN: Required level for class-spell based rangecheck is 14.") 
+				elseif OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
+
+					if ranges[playerClassEN] then
+						if IsSpellKnown(ranges[playerClassEN]) then
+							rangeSpellName, _, _, _, _, _, _, rangeMin, rangeMax = GetSpellInfo(ranges[playerClassEN])
+							if not rangeSpellName then
+								Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
+								Print("Please contact addon author. Thanks.")
+							elseif (not rangeMin or not rangeMax) or (rangeMin <= 0 and rangeMax <= 0) then
+								Print("ERROR", "spell min/max fail (rangecheck)", locale, rangeSpellName, rangeMin, rangeMax)
+								Print("Please contact addon author. Thanks.")
+							else
+								BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
+								BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+								BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
+								BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+								if OPT.ButtonTypeRangeCheck[currentSize] >= 3 then
+									BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+								end
 							end
-						end
-						if ranges[playerClassEN] then
-							local spellName = GetSpellInfo( ranges[playerClassEN] )
-							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id =", ranges[playerClassEN], spellName)
+						elseif (playerClassEN == "PALADIN" or playerClassEN == "MONK") and playerLevel < 14 then -- PAL14 MON14 TODO
+							Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.")
+							Print("Range check disabled.")
 						else
-							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN)
+							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
 							Print("Please contact addon author. Thanks.")
 						end
 					else
-						BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
-						BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-						BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
-						BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+						Print("ERROR", "unknown class (rangecheck)", locale, playerClassEN)
+						Print("Please contact addon author. Thanks.")
 					end
+
 				end
 			end
 
@@ -6743,7 +6795,7 @@ function BattlegroundTargets:CheckPlayerFocus()
 	end
 
 	-- class_range (Check Player Focus)
-	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
+	if rangeSpellName and OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
 		local curTime = GetTime()
 		local Name2Range = ENEMY_Name2Range[focusName]
 		if Name2Range then
@@ -7013,7 +7065,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	end
 
 	-- class_range (Check Unit Target)
-	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
+	if rangeSpellName and OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
 		if GVAR_TargetButton then
 			local Name2Range = ENEMY_Name2Range[enemyName]
 			if Name2Range then
@@ -7099,7 +7151,7 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 	end
 
 	-- class_range (Check Unit Health)
-	if rangeSpellName and OPT.ButtonClassRangeCheck[currentSize] then
+	if rangeSpellName and OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
 		local curTime = GetTime()
 		local Name2Range = ENEMY_Name2Range[targetName]
 		if Name2Range then
@@ -7375,52 +7427,98 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 		if not maxRange then return end
 		SPELL_Range[spellId] = maxRange
 	end
-	if SPELL_Range[spellId] > 45 then return end
 
-	-- enemy attack friend
-	if ENEMY_Names[sourceName] then
-		if destName == playerName then
-			ENEMY_Name2Range[sourceName] = GetTime()
-			local sourceButton = ENEMY_Name2Button[sourceName]
-			if sourceButton then
-				local GVAR_TargetButton = GVAR.TargetButton[sourceButton]
-				if GVAR_TargetButton then
-					Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-				end
-			end
-			return
-		elseif FRIEND_Names[destName] then
-			local curTime = GetTime()
-			if CheckInteractDistance(destName, 1) then -- 1:Inspect=28
+	if OPT.ButtonTypeRangeCheck[currentSize] == 4 then
+
+		if SPELL_Range[spellId] > rangeMax then return end
+		if SPELL_Range[spellId] < rangeMin then return end
+
+		-- enemy attack player
+		if ENEMY_Names[sourceName] then
+			if destName == playerName then
+				local curTime = GetTime()
 				ENEMY_Name2Range[sourceName] = curTime
-			end
-			if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
-			range_CL_DisplayThrottle = curTime
-			BattlegroundTargets:UpdateRange(curTime)
-			return
-		end
-	-- friend attack enemy
-	elseif ENEMY_Names[destName] then
-		if sourceName == playerName then
-			ENEMY_Name2Range[destName] = GetTime()
-			local destButton = ENEMY_Name2Button[destName]
-			if destButton then
-				local GVAR_TargetButton = GVAR.TargetButton[destButton]
-				if GVAR_TargetButton then
-					Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+				local sourceButton = ENEMY_Name2Button[sourceName]
+				if sourceButton then
+					local GVAR_TargetButton = GVAR.TargetButton[sourceButton]
+					if GVAR_TargetButton then
+						Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+					end
 				end
+				if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
+				range_CL_DisplayThrottle = curTime
+				BattlegroundTargets:UpdateRange(curTime)
 			end
-			return
-		elseif FRIEND_Names[sourceName] then
-			local curTime = GetTime()
-			if CheckInteractDistance(sourceName, 1) then -- 1:Inspect=28
-				ENEMY_Name2Range[destName] = curTime
-			end
-			if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
-			range_CL_DisplayThrottle = curTime
-			BattlegroundTargets:UpdateRange(curTime)
-			return
 		end
+
+	elseif OPT.ButtonTypeRangeCheck[currentSize] == 3 then
+
+		if SPELL_Range[spellId] > 45 then return end
+
+		-- enemy attack player
+		if ENEMY_Names[sourceName] then
+			if destName == playerName then
+				local curTime = GetTime()
+				ENEMY_Name2Range[sourceName] = curTime
+				local sourceButton = ENEMY_Name2Button[sourceName]
+				if sourceButton then
+					local GVAR_TargetButton = GVAR.TargetButton[sourceButton]
+					if GVAR_TargetButton then
+						Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+					end
+				end
+				if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
+				range_CL_DisplayThrottle = curTime
+				BattlegroundTargets:UpdateRange(curTime)
+			end
+		end
+
+	else--if OPT.ButtonTypeRangeCheck[currentSize] == 1 then
+
+		if SPELL_Range[spellId] > 45 then return end
+
+		-- enemy attack friend
+		if ENEMY_Names[sourceName] then
+			if destName == playerName then
+				ENEMY_Name2Range[sourceName] = GetTime()
+				local sourceButton = ENEMY_Name2Button[sourceName]
+				if sourceButton then
+					local GVAR_TargetButton = GVAR.TargetButton[sourceButton]
+					if GVAR_TargetButton then
+						Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+					end
+				end
+			elseif FRIEND_Names[destName] then
+				local curTime = GetTime()
+				if CheckInteractDistance(destName, 1) then -- 1:Inspect=28
+					ENEMY_Name2Range[sourceName] = curTime
+				end
+				if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
+				range_CL_DisplayThrottle = curTime
+				BattlegroundTargets:UpdateRange(curTime)
+			end
+		-- friend attack enemy
+		elseif ENEMY_Names[destName] then
+			if sourceName == playerName then
+				ENEMY_Name2Range[destName] = GetTime()
+				local destButton = ENEMY_Name2Button[destName]
+				if destButton then
+					local GVAR_TargetButton = GVAR.TargetButton[destButton]
+					if GVAR_TargetButton then
+						Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+					end
+				end
+			elseif FRIEND_Names[sourceName] then
+				local curTime = GetTime()
+				if CheckInteractDistance(sourceName, 1) then -- 1:Inspect=28
+					ENEMY_Name2Range[destName] = curTime
+				end
+				if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
+				range_CL_DisplayThrottle = curTime
+				BattlegroundTargets:UpdateRange(curTime)
+			end
+		end
+
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -7469,18 +7567,40 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckPlayerLevel() -- LVLCHK
-	if playerLevel > maxLevel then
+	if playerLevel == maxLevel then
 		isLowLevel = nil
 		BattlegroundTargets:UnregisterEvent("PLAYER_LEVEL_UP")
-		Print("ERROR", "wrong level", locale, playerLevel, maxLevel)
-		Print("Please contact addon author. Thanks.")
 	elseif playerLevel < maxLevel then
 		isLowLevel = true
 		BattlegroundTargets:RegisterEvent("PLAYER_LEVEL_UP")
-	else--if playerLevel == maxLevel then
+	else--if playerLevel > maxLevel then
 		isLowLevel = nil
 		BattlegroundTargets:UnregisterEvent("PLAYER_LEVEL_UP")
+		Print("ERROR", "wrong level", locale, playerLevel, maxLevel)
 	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CheckFaction()
+	local faction = UnitFactionGroup("player")
+	if faction == "Horde" then
+		playerFactionDEF   = 0 -- Horde
+		oppositeFactionDEF = 1 -- Alliance
+	elseif faction == "Alliance" then
+		playerFactionDEF   = 1 -- Alliance
+		oppositeFactionDEF = 0 -- Horde
+	elseif faction == "Pandaren" or playerLevel < 10 then -- TODO
+		playerFactionDEF   = 1 -- Dummy
+		oppositeFactionDEF = 0 -- Dummy
+	else
+		Print("ERROR", "unknown faction", locale, faction)
+		Print("Please contact addon author. Thanks.")
+		playerFactionDEF   = 1 -- Dummy
+		oppositeFactionDEF = 0 -- Dummy
+	end
+	playerFactionBG   = playerFactionDEF
+	oppositeFactionBG = oppositeFactionDEF
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -7523,18 +7643,18 @@ local function OnEvent(self, event, ...)
 		if isConfig then return end
 		if isDeadUpdateStop then return end
 
+		local _, _, _, _, sourceName, _, _, _, destName, _, _, spellId = ... -- timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, spellSchool = ...
+		if not sourceName then return end
+		if not destName then return end
+		if sourceName == destName then return end
+		if not spellId then return end
+
 		range_CL_Throttle = range_CL_Throttle + 1
 		if range_CL_Throttle > range_CL_Frequency then
 			range_CL_Throttle = 0
 			range_CL_Frequency = math_random(1,3)
 			return
 		end
-
-		local _, _, _, _, sourceName, _, _, _, destName, _, _, spellId = ... -- timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, spellSchool = ...
-		if not sourceName then return end
-		if not destName then return end
-		if sourceName == destName then return end
-		if not spellId then return end
 		CombatLogRangeCheck(sourceName, destName, spellId)
 
 	elseif event == "UNIT_HEALTH_FREQUENT" then
@@ -7601,25 +7721,13 @@ local function OnEvent(self, event, ...)
 		if arg1 then
 			playerLevel = arg1
 			BattlegroundTargets:CheckPlayerLevel()
+			if playerLevel == 10 then
+				BattlegroundTargets:CheckFaction()
+			end
 		end
 
 	elseif event == "PLAYER_LOGIN" then
-		local faction = UnitFactionGroup("player")
-		if faction == "Horde" then
-			playerFactionDEF   = 0 -- Horde
-			oppositeFactionDEF = 1 -- Alliance
-		elseif faction == "Alliance" then
-			playerFactionDEF   = 1 -- Alliance
-			oppositeFactionDEF = 0 -- Horde
-		else
-			Print("ERROR", "unknown faction", locale, faction)
-			Print("Please contact addon author. Thanks.")
-			playerFactionDEF   = 1
-			oppositeFactionDEF = 0
-		end
-		playerFactionBG   = playerFactionDEF
-		oppositeFactionBG = oppositeFactionDEF
-
+		BattlegroundTargets:CheckFaction()
 		BattlegroundTargets:InitOptions()
 		BattlegroundTargets:CreateInterfaceOptions()
 		BattlegroundTargets:LDBcheck()
