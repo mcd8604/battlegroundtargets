@@ -38,12 +38,12 @@
 --                                                                            --
 -- # Range Check: --------------------------------------- VERY HIGH CPU USAGE --
 --   - Events:                                                                --
---           Combat Log: --- COMBAT_LOG_EVENT_UNFILTERED                      --
---           Class: -------- PLAYER_TARGET_CHANGED                            --
+--        1) Combat Log: --- COMBAT_LOG_EVENT_UNFILTERED                      --
+--        2) Class: -------- PLAYER_TARGET_CHANGED                            --
 --                         - UNIT_HEALTH_FREQUENT                             --
 --                         - UPDATE_MOUSEOVER_UNIT                            --
 --                         - UNIT_TARGET                                      --
---           Mix: ---------- COMBAT_LOG_EVENT_UNFILTERED                      --
+--      3/4) Mix: ---------- COMBAT_LOG_EVENT_UNFILTERED                      --
 --                         - PLAYER_TARGET_CHANGED                            --
 --                         - UNIT_HEALTH_FREQUENT                             --
 --                         - UPDATE_MOUSEOVER_UNIT                            --
@@ -7590,7 +7590,7 @@ function BattlegroundTargets:CheckFaction()
 	elseif faction == "Alliance" then
 		playerFactionDEF   = 1 -- Alliance
 		oppositeFactionDEF = 0 -- Horde
-	elseif faction == "Pandaren" or playerLevel < 10 then -- TODO
+	elseif faction == "Neutral" then
 		playerFactionDEF   = 1 -- Dummy
 		oppositeFactionDEF = 0 -- Dummy
 	else
@@ -7721,7 +7721,7 @@ local function OnEvent(self, event, ...)
 		if arg1 then
 			playerLevel = arg1
 			BattlegroundTargets:CheckPlayerLevel()
-			if playerLevel == 10 then
+			if playerLevel == 10 then -- TODO
 				BattlegroundTargets:CheckFaction()
 			end
 		end
