@@ -130,6 +130,9 @@ local OPT = {}      -- local SavedVariable table (BattlegroundTargets_Options.Bu
 
 local AddonIcon = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-button"
 
+local _, _, _, tocversion = GetBuildInfo() -- TODO_MoP
+local RosterUpdate = "GROUP_ROSTER_UPDATE" if tocversion < 50000 then RosterUpdate = "RAID_ROSTER_UPDATE" end -- TODO_MoP
+
 local _G                         = _G
 local GetTime                    = _G.GetTime
 local InCombatLockdown           = _G.InCombatLockdown
@@ -146,14 +149,14 @@ local UnitName                   = _G.UnitName
 local UnitLevel                  = _G.UnitLevel
 local UnitHealthMax              = _G.UnitHealthMax
 local UnitHealth                 = _G.UnitHealth
-local UnitIsPartyLeader          = _G.UnitIsPartyLeader
+local UnitIsGroupLeader          = _G.UnitIsGroupLeader if tocversion < 50000 then UnitIsGroupLeader = _G.UnitIsPartyLeader end -- TODO_MoP
 local UnitBuff                   = _G.UnitBuff
 local UnitDebuff                 = _G.UnitDebuff
 local UnitIsVisible              = _G.UnitIsVisible
 local GetSpellInfo               = _G.GetSpellInfo
 local IsSpellInRange             = _G.IsSpellInRange
 local CheckInteractDistance      = _G.CheckInteractDistance
-local GetNumRaidMembers          = _G.GetNumRaidMembers
+local GetNumGroupMembers         = _G.GetNumGroupMembers if tocversion < 50000 then GetNumGroupMembers = _G.GetNumRaidMembers end -- TODO_MoP
 local GetRaidRosterInfo          = _G.GetRaidRosterInfo
 local math_min                   = _G.math.min
 local math_max                   = _G.math.max
@@ -215,13 +218,7 @@ local range_DisappearTime = 8               -- rangecheck: display update - clea
 
 local playerLevel = UnitLevel("player") -- LVLCHK
 local isLowLevel
-local maxLevel = 90
--- TODO -> DEL with MoP release
-local _, _, _, tocversion = GetBuildInfo()
-if tocversion < 50000 then
-	maxLevel = 85
-end
--- TODO -> DEL with MoP release
+local maxLevel = 90 if tocversion < 50000 then maxLevel = 85 end -- TODO_MoP
 
 local playerName = UnitName("player")
 local playerClass, playerClassEN = UnitClass("player")
@@ -356,11 +353,11 @@ local classes = { -- 2 62 66 126 130 190 194 254
 	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Fire_FireBolt02"},              -- Fire
 	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Frost_FrostBolt02"},            -- Frost
 	                       [4] = {role = x_UNKNOWN, icon = nil}}},
---	MONK        = {icon = {0.50781250, 0.74218750, 0.50781250, 0.74218750}, -- (130/256, 190/256, 130/256, 190/256) -- TODO
---	               spec = {[1] = {role = x_TANK,    icon = "Interface\\Icons\\Spell_Monk_Brewmaster_Spec"},         -- Brewmaster
---	                       [2] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Monk_Mistweaver_Spec"},         -- Mistweaver
---	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Monk_Windwalker_Spec"},         -- Windwalker
---	                       [4] = {role = x_UNKNOWN, icon = nil}}},
+	MONK        = {icon = {0.50781250, 0.74218750, 0.50781250, 0.74218750}, -- (130/256, 190/256, 130/256, 190/256) -- TODO_MoP
+	               spec = {[1] = {role = x_TANK,    icon = "Interface\\Icons\\Spell_Monk_Brewmaster_Spec"},         -- Brewmaster
+	                       [2] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Monk_Mistweaver_Spec"},         -- Mistweaver
+	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Monk_Windwalker_Spec"},         -- Windwalker
+	                       [4] = {role = x_UNKNOWN, icon = nil}}},
 	PALADIN     = {icon = {0.00781250, 0.24218750, 0.50781250, 0.74218750}, -- (  2/256,  62/256, 130/256, 190/256)
 	               spec = {[1] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Holy_HolyBolt"},                -- Holy
 	                       [2] = {role = x_TANK,    icon = "Interface\\Icons\\Ability_Paladin_ShieldoftheTemplar"}, -- Protection
@@ -417,7 +414,7 @@ local classesINT_LOCALIZED = { -- .cid .loc
  [8] = {cid = "SHAMAN",      blizz = classes_BLIZZ.SHAMAN      or  5, eng = "Shaman",       loc = classes_LOCALIZED.SHAMAN or "Shaman"},
  [9] = {cid = "WARLOCK",     blizz = classes_BLIZZ.WARLOCK     or  9, eng = "Warlock",      loc = classes_LOCALIZED.WARLOCK or "Warlock"},
 [10] = {cid = "WARRIOR",     blizz = classes_BLIZZ.WARRIOR     or  1, eng = "Warrior",      loc = classes_LOCALIZED.WARRIOR or "Warrior"},
---[11] = {cid = "MONK",        blizz = classes_BLIZZ.MONK        or 11, eng = "Monk",         loc = classes_LOCALIZED.MONK or "Monk"}, -- TODO
+[11] = {cid = "MONK",        blizz = classes_BLIZZ.MONK        or 11, eng = "Monk",         loc = classes_LOCALIZED.MONK or "Monk"}, -- TODO_MoP
 }
 
 local ranges = {}
@@ -425,7 +422,7 @@ ranges.DEATHKNIGHT =  47541 -- Death Coil        (30yd/m) - Lvl 55
 ranges.DRUID       =   5176 -- Wrath             (40yd/m) - Lvl  1
 ranges.HUNTER      =     75 -- Auto Shot       (5-40yd/m) - Lvl  1
 ranges.MAGE        =    133 -- Fireball          (40yd/m) - Lvl  1
---ranges.MONK        = 115546 -- Provoke           (40yd/m) - Lvl 14 MON14 TODO
+ranges.MONK        = 115546 -- Provoke           (40yd/m) - Lvl 14 MON14 TODO_MoP
 ranges.PALADIN     =  62124 -- Hand of Reckoning (30yd/m) - Lvl 14 PAL14
 ranges.PRIEST      =    589 -- Shadow Word: Pain (40yd/m) - Lvl  4
 ranges.ROGUE       =   6770 -- Sap               (10yd/m) - Lvl 10
@@ -509,7 +506,10 @@ local function Print(...)
 end
 
 local function ClassHexColor(class)
-	local hex = string_format("%.2x%.2x%.2x", classcolors[class].r*255, classcolors[class].g*255, classcolors[class].b*255)
+	local hex
+	if classcolors[class] then
+		hex = string_format("%.2x%.2x%.2x", classcolors[class].r*255, classcolors[class].g*255, classcolors[class].b*255)
+	end
 	return hex or "cccccc"
 end
 
@@ -3164,15 +3164,18 @@ function BattlegroundTargets:CreateOptionsFrame()
 		table_sort(classesINT_LOCALIZED, function(a, b) if a.loc < b.loc then return true end end)
 		local playerMClass = "?"
 		for i = 1, #classesINT_LOCALIZED do
-			local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(ranges[ classesINT_LOCALIZED[i].cid ])
-			local classStr = "|cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[ classesINT_LOCALIZED[i].cid ]..")|r"
-			if classesINT_LOCALIZED[i].cid == playerClassEN then
-				playerMClass = "|cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r"
+			local classEN = classesINT_LOCALIZED[i].cid
+if tocversion < 50000 and classEN ~= "MONK" then -- TODO_MoP
+			local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(ranges[classEN])
+			local classStr = "|cff"..ClassHexColor(classEN)..classesINT_LOCALIZED[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[classEN]..")|r"
+			if classEN == playerClassEN then
+				playerMClass = "|cff"..ClassHexColor(classEN)..classesINT_LOCALIZED[i].loc.."|r"
 				rangeInfoTxt = rangeInfoTxt..">>> "..classStr.." <<<"
 			else
-				rangeInfoTxt = rangeInfoTxt.."   "..classStr
+				rangeInfoTxt = rangeInfoTxt.."     "..classStr
 			end
 			rangeInfoTxt = rangeInfoTxt.."\n"
+end -- TODO_MoP
 		end
 		rangeInfoTxt = rangeInfoTxt.."\n\n"..rangeTypeName[3]..":\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..CLASS..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
@@ -3320,26 +3323,32 @@ function BattlegroundTargets:CreateOptionsFrame()
 		local infoTxt1 = sortDetail[1]..":\n"
 		table_sort(classesINT_LOCALIZED, function(a, b) if a.loc < b.loc then return true end end)
 		for i = 1, #classesINT_LOCALIZED do
+if tocversion < 50000 and classesINT_LOCALIZED[i].cid ~= "MONK" then -- TODO_MoP
 			infoTxt1 = infoTxt1.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r"
 			if i <= #classesINT_LOCALIZED then
 				infoTxt1 = infoTxt1.."\n"
 			end
+end -- TODO_MoP
 		end
 		local infoTxt2 = sortDetail[2]..":\n"
 		table_sort(classesINT_LOCALIZED, function(a, b) if a.eng < b.eng then return true end end)
 		for i = 1, #classesINT_LOCALIZED do
+if tocversion < 50000 and classesINT_LOCALIZED[i].cid ~= "MONK" then -- TODO_MoP
 			infoTxt2 = infoTxt2.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].eng.." ("..classesINT_LOCALIZED[i].loc..")|r"
 			if i <= #classesINT_LOCALIZED then
 				infoTxt2 = infoTxt2.."\n"
 			end
+end -- TODO_MoP
 		end
 		local infoTxt3 = sortDetail[3]..":\n"
 		table_sort(classesINT_LOCALIZED, function(a, b) if a.blizz < b.blizz then return true end end)
 		for i = 1, #classesINT_LOCALIZED do
+if tocversion < 50000 and classesINT_LOCALIZED[i].cid ~= "MONK" then -- TODO_MoP
 			infoTxt3 = infoTxt3.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r"
 			if i <= #classesINT_LOCALIZED then
 				infoTxt3 = infoTxt3.."\n"
 			end
+end -- TODO_MoP
 		end
 		----- text
 	GVAR.OptionsFrame.SortInfo = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -4876,7 +4885,7 @@ function BattlegroundTargets:EnableConfigMode()
 		ENEMY_Data[2].talentSpec = TLT.PRIEST[3]
 		ENEMY_Data[3] = {}
 		ENEMY_Data[3].name = TARGET.."_Cc-servername"
-		ENEMY_Data[3].classToken = "WARLOCK" -- "MONK" TODO
+		ENEMY_Data[3].classToken = "WARLOCK" -- "MONK" TODO_MoP
 		ENEMY_Data[3].talentSpec = TLT.WARLOCK[1] -- TLT.MONK[2]
 		ENEMY_Data[4] = {}
 		ENEMY_Data[4].name = TARGET.."_Dd-servername"
@@ -4952,7 +4961,7 @@ function BattlegroundTargets:EnableConfigMode()
 		ENEMY_Data[21].talentSpec = TLT.PRIEST[3]
 		ENEMY_Data[22] = {}
 		ENEMY_Data[22].name = TARGET.."_Vv-servername"
-		ENEMY_Data[22].classToken = "WARRIOR" -- "MONK" TODO
+		ENEMY_Data[22].classToken = "WARRIOR" -- "MONK" TODO_MoP
 		ENEMY_Data[22].talentSpec = TLT.WARRIOR[1] -- TLT.MONK[1]
 		ENEMY_Data[23] = {}
 		ENEMY_Data[23].name = TARGET.."_Ww-servername"
@@ -4976,7 +4985,7 @@ function BattlegroundTargets:EnableConfigMode()
 		ENEMY_Data[27].talentSpec = TLT.PRIEST[2]
 		ENEMY_Data[28] = {}
 		ENEMY_Data[28].name = TARGET.."_Cd-servername"
-		ENEMY_Data[28].classToken = "MAGE" -- "MONK" TODO
+		ENEMY_Data[28].classToken = "MAGE" -- "MONK" TODO_MoP
 		ENEMY_Data[28].talentSpec = TLT.MAGE[2] -- TLT.MONK[3]
 		ENEMY_Data[29] = {}
 		ENEMY_Data[29].name = TARGET.."_Ef-servername"
@@ -5026,6 +5035,15 @@ function BattlegroundTargets:EnableConfigMode()
 		ENEMY_Data[40].name = TARGET.."_Zz-servername"
 		ENEMY_Data[40].classToken = "ROGUE"
 		ENEMY_Data[40].talentSpec = nil
+
+		if tocversion >= 50000 then -- TODO_MoP
+			ENEMY_Data[3].classToken = "MONK"
+			ENEMY_Data[3].talentSpec = nil--TLT.MONK[2] -- TODO_MoP
+			ENEMY_Data[22].classToken = "MONK"
+			ENEMY_Data[22].talentSpec = nil--TLT.MONK[1] -- TODO_MoP
+			ENEMY_Data[28].classToken = "MONK"
+			ENEMY_Data[28].talentSpec = nil--TLT.MONK[3] -- TODO_MoP
+		end
 
 		for i = 1, 40 do
 			local role = 4
@@ -6300,7 +6318,7 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 
 	-- friend buff & debuff check
 	local function chk()
-		for num = 1, GetNumRaidMembers() do
+		for num = 1, GetNumGroupMembers() do -- TODO_MoP
 			local unitID = "raid"..num
 			for i = 1, 40 do
 				local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unitID, i)
@@ -6363,331 +6381,339 @@ end
 function BattlegroundTargets:BattlefieldCheck()
 	if not inWorld then return end
 	local _, instanceType = IsInInstance()
-
 	if instanceType == "pvp" then
-		inBattleground = true
-		isFlagBG = 0
+		BattlegroundTargets:IsBattleground()
+	else
+		BattlegroundTargets:IsNotBattleground()
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
 
-		local queueStatus, queueMapName, bgName
-		for i=1, GetMaxBattlefieldID() do
-			queueStatus, queueMapName = GetBattlefieldStatus(i)
-			if queueStatus == "active" then
-				bgName = queueMapName
-				break
-			end
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:IsBattleground()
+	inBattleground = true
+	isFlagBG = 0
+
+	local queueStatus, queueMapName, bgName
+	for i=1, GetMaxBattlefieldID() do
+		queueStatus, queueMapName = GetBattlefieldStatus(i)
+		if queueStatus == "active" then
+			bgName = queueMapName
+			break
 		end
+	end
 
-		if BGN[bgName] then
-			currentSize = bgSize[ BGN[bgName] ]
+	if BGN[bgName] then
+		currentSize = bgSize[ BGN[bgName] ]
+		reSizeCheck = 10
+		local flagBGnum = flagBG[ BGN[bgName] ]
+		if flagBGnum then
+			isFlagBG = flagBGnum
+		end
+	else
+		local zone = GetRealZoneText()
+		if BGN[zone] then
+			currentSize = bgSize[ BGN[zone] ]
 			reSizeCheck = 10
-			local flagBGnum = flagBG[ BGN[bgName] ]
+			local flagBGnum = flagBG[ BGN[zone] ]
 			if flagBGnum then
 				isFlagBG = flagBGnum
 			end
 		else
-			local zone = GetRealZoneText()
-			if BGN[zone] then
-				currentSize = bgSize[ BGN[zone] ]
-				reSizeCheck = 10
-				local flagBGnum = flagBG[ BGN[zone] ]
-				if flagBGnum then
-					isFlagBG = flagBGnum
-				end
-			else
-				if reSizeCheck >= 10 then
-					Print("ERROR", "unknown battleground name", locale, bgName, zone)
-					Print("Please contact addon author. Thanks.")
-				end
-				currentSize = 10
-				reSizeCheck = reSizeCheck + 1
-			end
-		end
-
-		if IsRatedBattleground() then
-			currentSize = 10
-			local faction = GetBattlefieldArenaFaction()
-			if faction == 0 then
-				playerFactionBG   = 0 -- Horde
-				oppositeFactionBG = 1 -- Alliance
-			elseif faction == 1 then
-				playerFactionBG   = 1 -- Alliance
-				oppositeFactionBG = 0 -- Horde
-			else
-				Print("ERROR", "unknown battleground faction", locale, faction)
+			if reSizeCheck >= 10 then
+				Print("ERROR", "unknown battleground name", locale, bgName, zone)
 				Print("Please contact addon author. Thanks.")
 			end
+			currentSize = 10
+			reSizeCheck = reSizeCheck + 1
 		end
+	end
 
-		if playerLevel >= maxLevel then -- LVLCHK
-			isLowLevel = nil
+	if IsRatedBattleground() then
+		currentSize = 10
+		local faction = GetBattlefieldArenaFaction()
+		if faction == 0 then
+			playerFactionBG   = 0 -- Horde
+			oppositeFactionBG = 1 -- Alliance
+		elseif faction == 1 then
+			playerFactionBG   = 1 -- Alliance
+			oppositeFactionBG = 0 -- Horde
 		else
-			isLowLevel = true
+			Print("ERROR", "unknown battleground faction", locale, faction)
+			Print("Please contact addon author. Thanks.")
 		end
+	end
 
-		if inCombat or InCombatLockdown() then
-			reCheckBG = true
-		else
-			reCheckBG = false
+	if playerLevel >= maxLevel then -- LVLCHK
+		isLowLevel = nil
+	else
+		isLowLevel = true
+	end
 
-			if BattlegroundTargets_Options.EnableBracket[currentSize] then
+	if inCombat or InCombatLockdown() then
+		reCheckBG = true
+	else
+		reCheckBG = false
 
-				GVAR.MainFrame:Show() -- HiDE
-				GVAR.MainFrame:EnableMouse(false)
-				GVAR.MainFrame:SetHeight(0.001)
-				GVAR.MainFrame.Movetext:Hide()
-				GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, -(20 / OPT.ButtonScale[currentSize]))
-				GVAR.ScoreUpdateTexture:Hide()
-
-				for i = 1, 40 do
-					local GVAR_TargetButton = GVAR.TargetButton[i]
-					if i < currentSize+1 then
-						BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, 1)
-						GVAR_TargetButton:Show()
-					else
-						GVAR_TargetButton:Hide()
-					end
-				end
-				BattlegroundTargets:SetupButtonLayout()
-
-				if BattlegroundTargets_Options.Summary[currentSize] then
-					GVAR.Summary.HealerFriend:SetText("0")
-					GVAR.Summary.TankFriend:SetText("0")
-					GVAR.Summary.DamageFriend:SetText("0")
-					GVAR.Summary.HealerEnemy:SetText("0")
-					GVAR.Summary.TankEnemy:SetText("0")
-					GVAR.Summary.DamageEnemy:SetText("0")
-					if OPT.ButtonShowGuildGroup[currentSize] then
-						for i = 1, 7 do
-							GVAR.GuildGroupSummaryEnemy[i].Text:SetText("")
-							GVAR.GuildGroupSummaryFriend[i].Text:SetText("")
-						end
-					end
-				end
-
-				BattlegroundTargets:BattlefieldScoreUpdate(1)
-
-				if OPT.ButtonShowFlag[currentSize] then
-					if currentSize == 10 or currentSize == 15 then
-
-						local flagIcon -- setup_flag_texture
-						if playerFactionBG ~= playerFactionDEF then
-							flagIcon = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral flag
-						elseif playerFactionDEF == 0 then
-							if isFlagBG == 2 then
-								flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
-							else
-								flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
-							end
-						else
-							if isFlagBG == 2 then
-								flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
-							else
-								flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
-							end
-						end
-						for i = 1, currentSize do
-							GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
-						end
-
-					end
-				end
-
-			else
-
-				GVAR.MainFrame:Hide()
-				for i = 1, 40 do
-					GVAR.TargetButton[i]:Hide()
-				end
-
-			end
-
-		end
-
-		BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
-		BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
-		BattlegroundTargets:UnregisterEvent("PLAYER_ALIVE")
-		BattlegroundTargets:UnregisterEvent("UNIT_HEALTH_FREQUENT")
-		BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
-		BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
-		BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
-		BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
-		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
-		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-		BattlegroundTargets:UnregisterEvent("RAID_ROSTER_UPDATE")
-		BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-		BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
-
-		-- ------------------------------------------------------------
 		if BattlegroundTargets_Options.EnableBracket[currentSize] then
-			BattlegroundTargets:RegisterEvent("PLAYER_DEAD")
-			BattlegroundTargets:RegisterEvent("PLAYER_UNGHOST")
-			BattlegroundTargets:RegisterEvent("PLAYER_ALIVE")
 
-			if isLowLevel then -- LVLCHK
-				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+			GVAR.MainFrame:Show() -- HiDE
+			GVAR.MainFrame:EnableMouse(false)
+			GVAR.MainFrame:SetHeight(0.001)
+			GVAR.MainFrame.Movetext:Hide()
+			GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, -(20 / OPT.ButtonScale[currentSize]))
+			GVAR.ScoreUpdateTexture:Hide()
+
+			for i = 1, 40 do
+				local GVAR_TargetButton = GVAR.TargetButton[i]
+				if i < currentSize+1 then
+					BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, 1)
+					GVAR_TargetButton:Show()
+				else
+					GVAR_TargetButton:Hide()
+				end
+			end
+			BattlegroundTargets:SetupButtonLayout()
+
+			if BattlegroundTargets_Options.Summary[currentSize] then
+				GVAR.Summary.HealerFriend:SetText("0")
+				GVAR.Summary.TankFriend:SetText("0")
+				GVAR.Summary.DamageFriend:SetText("0")
+				GVAR.Summary.HealerEnemy:SetText("0")
+				GVAR.Summary.TankEnemy:SetText("0")
+				GVAR.Summary.DamageEnemy:SetText("0")
+				if OPT.ButtonShowGuildGroup[currentSize] then
+					for i = 1, 7 do
+						GVAR.GuildGroupSummaryEnemy[i].Text:SetText("")
+						GVAR.GuildGroupSummaryFriend[i].Text:SetText("")
+					end
+				end
 			end
 
-			if OPT.ButtonShowHealthBar[currentSize] or OPT.ButtonShowHealthText[currentSize] then
-				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-				BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
-				BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-			end
-
-			if OPT.ButtonShowTargetCount[currentSize] then
-				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-			end
-
-			if OPT.ButtonShowTarget[currentSize] then
-				BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
-			end
-
-			if OPT.ButtonShowFocus[currentSize] then
-				BattlegroundTargets:RegisterEvent("PLAYER_FOCUS_CHANGED")
-			end
+			BattlegroundTargets:BattlefieldScoreUpdate(1)
 
 			if OPT.ButtonShowFlag[currentSize] then
 				if currentSize == 10 or currentSize == 15 then
-					BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
-					BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-					BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-				end
-			end
 
-			if OPT.ButtonShowAssist[currentSize] then
-				BattlegroundTargets:RegisterEvent("RAID_ROSTER_UPDATE")
-				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-			end
-
-			if OPT.ButtonShowLeader[currentSize] then
-				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-			end
-
-			if OPT.ButtonShowGuildGroup[currentSize] then
-				BattlegroundTargets:RegisterEvent("RAID_ROSTER_UPDATE")
-				BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-			end
-
-			rangeSpellName = nil
-			rangeMin = nil
-			rangeMax = nil
-			if OPT.ButtonRangeCheck[currentSize] then
-				if OPT.ButtonTypeRangeCheck[currentSize] == 1 then
-					BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-				elseif OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
-
-					if ranges[playerClassEN] then
-						if IsSpellKnown(ranges[playerClassEN]) then
-							rangeSpellName, _, _, _, _, _, _, rangeMin, rangeMax = GetSpellInfo(ranges[playerClassEN])
-							if not rangeSpellName then
-								Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
-								Print("Please contact addon author. Thanks.")
-							elseif (not rangeMin or not rangeMax) or (rangeMin <= 0 and rangeMax <= 0) then
-								Print("ERROR", "spell min/max fail (rangecheck)", locale, rangeSpellName, rangeMin, rangeMax)
-								Print("Please contact addon author. Thanks.")
-							else
-								BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
-								BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-								BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
-								BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-								if OPT.ButtonTypeRangeCheck[currentSize] >= 3 then
-									BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-								end
-							end
-						elseif (playerClassEN == "PALADIN" or playerClassEN == "MONK") and playerLevel < 14 then -- PAL14 MON14 TODO
-							Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.")
-							Print("Range check disabled.")
+					local flagIcon -- setup_flag_texture
+					if playerFactionBG ~= playerFactionDEF then
+						flagIcon = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral flag
+					elseif playerFactionDEF == 0 then
+						if isFlagBG == 2 then
+							flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
 						else
-							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
-							Print("Please contact addon author. Thanks.")
+							flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
 						end
 					else
-						Print("ERROR", "unknown class (rangecheck)", locale, playerClassEN)
-						Print("Please contact addon author. Thanks.")
+						if isFlagBG == 2 then
+							flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
+						else
+							flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
+						end
+					end
+					for i = 1, currentSize do
+						GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
 					end
 
 				end
 			end
 
-			BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
-		end
-		-- ------------------------------------------------------------
-	else
-		if not inBattleground and not reCheckBG then return end
-
-		--for k, v in pairs(eventTest) do print(k, v) end -- TEST
-
-		inBattleground = false
-		reSizeCheck = 0
-		oppositeFactionREAL = nil
-		flagDebuff = 0
-		flags = 0
-		isFlagBG = 0
-		flagCHK = nil
-		flagflag = nil
-		scoreUpdateCount = 0
-		isLeader = nil
-		hasFlag = nil
-		reCheckBG = nil
-		reCheckScore = nil
-		groupMembers = 0
-		groupMemChk = 0
-
-		BattlegroundTargets:CheckPlayerLevel() -- LVLCHK
-
-		BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
-		BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
-		BattlegroundTargets:UnregisterEvent("PLAYER_ALIVE")
-		BattlegroundTargets:UnregisterEvent("UNIT_HEALTH_FREQUENT")
-		BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
-		BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
-		BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
-		BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
-		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
-		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-		BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-		BattlegroundTargets:UnregisterEvent("RAID_ROSTER_UPDATE")
-		BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-		BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
-
-		if not isConfig then
-			table_wipe(ENEMY_Data)
-		end
-		table_wipe(ENEMY_Names)
-		table_wipe(ENEMY_Names4Flag)
-		table_wipe(ENEMY_Name2Button)
-		table_wipe(ENEMY_Name2Percent)
-		table_wipe(ENEMY_Name2Range)
-		table_wipe(ENEMY_Name2Level)
-		table_wipe(ENEMY_Guild)
-		table_wipe(ENEMY_GuildCount)
-		table_wipe(ENEMY_GroupNum)
-		table_wipe(FRIEND_GuildCount)
-		table_wipe(FRIEND_GuildName)
-		table_wipe(TARGET_Names)
-
-		if inCombat or InCombatLockdown() then
-			reCheckBG = true
 		else
-			reCheckBG = false
 
 			GVAR.MainFrame:Hide()
-			local flagIcon = "Interface\\WorldStateFrame\\AllianceFlag" -- setup_flag_texture
-			if playerFactionDEF == 0 then
-				flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
-			end
 			for i = 1, 40 do
-				local GVAR_TargetButton = GVAR.TargetButton[i]
-				GVAR_TargetButton.FlagTexture:SetTexture(flagIcon)
-				GVAR_TargetButton:Hide()
+				GVAR.TargetButton[i]:Hide()
 			end
-			if playerFactionDEF == 0 then -- summary_flag_texture
-				GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-			else
-				GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+
+		end
+
+	end
+
+	BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
+	BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
+	BattlegroundTargets:UnregisterEvent("PLAYER_ALIVE")
+	BattlegroundTargets:UnregisterEvent("UNIT_HEALTH_FREQUENT")
+	BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
+	BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
+	BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
+	BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+	BattlegroundTargets:UnregisterEvent(RosterUpdate) -- TODO_MoP
+	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
+
+	if BattlegroundTargets_Options.EnableBracket[currentSize] then
+		BattlegroundTargets:RegisterEvent("PLAYER_DEAD")
+		BattlegroundTargets:RegisterEvent("PLAYER_UNGHOST")
+		BattlegroundTargets:RegisterEvent("PLAYER_ALIVE")
+
+		if isLowLevel then -- LVLCHK
+			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+		end
+
+		if OPT.ButtonShowHealthBar[currentSize] or OPT.ButtonShowHealthText[currentSize] then
+			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+			BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
+			BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+		end
+
+		if OPT.ButtonShowTargetCount[currentSize] then
+			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+		end
+
+		if OPT.ButtonShowTarget[currentSize] then
+			BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
+		end
+
+		if OPT.ButtonShowFocus[currentSize] then
+			BattlegroundTargets:RegisterEvent("PLAYER_FOCUS_CHANGED")
+		end
+
+		if OPT.ButtonShowFlag[currentSize] then
+			if currentSize == 10 or currentSize == 15 then
+				BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
+				BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+				BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
 			end
 		end
 
+		if OPT.ButtonShowAssist[currentSize] then
+			BattlegroundTargets:RegisterEvent(RosterUpdate) -- TODO_MoP
+			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+		end
+
+		if OPT.ButtonShowLeader[currentSize] then
+			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+		end
+
+		if OPT.ButtonShowGuildGroup[currentSize] then
+			BattlegroundTargets:RegisterEvent(RosterUpdate) -- TODO_MoP
+			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+		end
+
+		rangeSpellName = nil
+		rangeMin = nil
+		rangeMax = nil
+		if OPT.ButtonRangeCheck[currentSize] then
+			if OPT.ButtonTypeRangeCheck[currentSize] == 1 then
+				BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+			elseif OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
+
+				if ranges[playerClassEN] then
+					if IsSpellKnown(ranges[playerClassEN]) then
+						rangeSpellName, _, _, _, _, _, _, rangeMin, rangeMax = GetSpellInfo(ranges[playerClassEN])
+						if not rangeSpellName then
+							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
+							Print("Please contact addon author. Thanks.")
+						elseif (not rangeMin or not rangeMax) or (rangeMin <= 0 and rangeMax <= 0) then
+							Print("ERROR", "spell min/max fail (rangecheck)", locale, rangeSpellName, rangeMin, rangeMax)
+							Print("Please contact addon author. Thanks.")
+						else
+							BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
+							BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+							BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
+							BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+							if OPT.ButtonTypeRangeCheck[currentSize] >= 3 then
+								BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+							end
+						end
+					elseif (playerClassEN == "PALADIN" or playerClassEN == "MONK") and playerLevel < 14 then -- PAL14 MON14 TODO_MoP
+						Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.")
+						Print("Range check disabled.")
+					else
+						Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
+						Print("Please contact addon author. Thanks.")
+					end
+				else
+					Print("ERROR", "unknown class (rangecheck)", locale, playerClassEN)
+					Print("Please contact addon author. Thanks.")
+				end
+
+			end
+		end
+
+		BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:IsNotBattleground()
+	if not inBattleground and not reCheckBG then return end
+
+	--for k, v in pairs(eventTest) do print(k, v) end -- TEST
+
+	inBattleground = false
+	reSizeCheck = 0
+	oppositeFactionREAL = nil
+	flagDebuff = 0
+	flags = 0
+	isFlagBG = 0
+	flagCHK = nil
+	flagflag = nil
+	scoreUpdateCount = 0
+	isLeader = nil
+	hasFlag = nil
+	reCheckBG = nil
+	reCheckScore = nil
+	groupMembers = 0
+	groupMemChk = 0
+
+	BattlegroundTargets:CheckPlayerLevel() -- LVLCHK
+
+	BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
+	BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
+	BattlegroundTargets:UnregisterEvent("PLAYER_ALIVE")
+	BattlegroundTargets:UnregisterEvent("UNIT_HEALTH_FREQUENT")
+	BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
+	BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
+	BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
+	BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+	BattlegroundTargets:UnregisterEvent(RosterUpdate) -- TODO_MoP
+	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
+
+	if not isConfig then
+		table_wipe(ENEMY_Data)
+	end
+	table_wipe(ENEMY_Names)
+	table_wipe(ENEMY_Names4Flag)
+	table_wipe(ENEMY_Name2Button)
+	table_wipe(ENEMY_Name2Percent)
+	table_wipe(ENEMY_Name2Range)
+	table_wipe(ENEMY_Name2Level)
+	table_wipe(ENEMY_Guild)
+	table_wipe(ENEMY_GuildCount)
+	table_wipe(ENEMY_GroupNum)
+	table_wipe(FRIEND_GuildCount)
+	table_wipe(FRIEND_GuildName)
+	table_wipe(TARGET_Names)
+
+	if inCombat or InCombatLockdown() then
+		reCheckBG = true
+	else
+		reCheckBG = false
+
+		GVAR.MainFrame:Hide()
+		local flagIcon = "Interface\\WorldStateFrame\\AllianceFlag" -- setup_flag_texture
+		if playerFactionDEF == 0 then
+			flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
+		end
+		for i = 1, 40 do
+			local GVAR_TargetButton = GVAR.TargetButton[i]
+			GVAR_TargetButton.FlagTexture:SetTexture(flagIcon)
+			GVAR_TargetButton:Hide()
+		end
+		if playerFactionDEF == 0 then -- summary_flag_texture
+			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+		else
+			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+		end
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -6738,7 +6764,7 @@ function BattlegroundTargets:CheckAssist()
 
 	isAssistUnitId = nil
 	isAssistName = nil
-	for i = 1, GetNumRaidMembers() do
+	for i = 1, GetNumGroupMembers() do -- TODO_MoP
 		local name, _, _, _, _, _, _, _, _, role = GetRaidRosterInfo(i)
 		if name and role and role == "MAINASSIST" then
 			isAssistName = name
@@ -6847,7 +6873,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		if curTime > targetCountForceUpdate + targetCountFrequency then
 			targetCountForceUpdate = curTime
 			table_wipe(TARGET_Names)
-			for num = 1, GetNumRaidMembers() do
+			for num = 1, GetNumGroupMembers() do -- TODO_MoP
 				local uID = "raid"..num
 				local fName, fRealm = UnitName(uID)
 				if fName then
@@ -6949,7 +6975,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 				leaderThrottle = leaderThrottle + 1
 				if leaderThrottle > leaderFrequency then
 					leaderThrottle = 0
-					if UnitIsPartyLeader(enemyID) then
+					if UnitIsGroupLeader(enemyID) then -- TODO_MoP
 						isLeader = enemyName
 						for i = 1, currentSize do
 							GVAR.TargetButton[i].LeaderTexture:SetAlpha(0)
@@ -6960,7 +6986,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 					end
 				end
 			else
-				if UnitIsPartyLeader(enemyID) then
+				if UnitIsGroupLeader(enemyID) then -- TODO_MoP
 					isLeader = enemyName
 					for i = 1, currentSize do
 						GVAR.TargetButton[i].LeaderTexture:SetAlpha(0)
@@ -7175,7 +7201,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 	if not BattlegroundTargets_Options.Summary[currentSize] then return end
 
 	-- scan each groupmember
-	local grpSize = GetNumRaidMembers()
+	local grpSize = GetNumGroupMembers() -- TODO_MoP
 	if groupMembers == 0 then
 		groupMembers = grpSize
 	end
@@ -7678,7 +7704,7 @@ local function OnEvent(self, event, ...)
 		if isConfig then return end
 		BattlegroundTargets:BattlefieldScoreUpdate()
 
-	elseif event == "RAID_ROSTER_UPDATE" then
+	elseif event == RosterUpdate then -- TODO_MoP
 		if OPT.ButtonShowAssist[currentSize] then
 			BattlegroundTargets:CheckAssist()
 		end
@@ -7721,7 +7747,7 @@ local function OnEvent(self, event, ...)
 		if arg1 then
 			playerLevel = arg1
 			BattlegroundTargets:CheckPlayerLevel()
-			if playerLevel == 10 then -- TODO
+			if playerLevel == 10 then -- TODO_MoP
 				BattlegroundTargets:CheckFaction()
 			end
 		end
