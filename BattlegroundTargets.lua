@@ -2,7 +2,7 @@
 -- BattlegroundTargets by kunda                                               --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
--- BattlegroundTargets is a simple 'Enemy Unit Frame' for battlegrounds.      --
+-- BattlegroundTargets is a 'Enemy Unit Frame' for battlegrounds.             --
 -- BattlegroundTargets is not a 'real' (Enemy) Unit Frame.                    --
 -- BattlegroundTargets simply generates buttons with target macros.           --
 --                                                                            --
@@ -152,7 +152,7 @@ local UnitHealth                 = _G.UnitHealth
 local UnitIsGroupLeader          = _G.UnitIsGroupLeader if tocversion < 50000 then UnitIsGroupLeader = _G.UnitIsPartyLeader end -- TODO_MoP
 local UnitBuff                   = _G.UnitBuff
 local UnitDebuff                 = _G.UnitDebuff
-local UnitIsVisible              = _G.UnitIsVisible
+local UnitIsVisible              = _G.UnitIsVisible -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
 local GetSpellInfo               = _G.GetSpellInfo
 local IsSpellInRange             = _G.IsSpellInRange
 local CheckInteractDistance      = _G.CheckInteractDistance
@@ -323,128 +323,132 @@ local sortDetail = {
 }
 
 local classcolors = {}
-for class, color in pairs(RAID_CLASS_COLORS) do
+for class, color in pairs(RAID_CLASS_COLORS) do -- Constants.lua
 	classcolors[class] = {r = color.r, g = color.g, b = color.b}
 end
 
-local x_HEAL    = 1
-local x_TANK    = 2
-local x_DAMAGE  = 3
-local x_UNKNOWN = 4
-local classimg = "Interface\\WorldStateFrame\\Icons-Classes"
-local classes = { -- 2 62 66 126 130 190 194 254
-	DEATHKNIGHT = {icon = {0.25781250, 0.49218750, 0.50781250, 0.74218750}, -- ( 66/256, 126/256, 130/256, 190/256)
-	               spec = {[1] = {role = x_TANK,    icon = "Interface\\Icons\\Spell_Deathknight_BloodPresence"},    -- Blood
-	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Deathknight_FrostPresence"},    -- Frost
-	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Deathknight_UnholyPresence"},   -- Unholy
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	DRUID       = {icon = {0.75781250, 0.99218750, 0.00781250, 0.24218750}, -- (194/256, 254/256,   2/256,  62/256)
-	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_StarFall"},              -- Balance
-	                       [2] = {role = x_TANK,    icon = "Interface\\Icons\\Ability_Racial_BearForm"},            -- Feral Combat
-	                       [3] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Nature_HealingTouch"},          -- Restoration
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	HUNTER      = {icon = {0.00781250, 0.24218750, 0.25781250, 0.49218750}, -- (  2/256,  62/256,  66/256, 126/256)
-	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_BestialDiscipline"},   -- Beast Mastery
-	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_FocusedAim"},          -- Marksmanship
-	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Hunter_Camouflage"},          -- Survival
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	MAGE        = {icon = {0.25781250, 0.49218750, 0.00781250, 0.24218750}, -- ( 66/256, 126/256,   2/256,  62/256)
-	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Holy_MagicalSentry"},           -- Arcane
-	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Fire_FireBolt02"},              -- Fire
-	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Frost_FrostBolt02"},            -- Frost
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	MONK        = {icon = {0.50781250, 0.74218750, 0.50781250, 0.74218750}, -- (130/256, 190/256, 130/256, 190/256) -- TODO_MoP
-	               spec = {[1] = {role = x_TANK,    icon = "Interface\\Icons\\Spell_Monk_Brewmaster_Spec"},         -- Brewmaster
-	                       [2] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Monk_Mistweaver_Spec"},         -- Mistweaver
-	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Monk_Windwalker_Spec"},         -- Windwalker
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	PALADIN     = {icon = {0.00781250, 0.24218750, 0.50781250, 0.74218750}, -- (  2/256,  62/256, 130/256, 190/256)
-	               spec = {[1] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Holy_HolyBolt"},                -- Holy
-	                       [2] = {role = x_TANK,    icon = "Interface\\Icons\\Ability_Paladin_ShieldoftheTemplar"}, -- Protection
-	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Holy_AuraOfLight"},             -- Retribution
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	PRIEST      = {icon = {0.50781250, 0.74218750, 0.25781250, 0.49218750}, -- (130/256, 190/256,  66/256, 126/256)
-	               spec = {[1] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Holy_PowerWordShield"},         -- Discipline
-	                       [2] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Holy_GuardianSpirit"},          -- Holy
-	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_ShadowWordPain"},        -- Shadow
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	ROGUE       = {icon = {0.50781250, 0.74218750, 0.00781250, 0.24218750}, -- (130/256, 190/256,   2/256,  62/256)
-	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Rogue_Eviscerate"},           -- Assassination
-	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_BackStab"},                   -- Combat
-	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Stealth"},                    -- Subtlety
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	SHAMAN      = {icon = {0.25781250, 0.49218750, 0.25781250, 0.49218750}, -- ( 66/256, 126/256,  66/256, 126/256)
-	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_Lightning"},             -- Elemental
-	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Nature_LightningShield"},       -- Enhancement
-	                       [3] = {role = x_HEAL,    icon = "Interface\\Icons\\Spell_Nature_MagicImmunity"},         -- Restoration
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	WARLOCK     = {icon = {0.75781250, 0.99218750, 0.25781250, 0.49218750}, -- (194/256, 254/256,  66/256, 126/256)
-	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_DeathCoil"},             -- Affliction
-	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_Metamorphosis"},         -- Demonology
-	                       [3] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Spell_Shadow_RainOfFire"},            -- Destruction
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	WARRIOR     = {icon = {0.00781250, 0.24218750, 0.00781250, 0.24218750}, -- (  2/256,  62/256,   2/256,  62/256)
-	               spec = {[1] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Warrior_SavageBlow"},         -- Arms
-	                       [2] = {role = x_DAMAGE,  icon = "Interface\\Icons\\Ability_Warrior_InnerRage"},          -- Fury
-	                       [3] = {role = x_TANK,    icon = "Interface\\Icons\\Ability_Warrior_DefensiveStance"},    -- Protection
-	                       [4] = {role = x_UNKNOWN, icon = nil}}},
-	ZZZFAILURE  = {icon = {0, 0, 0, 0},
-	               spec = {[1] = {role = x_UNKNOWN, icon = nil},   -- unknown
-	                       [2] = {role = x_UNKNOWN, icon = nil},   -- unknown
-	                       [3] = {role = x_UNKNOWN, icon = nil},   -- unknown
-	                       [4] = {role = x_UNKNOWN, icon = nil}}}, -- unknown
+-- texture: Interface\\WorldStateFrame\\Icons-Classes
+-- coords : 2 62 66 126 130 190 194 254
+-- role   : 1 = HEAL | 2 = TANK | 3 = DAMAGE | 4 = UNKNOWN
+local classes = {
+	DEATHKNIGHT = {coords = {0.25781250, 0.49218750, 0.50781250, 0.74218750}, -- ( 66/256, 126/256, 130/256, 190/256)
+	               spec   = {[1] = {role = 2, icon = "Interface\\Icons\\Spell_Deathknight_BloodPresence"},    -- Blood
+	                         [2] = {role = 3, icon = "Interface\\Icons\\Spell_Deathknight_FrostPresence"},    -- Frost
+	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Deathknight_UnholyPresence"},   -- Unholy
+	                         [4] = {role = 4, icon = nil}}},
+	DRUID       = {coords = {0.75781250, 0.99218750, 0.00781250, 0.24218750}, -- (194/256, 254/256,   2/256,  62/256)
+	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Spell_Nature_StarFall"},              -- Balance
+	                         [2] = {role = 2, icon = "Interface\\Icons\\Ability_Racial_BearForm"},            -- Feral Combat
+	                         [3] = {role = 1, icon = "Interface\\Icons\\Spell_Nature_HealingTouch"},          -- Restoration
+	                         [4] = {role = 4, icon = nil}}},
+	HUNTER      = {coords = {0.00781250, 0.24218750, 0.25781250, 0.49218750}, -- (  2/256,  62/256,  66/256, 126/256)
+	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Ability_Hunter_BestialDiscipline"},   -- Beast Mastery
+	                         [2] = {role = 3, icon = "Interface\\Icons\\Ability_Hunter_FocusedAim"},          -- Marksmanship
+	                         [3] = {role = 3, icon = "Interface\\Icons\\Ability_Hunter_Camouflage"},          -- Survival
+	                         [4] = {role = 4, icon = nil}}},
+	MAGE        = {coords = {0.25781250, 0.49218750, 0.00781250, 0.24218750}, -- ( 66/256, 126/256,   2/256,  62/256)
+	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Spell_Holy_MagicalSentry"},           -- Arcane
+	                         [2] = {role = 3, icon = "Interface\\Icons\\Spell_Fire_FireBolt02"},              -- Fire
+	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Frost_FrostBolt02"},            -- Frost
+	                         [4] = {role = 4, icon = nil}}},
+	MONK        = {coords = {0.50781250, 0.74218750, 0.50781250, 0.74218750}, -- (130/256, 190/256, 130/256, 190/256) -- TODO_MoP
+	               spec   = {[1] = {role = 2, icon = "Interface\\Icons\\Spell_Monk_Brewmaster_Spec"},         -- Brewmaster
+	                         [2] = {role = 1, icon = "Interface\\Icons\\Spell_Monk_Mistweaver_Spec"},         -- Mistweaver
+	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Monk_Windwalker_Spec"},         -- Windwalker
+	                         [4] = {role = 4, icon = nil}}},
+	PALADIN     = {coords = {0.00781250, 0.24218750, 0.50781250, 0.74218750}, -- (  2/256,  62/256, 130/256, 190/256)
+	               spec   = {[1] = {role = 1, icon = "Interface\\Icons\\Spell_Holy_HolyBolt"},                -- Holy
+	                         [2] = {role = 2, icon = "Interface\\Icons\\Ability_Paladin_ShieldoftheTemplar"}, -- Protection
+	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Holy_AuraOfLight"},             -- Retribution
+	                         [4] = {role = 4, icon = nil}}},
+	PRIEST      = {coords = {0.50781250, 0.74218750, 0.25781250, 0.49218750}, -- (130/256, 190/256,  66/256, 126/256)
+	               spec   = {[1] = {role = 1, icon = "Interface\\Icons\\Spell_Holy_PowerWordShield"},         -- Discipline
+	                         [2] = {role = 1, icon = "Interface\\Icons\\Spell_Holy_GuardianSpirit"},          -- Holy
+	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Shadow_ShadowWordPain"},        -- Shadow
+	                         [4] = {role = 4, icon = nil}}},
+	ROGUE       = {coords = {0.50781250, 0.74218750, 0.00781250, 0.24218750}, -- (130/256, 190/256,   2/256,  62/256)
+	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Ability_Rogue_Eviscerate"},           -- Assassination
+	                         [2] = {role = 3, icon = "Interface\\Icons\\Ability_BackStab"},                   -- Combat
+	                         [3] = {role = 3, icon = "Interface\\Icons\\Ability_Stealth"},                    -- Subtlety
+	                         [4] = {role = 4, icon = nil}}},
+	SHAMAN      = {coords = {0.25781250, 0.49218750, 0.25781250, 0.49218750}, -- ( 66/256, 126/256,  66/256, 126/256)
+	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Spell_Nature_Lightning"},             -- Elemental
+	                         [2] = {role = 3, icon = "Interface\\Icons\\Spell_Nature_LightningShield"},       -- Enhancement
+	                         [3] = {role = 1, icon = "Interface\\Icons\\Spell_Nature_MagicImmunity"},         -- Restoration
+	                         [4] = {role = 4, icon = nil}}},
+	WARLOCK     = {coords = {0.75781250, 0.99218750, 0.25781250, 0.49218750}, -- (194/256, 254/256,  66/256, 126/256)
+	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Spell_Shadow_DeathCoil"},             -- Affliction
+	                         [2] = {role = 3, icon = "Interface\\Icons\\Spell_Shadow_Metamorphosis"},         -- Demonology
+	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Shadow_RainOfFire"},            -- Destruction
+	                         [4] = {role = 4, icon = nil}}},
+	WARRIOR     = {coords = {0.00781250, 0.24218750, 0.00781250, 0.24218750}, -- (  2/256,  62/256,   2/256,  62/256)
+	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Ability_Warrior_SavageBlow"},         -- Arms
+	                         [2] = {role = 3, icon = "Interface\\Icons\\Ability_Warrior_InnerRage"},          -- Fury
+	                         [3] = {role = 2, icon = "Interface\\Icons\\Ability_Warrior_DefensiveStance"},    -- Protection
+	                         [4] = {role = 4, icon = nil}}},
+	ZZZFAILURE  = {coords = {0, 0, 0, 0},
+	               spec   = {[1] = {role = 4, icon = nil},   -- unknown
+	                         [2] = {role = 4, icon = nil},   -- unknown
+	                         [3] = {role = 4, icon = nil},   -- unknown
+	                         [4] = {role = 4, icon = nil}}}, -- unknown
 }
 
-local classes_LOCALIZED = {}
-FillLocalizedClassList(classes_LOCALIZED, false)
+local class_LocaSort = {}
+FillLocalizedClassList(class_LocaSort, false) -- Constants.lua
 
-local classes_BLIZZ = {}
-for i = 1, #CLASS_SORT_ORDER do
-	classes_BLIZZ[ CLASS_SORT_ORDER[i] ] = i
+local class_BlizzSort = {}
+for i = 1, #CLASS_SORT_ORDER do -- Constants.lua
+	class_BlizzSort[ CLASS_SORT_ORDER[i] ] = i
 end
 
-local classesINT_LOCALIZED = { -- .cid .loc
- [1] = {cid = "DEATHKNIGHT", blizz = classes_BLIZZ.DEATHKNIGHT or  2, eng = "Death Knight", loc = classes_LOCALIZED.DEATHKNIGHT or "Death Knight"},
- [2] = {cid = "DRUID",       blizz = classes_BLIZZ.DRUID       or  6, eng = "Druid",        loc = classes_LOCALIZED.DRUID or "Druid"},
- [3] = {cid = "HUNTER",      blizz = classes_BLIZZ.HUNTER      or 10, eng = "Hunter",       loc = classes_LOCALIZED.HUNTER or "Hunter"},
- [4] = {cid = "MAGE",        blizz = classes_BLIZZ.MAGE        or  8, eng = "Mage",         loc = classes_LOCALIZED.MAGE or "Mage"},
- [5] = {cid = "PALADIN",     blizz = classes_BLIZZ.PALADIN     or  3, eng = "Paladin",      loc = classes_LOCALIZED.PALADIN or "Paladin"},
- [6] = {cid = "PRIEST",      blizz = classes_BLIZZ.PRIEST      or  4, eng = "Priest",       loc = classes_LOCALIZED.PRIEST or "Priest"},
- [7] = {cid = "ROGUE",       blizz = classes_BLIZZ.ROGUE       or  7, eng = "Rogue",        loc = classes_LOCALIZED.ROGUE or "Rogue"},
- [8] = {cid = "SHAMAN",      blizz = classes_BLIZZ.SHAMAN      or  5, eng = "Shaman",       loc = classes_LOCALIZED.SHAMAN or "Shaman"},
- [9] = {cid = "WARLOCK",     blizz = classes_BLIZZ.WARLOCK     or  9, eng = "Warlock",      loc = classes_LOCALIZED.WARLOCK or "Warlock"},
-[10] = {cid = "WARRIOR",     blizz = classes_BLIZZ.WARRIOR     or  1, eng = "Warrior",      loc = classes_LOCALIZED.WARRIOR or "Warrior"},
-[11] = {cid = "MONK",        blizz = classes_BLIZZ.MONK        or 11, eng = "Monk",         loc = classes_LOCALIZED.MONK or "Monk"}, -- TODO_MoP
+local class_IntegerSort = { -- .cid .blizz .eng .loc
+ [1] = {cid = "DEATHKNIGHT", blizz = class_BlizzSort.DEATHKNIGHT or  2, eng = "Death Knight", loc = class_LocaSort.DEATHKNIGHT or "Death Knight"},
+ [2] = {cid = "DRUID",       blizz = class_BlizzSort.DRUID       or  7, eng = "Druid",        loc = class_LocaSort.DRUID or "Druid"},
+ [3] = {cid = "HUNTER",      blizz = class_BlizzSort.HUNTER      or 11, eng = "Hunter",       loc = class_LocaSort.HUNTER or "Hunter"},
+ [4] = {cid = "MAGE",        blizz = class_BlizzSort.MAGE        or  9, eng = "Mage",         loc = class_LocaSort.MAGE or "Mage"},
+ [5] = {cid = "MONK",        blizz = class_BlizzSort.MONK        or  4, eng = "Monk",         loc = class_LocaSort.MONK or "Monk"}, -- TODO_MoP
+ [6] = {cid = "PALADIN",     blizz = class_BlizzSort.PALADIN     or  3, eng = "Paladin",      loc = class_LocaSort.PALADIN or "Paladin"},
+ [7] = {cid = "PRIEST",      blizz = class_BlizzSort.PRIEST      or  5, eng = "Priest",       loc = class_LocaSort.PRIEST or "Priest"},
+ [8] = {cid = "ROGUE",       blizz = class_BlizzSort.ROGUE       or  8, eng = "Rogue",        loc = class_LocaSort.ROGUE or "Rogue"},
+ [9] = {cid = "SHAMAN",      blizz = class_BlizzSort.SHAMAN      or  6, eng = "Shaman",       loc = class_LocaSort.SHAMAN or "Shaman"},
+[10] = {cid = "WARLOCK",     blizz = class_BlizzSort.WARLOCK     or 10, eng = "Warlock",      loc = class_LocaSort.WARLOCK or "Warlock"},
+[11] = {cid = "WARRIOR",     blizz = class_BlizzSort.WARRIOR     or  1, eng = "Warrior",      loc = class_LocaSort.WARRIOR or "Warrior"},
 }
 
-local ranges = {}
-ranges.DEATHKNIGHT =  47541 -- Death Coil        (30yd/m) - Lvl 55
-ranges.DRUID       =   5176 -- Wrath             (40yd/m) - Lvl  1
-ranges.HUNTER      =     75 -- Auto Shot       (5-40yd/m) - Lvl  1
-ranges.MAGE        =    133 -- Fireball          (40yd/m) - Lvl  1
-ranges.MONK        = 115546 -- Provoke           (40yd/m) - Lvl 14 MON14 TODO_MoP
-ranges.PALADIN     =  62124 -- Hand of Reckoning (30yd/m) - Lvl 14 PAL14
-ranges.PRIEST      =    589 -- Shadow Word: Pain (40yd/m) - Lvl  4
-ranges.ROGUE       =   6770 -- Sap               (10yd/m) - Lvl 10
-ranges.SHAMAN      =    403 -- Lightning Bolt    (30yd/m) - Lvl  1
-ranges.WARLOCK     =    686 -- Shadow Bolt       (40yd/m) - Lvl  1
-ranges.WARRIOR     =    100 -- Charge          (8-25yd/m) - Lvl  3
---for k,v in pairs(ranges) do local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(v) print(k, v, name, minRange, maxRange) end -- TEST
+local ranges = {
+	DEATHKNIGHT =  47541, -- Death Coil        (30yd/m) - Lvl 55
+	DRUID       =   5176, -- Wrath             (40yd/m) - Lvl  1
+	HUNTER      =     75, -- Auto Shot       (5-40yd/m) - Lvl  1
+	MAGE        =    133, -- Fireball          (40yd/m) - Lvl  1
+	MONK        = 115546, -- Provoke           (40yd/m) - Lvl 14 MON14 TODO_MoP
+	PALADIN     =  62124, -- Hand of Reckoning (30yd/m) - Lvl 14 PAL14
+	PRIEST      =    589, -- Shadow Word: Pain (40yd/m) - Lvl  4
+	ROGUE       =   6770, -- Sap               (10yd/m) - Lvl 10
+	SHAMAN      =    403, -- Lightning Bolt    (30yd/m) - Lvl  1
+	WARLOCK     =    686, -- Shadow Bolt       (40yd/m) - Lvl  1
+	WARRIOR     =    100, -- Charge          (8-25yd/m) - Lvl  3
+}
+--for k, v in pairs(ranges) do local name, _, _, _, _, _, _, min, max = GetSpellInfo(v) print(k, v, name, min, max) end -- TEST
 
-local rangeTypeName = {}
-rangeTypeName[1] = "1) CombatLog |cffffff79(0-73)|r"
+local rangeTypeName = {
+	[1] = "1) CombatLog |cffffff79(0-73)|r", -- 1) combatlog
+	[2] = "2) ...",                          -- 2) class-spell based
+	[3] = "3) ...",                          -- 3) mix 1 class-spell based + combatlog (range: 0-45)
+	[4] = "4) ...",                          -- 4) mix 2 class-spell based + combatlog (range: class-spell dependent)
+}
 
-local rangeDisplay = {} -- RANGE_DISP_LAY
-rangeDisplay[1]  = "STD 100" -- STD = Standard
-rangeDisplay[2]  = "STD 100 mono"
-rangeDisplay[3]  = "STD 50"
-rangeDisplay[4]  = "STD 50 mono"
-rangeDisplay[5]  = "STD 10"
-rangeDisplay[6]  = "STD 10 mono"
-rangeDisplay[7]  = "X 100 mono" -- X = without block
-rangeDisplay[8]  = "X 50 mono"
-rangeDisplay[9]  = "X 10"
-rangeDisplay[10] = "X 10 mono"
+local rangeDisplay = { -- RANGE_DISP_LAY
+	 [1] = "STD 100", -- STD = Standard
+	 [2] = "STD 100 mono",
+	 [3] = "STD 50",
+	 [4] = "STD 50 mono",
+	 [5] = "STD 10",
+	 [6] = "STD 10 mono",
+	 [7] = "X 100 mono", -- X = without block
+	 [8] = "X 50 mono",
+	 [9] = "X 10",
+	[10] = "X 10 mono",
+}
 
 local function rt(H,E,M,P) return E,P,E,M,H,P,H,M end -- magical 180 degree texture cut center rotation
 
@@ -565,10 +569,6 @@ local function SortDetailPullDownFunc(value) -- PDFUNC
 end
 
 local function RangeCheckTypePullDownFunc(value) -- PDFUNC
-	-- 1) combatlog
-	-- 2) class-spell based
-	-- 3) mix class-spell based + combatlog (range: 0-45)
-	-- 4) mix class-spell based + combatlog (range: class-spell dependent)
 	BattlegroundTargets_Options.ButtonTypeRangeCheck[currentSize] = value
 	                        OPT.ButtonTypeRangeCheck[currentSize] = value
 end
@@ -1918,7 +1918,7 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.ClassTexture:SetWidth(buttonHeight-2)
 		GVAR_TargetButton.ClassTexture:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
-		GVAR_TargetButton.ClassTexture:SetTexture(classimg)
+		GVAR_TargetButton.ClassTexture:SetTexture("Interface\\WorldStateFrame\\Icons-Classes")
 		GVAR_TargetButton.ClassTexture:SetTexCoord(0, 0, 0, 0)
 
 		GVAR_TargetButton.LeaderTexture = GVAR_TargetButton:CreateTexture(nil, "ARTWORK")
@@ -3161,15 +3161,15 @@ function BattlegroundTargets:CreateOptionsFrame()
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["This option uses the CombatLog to check range."].."|r\n\n\n"
 		rangeInfoTxt = rangeInfoTxt..rangeTypeName[2]..":\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["This option uses a pre-defined spell to check range:"].."|r\n"
-		table_sort(classesINT_LOCALIZED, function(a, b) if a.loc < b.loc then return true end end)
+		table_sort(class_IntegerSort, function(a, b) if a.loc < b.loc then return true end end)
 		local playerMClass = "?"
-		for i = 1, #classesINT_LOCALIZED do
-			local classEN = classesINT_LOCALIZED[i].cid
+		for i = 1, #class_IntegerSort do
+			local classEN = class_IntegerSort[i].cid
 if tocversion < 50000 and classEN ~= "MONK" then -- TODO_MoP
 			local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(ranges[classEN])
-			local classStr = "|cff"..ClassHexColor(classEN)..classesINT_LOCALIZED[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[classEN]..")|r"
+			local classStr = "|cff"..ClassHexColor(classEN)..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[classEN]..")|r"
 			if classEN == playerClassEN then
-				playerMClass = "|cff"..ClassHexColor(classEN)..classesINT_LOCALIZED[i].loc.."|r"
+				playerMClass = "|cff"..ClassHexColor(classEN)..class_IntegerSort[i].loc.."|r"
 				rangeInfoTxt = rangeInfoTxt..">>> "..classStr.." <<<"
 			else
 				rangeInfoTxt = rangeInfoTxt.."     "..classStr
@@ -3321,31 +3321,31 @@ end -- TODO_MoP
 	-- sort info
 		----- text
 		local infoTxt1 = sortDetail[1]..":\n"
-		table_sort(classesINT_LOCALIZED, function(a, b) if a.loc < b.loc then return true end end)
-		for i = 1, #classesINT_LOCALIZED do
-if tocversion < 50000 and classesINT_LOCALIZED[i].cid ~= "MONK" then -- TODO_MoP
-			infoTxt1 = infoTxt1.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r"
-			if i <= #classesINT_LOCALIZED then
+		table_sort(class_IntegerSort, function(a, b) if a.loc < b.loc then return true end end)
+		for i = 1, #class_IntegerSort do
+if tocversion < 50000 and class_IntegerSort[i].cid ~= "MONK" then -- TODO_MoP
+			infoTxt1 = infoTxt1.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].loc.."|r"
+			if i <= #class_IntegerSort then
 				infoTxt1 = infoTxt1.."\n"
 			end
 end -- TODO_MoP
 		end
 		local infoTxt2 = sortDetail[2]..":\n"
-		table_sort(classesINT_LOCALIZED, function(a, b) if a.eng < b.eng then return true end end)
-		for i = 1, #classesINT_LOCALIZED do
-if tocversion < 50000 and classesINT_LOCALIZED[i].cid ~= "MONK" then -- TODO_MoP
-			infoTxt2 = infoTxt2.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].eng.." ("..classesINT_LOCALIZED[i].loc..")|r"
-			if i <= #classesINT_LOCALIZED then
+		table_sort(class_IntegerSort, function(a, b) if a.eng < b.eng then return true end end)
+		for i = 1, #class_IntegerSort do
+if tocversion < 50000 and class_IntegerSort[i].cid ~= "MONK" then -- TODO_MoP
+			infoTxt2 = infoTxt2.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].eng.." ("..class_IntegerSort[i].loc..")|r"
+			if i <= #class_IntegerSort then
 				infoTxt2 = infoTxt2.."\n"
 			end
 end -- TODO_MoP
 		end
 		local infoTxt3 = sortDetail[3]..":\n"
-		table_sort(classesINT_LOCALIZED, function(a, b) if a.blizz < b.blizz then return true end end)
-		for i = 1, #classesINT_LOCALIZED do
-if tocversion < 50000 and classesINT_LOCALIZED[i].cid ~= "MONK" then -- TODO_MoP
-			infoTxt3 = infoTxt3.." |cff"..ClassHexColor(classesINT_LOCALIZED[i].cid)..classesINT_LOCALIZED[i].loc.."|r"
-			if i <= #classesINT_LOCALIZED then
+		table_sort(class_IntegerSort, function(a, b) if a.blizz < b.blizz then return true end end)
+		for i = 1, #class_IntegerSort do
+if tocversion < 50000 and class_IntegerSort[i].cid ~= "MONK" then -- TODO_MoP
+			infoTxt3 = infoTxt3.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].loc.."|r"
+			if i <= #class_IntegerSort then
 				infoTxt3 = infoTxt3.."\n"
 			end
 end -- TODO_MoP
@@ -5719,16 +5719,16 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 local sortfunc13 = function(a, b) -- ROLE / CLASS / NAME | 13
 	if a.talentSpec == b.talentSpec then
-		if classes_BLIZZ[ a.classToken ] == classes_BLIZZ[ b.classToken ] then
+		if class_BlizzSort[ a.classToken ] == class_BlizzSort[ b.classToken ] then
 			if a.name < b.name then return true end
-		elseif classes_BLIZZ[ a.classToken ] < classes_BLIZZ[ b.classToken ] then return true end
+		elseif class_BlizzSort[ a.classToken ] < class_BlizzSort[ b.classToken ] then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
 local sortfunc11 = function(a, b) -- ROLE / CLASS / NAME | 11
 	if a.talentSpec == b.talentSpec then
-		if classes_LOCALIZED[ a.classToken ] == classes_LOCALIZED[ b.classToken ] then
+		if class_LocaSort[ a.classToken ] == class_LocaSort[ b.classToken ] then
 			if a.name < b.name then return true end
-		elseif classes_LOCALIZED[ a.classToken ] < classes_LOCALIZED[ b.classToken ] then return true end
+		elseif class_LocaSort[ a.classToken ] < class_LocaSort[ b.classToken ] then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
 local sortfunc12 = function(a, b) -- ROLE / CLASS / NAME | 12
@@ -5744,18 +5744,18 @@ local sortfunc2 = function(a, b) -- ROLE / NAME | 2
 	elseif a.talentSpec < b.talentSpec then return true end
 end
 local sortfunc33 = function(a, b) -- CLASS / ROLE / NAME | 33
-	if classes_BLIZZ[ a.classToken ] == classes_BLIZZ[ b.classToken ] then
+	if class_BlizzSort[ a.classToken ] == class_BlizzSort[ b.classToken ] then
 		if a.talentSpec == b.talentSpec then
 			if a.name < b.name then return true end
 		elseif a.talentSpec < b.talentSpec then return true end
-	elseif classes_BLIZZ[ a.classToken ] < classes_BLIZZ[ b.classToken ] then return true end
+	elseif class_BlizzSort[ a.classToken ] < class_BlizzSort[ b.classToken ] then return true end
 end
 local sortfunc31 = function(a, b) -- CLASS / ROLE / NAME | 31
-	if classes_LOCALIZED[ a.classToken ] == classes_LOCALIZED[ b.classToken ] then
+	if class_LocaSort[ a.classToken ] == class_LocaSort[ b.classToken ] then
 		if a.talentSpec == b.talentSpec then
 			if a.name < b.name then return true end
 		elseif a.talentSpec < b.talentSpec then return true end
-	elseif classes_LOCALIZED[ a.classToken ] < classes_LOCALIZED[ b.classToken ] then return true end
+	elseif class_LocaSort[ a.classToken ] < class_LocaSort[ b.classToken ] then return true end
 end
 local sortfunc32 = function(a, b) -- CLASS / ROLE / NAME | 32
 	if a.classToken == b.classToken then
@@ -5765,14 +5765,14 @@ local sortfunc32 = function(a, b) -- CLASS / ROLE / NAME | 32
 	elseif a.classToken < b.classToken then return true end
 end
 local sortfunc43 = function(a, b) -- CLASS / NAME | 43
-	if classes_BLIZZ[ a.classToken ] == classes_BLIZZ[ b.classToken ] then
+	if class_BlizzSort[ a.classToken ] == class_BlizzSort[ b.classToken ] then
 		if a.name < b.name then return true end
-	elseif classes_BLIZZ[ a.classToken ] < classes_BLIZZ[ b.classToken ] then return true end
+	elseif class_BlizzSort[ a.classToken ] < class_BlizzSort[ b.classToken ] then return true end
 end
 local sortfunc41 = function(a, b) -- CLASS / NAME | 41
-	if classes_LOCALIZED[ a.classToken ] == classes_LOCALIZED[ b.classToken ] then
+	if class_LocaSort[ a.classToken ] == class_LocaSort[ b.classToken ] then
 		if a.name < b.name then return true end
-	elseif classes_LOCALIZED[ a.classToken ] < classes_LOCALIZED[ b.classToken ] then return true end
+	elseif class_LocaSort[ a.classToken ] < class_LocaSort[ b.classToken ] then return true end
 end
 local sortfunc42 = function(a, b) -- CLASS / NAME | 42
 	if a.classToken == b.classToken then
@@ -5900,7 +5900,7 @@ function BattlegroundTargets:MainDataUpdate()
 			end
 
 			if ButtonClassIcon then
-				GVAR_TargetButton.ClassTexture:SetTexCoord(classes[qclassToken].icon[1], classes[qclassToken].icon[2], classes[qclassToken].icon[3], classes[qclassToken].icon[4])
+				GVAR_TargetButton.ClassTexture:SetTexCoord(classes[qclassToken].coords[1], classes[qclassToken].coords[2], classes[qclassToken].coords[3], classes[qclassToken].coords[4])
 			end
 
 			local nameE = ENEMY_Names[qname]
@@ -7002,7 +7002,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	-- GLDGRP
 	if OPT.ButtonShowGuildGroup[currentSize] then
 		if not ENEMY_Guild[enemyName] then
-			if UnitIsVisible(enemyID) then -- vis
+			if UnitIsVisible(enemyID) then -- vis -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
 
 				local guildName = GetGuildInfo(enemyID)
 				if guildName and guildName ~= "" then
@@ -7075,7 +7075,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 				end
 
-			end -- vis
+			end -- vis -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
 		end
 	end
 
@@ -7207,7 +7207,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 	end
 	for num = 1, grpSize do
 		local unitID = "raid"..num
-		if UnitIsVisible(unitID) then
+		if UnitIsVisible(unitID) then -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
 			groupMemChk = groupMemChk + 1
 			local name, realm = UnitName(unitID)
 			if realm and realm ~= "" then
@@ -7226,7 +7226,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 				end
 			end
 
-		end
+		end -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
 	end
 
 	-- build table with guildCount as key and number of groups with same membersize as value
