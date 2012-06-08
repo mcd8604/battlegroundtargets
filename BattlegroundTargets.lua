@@ -6422,7 +6422,6 @@ function BattlegroundTargets:IsBattleground()
 		else
 			if reSizeCheck >= 10 then
 				Print("ERROR", "unknown battleground name", locale, bgName, zone)
-				Print("Please contact addon author. Thanks.")
 			end
 			currentSize = 10
 			reSizeCheck = reSizeCheck + 1
@@ -6440,7 +6439,6 @@ function BattlegroundTargets:IsBattleground()
 			oppositeFactionBG = 0 -- Horde
 		else
 			Print("ERROR", "unknown battleground faction", locale, faction)
-			Print("Please contact addon author. Thanks.")
 		end
 	end
 
@@ -6606,10 +6604,8 @@ function BattlegroundTargets:IsBattleground()
 						rangeSpellName, _, _, _, _, _, _, rangeMin, rangeMax = GetSpellInfo(ranges[playerClassEN])
 						if not rangeSpellName then
 							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
-							Print("Please contact addon author. Thanks.")
 						elseif (not rangeMin or not rangeMax) or (rangeMin <= 0 and rangeMax <= 0) then
 							Print("ERROR", "spell min/max fail (rangecheck)", locale, rangeSpellName, rangeMin, rangeMax)
-							Print("Please contact addon author. Thanks.")
 						else
 							BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
 							BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
@@ -6621,14 +6617,11 @@ function BattlegroundTargets:IsBattleground()
 						end
 					elseif (playerClassEN == "PALADIN" or playerClassEN == "MONK") and playerLevel < 14 then -- PAL14 MON14 TODO_MoP
 						Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.")
-						Print("Range check disabled.")
 					else
 						Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
-						Print("Please contact addon author. Thanks.")
 					end
 				else
 					Print("ERROR", "unknown class (rangecheck)", locale, playerClassEN)
-					Print("Please contact addon author. Thanks.")
 				end
 
 			end
@@ -7621,7 +7614,6 @@ function BattlegroundTargets:CheckFaction()
 		oppositeFactionDEF = 0 -- Dummy
 	else
 		Print("ERROR", "unknown faction", locale, faction)
-		Print("Please contact addon author. Thanks.")
 		playerFactionDEF   = 1 -- Dummy
 		oppositeFactionDEF = 0 -- Dummy
 	end
