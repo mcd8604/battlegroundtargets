@@ -7455,6 +7455,9 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 		-- enemy attack player
 		if ENEMY_Names[sourceName] then
 			if destName == playerName then
+
+				if ENEMY_Name2Percent[sourceName] then return end
+
 				local curTime = GetTime()
 				ENEMY_Name2Range[sourceName] = curTime
 				local sourceButton = ENEMY_Name2Button[sourceName]
@@ -7477,6 +7480,9 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 		-- enemy attack player
 		if ENEMY_Names[sourceName] then
 			if destName == playerName then
+
+				if ENEMY_Name2Percent[sourceName] then return end
+
 				local curTime = GetTime()
 				ENEMY_Name2Range[sourceName] = curTime
 				local sourceButton = ENEMY_Name2Button[sourceName]
