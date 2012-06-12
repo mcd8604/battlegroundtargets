@@ -420,14 +420,18 @@ local ranges = {
 	DRUID       =   5176, -- Wrath             (40yd/m) - Lvl  1
 	HUNTER      =     75, -- Auto Shot       (5-40yd/m) - Lvl  1
 	MAGE        =    133, -- Fireball          (40yd/m) - Lvl  1
-	MONK        = 115546, -- Provoke           (40yd/m) - Lvl 14 MON14 TODO_MoP
-	PALADIN     =  62124, -- Hand of Reckoning (30yd/m) - Lvl 14 PAL14
+	MONK        = 115546, -- Provoke           (40yd/m) - Lvl 14 MON14 TODO_MoP ?warning req in MoP?
+	PALADIN     =  62124, -- Hand of Reckoning (30yd/m) - Lvl 14 PAL14 TODO_MoP ?NO warning req in MoP? (Lvl 3)
 	PRIEST      =    589, -- Shadow Word: Pain (40yd/m) - Lvl  4
-	ROGUE       =   6770, -- Sap               (10yd/m) - Lvl 10
+	ROGUE       =   6770, -- Sap               (10yd/m) - Lvl 10 ROG12 TODO_MoP ?warning req in MoP? (Lvl 12)
 	SHAMAN      =    403, -- Lightning Bolt    (30yd/m) - Lvl  1
 	WARLOCK     =    686, -- Shadow Bolt       (40yd/m) - Lvl  1
 	WARRIOR     =    100, -- Charge          (8-25yd/m) - Lvl  3
 }
+if tocversion >= 50000 then -- TODO_MoP
+	ranges.MAGE    = 44614-- Frostfire Bolt    (40yd/m) - Lvl 1
+	ranges.PALADIN = 20271-- Judgment          (30yd/m) - Lvl 3
+end
 --for k, v in pairs(ranges) do local name, _, _, _, _, _, _, min, max = GetSpellInfo(v) print(k, v, name, min, max) end -- TEST
 
 local rangeTypeName = {
@@ -6615,8 +6619,12 @@ function BattlegroundTargets:IsBattleground()
 								BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 							end
 						end
-					elseif (playerClassEN == "PALADIN" or playerClassEN == "MONK") and playerLevel < 14 then -- PAL14 MON14 TODO_MoP
+					elseif tocversion < 50000 and playerClassEN == "PALADIN" and playerLevel < 14 then -- PAL14 TODO_MoP
 						Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.")
+					elseif tocversion >= 50000 and playerClassEN == "MONK" and playerLevel < 14 then -- MON14 TODO_MoP
+						Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.")
+					elseif tocversion >= 50000 and playerClassEN == "ROGUE" and playerLevel < 12 then -- ROG12 TODO_MoP
+						Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 12.")
 					else
 						Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
 					end
