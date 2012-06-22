@@ -7196,38 +7196,73 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
--- TODO
 function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 	if isConfig then return end
 	if not BattlegroundTargets_Options.Summary[currentSize] then return end
 
 	-- scan each groupmember
-	local grpSize = GetNumGroupMembers() -- TODO_MoP
-	if groupMembers == 0 then
-		groupMembers = grpSize
+	groupMembers = GetNumGroupMembers() -- TODO_MoP
+	if groupMemChk > groupMembers then
+		groupMemChk = groupMembers
 	end
-	for num = 1, grpSize do
+
+	--print("0---START -----", caller, GetTime()) -- TEST
+	for num = 1, groupMembers do
 		local unitID = "raid"..num
-		if UnitIsVisible(unitID) then -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
-			groupMemChk = groupMemChk + 1
+		if UnitIsVisible(unitID) then -- vis -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
 			local name, realm = UnitName(unitID)
 			if realm and realm ~= "" then
 				name = name.."-"..realm
 			end
+			if name then
+				-- do the guild name check 3 times. reason: sometimes GetGuildInfo() returns nil, even if a player is in a guild.
+				if not FRIEND_GuildName[name] then
 
-			if name and not FRIEND_GuildName[name] then
-				FRIEND_GuildName[name] = 1
-				local guildName = GetGuildInfo(unitID)
-				if guildName and guildName ~= "" then
-					if not FRIEND_GuildCount[guildName] then
-						FRIEND_GuildCount[guildName] = 1
-					else
-						FRIEND_GuildCount[guildName] = FRIEND_GuildCount[guildName] + 1
+					FRIEND_GuildName[name] = 1
+					local guildName = GetGuildInfo(unitID)
+					if guildName and guildName ~= "" then
+						FRIEND_GuildName[name] = 4
+						groupMemChk = groupMemChk + 1
+						if not FRIEND_GuildCount[guildName] then
+							FRIEND_GuildCount[guildName] = 1
+						else
+							FRIEND_GuildCount[guildName] = FRIEND_GuildCount[guildName] + 1
+						end
 					end
+					--print(num, groupMembers, unitID, "#", name, "->", guildName, "*1*", FRIEND_GuildName[name]) -- TEST
+
+				elseif FRIEND_GuildName[name] < 3 then
+
+					FRIEND_GuildName[name] = FRIEND_GuildName[name] + 1
+					local guildName = GetGuildInfo(unitID)
+					if guildName and guildName ~= "" then
+						FRIEND_GuildName[name] = 4
+						groupMemChk = groupMemChk + 1
+						if not FRIEND_GuildCount[guildName] then
+							FRIEND_GuildCount[guildName] = 1
+						else
+							FRIEND_GuildCount[guildName] = FRIEND_GuildCount[guildName] + 1
+						end
+					end
+					--print(num, groupMembers, unitID, "#", name, "->", guildName, "*2*", FRIEND_GuildName[name]) -- TEST
+
+				elseif FRIEND_GuildName[name] == 3 then
+
+					FRIEND_GuildName[name] = 4
+					groupMemChk = groupMemChk + 1
+					local guildName = GetGuildInfo(unitID)
+					if guildName and guildName ~= "" then
+						if not FRIEND_GuildCount[guildName] then
+							FRIEND_GuildCount[guildName] = 1
+						else
+							FRIEND_GuildCount[guildName] = FRIEND_GuildCount[guildName] + 1
+						end
+					end
+					--print(num, groupMembers, unitID, "#", name, "->", guildName, "*3*", FRIEND_GuildName[name]) -- TEST
+
 				end
 			end
-
-		end -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
+		end -- vis -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
 	end
 
 	-- build table with guildCount as key and number of groups with same membersize as value
@@ -7637,6 +7672,18 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CheckIfPlayerIsGhost()
+	if not inBattleground then return end
+	if UnitIsGhost("player") then
+		isDeadUpdateStop = true
+		BattlegroundTargets:ClearRangeData()
+	else
+		isDeadUpdateStop = false
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
 local function OnEvent(self, event, ...)
 	--if not eventTest[event] then eventTest[event] = 1 else eventTest[event] = eventTest[event] + 1 end -- TEST
 	if event == "PLAYER_REGEN_DISABLED" then
@@ -7735,13 +7782,7 @@ local function OnEvent(self, event, ...)
 		if not inBattleground then return end
 		isDeadUpdateStop = false
 	elseif event == "PLAYER_ALIVE" then
-		if not inBattleground then return end
-		if UnitIsGhost("player") then
-			isDeadUpdateStop = true
-			BattlegroundTargets:ClearRangeData()
-		else
-			isDeadUpdateStop = false
-		end
+		BattlegroundTargets:CheckIfPlayerIsGhost()
 
 	elseif event == "ZONE_CHANGED_NEW_AREA" then
 		if not inWorld then return end
@@ -7778,6 +7819,7 @@ local function OnEvent(self, event, ...)
 		inWorld = true
 		BattlegroundTargets:CheckPlayerLevel() -- LVLCHK
 		BattlegroundTargets:BattlefieldCheck()
+		BattlegroundTargets:CheckIfPlayerIsGhost()
 		BattlegroundTargets:CreateMinimapButton()
 
 		if not BattlegroundTargets_Options.FirstRun then
