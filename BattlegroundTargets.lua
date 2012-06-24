@@ -7499,7 +7499,17 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 		if ENEMY_Names[sourceName] then
 			if destName == playerName then
 
-				if ENEMY_Name2Percent[sourceName] then return end
+				if ENEMY_Name2Percent[sourceName] == 0 then
+					ENEMY_Name2Range[sourceName] = nil
+					local sourceButton = ENEMY_Name2Button[sourceName]
+					if sourceButton then
+						local GVAR_TargetButton = GVAR.TargetButton[sourceButton]
+						if GVAR_TargetButton then
+							Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+						end
+					end
+					return
+				end
 
 				local curTime = GetTime()
 				ENEMY_Name2Range[sourceName] = curTime
@@ -7524,7 +7534,17 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 		if ENEMY_Names[sourceName] then
 			if destName == playerName then
 
-				if ENEMY_Name2Percent[sourceName] then return end
+				if ENEMY_Name2Percent[sourceName] == 0 then
+					ENEMY_Name2Range[sourceName] = nil
+					local sourceButton = ENEMY_Name2Button[sourceName]
+					if sourceButton then
+						local GVAR_TargetButton = GVAR.TargetButton[sourceButton]
+						if GVAR_TargetButton then
+							Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+						end
+					end
+					return
+				end
 
 				local curTime = GetTime()
 				ENEMY_Name2Range[sourceName] = curTime
