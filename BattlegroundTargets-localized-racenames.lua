@@ -84,6 +84,31 @@ elseif locale == "frFR" then
 		["Gobelin"] = HORDE,
 		["Gobeline"] = HORDE,
 	}
+elseif locale == "itIT" then
+--[[ --TODO
+
+--]]
+
+	BattlegroundTargets_RaceNames = { -- TODO | data from Patch 5.0.3.15851 (BETA)
+		["Umana"] = ALLIANCE,
+		["Umano"] = ALLIANCE,
+		["Gnoma"] = ALLIANCE,
+		["Gnomo"] = ALLIANCE,
+		["Non Morto"] = HORDE,
+		["Non Morta"] = HORDE,
+		["Elfa della Notte"] = ALLIANCE,
+		["Elfo della Notte"] = ALLIANCE,
+		["Elfa del Sangue"] = HORDE,
+		["Elfo del Sangue"] = HORDE,
+		["Orchessa"] = HORDE,
+		["Orco"] = HORDE,
+
+		["Draenei"] = ALLIANCE,
+		["Troll"] = HORDE,
+		["Nano"] = ALLIANCE,
+		["Goblin"] = HORDE,
+		["Tauren"] = HORDE,
+	}
 elseif locale == "koKR" then
 	BattlegroundTargets_RaceNames = { -- 12 | data from Patch 4.3.2.15201 (PTR)
 		["트롤"] = HORDE,

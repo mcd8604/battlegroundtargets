@@ -1,14 +1,13 @@
-## Interface: 40300
+## Interface: 50001
 ## Author: kunda
 ## Title: BattlegroundTargets
 ## Notes: Shows all battleground enemies. Simple 'Enemy Unit Frame' for battlegrounds.
 ## Notes-zhCN: 显示全部战场敌人。战场简洁敌对单位框体。
 ## Notes-zhTW: 顯示全部戰場敵人。戰場簡潔敵對單位框體。
-## Version: 40300-12
+## Version: 50001-1
 ## SavedVariables: BattlegroundTargets_Options
 
 BattlegroundTargets-localized-bgnames.lua
-BattlegroundTargets-localized-talents.lua
 BattlegroundTargets-localized-flag.lua
 BattlegroundTargets-localized-racenames.lua
 
@@ -16,6 +15,7 @@ BattlegroundTargets-localization-enUS.lua
 BattlegroundTargets-localization-deDE.lua
 BattlegroundTargets-localization-esES.lua
 BattlegroundTargets-localization-esMX.lua
+BattlegroundTargets-localization-itIT.lua
 BattlegroundTargets-localization-frFR.lua
 BattlegroundTargets-localization-koKR.lua
 BattlegroundTargets-localization-ptBR.lua

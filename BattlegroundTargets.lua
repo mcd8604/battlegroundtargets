@@ -67,11 +67,11 @@
 --   - Event:              - UNIT_TARGET                                      --
 --                                                                            --
 -- # Guild Groups: ----------------------------------------- MEDIUM CPU USAGE --
---   - Events:             - RAID_ROSTER_UPDATE                               --
+--   - Events:             - GROUP_ROSTER_UPDATE                              --
 --                         - UNIT_TARGET                                      --
 --                                                                            --
 -- # Main Assist Target: ------------------------------- LOW MEDIUM CPU USAGE --
---   - Events:             - RAID_ROSTER_UPDATE                               --
+--   - Events:             - GROUP_ROSTER_UPDATE                              --
 --                         - UNIT_TARGET                                      --
 --                                                                            --
 -- # Leader: ------------------------------------------- LOW MEDIUM CPU USAGE --
@@ -114,12 +114,19 @@
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 
+local _, _, _, tocversion = GetBuildInfo() -- TODO_MoP
+if tocversion < 50000 then
+	print("|cffffff7fBattlegroundTargets:|r This is for Mist of Pandaria only.")
+	print("|cffffff7fBattlegroundTargets:|r Please use the latest Release version.")
+	print("|cffffff7fBattlegroundTargets terminated.|r")
+	return
+end
+
 -- ---------------------------------------------------------------------------------------------------------------------
 BattlegroundTargets_Options = {} -- SavedVariable options table
 local BattlegroundTargets = CreateFrame("Frame") -- container
 
 local L   = BattlegroundTargets_Localization -- localization table
-local TLT = BattlegroundTargets_Talents      -- localized talents
 local BGN = BattlegroundTargets_BGNames      -- localized battleground names
 local FLG = BattlegroundTargets_Flag         -- localized flag picked/dropped/captured/debuff
 local RNA = BattlegroundTargets_RaceNames    -- localized race names
@@ -129,9 +136,6 @@ local TEMPLATE = {} -- Templates
 local OPT = {}      -- local SavedVariable table (BattlegroundTargets_Options.Button*)
 
 local AddonIcon = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-button"
-
-local _, _, _, tocversion = GetBuildInfo() -- TODO_MoP
-local RosterUpdate = "GROUP_ROSTER_UPDATE" if tocversion < 50000 then RosterUpdate = "RAID_ROSTER_UPDATE" end -- TODO_MoP
 
 local _G                         = _G
 local GetTime                    = _G.GetTime
@@ -149,14 +153,14 @@ local UnitName                   = _G.UnitName
 local UnitLevel                  = _G.UnitLevel
 local UnitHealthMax              = _G.UnitHealthMax
 local UnitHealth                 = _G.UnitHealth
-local UnitIsGroupLeader          = _G.UnitIsGroupLeader if tocversion < 50000 then UnitIsGroupLeader = _G.UnitIsPartyLeader end -- TODO_MoP
+local UnitIsGroupLeader          = _G.UnitIsGroupLeader
 local UnitBuff                   = _G.UnitBuff
 local UnitDebuff                 = _G.UnitDebuff
 local UnitIsVisible              = _G.UnitIsVisible -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
 local GetSpellInfo               = _G.GetSpellInfo
 local IsSpellInRange             = _G.IsSpellInRange
 local CheckInteractDistance      = _G.CheckInteractDistance
-local GetNumGroupMembers         = _G.GetNumGroupMembers if tocversion < 50000 then GetNumGroupMembers = _G.GetNumRaidMembers end -- TODO_MoP
+local GetNumGroupMembers         = _G.GetNumGroupMembers
 local GetRaidRosterInfo          = _G.GetRaidRosterInfo
 local math_min                   = _G.math.min
 local math_max                   = _G.math.max
@@ -169,6 +173,8 @@ local table_sort                 = _G.table.sort
 local table_wipe                 = _G.table.wipe
 local pairs                      = _G.pairs
 local tonumber                   = _G.tonumber
+
+local locale = GetLocale()
 
 local inWorld
 local inBattleground
@@ -218,7 +224,7 @@ local range_DisappearTime = 8               -- rangecheck: display update - clea
 
 local playerLevel = UnitLevel("player") -- LVLCHK
 local isLowLevel
-local maxLevel = 90 if tocversion < 50000 then maxLevel = 85 end -- TODO_MoP
+local maxLevel = 90
 
 local playerName = UnitName("player")
 local playerClass, playerClassEN = UnitClass("player")
@@ -280,7 +286,9 @@ local bgSize = {
 	["Strand of the Ancients"] = 15,
 	["Isle of Conquest"] = 40,
 	["The Battle for Gilneas"] = 10,
-	["Twin Peaks"] = 10, 
+	["Twin Peaks"] = 10,
+	["Silvershard Mines"] = 15, -- TODO
+	["Temple of Kotmogu"] = 15, -- TODO
 }
 
 local bgSizeINT = {
@@ -315,7 +323,6 @@ local sortBy = {
 	[5] = NAME,
 }
 
-local locale = GetLocale()
 local sortDetail = {
 	[1] = "*"..CLASS.." ("..locale..")",
 	[2] = "*"..CLASS.." (english)",
@@ -331,67 +338,44 @@ end
 -- coords : 2 62 66 126 130 190 194 254
 -- role   : 1 = HEAL | 2 = TANK | 3 = DAMAGE | 4 = UNKNOWN
 local classes = {
-	DEATHKNIGHT = {coords = {0.25781250, 0.49218750, 0.50781250, 0.74218750}, -- ( 66/256, 126/256, 130/256, 190/256)
-	               spec   = {[1] = {role = 2, icon = "Interface\\Icons\\Spell_Deathknight_BloodPresence"},    -- Blood
-	                         [2] = {role = 3, icon = "Interface\\Icons\\Spell_Deathknight_FrostPresence"},    -- Frost
-	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Deathknight_UnholyPresence"},   -- Unholy
-	                         [4] = {role = 4, icon = nil}}},
-	DRUID       = {coords = {0.75781250, 0.99218750, 0.00781250, 0.24218750}, -- (194/256, 254/256,   2/256,  62/256)
-	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Spell_Nature_StarFall"},              -- Balance
-	                         [2] = {role = 2, icon = "Interface\\Icons\\Ability_Racial_BearForm"},            -- Feral Combat
-	                         [3] = {role = 1, icon = "Interface\\Icons\\Spell_Nature_HealingTouch"},          -- Restoration
-	                         [4] = {role = 4, icon = nil}}},
-	HUNTER      = {coords = {0.00781250, 0.24218750, 0.25781250, 0.49218750}, -- (  2/256,  62/256,  66/256, 126/256)
-	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Ability_Hunter_BestialDiscipline"},   -- Beast Mastery
-	                         [2] = {role = 3, icon = "Interface\\Icons\\Ability_Hunter_FocusedAim"},          -- Marksmanship
-	                         [3] = {role = 3, icon = "Interface\\Icons\\Ability_Hunter_Camouflage"},          -- Survival
-	                         [4] = {role = 4, icon = nil}}},
-	MAGE        = {coords = {0.25781250, 0.49218750, 0.00781250, 0.24218750}, -- ( 66/256, 126/256,   2/256,  62/256)
-	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Spell_Holy_MagicalSentry"},           -- Arcane
-	                         [2] = {role = 3, icon = "Interface\\Icons\\Spell_Fire_FireBolt02"},              -- Fire
-	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Frost_FrostBolt02"},            -- Frost
-	                         [4] = {role = 4, icon = nil}}},
-	MONK        = {coords = {0.50781250, 0.74218750, 0.50781250, 0.74218750}, -- (130/256, 190/256, 130/256, 190/256) -- TODO_MoP
-	               spec   = {[1] = {role = 2, icon = "Interface\\Icons\\Spell_Monk_Brewmaster_Spec"},         -- Brewmaster
-	                         [2] = {role = 1, icon = "Interface\\Icons\\Spell_Monk_Mistweaver_Spec"},         -- Mistweaver
-	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Monk_Windwalker_Spec"},         -- Windwalker
-	                         [4] = {role = 4, icon = nil}}},
-	PALADIN     = {coords = {0.00781250, 0.24218750, 0.50781250, 0.74218750}, -- (  2/256,  62/256, 130/256, 190/256)
-	               spec   = {[1] = {role = 1, icon = "Interface\\Icons\\Spell_Holy_HolyBolt"},                -- Holy
-	                         [2] = {role = 2, icon = "Interface\\Icons\\Ability_Paladin_ShieldoftheTemplar"}, -- Protection
-	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Holy_AuraOfLight"},             -- Retribution
-	                         [4] = {role = 4, icon = nil}}},
-	PRIEST      = {coords = {0.50781250, 0.74218750, 0.25781250, 0.49218750}, -- (130/256, 190/256,  66/256, 126/256)
-	               spec   = {[1] = {role = 1, icon = "Interface\\Icons\\Spell_Holy_PowerWordShield"},         -- Discipline
-	                         [2] = {role = 1, icon = "Interface\\Icons\\Spell_Holy_GuardianSpirit"},          -- Holy
-	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Shadow_ShadowWordPain"},        -- Shadow
-	                         [4] = {role = 4, icon = nil}}},
-	ROGUE       = {coords = {0.50781250, 0.74218750, 0.00781250, 0.24218750}, -- (130/256, 190/256,   2/256,  62/256)
-	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Ability_Rogue_Eviscerate"},           -- Assassination
-	                         [2] = {role = 3, icon = "Interface\\Icons\\Ability_BackStab"},                   -- Combat
-	                         [3] = {role = 3, icon = "Interface\\Icons\\Ability_Stealth"},                    -- Subtlety
-	                         [4] = {role = 4, icon = nil}}},
-	SHAMAN      = {coords = {0.25781250, 0.49218750, 0.25781250, 0.49218750}, -- ( 66/256, 126/256,  66/256, 126/256)
-	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Spell_Nature_Lightning"},             -- Elemental
-	                         [2] = {role = 3, icon = "Interface\\Icons\\Spell_Nature_LightningShield"},       -- Enhancement
-	                         [3] = {role = 1, icon = "Interface\\Icons\\Spell_Nature_MagicImmunity"},         -- Restoration
-	                         [4] = {role = 4, icon = nil}}},
-	WARLOCK     = {coords = {0.75781250, 0.99218750, 0.25781250, 0.49218750}, -- (194/256, 254/256,  66/256, 126/256)
-	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Spell_Shadow_DeathCoil"},             -- Affliction
-	                         [2] = {role = 3, icon = "Interface\\Icons\\Spell_Shadow_Metamorphosis"},         -- Demonology
-	                         [3] = {role = 3, icon = "Interface\\Icons\\Spell_Shadow_RainOfFire"},            -- Destruction
-	                         [4] = {role = 4, icon = nil}}},
-	WARRIOR     = {coords = {0.00781250, 0.24218750, 0.00781250, 0.24218750}, -- (  2/256,  62/256,   2/256,  62/256)
-	               spec   = {[1] = {role = 3, icon = "Interface\\Icons\\Ability_Warrior_SavageBlow"},         -- Arms
-	                         [2] = {role = 3, icon = "Interface\\Icons\\Ability_Warrior_InnerRage"},          -- Fury
-	                         [3] = {role = 2, icon = "Interface\\Icons\\Ability_Warrior_DefensiveStance"},    -- Protection
-	                         [4] = {role = 4, icon = nil}}},
+	DEATHKNIGHT = {coords = {0.25781250, 0.49218750, 0.50781250, 0.74218750}}, -- ( 66/256, 126/256, 130/256, 190/256)
+	DRUID       = {coords = {0.75781250, 0.99218750, 0.00781250, 0.24218750}}, -- (194/256, 254/256,   2/256,  62/256)
+	HUNTER      = {coords = {0.00781250, 0.24218750, 0.25781250, 0.49218750}}, -- (  2/256,  62/256,  66/256, 126/256)
+	MAGE        = {coords = {0.25781250, 0.49218750, 0.00781250, 0.24218750}}, -- ( 66/256, 126/256,   2/256,  62/256)
+	MONK        = {coords = {0.50781250, 0.74218750, 0.50781250, 0.74218750}}, -- (130/256, 190/256, 130/256, 190/256)
+	PALADIN     = {coords = {0.00781250, 0.24218750, 0.50781250, 0.74218750}}, -- (  2/256,  62/256, 130/256, 190/256)
+	PRIEST      = {coords = {0.50781250, 0.74218750, 0.25781250, 0.49218750}}, -- (130/256, 190/256,  66/256, 126/256)
+	ROGUE       = {coords = {0.50781250, 0.74218750, 0.00781250, 0.24218750}}, -- (130/256, 190/256,   2/256,  62/256)
+	SHAMAN      = {coords = {0.25781250, 0.49218750, 0.25781250, 0.49218750}}, -- ( 66/256, 126/256,  66/256, 126/256)
+	WARLOCK     = {coords = {0.75781250, 0.99218750, 0.25781250, 0.49218750}}, -- (194/256, 254/256,  66/256, 126/256)
+	WARRIOR     = {coords = {0.00781250, 0.24218750, 0.00781250, 0.24218750}}, -- (  2/256,  62/256,   2/256,  62/256)
 	ZZZFAILURE  = {coords = {0, 0, 0, 0},
-	               spec   = {[1] = {role = 4, icon = nil},   -- unknown
-	                         [2] = {role = 4, icon = nil},   -- unknown
-	                         [3] = {role = 4, icon = nil},   -- unknown
-	                         [4] = {role = 4, icon = nil}}}, -- unknown
+	               spec   = {[1] = {role = 4, icon = nil, specName = ""},   -- unknown
+	                         [2] = {role = 4, icon = nil, specName = ""},   -- unknown
+	                         [3] = {role = 4, icon = nil, specName = ""},   -- unknown
+	                         [4] = {role = 4, icon = nil, specName = ""},   -- unknown
+	                         [5] = {role = 4, icon = nil, specName = ""}}}, -- unknown
 }
+
+for classID = 1, MAX_CLASSES do
+	local _, classTag = GetClassInfoByID(classID)
+	local numTabs = GetNumSpecializationsForClassID(classID)
+	--print("#", classTag, "| numTabs =", numTabs, "| classID =", classID) -- TEST
+	classes[classTag].spec = {}
+	for i = 1, 5 do -- 5 means: maximum numTabs (3 or 4) or MAX_TALENT_TABS (=4) + 1 for unknown spec = 5
+		if i <= numTabs then
+			local id, name, _, icon = GetSpecializationInfoForClassID(classID, i)
+			local role = GetSpecializationRoleByID(id)
+			--print("#", role, id, name, icon) -- TEST
+			if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, icon = icon, specName = name} -- DAMAGER: total = 23
+			elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, icon = icon, specName = name} -- HEALER : total =  6
+			elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, icon = icon, specName = name} -- TANK   : total =  5
+			end
+		else
+			classes[classTag].spec[i] = {role = 4, icon = nil, specName = ""}
+		end
+	end
+end
 
 local class_LocaSort = {}
 FillLocalizedClassList(class_LocaSort, false) -- Constants.lua
@@ -406,7 +390,7 @@ local class_IntegerSort = { -- .cid .blizz .eng .loc
  [2] = {cid = "DRUID",       blizz = class_BlizzSort.DRUID       or  7, eng = "Druid",        loc = class_LocaSort.DRUID or "Druid"},
  [3] = {cid = "HUNTER",      blizz = class_BlizzSort.HUNTER      or 11, eng = "Hunter",       loc = class_LocaSort.HUNTER or "Hunter"},
  [4] = {cid = "MAGE",        blizz = class_BlizzSort.MAGE        or  9, eng = "Mage",         loc = class_LocaSort.MAGE or "Mage"},
- [5] = {cid = "MONK",        blizz = class_BlizzSort.MONK        or  4, eng = "Monk",         loc = class_LocaSort.MONK or "Monk"}, -- TODO_MoP
+ [5] = {cid = "MONK",        blizz = class_BlizzSort.MONK        or  4, eng = "Monk",         loc = class_LocaSort.MONK or "Monk"},
  [6] = {cid = "PALADIN",     blizz = class_BlizzSort.PALADIN     or  3, eng = "Paladin",      loc = class_LocaSort.PALADIN or "Paladin"},
  [7] = {cid = "PRIEST",      blizz = class_BlizzSort.PRIEST      or  5, eng = "Priest",       loc = class_LocaSort.PRIEST or "Priest"},
  [8] = {cid = "ROGUE",       blizz = class_BlizzSort.ROGUE       or  8, eng = "Rogue",        loc = class_LocaSort.ROGUE or "Rogue"},
@@ -418,20 +402,16 @@ local class_IntegerSort = { -- .cid .blizz .eng .loc
 local ranges = {
 	DEATHKNIGHT =  47541, -- Death Coil        (30yd/m) - Lvl 55
 	DRUID       =   5176, -- Wrath             (40yd/m) - Lvl  1
-	HUNTER      =     75, -- Auto Shot       (5-40yd/m) - Lvl  1
-	MAGE        =    133, -- Fireball          (40yd/m) - Lvl  1
-	MONK        = 115546, -- Provoke           (40yd/m) - Lvl 14 MON14 TODO_MoP ?warning req in MoP?
-	PALADIN     =  62124, -- Hand of Reckoning (30yd/m) - Lvl 14 PAL14 TODO_MoP ?NO warning req in MoP? (Lvl 3)
+	HUNTER      =     75, -- Auto Shot         (40yd/m) - Lvl  1
+	MAGE        =  44614, -- Frostfire Bolt    (40yd/m) - Lvl  1
+	MONK        = 115546, -- Provoke           (40yd/m) - Lvl 14 MON14
+	PALADIN     =  20271, -- Judgment          (30yd/m) - Lvl  3
 	PRIEST      =    589, -- Shadow Word: Pain (40yd/m) - Lvl  4
-	ROGUE       =   6770, -- Sap               (10yd/m) - Lvl 10 ROG12 TODO_MoP ?warning req in MoP? (Lvl 12)
+	ROGUE       =   6770, -- Sap               (10yd/m) - Lvl 12 ROG12
 	SHAMAN      =    403, -- Lightning Bolt    (30yd/m) - Lvl  1
 	WARLOCK     =    686, -- Shadow Bolt       (40yd/m) - Lvl  1
 	WARRIOR     =    100, -- Charge          (8-25yd/m) - Lvl  3
 }
-if tocversion >= 50000 then -- TODO_MoP
-	ranges.MAGE    = 44614-- Frostfire Bolt    (40yd/m) - Lvl 1
-	ranges.PALADIN = 20271-- Judgment          (30yd/m) - Lvl 3
-end
 --for k, v in pairs(ranges) do local name, _, _, _, _, _, _, min, max = GetSpellInfo(v) print(k, v, name, min, max) end -- TEST
 
 local rangeTypeName = {
@@ -2002,8 +1982,10 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.FlagTexture:SetTexCoord(0.15625001, 0.84374999, 0.15625001, 0.84374999)--(5/32, 27/32, 5/32, 27/32)
 		if playerFactionDEF == 0 then -- setup_flag_texture
 			GVAR_TargetButton.FlagTexture:SetTexture("Interface\\WorldStateFrame\\HordeFlag")
-		else
+		elseif playerFactionDEF == 1 then
 			GVAR_TargetButton.FlagTexture:SetTexture("Interface\\WorldStateFrame\\AllianceFlag")
+		else
+			GVAR_TargetButton.FlagTexture:SetTexture("Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2") -- neutral_flag
 		end
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
 
@@ -2109,9 +2091,12 @@ function BattlegroundTargets:CreateFrames()
 	if playerFactionDEF == 0 then -- summary_flag_texture
 		GVAR.Summary.Logo1:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
 		GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-	else
+	elseif playerFactionDEF == 1 then
 		GVAR.Summary.Logo1:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
 		GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+	else
+		GVAR.Summary.Logo1:SetTexture("Interface\\Timer\\Panda-Logo")
+		GVAR.Summary.Logo2:SetTexture("Interface\\Timer\\Panda-Logo")
 	end
 	-- ----------------------------------------
 
@@ -3169,7 +3154,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		local playerMClass = "?"
 		for i = 1, #class_IntegerSort do
 			local classEN = class_IntegerSort[i].cid
-if tocversion < 50000 and classEN ~= "MONK" then -- TODO_MoP
 			local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(ranges[classEN])
 			local classStr = "|cff"..ClassHexColor(classEN)..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[classEN]..")|r"
 			if classEN == playerClassEN then
@@ -3179,7 +3163,6 @@ if tocversion < 50000 and classEN ~= "MONK" then -- TODO_MoP
 				rangeInfoTxt = rangeInfoTxt.."     "..classStr
 			end
 			rangeInfoTxt = rangeInfoTxt.."\n"
-end -- TODO_MoP
 		end
 		rangeInfoTxt = rangeInfoTxt.."\n\n"..rangeTypeName[3]..":\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..CLASS..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
@@ -3327,32 +3310,26 @@ end -- TODO_MoP
 		local infoTxt1 = sortDetail[1]..":\n"
 		table_sort(class_IntegerSort, function(a, b) if a.loc < b.loc then return true end end)
 		for i = 1, #class_IntegerSort do
-if tocversion < 50000 and class_IntegerSort[i].cid ~= "MONK" then -- TODO_MoP
 			infoTxt1 = infoTxt1.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].loc.."|r"
 			if i <= #class_IntegerSort then
 				infoTxt1 = infoTxt1.."\n"
 			end
-end -- TODO_MoP
 		end
 		local infoTxt2 = sortDetail[2]..":\n"
 		table_sort(class_IntegerSort, function(a, b) if a.eng < b.eng then return true end end)
 		for i = 1, #class_IntegerSort do
-if tocversion < 50000 and class_IntegerSort[i].cid ~= "MONK" then -- TODO_MoP
 			infoTxt2 = infoTxt2.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].eng.." ("..class_IntegerSort[i].loc..")|r"
 			if i <= #class_IntegerSort then
 				infoTxt2 = infoTxt2.."\n"
 			end
-end -- TODO_MoP
 		end
 		local infoTxt3 = sortDetail[3]..":\n"
 		table_sort(class_IntegerSort, function(a, b) if a.blizz < b.blizz then return true end end)
 		for i = 1, #class_IntegerSort do
-if tocversion < 50000 and class_IntegerSort[i].cid ~= "MONK" then -- TODO_MoP
 			infoTxt3 = infoTxt3.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].loc.."|r"
 			if i <= #class_IntegerSort then
 				infoTxt3 = infoTxt3.."\n"
 			end
-end -- TODO_MoP
 		end
 		----- text
 	GVAR.OptionsFrame.SortInfo = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -4882,192 +4859,186 @@ function BattlegroundTargets:EnableConfigMode()
 		ENEMY_Data[1] = {}
 		ENEMY_Data[1].name = TARGET.."_Aa-servername"
 		ENEMY_Data[1].classToken = "DRUID"
-		ENEMY_Data[1].talentSpec = TLT.DRUID[3]
+		ENEMY_Data[1].talentSpec = classes["DRUID"].spec[3].specName
 		ENEMY_Data[2] = {}
 		ENEMY_Data[2].name = TARGET.."_Bb-servername"
 		ENEMY_Data[2].classToken = "PRIEST"
-		ENEMY_Data[2].talentSpec = TLT.PRIEST[3]
+		ENEMY_Data[2].talentSpec = classes["PRIEST"].spec[3].specName
 		ENEMY_Data[3] = {}
 		ENEMY_Data[3].name = TARGET.."_Cc-servername"
-		ENEMY_Data[3].classToken = "WARLOCK" -- "MONK" TODO_MoP
-		ENEMY_Data[3].talentSpec = TLT.WARLOCK[1] -- TLT.MONK[2]
+		ENEMY_Data[3].classToken = "MONK"
+		ENEMY_Data[3].talentSpec = classes["MONK"].spec[2].specName
 		ENEMY_Data[4] = {}
 		ENEMY_Data[4].name = TARGET.."_Dd-servername"
 		ENEMY_Data[4].classToken = "HUNTER"
-		ENEMY_Data[4].talentSpec = TLT.HUNTER[3]
+		ENEMY_Data[4].talentSpec = classes["HUNTER"].spec[3].specName
 		ENEMY_Data[5] = {}
 		ENEMY_Data[5].name = TARGET.."_Ee-servername"
 		ENEMY_Data[5].classToken = "WARRIOR"
-		ENEMY_Data[5].talentSpec = TLT.WARRIOR[3]
+		ENEMY_Data[5].talentSpec = classes["WARRIOR"].spec[3].specName
 		ENEMY_Data[6] = {}
 		ENEMY_Data[6].name = TARGET.."_Ff-servername"
 		ENEMY_Data[6].classToken = "ROGUE"
-		ENEMY_Data[6].talentSpec = TLT.ROGUE[2]
+		ENEMY_Data[6].talentSpec = classes["ROGUE"].spec[2].specName
 		ENEMY_Data[7] = {}
 		ENEMY_Data[7].name = TARGET.."_Gg-servername"
 		ENEMY_Data[7].classToken = "SHAMAN"
-		ENEMY_Data[7].talentSpec = TLT.SHAMAN[3]
+		ENEMY_Data[7].talentSpec = classes["SHAMAN"].spec[3].specName
 		ENEMY_Data[8] = {}
 		ENEMY_Data[8].name = TARGET.."_Hh-servername"
 		ENEMY_Data[8].classToken = "PALADIN"
-		ENEMY_Data[8].talentSpec = TLT.PALADIN[3]
+		ENEMY_Data[8].talentSpec = classes["PALADIN"].spec[3].specName
 		ENEMY_Data[9] = {}
 		ENEMY_Data[9].name = TARGET.."_Ii-servername"
 		ENEMY_Data[9].classToken = "MAGE"
-		ENEMY_Data[9].talentSpec = TLT.MAGE[3]
+		ENEMY_Data[9].talentSpec = classes["MAGE"].spec[3].specName
 		ENEMY_Data[10] = {}
 		ENEMY_Data[10].name = TARGET.."_Jj-servername"
 		ENEMY_Data[10].classToken = "DEATHKNIGHT"
-		ENEMY_Data[10].talentSpec = TLT.DEATHKNIGHT[2]
+		ENEMY_Data[10].talentSpec = classes["DEATHKNIGHT"].spec[2].specName
 		ENEMY_Data[11] = {}
 		ENEMY_Data[11].name = TARGET.."_Kk-servername"
 		ENEMY_Data[11].classToken = "DRUID"
-		ENEMY_Data[11].talentSpec = TLT.DRUID[1]
+		ENEMY_Data[11].talentSpec = classes["DRUID"].spec[1].specName
 		ENEMY_Data[12] = {}
 		ENEMY_Data[12].name = TARGET.."_Ll-servername"
 		ENEMY_Data[12].classToken = "DEATHKNIGHT"
-		ENEMY_Data[12].talentSpec = TLT.DEATHKNIGHT[3]
+		ENEMY_Data[12].talentSpec = classes["DEATHKNIGHT"].spec[3].specName
 		ENEMY_Data[13] = {}
 		ENEMY_Data[13].name = TARGET.."_Mm-servername"
 		ENEMY_Data[13].classToken = "PALADIN"
-		ENEMY_Data[13].talentSpec = TLT.PALADIN[3]
+		ENEMY_Data[13].talentSpec = classes["PALADIN"].spec[3].specName
 		ENEMY_Data[14] = {}
 		ENEMY_Data[14].name = TARGET.."_Nn-servername"
 		ENEMY_Data[14].classToken = "MAGE"
-		ENEMY_Data[14].talentSpec = TLT.MAGE[1]
+		ENEMY_Data[14].talentSpec = classes["MAGE"].spec[1].specName
 		ENEMY_Data[15] = {}
 		ENEMY_Data[15].name = TARGET.."_Oo-servername"
 		ENEMY_Data[15].classToken = "SHAMAN"
-		ENEMY_Data[15].talentSpec = TLT.SHAMAN[2]
+		ENEMY_Data[15].talentSpec = classes["SHAMAN"].spec[2].specName
 		ENEMY_Data[16] = {}
 		ENEMY_Data[16].name = TARGET.."_Pp-servername"
 		ENEMY_Data[16].classToken = "ROGUE"
-		ENEMY_Data[16].talentSpec = TLT.ROGUE[1]
+		ENEMY_Data[16].talentSpec = classes["ROGUE"].spec[1].specName
 		ENEMY_Data[17] = {}
 		ENEMY_Data[17].name = TARGET.."_Qq-servername"
 		ENEMY_Data[17].classToken = "WARLOCK"
-		ENEMY_Data[17].talentSpec = TLT.WARLOCK[2]
+		ENEMY_Data[17].talentSpec = classes["WARLOCK"].spec[2].specName
 		ENEMY_Data[18] = {}
 		ENEMY_Data[18].name = TARGET.."_Rr-servername"
 		ENEMY_Data[18].classToken = "PRIEST"
-		ENEMY_Data[18].talentSpec = TLT.PRIEST[3]
+		ENEMY_Data[18].talentSpec = classes["PRIEST"].spec[3].specName
 		ENEMY_Data[19] = {}
 		ENEMY_Data[19].name = TARGET.."_Ss-servername"
 		ENEMY_Data[19].classToken = "WARRIOR"
-		ENEMY_Data[19].talentSpec = TLT.WARRIOR[1]
+		ENEMY_Data[19].talentSpec = classes["WARRIOR"].spec[1].specName
 		ENEMY_Data[20] = {}
 		ENEMY_Data[20].name = TARGET.."_Tt-servername"
 		ENEMY_Data[20].classToken = "DRUID"
-		ENEMY_Data[20].talentSpec = TLT.DRUID[2]
+		ENEMY_Data[20].talentSpec = classes["DRUID"].spec[2].specName
 		ENEMY_Data[21] = {}
 		ENEMY_Data[21].name = TARGET.."_Uu-servername"
 		ENEMY_Data[21].classToken = "PRIEST"
-		ENEMY_Data[21].talentSpec = TLT.PRIEST[3]
+		ENEMY_Data[21].talentSpec = classes["PRIEST"].spec[3].specName
 		ENEMY_Data[22] = {}
 		ENEMY_Data[22].name = TARGET.."_Vv-servername"
-		ENEMY_Data[22].classToken = "WARRIOR" -- "MONK" TODO_MoP
-		ENEMY_Data[22].talentSpec = TLT.WARRIOR[1] -- TLT.MONK[1]
+		ENEMY_Data[22].classToken = "MONK"
+		ENEMY_Data[22].talentSpec = classes["MONK"].spec[1].specName
 		ENEMY_Data[23] = {}
 		ENEMY_Data[23].name = TARGET.."_Ww-servername"
 		ENEMY_Data[23].classToken = "SHAMAN"
-		ENEMY_Data[23].talentSpec = TLT.SHAMAN[1]
+		ENEMY_Data[23].talentSpec = classes["SHAMAN"].spec[1].specName
 		ENEMY_Data[24] = {}
 		ENEMY_Data[24].name = TARGET.."_Xx-servername"
 		ENEMY_Data[24].classToken = "HUNTER"
-		ENEMY_Data[24].talentSpec = TLT.HUNTER[2]
+		ENEMY_Data[24].talentSpec = classes["HUNTER"].spec[2].specName
 		ENEMY_Data[25] = {}
 		ENEMY_Data[25].name = TARGET.."_Yy-servername"
 		ENEMY_Data[25].classToken = "SHAMAN"
-		ENEMY_Data[25].talentSpec = TLT.SHAMAN[2]
+		ENEMY_Data[25].talentSpec = classes["SHAMAN"].spec[2].specName
 		ENEMY_Data[26] = {}
 		ENEMY_Data[26].name = TARGET.."_Zz-servername"
 		ENEMY_Data[26].classToken = "WARLOCK"
-		ENEMY_Data[26].talentSpec = TLT.WARLOCK[3]
+		ENEMY_Data[26].talentSpec = classes["WARLOCK"].spec[3].specName
 		ENEMY_Data[27] = {}
 		ENEMY_Data[27].name = TARGET.."_Ab-servername"
 		ENEMY_Data[27].classToken = "PRIEST"
-		ENEMY_Data[27].talentSpec = TLT.PRIEST[2]
+		ENEMY_Data[27].talentSpec = classes["PRIEST"].spec[2].specName
 		ENEMY_Data[28] = {}
 		ENEMY_Data[28].name = TARGET.."_Cd-servername"
-		ENEMY_Data[28].classToken = "MAGE" -- "MONK" TODO_MoP
-		ENEMY_Data[28].talentSpec = TLT.MAGE[2] -- TLT.MONK[3]
+		ENEMY_Data[28].classToken = "MONK"
+		ENEMY_Data[28].talentSpec = classes["MONK"].spec[3].specName
 		ENEMY_Data[29] = {}
 		ENEMY_Data[29].name = TARGET.."_Ef-servername"
 		ENEMY_Data[29].classToken = "ROGUE"
-		ENEMY_Data[29].talentSpec = TLT.ROGUE[3]
+		ENEMY_Data[29].talentSpec = classes["ROGUE"].spec[3].specName
 		ENEMY_Data[30] = {}
 		ENEMY_Data[30].name = TARGET.."_Gh-servername"
 		ENEMY_Data[30].classToken = "DRUID"
-		ENEMY_Data[30].talentSpec = TLT.DRUID[1]
+		ENEMY_Data[30].talentSpec = classes["DRUID"].spec[4].specName
 		ENEMY_Data[31] = {}
 		ENEMY_Data[31].name = TARGET.."_Ij-servername"
 		ENEMY_Data[31].classToken = "HUNTER"
-		ENEMY_Data[31].talentSpec = TLT.HUNTER[3]
+		ENEMY_Data[31].talentSpec = classes["HUNTER"].spec[3].specName
 		ENEMY_Data[32] = {}
 		ENEMY_Data[32].name = TARGET.."_Kl-servername"
 		ENEMY_Data[32].classToken = "WARRIOR"
-		ENEMY_Data[32].talentSpec = TLT.WARRIOR[2]
+		ENEMY_Data[32].talentSpec = classes["WARRIOR"].spec[2].specName
 		ENEMY_Data[33] = {}
 		ENEMY_Data[33].name = TARGET.."_Mn-servername"
 		ENEMY_Data[33].classToken = "PALADIN"
-		ENEMY_Data[33].talentSpec = TLT.PALADIN[1]
+		ENEMY_Data[33].talentSpec = classes["PALADIN"].spec[1].specName
 		ENEMY_Data[34] = {}
 		ENEMY_Data[34].name = TARGET.."_Op-servername"
 		ENEMY_Data[34].classToken = "MAGE"
-		ENEMY_Data[34].talentSpec = TLT.MAGE[3]
+		ENEMY_Data[34].talentSpec = classes["MAGE"].spec[3].specName
 		ENEMY_Data[35] = {}
 		ENEMY_Data[35].name = TARGET.."_Qr-servername"
 		ENEMY_Data[35].classToken = "DEATHKNIGHT"
-		ENEMY_Data[35].talentSpec = TLT.DEATHKNIGHT[3]
+		ENEMY_Data[35].talentSpec = classes["DEATHKNIGHT"].spec[3].specName
 		ENEMY_Data[36] = {}
 		ENEMY_Data[36].name = TARGET.."_St-servername"
 		ENEMY_Data[36].classToken = "MAGE"
-		ENEMY_Data[36].talentSpec = TLT.MAGE[2]
+		ENEMY_Data[36].talentSpec = classes["MAGE"].spec[2].specName
 		ENEMY_Data[37] = {}
 		ENEMY_Data[37].name = TARGET.."_Uv-servername"
 		ENEMY_Data[37].classToken = "HUNTER"
-		ENEMY_Data[37].talentSpec = TLT.HUNTER[2]
+		ENEMY_Data[37].talentSpec = classes["HUNTER"].spec[2].specName
 		ENEMY_Data[38] = {}
 		ENEMY_Data[38].name = TARGET.."_Wx-servername"
 		ENEMY_Data[38].classToken = "WARLOCK"
-		ENEMY_Data[38].talentSpec = TLT.WARLOCK[1]
+		ENEMY_Data[38].talentSpec = classes["WARLOCK"].spec[1].specName
 		ENEMY_Data[39] = {}
 		ENEMY_Data[39].name = TARGET.."_Yz-servername"
 		ENEMY_Data[39].classToken = "WARLOCK"
-		ENEMY_Data[39].talentSpec = TLT.WARLOCK[2]
+		ENEMY_Data[39].talentSpec = classes["WARLOCK"].spec[2].specName
 		ENEMY_Data[40] = {}
 		ENEMY_Data[40].name = TARGET.."_Zz-servername"
 		ENEMY_Data[40].classToken = "ROGUE"
 		ENEMY_Data[40].talentSpec = nil
 
-		if tocversion >= 50000 then -- TODO_MoP
-			ENEMY_Data[3].classToken = "MONK"
-			ENEMY_Data[3].talentSpec = nil--TLT.MONK[2] -- TODO_MoP
-			ENEMY_Data[22].classToken = "MONK"
-			ENEMY_Data[22].talentSpec = nil--TLT.MONK[1] -- TODO_MoP
-			ENEMY_Data[28].classToken = "MONK"
-			ENEMY_Data[28].talentSpec = nil--TLT.MONK[3] -- TODO_MoP
-		end
-
 		for i = 1, 40 do
 			local role = 4
-			local spec = 4
+			local spec = 5
 			
 			local talentSpec = ENEMY_Data[i].talentSpec
 			local classToken = ENEMY_Data[i].classToken
 			
 			if talentSpec and classToken then
-				local token = TLT[classToken]
+				local token = classes[classToken]
 				if token then
-					if talentSpec == token[1] then
+					if token.spec[1] and talentSpec == token.spec[1].specName then
 						role = classes[classToken].spec[1].role
 						spec = 1
-					elseif talentSpec == token[2] then
+					elseif token.spec[2] and talentSpec == token.spec[2].specName then
 						role = classes[classToken].spec[2].role
 						spec = 2
-					elseif talentSpec == token[3] then
+					elseif token.spec[3] and talentSpec == token.spec[3].specName then
 						role = classes[classToken].spec[3].role
 						spec = 3
+					elseif token.spec[4] and talentSpec == token.spec[4].specName then
+						role = classes[classToken].spec[4].role
+						spec = 4
 					end
 				end
 			end
@@ -6121,10 +6092,11 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 	table_wipe(FRIEND_Names)
 	ENEMY_Roles = {0,0,0,0} -- SUMMARY
 	FRIEND_Roles = {0,0,0,0}
-
+--print("BattlefieldScoreUpdate | GetNumBattlefieldScores() =", GetNumBattlefieldScores())
 	local x = 1
 	for index = 1, GetNumBattlefieldScores() do
 		local name, _, _, _, _, faction, race, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
+--print(index, name, faction, race, classToken, talentSpec)
 		if name then
 			if faction == oppositeFactionBG then
 
@@ -6139,34 +6111,35 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 					end
 				end
 
-				--if race then -- TEST
-				--	if not BattlegroundTargets_Options.TesT then BattlegroundTargets_Options.TesT = {} end
-				--	if not BattlegroundTargets_Options.TesT[locale] then BattlegroundTargets_Options.TesT[locale] = {} end
-				--	if playerFactionDEF == 0 then
-				--		BattlegroundTargets_Options.TesT[locale][race] = "ALLIANCE"
-				--	else
-				--		BattlegroundTargets_Options.TesT[locale][race] = "HORDE"
-				--	end
-				--end
+				--[[
+				if race then -- TEST
+					if not BattlegroundTargets_Options.TesT1 then BattlegroundTargets_Options.TesT1 = {} end
+					if not BattlegroundTargets_Options.TesT1[locale] then BattlegroundTargets_Options.TesT1[locale] = {} end
+					if playerFactionDEF == 0 then
+						BattlegroundTargets_Options.TesT1[locale][race] = "ALLIANCE"
+					else
+						BattlegroundTargets_Options.TesT1[locale][race] = "HORDE"
+					end
+				end
+				--]]
 
 				local role = 4
-				local spec = 4
-				local class = "ZZZFAILURE"
-				if classToken then
-					class = classToken
-					if talentSpec then
-						local token = TLT[classToken]
-						if token then
-							if talentSpec == token[1] then
-								role = classes[classToken].spec[1].role
-								spec = 1
-							elseif talentSpec == token[2] then
-								role = classes[classToken].spec[2].role
-								spec = 2
-							elseif talentSpec == token[3] then
-								role = classes[classToken].spec[3].role
-								spec = 3
-							end
+				local spec = 5
+				if classToken and talentSpec then
+					local token = classes[classToken]
+					if token then
+						if token.spec[1] and talentSpec == token.spec[1].specName then
+							role = classes[classToken].spec[1].role
+							spec = 1
+						elseif token.spec[2] and talentSpec == token.spec[2].specName then
+							role = classes[classToken].spec[2].role
+							spec = 2
+						elseif token.spec[3] and talentSpec == token.spec[3].specName then
+							role = classes[classToken].spec[3].role
+							spec = 3
+						elseif token.spec[4] and talentSpec == token.spec[4].specName then
+							role = classes[classToken].spec[4].role
+							spec = 4
 						end
 					end
 				end
@@ -6174,7 +6147,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 
 				ENEMY_Data[x] = {}
 				ENEMY_Data[x].name = name
-				ENEMY_Data[x].classToken = class
+				ENEMY_Data[x].classToken = classToken or "ZZZFAILURE"
 				ENEMY_Data[x].specNum = spec
 				ENEMY_Data[x].talentSpec = role
 				x = x + 1
@@ -6185,36 +6158,37 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 
 			else
 
-				--if race then -- TEST
-				--	if not BattlegroundTargets_Options.TesT then BattlegroundTargets_Options.TesT = {} end
-				--	if not BattlegroundTargets_Options.TesT[locale] then BattlegroundTargets_Options.TesT[locale] = {} end
-				--	if playerFactionDEF == 0 then
-				--		BattlegroundTargets_Options.TesT[locale][race] = "zzHORDE"
-				--	else
-				--		BattlegroundTargets_Options.TesT[locale][race] = "zzALLIANCE"
-				--	end
-				--end
+				--[[
+				if race then -- TEST
+					if not BattlegroundTargets_Options.TesT2 then BattlegroundTargets_Options.TesT2 = {} end
+					if not BattlegroundTargets_Options.TesT2[locale] then BattlegroundTargets_Options.TesT2[locale] = {} end
+					if playerFactionDEF == 0 then
+						BattlegroundTargets_Options.TesT2[locale][race] = "zzHORDE"
+					else
+						BattlegroundTargets_Options.TesT2[locale][race] = "zzALLIANCE"
+					end
+				end
+				--]]
 
 				FRIEND_Names[name] = 1
 
 				local role = 4
-				--local spec = 4
-				local class = "ZZZFAILURE"
-				if classToken then
-					class = classToken
-					if talentSpec then
-						local token = TLT[classToken]
-						if token then
-							if talentSpec == token[1] then
-								role = classes[classToken].spec[1].role
-								--spec = 1
-							elseif talentSpec == token[2] then
-								role = classes[classToken].spec[2].role
-								--spec = 2
-							elseif talentSpec == token[3] then
-								role = classes[classToken].spec[3].role
-								--spec = 3
-							end
+				--local spec = 5
+				if classToken and talentSpec then
+					local token = classes[classToken]
+					if token then
+						if token.spec[1] and talentSpec == token.spec[1].specName then
+							role = classes[classToken].spec[1].role
+							--spec = 1
+						elseif token.spec[2] and talentSpec == token.spec[2].specName then
+							role = classes[classToken].spec[2].role
+							--spec = 2
+						elseif token.spec[3] and talentSpec == token.spec[3].specName then
+							role = classes[classToken].spec[3].role
+							--spec = 3
+						elseif token.spec[4] and talentSpec == token.spec[4].specName then
+							role = classes[classToken].spec[4].role
+							--spec = 4
 						end
 					end
 				end
@@ -6322,7 +6296,7 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 
 	-- friend buff & debuff check
 	local function chk()
-		for num = 1, GetNumGroupMembers() do -- TODO_MoP
+		for num = 1, GetNumGroupMembers() do
 			local unitID = "raid"..num
 			for i = 1, 40 do
 				local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unitID, i)
@@ -6401,6 +6375,7 @@ function BattlegroundTargets:IsBattleground()
 	local queueStatus, queueMapName, bgName
 	for i=1, GetMaxBattlefieldID() do
 		queueStatus, queueMapName = GetBattlefieldStatus(i)
+--print("--", queueStatus, "|", queueMapName, "--", GetBattlefieldStatus(i), "--", GetRealZoneText() )
 		if queueStatus == "active" then
 			bgName = queueMapName
 			break
@@ -6408,6 +6383,7 @@ function BattlegroundTargets:IsBattleground()
 	end
 
 	if BGN[bgName] then
+--print("BGN[bgName] found", bgName, BGN[bgName])
 		currentSize = bgSize[ BGN[bgName] ]
 		reSizeCheck = 10
 		local flagBGnum = flagBG[ BGN[bgName] ]
@@ -6499,7 +6475,7 @@ function BattlegroundTargets:IsBattleground()
 
 					local flagIcon -- setup_flag_texture
 					if playerFactionBG ~= playerFactionDEF then
-						flagIcon = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral flag
+						flagIcon = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral_flag
 					elseif playerFactionDEF == 0 then
 						if isFlagBG == 2 then
 							flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
@@ -6542,7 +6518,7 @@ function BattlegroundTargets:IsBattleground()
 	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
 	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
 	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-	BattlegroundTargets:UnregisterEvent(RosterUpdate) -- TODO_MoP
+	BattlegroundTargets:UnregisterEvent("GROUP_ROSTER_UPDATE")
 	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
 
@@ -6582,7 +6558,7 @@ function BattlegroundTargets:IsBattleground()
 		end
 
 		if OPT.ButtonShowAssist[currentSize] then
-			BattlegroundTargets:RegisterEvent(RosterUpdate) -- TODO_MoP
+			BattlegroundTargets:RegisterEvent("GROUP_ROSTER_UPDATE")
 			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
 		end
 
@@ -6591,7 +6567,7 @@ function BattlegroundTargets:IsBattleground()
 		end
 
 		if OPT.ButtonShowGuildGroup[currentSize] then
-			BattlegroundTargets:RegisterEvent(RosterUpdate) -- TODO_MoP
+			BattlegroundTargets:RegisterEvent("GROUP_ROSTER_UPDATE")
 			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
 		end
 
@@ -6619,11 +6595,9 @@ function BattlegroundTargets:IsBattleground()
 								BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 							end
 						end
-					elseif tocversion < 50000 and playerClassEN == "PALADIN" and playerLevel < 14 then -- PAL14 TODO_MoP
+					elseif playerClassEN == "MONK" and playerLevel < 14 then -- MON14
 						Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.")
-					elseif tocversion >= 50000 and playerClassEN == "MONK" and playerLevel < 14 then -- MON14 TODO_MoP
-						Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.")
-					elseif tocversion >= 50000 and playerClassEN == "ROGUE" and playerLevel < 12 then -- ROG12 TODO_MoP
+					elseif playerClassEN == "ROGUE" and playerLevel < 12 then -- ROG12
 						Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 12.")
 					else
 						Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
@@ -6675,7 +6649,7 @@ function BattlegroundTargets:IsNotBattleground()
 	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
 	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
 	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-	BattlegroundTargets:UnregisterEvent(RosterUpdate) -- TODO_MoP
+	BattlegroundTargets:UnregisterEvent("GROUP_ROSTER_UPDATE")
 	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
 
@@ -6701,19 +6675,21 @@ function BattlegroundTargets:IsNotBattleground()
 		reCheckBG = false
 
 		GVAR.MainFrame:Hide()
-		local flagIcon = "Interface\\WorldStateFrame\\AllianceFlag" -- setup_flag_texture
-		if playerFactionDEF == 0 then
+		local flagIcon
+		if playerFactionDEF == 0 then -- setup_flag_texture -- summary_flag_texture
 			flagIcon = "Interface\\WorldStateFrame\\HordeFlag"
+			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+		elseif playerFactionDEF == 1 then
+			flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
+			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+		else
+			flagIcon = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral_flag
+			GVAR.Summary.Logo2:SetTexture("Interface\\Timer\\Panda-Logo")
 		end
 		for i = 1, 40 do
 			local GVAR_TargetButton = GVAR.TargetButton[i]
 			GVAR_TargetButton.FlagTexture:SetTexture(flagIcon)
 			GVAR_TargetButton:Hide()
-		end
-		if playerFactionDEF == 0 then -- summary_flag_texture
-			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-		else
-			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
 		end
 	end
 end
@@ -6765,7 +6741,7 @@ function BattlegroundTargets:CheckAssist()
 
 	isAssistUnitId = nil
 	isAssistName = nil
-	for i = 1, GetNumGroupMembers() do -- TODO_MoP
+	for i = 1, GetNumGroupMembers() do
 		local name, _, _, _, _, _, _, _, _, role = GetRaidRosterInfo(i)
 		if name and role and role == "MAINASSIST" then
 			isAssistName = name
@@ -6874,7 +6850,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		if curTime > targetCountForceUpdate + targetCountFrequency then
 			targetCountForceUpdate = curTime
 			table_wipe(TARGET_Names)
-			for num = 1, GetNumGroupMembers() do -- TODO_MoP
+			for num = 1, GetNumGroupMembers() do
 				local uID = "raid"..num
 				local fName, fRealm = UnitName(uID)
 				if fName then
@@ -6976,7 +6952,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 				leaderThrottle = leaderThrottle + 1
 				if leaderThrottle > leaderFrequency then
 					leaderThrottle = 0
-					if UnitIsGroupLeader(enemyID) then -- TODO_MoP
+					if UnitIsGroupLeader(enemyID) then
 						isLeader = enemyName
 						for i = 1, currentSize do
 							GVAR.TargetButton[i].LeaderTexture:SetAlpha(0)
@@ -6987,7 +6963,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 					end
 				end
 			else
-				if UnitIsGroupLeader(enemyID) then -- TODO_MoP
+				if UnitIsGroupLeader(enemyID) then
 					isLeader = enemyName
 					for i = 1, currentSize do
 						GVAR.TargetButton[i].LeaderTexture:SetAlpha(0)
@@ -7088,6 +7064,21 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 			if GVAR_TargetButton then
 				GVAR_TargetButton.Name:SetText(level.." "..GVAR_TargetButton.name4button)
 			end
+		end
+	end
+
+	-- real faction check
+	-- NOTE: This check is here because with MoP The Pandaren race has the same name on Alliance and Horde side, and so
+	--       it's not possible with GetBattlefieldScore() to get the real opposite faction if all enemy chars are Pandaren.
+	--       This check covers such a rare case...but it will only work if 'Show Target' is enabled...
+	if oppositeFactionREAL == nil then -- summary_flag_texture
+		local factionGroup = UnitFactionGroup(enemyID)
+		if factionGroup == "Horde" then
+			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+			oppositeFactionREAL = 0
+		elseif factionGroup == "Alliance" then
+			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+			oppositeFactionREAL = 1
 		end
 	end
 
@@ -7201,7 +7192,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 	if not BattlegroundTargets_Options.Summary[currentSize] then return end
 
 	-- scan each groupmember
-	groupMembers = GetNumGroupMembers() -- TODO_MoP
+	groupMembers = GetNumGroupMembers()
 	if groupMemChk > groupMembers then
 		groupMemChk = groupMembers
 	end
@@ -7352,6 +7343,7 @@ function BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 end
 
 function BattlegroundTargets:FlagDebuffCheck(message)
+--print("FlagDebuffCheck", message)
 	if message == FLG["FLAG_DEBUFF1"] or message == FLG["FLAG_DEBUFF2"] then -- FLAGDEBUFF
 		flagDebuff = flagDebuff + 1
 		if hasFlag then
@@ -7369,6 +7361,7 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:FlagCheck(message, messageFaction)
+--print("FlagCheck", message, messageFaction)
 	if messageFaction == playerFactionBG then
 		-- -----------------------------------------------------------------------------------------------------------------
 		local fc = string_match(message, FLG["WSG_TP_REGEX_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
@@ -7675,12 +7668,15 @@ function BattlegroundTargets:CheckFaction()
 	if faction == "Horde" then
 		playerFactionDEF   = 0 -- Horde
 		oppositeFactionDEF = 1 -- Alliance
+		BattlegroundTargets:UnregisterEvent("NEUTRAL_FACTION_SELECT_RESULT")
 	elseif faction == "Alliance" then
 		playerFactionDEF   = 1 -- Alliance
 		oppositeFactionDEF = 0 -- Horde
+		BattlegroundTargets:UnregisterEvent("NEUTRAL_FACTION_SELECT_RESULT")
 	elseif faction == "Neutral" then
-		playerFactionDEF   = 1 -- Dummy
-		oppositeFactionDEF = 0 -- Dummy
+		playerFactionDEF   = 2 -- Pandaren
+		oppositeFactionDEF = 2 -- Pandaren
+		BattlegroundTargets:RegisterEvent("NEUTRAL_FACTION_SELECT_RESULT")
 	else
 		Print("ERROR", "unknown faction", locale, faction)
 		playerFactionDEF   = 1 -- Dummy
@@ -7777,7 +7773,7 @@ local function OnEvent(self, event, ...)
 		if isConfig then return end
 		BattlegroundTargets:BattlefieldScoreUpdate()
 
-	elseif event == RosterUpdate then -- TODO_MoP
+	elseif event == "GROUP_ROSTER_UPDATE" then
 		if OPT.ButtonShowAssist[currentSize] then
 			BattlegroundTargets:CheckAssist()
 		end
@@ -7814,10 +7810,10 @@ local function OnEvent(self, event, ...)
 		if arg1 then
 			playerLevel = arg1
 			BattlegroundTargets:CheckPlayerLevel()
-			if playerLevel == 10 then -- TODO_MoP
-				BattlegroundTargets:CheckFaction()
-			end
 		end
+
+	elseif event == "NEUTRAL_FACTION_SELECT_RESULT" then
+		BattlegroundTargets:CheckFaction()
 
 	elseif event == "PLAYER_LOGIN" then
 		BattlegroundTargets:CheckFaction()

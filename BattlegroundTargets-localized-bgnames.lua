@@ -13,6 +13,8 @@ if locale == "deDE" then
 		["Insel der Eroberung"] = "Isle of Conquest",
 		["Die Schlacht um Gilneas"] = "The Battle for Gilneas",
 		["Zwillingsgipfel"] = "Twin Peaks", 
+		["Silberbruchmine"] = "Silvershard Mines", -- not tested, value from GetCategoryInfo(15162) [5.0.3.15851 BETA]
+		["Tempel von Katmogu"] = "Temple of Kotmogu", -- not tested, value from GetCategoryInfo(15163) [5.0.3.15851 BETA]
 	}
 elseif locale == "esES" then
 	BattlegroundTargets_BGNames = {
@@ -24,6 +26,8 @@ elseif locale == "esES" then
 		["Isla de la Conquista"] = "Isle of Conquest",
 		["La Batalla por Gilneas"] = "The Battle for Gilneas",
 		["Cumbres Gemelas"] = "Twin Peaks",
+		["Minas Lonjaplata"] = "Silvershard Mines", -- not tested, value from GetCategoryInfo(15162) [5.0.3.15851 BETA]
+		["Templo de Kotmogu"] = "Temple of Kotmogu", -- not tested, value from GetCategoryInfo(15163) [5.0.3.15851 BETA]
 	}
 elseif locale == "esMX" then
 	BattlegroundTargets_BGNames = {
@@ -35,6 +39,8 @@ elseif locale == "esMX" then
 		["Isla de la Conquista"] = "Isle of Conquest",
 		["La Batalla por Gilneas"] = "The Battle for Gilneas",
 		["Cumbres Gemelas"] = "Twin Peaks",
+		["Minas Lonjaplata"] = "Silvershard Mines", -- not tested, value from GetCategoryInfo(15162) [5.0.3.15851 BETA]
+		["Templo de Kotmogu"] = "Temple of Kotmogu", -- not tested, value from GetCategoryInfo(15163) [5.0.3.15851 BETA]
 	}
 elseif locale == "frFR" then
 	BattlegroundTargets_BGNames = {
@@ -46,6 +52,21 @@ elseif locale == "frFR" then
 		["Île des Conquérants"] = "Isle of Conquest",
 		["La bataille de Gilnéas"] = "The Battle for Gilneas",
 		["Pics-Jumeaux"] = "Twin Peaks",
+		["Mines d’Éclargent"] = "Silvershard Mines", -- not tested, value from GetCategoryInfo(15162) [5.0.3.15851 BETA]
+		["Temple de Kotmogu"] = "Temple of Kotmogu", -- not tested, value from GetCategoryInfo(15163) [5.0.3.15851 BETA]
+	}
+elseif locale == "itIT" then
+	BattlegroundTargets_BGNames = {
+		["Valle d'Alterac"] = "Alterac Valley",
+		["Forra dei Cantaguerra"] = "Warsong Gulch",
+		["Bacino d'Arathi"] = "Arathi Basin",
+		["Occhio del Ciclone"] = "Eye of the Storm",
+		["Lido degli Antichi"] = "Strand of the Ancients",
+		["Isola della Conquista"] = "Isle of Conquest",
+		["Battaglia per Gilneas"] = "The Battle for Gilneas",
+		["Picchi Gemelli"] = "Twin Peaks",
+		["Miniere di Cupargento"] = "Silvershard Mines", -- not tested, value from GetCategoryInfo(15162) [5.0.3.15851 BETA]
+		["Tempio di Kotmogu"] = "Temple of Kotmogu", -- not tested, value from GetCategoryInfo(15163) [5.0.3.15851 BETA]
 	}
 elseif locale == "koKR" then
 	BattlegroundTargets_BGNames = {
@@ -57,6 +78,8 @@ elseif locale == "koKR" then
 		["정복의 섬"] = "Isle of Conquest",
 		["길니아스 전투"] = "The Battle for Gilneas",
 		["쌍둥이 봉우리"] = "Twin Peaks",
+		["은빛수정 광산"] = "Silvershard Mines", -- not tested, value from GetCategoryInfo(15162) [5.0.3.15851 BETA]
+		["코트모구의 사원"] = "Temple of Kotmogu", -- not tested, value from GetCategoryInfo(15163) [5.0.3.15851 BETA]
 	}
 elseif locale == "ptBR" then
 	BattlegroundTargets_BGNames = {
@@ -68,6 +91,8 @@ elseif locale == "ptBR" then
 		["Ilha da Conquista"] = "Isle of Conquest",
 		["A Batalha por Guilnéas"] = "The Battle for Gilneas",
 		["Montes Gêmeos"] = "Twin Peaks",
+		["Minas Estilhaço Prateado"] = "Silvershard Mines", -- not tested, value from GetCategoryInfo(15162) [5.0.3.15851 BETA]
+		["Templo de Kotmogu"] = "Temple of Kotmogu", -- not tested, value from GetCategoryInfo(15163) [5.0.3.15851 BETA]
 	}
 elseif locale == "ruRU" then
 	BattlegroundTargets_BGNames = {
@@ -79,6 +104,8 @@ elseif locale == "ruRU" then
 		["Остров Завоеваний"] = "Isle of Conquest",
 		["Битва за Гилнеас"] = "The Battle for Gilneas",
 		["Два Пика"] = "Twin Peaks",
+		["Серебряные копи"] = "Silvershard Mines", -- not tested, value from GetCategoryInfo(15162) [5.0.3.15851 BETA]
+		["Храм Котмогу"] = "Temple of Kotmogu", -- not tested, value from GetCategoryInfo(15163) [5.0.3.15851 BETA]
 	}
 elseif locale == "zhCN" then
 	BattlegroundTargets_BGNames = {
@@ -90,6 +117,8 @@ elseif locale == "zhCN" then
 		["征服之岛"] = "Isle of Conquest",
 		["吉尔尼斯之战"] = "The Battle for Gilneas",
 		["双子峰"] = "Twin Peaks",
+		["Silvershard Mines"] = "Silvershard Mines", -- TODO -> no chance to login with zhCN :( [5.0.3.15851 BETA]
+		["Temple of Kotmogu"] = "Temple of Kotmogu", -- TODO -> no chance to login with zhCN :( [5.0.3.15851 BETA]
 	}
 elseif locale == "zhTW" then
 	BattlegroundTargets_BGNames = {
@@ -101,6 +130,8 @@ elseif locale == "zhTW" then
 		["征服之島"] = "Isle of Conquest",
 		["吉爾尼斯之戰"] = "The Battle for Gilneas",
 		["雙子峰"] = "Twin Peaks",
+		["Silvershard Mines"] = "Silvershard Mines", -- TODO -> not translated :( [5.0.3.15851 BETA]
+		["Temple of Kotmogu"] = "Temple of Kotmogu", -- TODO -> not translated :( [5.0.3.15851 BETA]
 	}
 else
 	BattlegroundTargets_BGNames = {
@@ -112,5 +143,31 @@ else
 		["Isle of Conquest"] = "Isle of Conquest",
 		["The Battle for Gilneas"] = "The Battle for Gilneas",
 		["Twin Peaks"] = "Twin Peaks",
+		["Silvershard Mines"] = "Silvershard Mines", -- not tested [5.0.3.15851 BETA]
+		["Temple of Kotmogu"] = "Temple of Kotmogu", -- not tested [5.0.3.15851 BETA]
 	}
 end
+
+-- bg name TEST
+-- real bg check required
+-- * maybe it's possible to delete this file and use the GetCategoryInfo() values 
+-- * okay, it's not possible, frFR returns different values (frFR was the first loca with different names, than I didn't checked the others...) :(
+--[[
+local xxx = GetCategoryList()
+for k, v in pairs(xxx) do
+	print(k, v, GetCategoryInfo(v))
+end
+--]]
+--[[
+print(locale, "#", "Alterac Valley",         "->", GetCategoryInfo(14801))
+print(locale, "#", "Warsong Gulch",          "->", GetCategoryInfo(14804))
+print(locale, "#", "Arathi Basin",           "->", GetCategoryInfo(14802))
+print(locale, "#", "Eye of the Storm",       "->", GetCategoryInfo(14803))
+print(locale, "#", "Strand of the Ancients", "->", GetCategoryInfo(14881))
+print(locale, "#", "Isle of Conquest",       "->", GetCategoryInfo(15003))
+print(locale, "#", "The Battle for Gilneas", "->", GetCategoryInfo(15073))
+print(locale, "#", "Twin Peaks",             "->", GetCategoryInfo(15074))
+print(locale, "#", "Silvershard Mines",      "->", GetCategoryInfo(15162))
+print(locale, "#", "Temple of Kotmogu",      "->", GetCategoryInfo(15163))
+--]]
+-- bg name TEST

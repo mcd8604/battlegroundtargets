@@ -92,6 +92,22 @@ BattlegroundTargets_Flag:CreateLocaleTable({
 	["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "L'Alliance a pris le drapeau !",
 	["EOTS_STRING_CAPTURED_BY_HORDE"] = "La Horde s'est emparée du drapeau !",
 })
+elseif locale == "itIT" then
+BattlegroundTargets_Flag:CreateLocaleTable({
+	-- ### itIT: tested with Patch 5.0.3.15851 (BETA) ###
+	-- # Warsong Gulch & Twin Peaks:
+	["FLAG_DEBUFF1"] = "I portatori di bandiera sono diventati vulnerabili agli attacchi!",
+	["FLAG_DEBUFF2"] = "I portatori di bandiera sono diventati più vulnerabili agli attacchi!",
+	["WSG_TP_REGEX_PICKED1"] = "(.+) ha raccolto la bandiera dell'(%a+)!",
+	["WSG_TP_REGEX_PICKED2"] = "(.+) ha raccolto la bandiera dell'(%a+)!",
+	["WSG_TP_MATCH_DROPPED"] = "lasciato cadere la bandiera",
+	["WSG_TP_MATCH_CAPTURED"] = "conquistato la bandiera",
+	-- # Eye of the Storm:
+	["EOTS_REGEX_PICKED"] = "(.+) ha conquistato la bandiera!", -- TODO
+	["EOTS_STRING_DROPPED"] = "La bandiera è a terra!", -- TODO
+	["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "L'Alleanza ha conquistato la bandiera!", -- TODO
+	["EOTS_STRING_CAPTURED_BY_HORDE"] = "L'Orda ha conquistato la bandiera!", -- TODO needs check
+})
 elseif locale == "koKR" then
 BattlegroundTargets_Flag:CreateLocaleTable({
 	-- ### koKR: tested with Patch 4.3.2.15211 (PTR) ###
