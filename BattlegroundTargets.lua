@@ -127,7 +127,6 @@ BattlegroundTargets_Options = {} -- SavedVariable options table
 local BattlegroundTargets = CreateFrame("Frame") -- container
 
 local L   = BattlegroundTargets_Localization -- localization table
-local BGN = BattlegroundTargets_BGNames      -- localized battleground names
 local FLG = BattlegroundTargets_Flag         -- localized flag picked/dropped/captured/debuff
 local RNA = BattlegroundTargets_RaceNames    -- localized race names
 
@@ -278,29 +277,32 @@ local sizeBarHeight = 14
 local fontPath = _G["GameFontNormal"]:GetFont()
 
 local currentSize = 10
-local bgSize = {
-	["Alterac Valley"] = 40,
-	["Warsong Gulch"] = 10,
-	["Arathi Basin"] = 15,
-	["Eye of the Storm"] = 15,
-	["Strand of the Ancients"] = 15,
-	["Isle of Conquest"] = 40,
-	["The Battle for Gilneas"] = 10,
-	["Twin Peaks"] = 10,
-	["Silvershard Mines"] = 15, -- TODO
-	["Temple of Kotmogu"] = 15, -- TODO
-}
+
+local bgMaps = {}
+local function BuildBattlegroundMapTable()
+  for i = 1, GetNumBattlegroundTypes() do
+    local localizedName, _, _, _, bgID = GetBattlegroundInfo(i) -- localizedName, canEnter, isHoliday, isRandom, BattleGroundID, mapDescription, BGMapID
+    --print(i, localizedName, bgID) -- TEST
+        if bgID ==   1 then bgMaps[localizedName] = {bgSize = 40, flagBG = 0} -- Alterac Valley
+    elseif bgID ==   2 then bgMaps[localizedName] = {bgSize = 10, flagBG = 1} -- Warsong Gulch
+    elseif bgID ==   3 then bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Arathi Basin
+    elseif bgID ==   7 then bgMaps[localizedName] = {bgSize = 15, flagBG = 2} -- Eye of the Storm
+    elseif bgID ==   9 then bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Strand of the Ancients
+    elseif bgID ==  30 then bgMaps[localizedName] = {bgSize = 40, flagBG = 0} -- Isle of Conquest
+    elseif bgID == 108 then bgMaps[localizedName] = {bgSize = 10, flagBG = 3} -- Twin Peaks
+    elseif bgID == 120 then bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- The Battle for Gilneas
+    elseif bgID == 699 then bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Temple of Kotmogu -- size TODO_MoP
+  --elseif bgID == 706 then bgMaps[localizedName] = {bgSize = 15, flagBG = 4} -- CTF3 ? -- TODO_MoP
+    elseif bgID == 708 then bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Silvershard Mines -- size TODO_MoP
+    end
+  end
+  --for k, v in pairs(bgMaps) do print(k, v.bgSize, v.flagBG) end -- TEST
+end
 
 local bgSizeINT = {
 	[1] = 10,
 	[2] = 15,
 	[3] = 40,
-}
-
-local flagBG = {
-	["Warsong Gulch"] = 1,
-	["Eye of the Storm"] = 2,
-	["Twin Peaks"] = 3, 
 }
 
 local flagIDs = {
@@ -413,6 +415,7 @@ local ranges = {
 	WARRIOR     =    100, -- Charge          (8-25yd/m) - Lvl  3
 }
 --for k, v in pairs(ranges) do local name, _, _, _, _, _, _, min, max = GetSpellInfo(v) print(k, v, name, min, max) end -- TEST
+--print("IsSpellKnown", ranges[playerClassEN], "|", IsSpellKnown(ranges[playerClassEN]))
 
 local rangeTypeName = {
 	[1] = "1) CombatLog |cffffff79(0-73)|r", -- 1) combatlog
@@ -6219,11 +6222,11 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 		end
 	end
 
-	if BGN[bgName] then
+	if bgMaps[bgName] then
 		BattlegroundTargets:BattlefieldCheck()
 	else
 		local zone = GetRealZoneText()
-		if BGN[zone] then
+		if bgMaps[zone] then
 			BattlegroundTargets:BattlefieldCheck()
 		else
 			reSizeCheck = reSizeCheck + 1
@@ -6375,30 +6378,22 @@ function BattlegroundTargets:IsBattleground()
 	local queueStatus, queueMapName, bgName
 	for i=1, GetMaxBattlefieldID() do
 		queueStatus, queueMapName = GetBattlefieldStatus(i)
---print("--", queueStatus, "|", queueMapName, "--", GetBattlefieldStatus(i), "--", GetRealZoneText() )
 		if queueStatus == "active" then
 			bgName = queueMapName
 			break
 		end
 	end
 
-	if BGN[bgName] then
---print("BGN[bgName] found", bgName, BGN[bgName])
-		currentSize = bgSize[ BGN[bgName] ]
+	if bgMaps[bgName] then
 		reSizeCheck = 10
-		local flagBGnum = flagBG[ BGN[bgName] ]
-		if flagBGnum then
-			isFlagBG = flagBGnum
-		end
+		currentSize = bgMaps[bgName].bgSize
+		isFlagBG    = bgMaps[bgName].flagBG
 	else
 		local zone = GetRealZoneText()
-		if BGN[zone] then
-			currentSize = bgSize[ BGN[zone] ]
+		if bgMaps[zone] then
 			reSizeCheck = 10
-			local flagBGnum = flagBG[ BGN[zone] ]
-			if flagBGnum then
-				isFlagBG = flagBGnum
-			end
+			currentSize = bgMaps[zone].bgSize
+			isFlagBG    = bgMaps[zone].flagBG
 		else
 			if reSizeCheck >= 10 then
 				Print("ERROR", "unknown battleground name", locale, bgName, zone)
@@ -6407,7 +6402,7 @@ function BattlegroundTargets:IsBattleground()
 			reSizeCheck = reSizeCheck + 1
 		end
 	end
-
+--print("# currentSize:", currentSize, isFlagBG, "reSizeCheck:", reSizeCheck, "bgName:", bgName)
 	if IsRatedBattleground() then
 		currentSize = 10
 		local faction = GetBattlefieldArenaFaction()
@@ -7816,6 +7811,7 @@ local function OnEvent(self, event, ...)
 		BattlegroundTargets:CheckFaction()
 
 	elseif event == "PLAYER_LOGIN" then
+		BuildBattlegroundMapTable()
 		BattlegroundTargets:CheckFaction()
 		BattlegroundTargets:InitOptions()
 		BattlegroundTargets:CreateInterfaceOptions()

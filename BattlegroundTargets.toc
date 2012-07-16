@@ -7,7 +7,6 @@
 ## Version: 50001-1
 ## SavedVariables: BattlegroundTargets_Options
 
-BattlegroundTargets-localized-bgnames.lua
 BattlegroundTargets-localized-flag.lua
 BattlegroundTargets-localized-racenames.lua
 
