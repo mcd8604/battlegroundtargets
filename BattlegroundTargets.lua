@@ -114,14 +114,6 @@
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 
-local _, _, _, tocversion = GetBuildInfo() -- TODO_MoP
-if tocversion < 50000 then
-	print("|cffffff7fBattlegroundTargets:|r This is for Mist of Pandaria only.")
-	print("|cffffff7fBattlegroundTargets:|r Please use the latest Release version.")
-	print("|cffffff7fBattlegroundTargets terminated.|r")
-	return
-end
-
 -- ---------------------------------------------------------------------------------------------------------------------
 BattlegroundTargets_Options = {} -- SavedVariable options table
 local BattlegroundTargets = CreateFrame("Frame") -- container
@@ -136,42 +128,43 @@ local OPT = {}      -- local SavedVariable table (BattlegroundTargets_Options.Bu
 
 local AddonIcon = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-button"
 
-local _G                         = _G
-local GetTime                    = _G.GetTime
-local InCombatLockdown           = _G.InCombatLockdown
-local IsInInstance               = _G.IsInInstance
-local IsRatedBattleground        = _G.IsRatedBattleground
-local GetBattlefieldArenaFaction = _G.GetBattlefieldArenaFaction
-local GetRealZoneText            = _G.GetRealZoneText
-local GetMaxBattlefieldID        = _G.GetMaxBattlefieldID
-local GetBattlefieldStatus       = _G.GetBattlefieldStatus
-local GetNumBattlefieldScores    = _G.GetNumBattlefieldScores
-local GetBattlefieldScore        = _G.GetBattlefieldScore
-local SetBattlefieldScoreFaction = _G.SetBattlefieldScoreFaction
-local UnitName                   = _G.UnitName
-local UnitLevel                  = _G.UnitLevel
-local UnitHealthMax              = _G.UnitHealthMax
-local UnitHealth                 = _G.UnitHealth
-local UnitIsGroupLeader          = _G.UnitIsGroupLeader
-local UnitBuff                   = _G.UnitBuff
-local UnitDebuff                 = _G.UnitDebuff
-local UnitIsVisible              = _G.UnitIsVisible -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
-local GetSpellInfo               = _G.GetSpellInfo
-local IsSpellInRange             = _G.IsSpellInRange
-local CheckInteractDistance      = _G.CheckInteractDistance
-local GetNumGroupMembers         = _G.GetNumGroupMembers
-local GetRaidRosterInfo          = _G.GetRaidRosterInfo
-local math_min                   = _G.math.min
-local math_max                   = _G.math.max
-local math_floor                 = _G.math.floor
-local math_random                = _G.math.random
-local string_find                = _G.string.find
-local string_match               = _G.string.match
-local string_format              = _G.string.format
-local table_sort                 = _G.table.sort
-local table_wipe                 = _G.table.wipe
-local pairs                      = _G.pairs
-local tonumber                   = _G.tonumber
+local _G = _G
+local GetTime                     = GetTime
+local InCombatLockdown            = InCombatLockdown
+local IsInInstance                = IsInInstance
+local IsRatedBattleground         = IsRatedBattleground
+local GetBattlefieldArenaFaction  = GetBattlefieldArenaFaction
+local GetRealZoneText             = GetRealZoneText
+local GetMaxBattlefieldID         = GetMaxBattlefieldID
+local GetBattlefieldStatus        = GetBattlefieldStatus
+local GetNumBattlefieldScores     = GetNumBattlefieldScores
+local GetBattlefieldScore         = GetBattlefieldScore
+local SetBattlefieldScoreFaction  = SetBattlefieldScoreFaction
+local RequestBattlefieldScoreData = RequestBattlefieldScoreData
+local UnitName                    = UnitName
+local UnitLevel                   = UnitLevel
+local UnitHealthMax               = UnitHealthMax
+local UnitHealth                  = UnitHealth
+local UnitIsGroupLeader           = UnitIsGroupLeader
+local UnitBuff                    = UnitBuff
+local UnitDebuff                  = UnitDebuff
+local UnitIsVisible               = UnitIsVisible -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
+local GetSpellInfo                = GetSpellInfo
+local IsSpellInRange              = IsSpellInRange
+local CheckInteractDistance       = CheckInteractDistance
+local GetNumGroupMembers          = GetNumGroupMembers
+local GetRaidRosterInfo           = GetRaidRosterInfo
+local math_min                    = math.min
+local math_max                    = math.max
+local math_floor                  = math.floor
+local math_random                 = math.random
+local string_find                 = string.find
+local string_match                = string.match
+local string_format               = string.format
+local table_sort                  = table.sort
+local table_wipe                  = table.wipe
+local pairs                       = pairs
+local tonumber                    = tonumber
 
 local locale = GetLocale()
 
@@ -200,9 +193,6 @@ local groupMembers = 0
 local groupMemChk = 0
 
 -- THROTTLE (reduce CPU usage) -----------------------------------------------------------------------------------------
-local scoreUpdateThrottle  = GetTime()      -- scoreupdate: B.attlefieldScoreUpdate()
-local scoreUpdateFrequency = 1              -- scoreupdate: 0-20 updates = 1 second | 21+ updates = 5 seconds
-local scoreUpdateCount     = 0              -- scoreupdate: (reason: later score updates are less relevant and 5 seconds is still very high)
 local range_SPELL_Frequency     = 0.2       -- rangecheck: [class-spell]: the 0.2 second freq is per enemy (variable: ENEMY_Name2Range[enemyname]) 
 local range_CL_Throttle         = 0         -- rangecheck: [combatlog] C.ombatLogRangeCheck()
 local range_CL_Frequency        = 3         -- rangecheck: [combatlog] 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% combatlog messages filtered (36% vs overhead: two variables, one addition, one number comparison and if filtered one math_random)
@@ -291,9 +281,9 @@ local function BuildBattlegroundMapTable()
     elseif bgID ==  30 then bgMaps[localizedName] = {bgSize = 40, flagBG = 0} -- Isle of Conquest
     elseif bgID == 108 then bgMaps[localizedName] = {bgSize = 10, flagBG = 3} -- Twin Peaks
     elseif bgID == 120 then bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- The Battle for Gilneas
-    elseif bgID == 699 then bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Temple of Kotmogu -- size TODO_MoP
-  --elseif bgID == 706 then bgMaps[localizedName] = {bgSize = 15, flagBG = 4} -- CTF3 ? -- TODO_MoP
-    elseif bgID == 708 then bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Silvershard Mines -- size TODO_MoP
+    elseif bgID == 699 then bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- Temple of Kotmogu
+  --elseif bgID == 706 then bgMaps[localizedName] = {bgSize = 15, flagBG = 4} -- CTF3
+    elseif bgID == 708 then bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- Silvershard Mines
     end
   end
   --for k, v in pairs(bgMaps) do print(k, v.bgSize, v.flagBG) end -- TEST
@@ -338,7 +328,7 @@ end
 
 -- texture: Interface\\WorldStateFrame\\Icons-Classes
 -- coords : 2 62 66 126 130 190 194 254
--- role   : 1 = HEAL | 2 = TANK | 3 = DAMAGE | 4 = UNKNOWN
+-- role   : 1 = HEALER | 2 = TANK | 3 = DAMAGER | 4 = UNKNOWN
 local classes = {
 	DEATHKNIGHT = {coords = {0.25781250, 0.49218750, 0.50781250, 0.74218750}}, -- ( 66/256, 126/256, 130/256, 190/256)
 	DRUID       = {coords = {0.75781250, 0.99218750, 0.00781250, 0.24218750}}, -- (194/256, 254/256,   2/256,  62/256)
@@ -451,9 +441,9 @@ local Textures = {
 	Expand           = {coords     =    { 1/64, 18/64,  1/64, 18/64}},
 	Collapse         = {coords     = {rt( 1/64, 18/64,  1/64, 18/64)}}, -- 180 degree rota
 	Close            = {coords     =    { 1/64, 18/64, 19/64, 36/64}},
-	RoleIcon         = {[1]        =    {32/64, 48/64, 16/64, 32/64},   -- HEAL
+	RoleIcon         = {[1]        =    {32/64, 48/64, 16/64, 32/64},   -- HEALER
 	                    [2]        =    {48/64, 64/64,  0/64, 16/64},   -- TANK
-	                    [3]        =    {32/64, 48/64,  0/64, 16/64},   -- DAMAGE
+	                    [3]        =    {32/64, 48/64,  0/64, 16/64},   -- DAMAGER
 	                    [4]        =    {48/64, 64/64, 16/64, 32/64}},  -- UNKNOWN
 	l40_18           = {coords     =    {36/64, 41/64, 37/64, 51/64}, width =  5*2, height = 14*2},
 	l40_24           = {coords     =    {27/64, 36/64, 37/64, 47/64}, width =  9*2, height = 10*2},
@@ -2157,6 +2147,7 @@ function BattlegroundTargets:CreateFrames()
 	-- GVAR.WorldStateScoreWarning:SetWidth()
 	GVAR.WorldStateScoreWarning:SetHeight(30)
 	GVAR.WorldStateScoreWarning:SetPoint("BOTTOM", WorldStateScoreFrame, "TOP", 0, 10)
+	GVAR.WorldStateScoreWarning:SetAlpha(0.75)
 	GVAR.WorldStateScoreWarning:Hide()
 
 	GVAR.WorldStateScoreWarning.Texture = GVAR.WorldStateScoreWarning:CreateTexture(nil, "ARTWORK")
@@ -5989,12 +5980,12 @@ function BattlegroundTargets:MainDataUpdate()
 					ENEMY_Roles[role] = ENEMY_Roles[role] + 1
 				end
 			end
-			GVAR.Summary.HealerFriend:SetText(FRIEND_Roles[1]) -- HEAL   FRIEND
-			GVAR.Summary.TankFriend:SetText(FRIEND_Roles[2])   -- TANK   FRIEND
-			GVAR.Summary.DamageFriend:SetText(FRIEND_Roles[3]) -- DAMAGE FRIEND
-			GVAR.Summary.HealerEnemy:SetText(ENEMY_Roles[1])   -- HEAL   ENEMY
-			GVAR.Summary.TankEnemy:SetText(ENEMY_Roles[2])     -- TANK   ENEMY
-			GVAR.Summary.DamageEnemy:SetText(ENEMY_Roles[3])   -- DAMAGE ENEMY
+			GVAR.Summary.HealerFriend:SetText(FRIEND_Roles[1]) -- HEALER  FRIEND
+			GVAR.Summary.TankFriend:SetText(FRIEND_Roles[2])   -- TANK    FRIEND
+			GVAR.Summary.DamageFriend:SetText(FRIEND_Roles[3]) -- DAMAGER FRIEND
+			GVAR.Summary.HealerEnemy:SetText(ENEMY_Roles[1])   -- HEALER  ENEMY
+			GVAR.Summary.TankEnemy:SetText(ENEMY_Roles[2])     -- TANK    ENEMY
+			GVAR.Summary.DamageEnemy:SetText(ENEMY_Roles[3])   -- DAMAGER ENEMY
 		end
 		if isLowLevel then -- LVLCHK
 			for i = 1, currentSize do
@@ -6050,21 +6041,25 @@ function BattlegroundTargets:MainDataUpdate()
 
 	-- SUMMARY
 	if BattlegroundTargets_Options.Summary[currentSize] then
-		GVAR.Summary.HealerFriend:SetText(FRIEND_Roles[1]) -- HEAL   FRIEND
-		GVAR.Summary.TankFriend:SetText(FRIEND_Roles[2])   -- TANK   FRIEND
-		GVAR.Summary.DamageFriend:SetText(FRIEND_Roles[3]) -- DAMAGE FRIEND
-		GVAR.Summary.HealerEnemy:SetText(ENEMY_Roles[1])   -- HEAL   ENEMY
-		GVAR.Summary.TankEnemy:SetText(ENEMY_Roles[2])     -- TANK   ENEMY
-		GVAR.Summary.DamageEnemy:SetText(ENEMY_Roles[3])   -- DAMAGE ENEMY
+		GVAR.Summary.HealerFriend:SetText(FRIEND_Roles[1]) -- HEALER  FRIEND
+		GVAR.Summary.TankFriend:SetText(FRIEND_Roles[2])   -- TANK    FRIEND
+		GVAR.Summary.DamageFriend:SetText(FRIEND_Roles[3]) -- DAMAGER FRIEND
+		GVAR.Summary.HealerEnemy:SetText(ENEMY_Roles[1])   -- HEALER  ENEMY
+		GVAR.Summary.TankEnemy:SetText(ENEMY_Roles[2])     -- TANK    ENEMY
+		GVAR.Summary.DamageEnemy:SetText(ENEMY_Roles[3])   -- DAMAGER ENEMY
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
+function BattlegroundTargets:BattlefieldScoreUpdate()
 	local curTime = GetTime()
+	local diff = curTime - latestScoreUpdate
+	if diff < 0.5 then
+		return
+	end
 	if inCombat or InCombatLockdown() then
-		if curTime - latestScoreUpdate >= latestScoreWarning then
+		if diff >= latestScoreWarning then
 			GVAR.ScoreUpdateTexture:Show()
 		else
 			GVAR.ScoreUpdateTexture:Hide()
@@ -6073,33 +6068,27 @@ function BattlegroundTargets:BattlefieldScoreUpdate(forceUpdate)
 		return
 	end
 
-	if not forceUpdate then
-		if scoreUpdateThrottle + scoreUpdateFrequency > curTime then return end
-		scoreUpdateThrottle = curTime
+	-- Button WorldStateScoreFrameTab1/2/3 (WorldStateFrame.xml) - 1 = all | 2 = Alliance | 3 = Horde
+	-- WorldStateScoreFrameTab_OnClick (WorldStateFrame.lua)
+	-- PanelTemplates_SetTab (UIPanelTemplates.lua)
+	local wssf = WorldStateScoreFrame
+	if wssf and wssf:IsShown() and wssf.selectedTab and wssf.selectedTab > 1 then
+		return
 	end
 
-	local wssf = WorldStateScoreFrame -- WorldStateScoreFrameTab_OnClick (WorldStateFrame.lua) | PanelTemplates_SetTab (UIPanelTemplates.lua) | Button WorldStateScoreFrameTab1/2/3 (WorldStateFrame.xml)
-	if wssf and wssf:IsShown() and wssf.selectedTab and wssf.selectedTab > 1 then return end
-
-	scoreUpdateCount = scoreUpdateCount + 1
-	if scoreUpdateCount > 20 then
-		scoreUpdateFrequency = 5
-	end
 	reCheckScore = nil
 	latestScoreUpdate = curTime
 	GVAR.ScoreUpdateTexture:Hide()
-
-	SetBattlefieldScoreFaction()
 
 	table_wipe(ENEMY_Data)
 	table_wipe(FRIEND_Names)
 	ENEMY_Roles = {0,0,0,0} -- SUMMARY
 	FRIEND_Roles = {0,0,0,0}
---print("BattlefieldScoreUpdate | GetNumBattlefieldScores() =", GetNumBattlefieldScores())
+	
+	--print("GetNumBattlefieldScores() =", GetNumBattlefieldScores()) -- TEST
 	local x = 1
 	for index = 1, GetNumBattlefieldScores() do
 		local name, _, _, _, _, faction, race, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
---print(index, name, faction, race, classToken, talentSpec)
 		if name then
 			if faction == oppositeFactionBG then
 
@@ -6373,7 +6362,6 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:IsBattleground()
 	inBattleground = true
-	isFlagBG = 0
 
 	local queueStatus, queueMapName, bgName
 	for i=1, GetMaxBattlefieldID() do
@@ -6395,14 +6383,15 @@ function BattlegroundTargets:IsBattleground()
 			currentSize = bgMaps[zone].bgSize
 			isFlagBG    = bgMaps[zone].flagBG
 		else
-			if reSizeCheck >= 10 then
+			if reSizeCheck == 10 then
 				Print("ERROR", "unknown battleground name", locale, bgName, zone)
 			end
-			currentSize = 10
 			reSizeCheck = reSizeCheck + 1
+			currentSize = 10
+			isFlagBG    = 0
 		end
 	end
---print("# currentSize:", currentSize, isFlagBG, "reSizeCheck:", reSizeCheck, "bgName:", bgName)
+
 	if IsRatedBattleground() then
 		currentSize = 10
 		local faction = GetBattlefieldArenaFaction()
@@ -6462,8 +6451,6 @@ function BattlegroundTargets:IsBattleground()
 					end
 				end
 			end
-
-			BattlegroundTargets:BattlefieldScoreUpdate(1)
 
 			if OPT.ButtonShowFlag[currentSize] then
 				if currentSize == 10 or currentSize == 15 then
@@ -6605,6 +6592,27 @@ function BattlegroundTargets:IsBattleground()
 		end
 
 		BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
+		BattlegroundTargets:BattlefieldScoreRequest()
+
+		local frequency = 1 --    0-20 updates = 1 second
+		local elapsed = 0   --   21-60 updates = 2 seconds
+		local count = 0     --   61+   updates = 5 seconds
+		GVAR.MainFrame:SetScript("OnUpdate", function(self, elap)
+			elapsed = elapsed + elap
+			if elapsed < frequency then return end
+			elapsed = 0
+			if count > 60 then
+				frequency = 5
+			elseif count > 20 then
+				frequency = 2
+				count = count + 1
+			else
+				count = count + 1
+			end
+			--print("OnUpdate", count, frequency) -- TEST
+			BattlegroundTargets:BattlefieldScoreRequest()
+		end)
+
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -6623,7 +6631,6 @@ function BattlegroundTargets:IsNotBattleground()
 	isFlagBG = 0
 	flagCHK = nil
 	flagflag = nil
-	scoreUpdateCount = 0
 	isLeader = nil
 	hasFlag = nil
 	reCheckBG = nil
@@ -6663,6 +6670,8 @@ function BattlegroundTargets:IsNotBattleground()
 	table_wipe(FRIEND_GuildCount)
 	table_wipe(FRIEND_GuildName)
 	table_wipe(TARGET_Names)
+
+	GVAR.MainFrame:SetScript("OnUpdate", nil)
 
 	if inCombat or InCombatLockdown() then
 		reCheckBG = true
@@ -7338,7 +7347,7 @@ function BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 end
 
 function BattlegroundTargets:FlagDebuffCheck(message)
---print("FlagDebuffCheck", message)
+	--print("FlagDebuffCheck", message) -- TEST
 	if message == FLG["FLAG_DEBUFF1"] or message == FLG["FLAG_DEBUFF2"] then -- FLAGDEBUFF
 		flagDebuff = flagDebuff + 1
 		if hasFlag then
@@ -7356,7 +7365,7 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:FlagCheck(message, messageFaction)
---print("FlagCheck", message, messageFaction)
+	--print("FlagCheck", message, messageFaction) -- TEST
 	if messageFaction == playerFactionBG then
 		-- -----------------------------------------------------------------------------------------------------------------
 		local fc = string_match(message, FLG["WSG_TP_REGEX_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
@@ -7695,6 +7704,17 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:BattlefieldScoreRequest()
+	local wssf = WorldStateScoreFrame
+	if wssf and wssf:IsShown() then
+		return
+	end
+	SetBattlefieldScoreFaction()
+	RequestBattlefieldScoreData()
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
 local function OnEvent(self, event, ...)
 	--if not eventTest[event] then eventTest[event] = 1 else eventTest[event] = eventTest[event] + 1 end -- TEST
 	if event == "PLAYER_REGEN_DISABLED" then
@@ -7707,11 +7727,11 @@ local function OnEvent(self, event, ...)
 		inCombat = false
 		if reCheckScore then
 			if not inWorld then return end
-			BattlegroundTargets:BattlefieldScoreUpdate(1)
+			BattlegroundTargets:BattlefieldScoreRequest()
 		end
 		if reCheckBG then
 			if not inWorld then return end
-			BattlegroundTargets:BattlefieldCheck()
+			BattlegroundTargets:BattlefieldScoreRequest()
 		end
 		if reSetLayout then
 			if not inWorld then return end

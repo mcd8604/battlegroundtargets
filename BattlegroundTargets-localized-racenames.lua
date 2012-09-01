@@ -85,11 +85,7 @@ elseif locale == "frFR" then
 		["Gobeline"] = HORDE,
 	}
 elseif locale == "itIT" then
---[[ --TODO
-
---]]
-
-	BattlegroundTargets_RaceNames = { -- TODO | data from Patch 5.0.3.15851 (BETA)
+	BattlegroundTargets_RaceNames = { -- 19 TODO | data from Patch 5.0.4.16016 (LIVE)
 		["Umana"] = ALLIANCE,
 		["Umano"] = ALLIANCE,
 		["Gnoma"] = ALLIANCE,
@@ -102,10 +98,11 @@ elseif locale == "itIT" then
 		["Elfo del Sangue"] = HORDE,
 		["Orchessa"] = HORDE,
 		["Orco"] = HORDE,
-
+		["Nano"] = ALLIANCE,
+		["Nana"] = ALLIANCE,
+		["Worgen"] = ALLIANCE,
 		["Draenei"] = ALLIANCE,
 		["Troll"] = HORDE,
-		["Nano"] = ALLIANCE,
 		["Goblin"] = HORDE,
 		["Tauren"] = HORDE,
 	}
