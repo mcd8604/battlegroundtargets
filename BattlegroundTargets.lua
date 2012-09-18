@@ -129,6 +129,12 @@ local OPT = {}      -- local SavedVariable table (BattlegroundTargets_Options.Bu
 local AddonIcon = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-button"
 
 local _G = _G
+local GetNumBattlegroundTypes         = GetNumBattlegroundTypes
+local GetBattlegroundInfo             = GetBattlegroundInfo
+local GetClassInfoByID                = GetClassInfoByID
+local GetNumSpecializationsForClassID = GetNumSpecializationsForClassID
+local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
+local GetSpecializationRoleByID       = GetSpecializationRoleByID
 local GetTime                     = GetTime
 local InCombatLockdown            = InCombatLockdown
 local IsInInstance                = IsInInstance
@@ -141,7 +147,9 @@ local GetNumBattlefieldScores     = GetNumBattlefieldScores
 local GetBattlefieldScore         = GetBattlefieldScore
 local SetBattlefieldScoreFaction  = SetBattlefieldScoreFaction
 local RequestBattlefieldScoreData = RequestBattlefieldScoreData
+local UnitFactionGroup            = UnitFactionGroup
 local UnitName                    = UnitName
+local UnitClass                   = UnitClass
 local UnitLevel                   = UnitLevel
 local UnitHealthMax               = UnitHealthMax
 local UnitHealth                  = UnitHealth
@@ -149,7 +157,9 @@ local UnitIsGroupLeader           = UnitIsGroupLeader
 local UnitBuff                    = UnitBuff
 local UnitDebuff                  = UnitDebuff
 local UnitIsVisible               = UnitIsVisible -- TODO_MoP - U.nitIsVisible is no longer necessary, needs check
+local GetGuildInfo                = GetGuildInfo
 local GetSpellInfo                = GetSpellInfo
+local IsSpellKnown                = IsSpellKnown
 local IsSpellInRange              = IsSpellInRange
 local CheckInteractDistance       = CheckInteractDistance
 local GetNumGroupMembers          = GetNumGroupMembers
@@ -171,12 +181,16 @@ local locale = GetLocale()
 local inWorld
 local inBattleground
 local inCombat
+
 local reCheckBG
 local reCheckScore
 local reSizeCheck = 0 -- check bgname if normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
 local reSetLayout
+local rePosMain
+
 local isConfig
 local testDataLoaded
+
 local isTarget = 0
 local hasFlag
 local isDeadUpdateStop
@@ -1778,15 +1792,27 @@ function BattlegroundTargets:CreateFrames()
 	GVAR.MainFrame:SetWidth(150)
 	GVAR.MainFrame:SetHeight(20)
 	GVAR.MainFrame:SetScript("OnShow", function() BattlegroundTargets:MainFrameShow() end)
-	GVAR.MainFrame:SetScript("OnEnter", function() GVAR.MainFrame.Movetext:SetTextColor(1, 1, 1, 1) end)
-	GVAR.MainFrame:SetScript("OnLeave", function() GVAR.MainFrame.Movetext:SetTextColor(0.3, 0.3, 0.3, 1) end)
+	GVAR.MainFrame:SetScript("OnEnter", function()
+		if inCombat or InCombatLockdown() then return end
+		GVAR.MainFrame.Movetext:SetTextColor(1, 1, 1, 1)
+	end)
+	GVAR.MainFrame:SetScript("OnLeave", function()
+		GVAR.MainFrame.Movetext:SetTextColor(0.3, 0.3, 0.3, 1)
+	end)
 	GVAR.MainFrame:SetScript("OnMouseDown", function()
 		if inCombat or InCombatLockdown() then return end
+		GVAR.MainFrame.isMoving = true
 		GVAR.MainFrame:StartMoving()
 	end)
 	GVAR.MainFrame:SetScript("OnMouseUp", function()
-		if inCombat or InCombatLockdown() then return end
+		if not GVAR.MainFrame.isMoving then return end
+		GVAR.MainFrame.isMoving = nil
 		GVAR.MainFrame:StopMovingOrSizing()
+		if inCombat or InCombatLockdown() then
+			rePosMain = true
+			return
+		end
+		rePosMain = nil
 		BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_MainFrame")
 	end)
 	GVAR.MainFrame:Hide()
@@ -3578,6 +3604,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.TargetIcon1)
 	GVAR.OptionsFrame.TargetIcon1:SetScript("OnClick", function()
 		BattlegroundTargets_Options.TargetIcon = "default"
+		GVAR.OptionsFrame.TargetIcon1:SetChecked(true)
 		GVAR.OptionsFrame.TargetIcon2:SetChecked(false)
 		if BattlegroundTargets_Options.EnableBracket[currentSize] then
 			BattlegroundTargets:EnableConfigMode()
@@ -3590,6 +3617,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TargetIcon2:SetScript("OnClick", function()
 		BattlegroundTargets_Options.TargetIcon = "bgt"
 		GVAR.OptionsFrame.TargetIcon1:SetChecked(false)
+		GVAR.OptionsFrame.TargetIcon2:SetChecked(true)
 		if BattlegroundTargets_Options.EnableBracket[currentSize] then
 			BattlegroundTargets:EnableConfigMode()
 		end
@@ -6563,7 +6591,10 @@ function BattlegroundTargets:IsBattleground()
 
 				if ranges[playerClassEN] then
 					if IsSpellKnown(ranges[playerClassEN]) then
-						rangeSpellName, _, _, _, _, _, _, rangeMin, rangeMax = GetSpellInfo(ranges[playerClassEN])
+						local SpellName, _, _, _, _, _, _, Min, Max = GetSpellInfo(ranges[playerClassEN])
+						rangeSpellName = SpellName
+						rangeMin = Min
+						rangeMax = Max
 						if not rangeSpellName then
 							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
 						elseif (not rangeMin or not rangeMax) or (rangeMin <= 0 and rangeMax <= 0) then
@@ -7725,17 +7756,30 @@ local function OnEvent(self, event, ...)
 		end
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		inCombat = false
-		if reCheckScore then
+		if reCheckScore or reCheckBG then
 			if not inWorld then return end
 			BattlegroundTargets:BattlefieldScoreRequest()
 		end
-		if reCheckBG then
-			if not inWorld then return end
-			BattlegroundTargets:BattlefieldScoreRequest()
+		if rePosMain then
+			rePosMain = nil
+			if GVAR.MainFrame:IsShown() then
+				BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_MainFrame")
+			end
 		end
 		if reSetLayout then
 			if not inWorld then return end
 			BattlegroundTargets:SetupButtonLayout()
+			if inBattleground then
+				if not BattlegroundTargets_Options.EnableBracket[currentSize] then
+					if GVAR.MainFrame:IsShown() and not GVAR.OptionsFrame:IsShown() then
+						BattlegroundTargets:DisableConfigMode()
+					end
+				end
+			else
+				if GVAR.MainFrame:IsShown() and not GVAR.OptionsFrame:IsShown() then
+					BattlegroundTargets:DisableConfigMode()
+				end
+			end
 		end
 		if isConfig then
 			if not inWorld then return end
