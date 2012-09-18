@@ -6143,34 +6143,42 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 				end
 				--]]
 
+				ENEMY_Data[x] = {}
+
 				local role = 4
 				local spec = 5
-				if classToken and talentSpec then
+				if classToken then
 					local token = classes[classToken]
 					if token then
-						if token.spec[1] and talentSpec == token.spec[1].specName then
-							role = classes[classToken].spec[1].role
-							spec = 1
-						elseif token.spec[2] and talentSpec == token.spec[2].specName then
-							role = classes[classToken].spec[2].role
-							spec = 2
-						elseif token.spec[3] and talentSpec == token.spec[3].specName then
-							role = classes[classToken].spec[3].role
-							spec = 3
-						elseif token.spec[4] and talentSpec == token.spec[4].specName then
-							role = classes[classToken].spec[4].role
-							spec = 4
+						if talentSpec then
+							if token.spec[1] and talentSpec == token.spec[1].specName then
+								role = classes[classToken].spec[1].role
+								spec = 1
+							elseif token.spec[2] and talentSpec == token.spec[2].specName then
+								role = classes[classToken].spec[2].role
+								spec = 2
+							elseif token.spec[3] and talentSpec == token.spec[3].specName then
+								role = classes[classToken].spec[3].role
+								spec = 3
+							elseif token.spec[4] and talentSpec == token.spec[4].specName then
+								role = classes[classToken].spec[4].role
+								spec = 4
+							end
 						end
+						ENEMY_Data[x].classToken = classToken
+					else
+						ENEMY_Data[x].classToken = "ZZZFAILURE"
 					end
+				else
+					ENEMY_Data[x].classToken = "ZZZFAILURE"
 				end
-				ENEMY_Roles[role] = ENEMY_Roles[role] + 1 -- SUMMARY
 
-				ENEMY_Data[x] = {}
 				ENEMY_Data[x].name = name
-				ENEMY_Data[x].classToken = classToken or "ZZZFAILURE"
 				ENEMY_Data[x].specNum = spec
 				ENEMY_Data[x].talentSpec = role
 				x = x + 1
+
+				ENEMY_Roles[role] = ENEMY_Roles[role] + 1 -- SUMMARY
 
 				if not ENEMY_Names[name] then
 					ENEMY_Names[name] = 0
