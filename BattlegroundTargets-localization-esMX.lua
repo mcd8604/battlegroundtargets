@@ -1,5 +1,5 @@
 -- -------------------------------------------------------------------------- --
--- BattlegroundTargets esMX Localization (same as esES, pls correct if wrong) --
+-- BattlegroundTargets esMX Localization (Thanks arkdelkaos)                  --
 -- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 if GetLocale() ~= "esMX" then return end
@@ -12,15 +12,15 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["40 vs 40"] = "40 vs 40",
 ["Enable"] = "Habilitado",
 ["Independent Positioning"] = "Posicionamiento independiente",
-["Layout"] = true,
-["Summary"] = true,
+["Layout"] = "Esquema",
+["Summary"] = "Resumen",
 ["Copy this settings to '%s'"] = "Copiar estas opciones a '%s'",
-["Show Role"] = true,
+["Show Role"] = "Mostrar función",
 ["Show Specialization"] = "Mostrar la rama de talentos",
 ["Show Class Icon"] = "Mostrar el icono de clase",
 ["Hide Realm"] = "Ocultar el reino",
 ["Show Leader"] = "Mostrar al lider",
-["Show Guild Groups"] = true,
+["Show Guild Groups"] = "Mostrar grupos de hermandad",
 ["Show Target"] = "Mostrar el target",
 ["Show Focus"] = "Mostrar el focus",
 ["Show Flag Carrier"] = "Mostrar el portador de la bandera",
@@ -29,11 +29,11 @@ BattlegroundTargets_Localization:CreateLocaleTable({
 ["Show Health Bar"] = "Mostrar la barra de vida",
 ["Show Percent"] = "Mostrar el porcentaje",
 ["Show Range"] = "Mostrar el rango de distancia",
- ["This option uses the CombatLog to check range."] = true,
+ ["This option uses the CombatLog to check range."] = "Esta opcion utilizará el combatlog para medir la distancia",
  ["This option uses a pre-defined spell to check range:"] = "Esta opción utiliza una distancia predefinida por una magia:",
- ["Mix"] = true,
- ["if you are attacked only"] = true,
- ["(class dependent)"] = true,
+ ["Mix"] = "Mezcla",
+ ["if you are attacked only"] = "solo en combate",
+ ["(class dependent)"] = "(dependiendo de la clase)",
  ["Disable this option if you have CPU/FPS problems in combat."] = "Deshabilita esta opción si tienes problemas de lag durante el combate.",
 ["Sort By"] = "Ordenar por",
 ["Text Size"] = "Tamaño del texto",
