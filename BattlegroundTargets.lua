@@ -1266,7 +1266,7 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 		end
 		button.PullDownMenu.Button[i]:Show()
 
-		if pulldownWidth == 0 then
+		if pulldownWidth <= 0 then
 			local w = button.PullDownMenu.Button[i].Text:GetStringWidth()+15+18
 			if w > autoWidth then
 				autoWidth = w
@@ -1274,8 +1274,17 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 		end
 	end
 
+	--  < 0 : auto, but max width n
+	-- == 0 : auto
+	--  > 0 : fixed width n
 	local newWidth = pulldownWidth
-	if pulldownWidth == 0 then
+	if pulldownWidth < 0 then
+		if autoWidth < -pulldownWidth then
+			newWidth = autoWidth
+		else
+			newWidth = -pulldownWidth
+		end
+	elseif pulldownWidth == 0 then
 		newWidth = autoWidth
 	end
 
@@ -3258,7 +3267,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.RangeCheckTypePullDown,
 		"RangeType",
 		buttonName,
-		0,
+		-200,
 		4,
 		RangeCheckTypePullDownFunc
 	)
