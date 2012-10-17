@@ -6373,19 +6373,19 @@ function BattlegroundTargets:CheckFlagCarrierEND() -- FLAGSPY
 	   not OPT.ButtonShowAssist[currentSize] and
 	   not OPT.ButtonShowLeader[currentSize] and
 	   not OPT.ButtonShowGuildGroup[currentSize] and
-	   (not OPT.ButtonRangeCheck[currentSize] or (OPT.ButtonRangeCheck[currentSize] and not OPT.ButtonTypeRangeCheck[currentSize] >= 2)) and
+	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2) and
 	   not isLowLevel -- LVLCHK
 	then
 		BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
 	end
 	if not OPT.ButtonShowHealthBar[currentSize] and
 	   not OPT.ButtonShowHealthText[currentSize] and
-	   (not OPT.ButtonRangeCheck[currentSize] or (OPT.ButtonRangeCheck[currentSize] and not OPT.ButtonTypeRangeCheck[currentSize] >= 2))
+	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2)
 	then
 		BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
 	end
 	if not OPT.ButtonShowTarget[currentSize] and
-	   (not OPT.ButtonRangeCheck[currentSize] or (OPT.ButtonRangeCheck[currentSize] and not OPT.ButtonTypeRangeCheck[currentSize] >= 2))
+	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2)
 	then
 		BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
 	end
