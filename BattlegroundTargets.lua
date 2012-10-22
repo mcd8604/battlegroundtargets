@@ -338,25 +338,25 @@ local sortDetail = {
 local fontStyles = {
  [1] = {font = "Fonts\\2002.ttf",         name = "2002 - |cffa070ddLatin-1|r |cff68ccefkoKR|r |cffff7c0aruRU|r"},
  [2] = {font = "Fonts\\2002B.ttf",        name = "2002 Bold - |cffa070ddLatin-1|r |cff68ccefkoKR|r |cffff7c0aruRU|r"},
- [3] = {font = "Fonts\\ARIALN.TTF",       name = "Arial Narrowv - |cffa070ddLatin|r |cffff7c0aruRU|r"},
+ [3] = {font = "Fonts\\ARIALN.TTF",       name = "Arial Narrow - |cffa070ddLatin|r |cffff7c0aruRU|r"},
  [4] = {font = "Fonts\\ARHei.ttf",        name = "AR CrystalzcuheiGBK Demibold - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
  [5] = {font = "Fonts\\bHEI00M.ttf",      name = "AR Heiti2 Medium B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
  [6] = {font = "Fonts\\bHEI01B.ttf",      name = "AR Heiti2 Bold B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
  [7] = {font = "Fonts\\bKAI00M.ttf",      name = "AR Kaiti Medium B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
  [8] = {font = "Fonts\\bLEI00D.ttf",      name = "AR Leisu Demi B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
- [9] = {font = "Fonts\\ARKai_C.ttf",      name = "AR ZhongkaiGBK Medium (Combat) - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
-[10] = {font = "Fonts\\ARKai_T.ttf",      name = "AR ZhongkaiGBK Medium - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
+ [9] = {font = "Fonts\\ARKai_C.ttf",      name = "AR ZhongkaiGBK Medium C - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
+[10] = {font = "Fonts\\ARKai_T.ttf",      name = "AR ZhongkaiGBK Medium T- |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
 [11] = {font = "Fonts\\FRIZQT__.TTF",     name = "Friz Quadrata TT - |cffa070ddLatin-1|r"},
 [12] = {font = "Fonts\\FRIZQT___CYR.TTF", name = "FrizQuadrataCTT - |cffff7c0aruRU|r"},
-[13] = {font = "Fonts\\K_Pagetext.TTF",   name = "MoK - |cffa070ddLatin-1|r  |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
-[14] = {font = "Fonts\\MORPHEUS.TTF",     name = "Morpheus - |cffa070ddLatin-1|r"},
-[15] = {font = "Fonts\\MORPHEUS_CYR.TTF", name = "Morpheus - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"},
-[16] = {font = "Fonts\\NIM_____.ttf",     name = "Nimrod MT - |cffa070ddLatin|r  |cffff7c0aruRU|r"},
-[17] = {font = "Fonts\\SKURRI.TTF",       name = "Skurri - |cffa070ddLatin-1|r"},
-[18] = {font = "Fonts\\SKURRI_CYR.TTF",   name = "Skurri - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"},
+[13] = {font = "Fonts\\MORPHEUS.TTF",     name = "Morpheus - |cffa070ddLatin-1|r"},
+[14] = {font = "Fonts\\MORPHEUS_CYR.TTF", name = "Morpheus Cyr - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"},
+[15] = {font = "Fonts\\NIM_____.ttf",     name = "Nimrod MT - |cffa070ddLatin|r  |cffff7c0aruRU|r"},
+[16] = {font = "Fonts\\SKURRI.TTF",       name = "Skurri - |cffa070ddLatin-1|r"},
+[17] = {font = "Fonts\\SKURRI_CYR.TTF",   name = "Skurri Cyr - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"},
+[18] = {font = "Fonts\\K_Pagetext.TTF",   name = "YDIMokM - |cffa070ddLatin-1|r  |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
 [19] = {font = "Fonts\\K_Damage.TTF",     name = "YDIWingsM - |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
-
 }
+
 local defaultFont = 1
 if locale == "ruRU" then
 	defaultFont = 12 -- FRIZQT___CYR.TTF (same as defined in FontStyleOverrides.xml)
@@ -1340,8 +1340,8 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS2 = "/bgtargets"
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
-	if type(BattlegroundTargets_Options.version) ~= "number"   then
-		BattlegroundTargets_Options.version = 14
+	if type(BattlegroundTargets_Options.version) ~= "number" then
+		BattlegroundTargets_Options.version = 15
 	end
 
 	--  1 =   r2 | 40200-1  | 01 Aug 2011 | initial commit
@@ -1358,6 +1358,7 @@ function BattlegroundTargets:InitOptions()
 	-- 12 = r107 | 40300-10 | 04 Mar 2012
 	-- 13 = r109 | 40300-10 | 04 Mar 2012
 	-- 14 = r126 | 40300-12 | 07 Jun 2012
+	-- 15 = r153 | 50001-4  | 22 Oct 2012
 
 	if BattlegroundTargets_Options.version == 1 then
 		if BattlegroundTargets_Options.ButtonFontSize then
@@ -1563,6 +1564,14 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.ButtonAvgRangeCheck = nil
 		BattlegroundTargets_Options.ButtonClassRangeCheck = nil
 		BattlegroundTargets_Options.version = 14
+	end
+
+	if BattlegroundTargets_Options.version == 14 then -- font reset
+		if BattlegroundTargets_Options.ButtonFontStyle then
+			BattlegroundTargets_Options.ButtonFontStyle = nil
+			Print("Font reset.")
+		end
+		BattlegroundTargets_Options.version = 15
 	end
 
 	if type(BattlegroundTargets_Options.pos)                        ~= "table"   then BattlegroundTargets_Options.pos                        = {}    end
