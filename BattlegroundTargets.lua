@@ -357,16 +357,23 @@ local fontStyles = {
 [19] = {font = "Fonts\\K_Damage.TTF",     name = "YDIWingsM - |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
 }
 
-local defaultFont = 1
-if locale == "ruRU" then
-	defaultFont = 12 -- FRIZQT___CYR.TTF (same as defined in FontStyleOverrides.xml)
-elseif locale == "koKR" then
-	defaultFont = 1 -- 2002.ttf (same as defined in FontStyleOverrides.xml)
-elseif locale == "zhCN" then
-	defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml)
-elseif locale == "zhTW" then
-	defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml)
-end
+  local defaultFont = 1
+--    if locale == "deDE" then defaultFont =  1
+--elseif locale == "enGB" then defaultFont =  1
+--elseif locale == "enUS" then defaultFont =  1
+--elseif locale == "esES" then defaultFont =  1
+--elseif locale == "esMX" then defaultFont =  1
+--elseif locale == "frFR" then defaultFont =  1
+--elseif locale == "itIT" then defaultFont =  1
+--elseif locale == "koKR" then defaultFont =  1 -- 2002.ttf (same as defined in FontStyleOverrides.xml)
+--elseif locale == "ptBR" then defaultFont =  1
+--elseif locale == "ptPT" then defaultFont =  1
+      if locale == "ruRU" then defaultFont = 12 -- FRIZQT___CYR.TTF (same as defined in FontStyleOverrides.xml)
+  elseif locale == "zhCN" then defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml)
+  elseif locale == "zhTW" then defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml)
+  elseif locale == "enCN" then defaultFont = 10 -- TODO needs check
+  elseif locale == "enTW" then defaultFont = 10 -- TODO needs check
+  end
 
 local fontPath = fontStyles[defaultFont].font
 
