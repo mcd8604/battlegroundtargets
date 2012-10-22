@@ -164,11 +164,6 @@ local UnitIsVisible = UnitIsVisible -- TODO_MoP needs check
 local UnitLevel = UnitLevel
 local UnitName = UnitName
 
-local TARGET = TARGET
-local ROLE = ROLE
-local CLASS = CLASS
-local NAME = NAME
-
 -- -------------------------------------------------------------------------- --
 
 BattlegroundTargets_Options = {} -- SavedVariable options table
@@ -214,7 +209,7 @@ local flagflag
 local groupMembers = 0
 local groupMemChk = 0
 
--- THROTTLE (reduce CPU usage) -----------------------------------------------------------------------------------------
+-- THROTTLE (reduce CPU usage)
 local range_SPELL_Frequency     = 0.2       -- rangecheck: [class-spell]: the 0.2 second freq is per enemy (variable: ENEMY_Name2Range[enemyname]) 
 local range_CL_Throttle         = 0         -- rangecheck: [combatlog] C.ombatLogRangeCheck()
 local range_CL_Frequency        = 3         -- rangecheck: [combatlog] 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% combatlog messages filtered (36% vs overhead: two variables, one addition, one number comparison and if filtered one math_random)
@@ -222,15 +217,15 @@ local range_CL_DisplayThrottle  = GetTime() -- rangecheck: [combatlog] display u
 local range_CL_DisplayFrequency = 0.33      -- rangecheck: [combatlog] display update
 local leaderThrottle  = 0                   -- leader: C.heckUnitTarget()
 local leaderFrequency = 5                   -- leader: if isLeader is true then pause 5 times(events) until next check (reason: leader does not change often in a bg, irrelevant info anyway)
--- FORCE UPDATE (precise results) --------------------------------------------------------------------------------------
+-- FORCE UPDATE (precise results)
 local assistForceUpdate = GetTime()         -- assist: C.heckUnitTarget()
 local assistFrequency   = 0.5               -- assist: immediate assist target check (reason: target loss and I don't know why... -> brute force)
 local targetCountForceUpdate = GetTime()    -- targetcount: C.heckUnitTarget()
 local targetCountFrequency   = 30           -- targetcount: a complete raid/raidtarget check every 30 seconds (reason: target loss and I don't know why... -> brute force)
--- WARNING -------------------------------------------------------------------------------------------------------------
+-- WARNING
 local latestScoreUpdate  = GetTime()        -- scoreupdate: B.attlefieldScoreUpdate()
 local latestScoreWarning = 60               -- scoreupdate: inCombat-warning icon if latest score update is >= 60 seconds
--- MISC ----------------------------------------------------------------------------------------------------------------
+-- MISC
 local range_DisappearTime = 8               -- rangecheck: display update - clears range display if an enemy was not seen for 8 seconds
 
 local playerLevel = UnitLevel("player") -- LVLCHK
@@ -282,11 +277,8 @@ local testLeader = 4
 local testGroupNum = {}
 
 local healthBarWidth = 0.01
-
 local sizeOffset    = 5
 local sizeBarHeight = 14
-
-local fontPath = _G["GameFontNormal"]:GetFont()
 
 local currentSize = 10
 
@@ -342,6 +334,41 @@ local sortDetail = {
 	[2] = "*"..CLASS.." (english)",
 	[3] = "*"..CLASS.." (Blizzard)",
 }
+
+local fontStyles = {
+ [1] = {font = "Fonts\\2002.ttf",         name = "2002 - |cffa070ddLatin-1|r |cff68ccefkoKR|r |cffff7c0aruRU|r"},
+ [2] = {font = "Fonts\\2002B.ttf",        name = "2002 Bold - |cffa070ddLatin-1|r |cff68ccefkoKR|r |cffff7c0aruRU|r"},
+ [3] = {font = "Fonts\\ARIALN.TTF",       name = "Arial Narrowv - |cffa070ddLatin|r |cffff7c0aruRU|r"},
+ [4] = {font = "Fonts\\ARHei.ttf",        name = "AR CrystalzcuheiGBK Demibold - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
+ [5] = {font = "Fonts\\bHEI00M.ttf",      name = "AR Heiti2 Medium B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
+ [6] = {font = "Fonts\\bHEI01B.ttf",      name = "AR Heiti2 Bold B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
+ [7] = {font = "Fonts\\bKAI00M.ttf",      name = "AR Kaiti Medium B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
+ [8] = {font = "Fonts\\bLEI00D.ttf",      name = "AR Leisu Demi B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
+ [9] = {font = "Fonts\\ARKai_C.ttf",      name = "AR ZhongkaiGBK Medium (Combat) - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
+[10] = {font = "Fonts\\ARKai_T.ttf",      name = "AR ZhongkaiGBK Medium - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
+[11] = {font = "Fonts\\FRIZQT__.TTF",     name = "Friz Quadrata TT - |cffa070ddLatin-1|r"},
+[12] = {font = "Fonts\\FRIZQT___CYR.TTF", name = "FrizQuadrataCTT - |cffff7c0aruRU|r"},
+[13] = {font = "Fonts\\K_Pagetext.TTF",   name = "MoK - |cffa070ddLatin-1|r  |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
+[14] = {font = "Fonts\\MORPHEUS.TTF",     name = "Morpheus - |cffa070ddLatin-1|r"},
+[15] = {font = "Fonts\\MORPHEUS_CYR.TTF", name = "Morpheus - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"},
+[16] = {font = "Fonts\\NIM_____.ttf",     name = "Nimrod MT - |cffa070ddLatin|r  |cffff7c0aruRU|r"},
+[17] = {font = "Fonts\\SKURRI.TTF",       name = "Skurri - |cffa070ddLatin-1|r"},
+[18] = {font = "Fonts\\SKURRI_CYR.TTF",   name = "Skurri - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"},
+[19] = {font = "Fonts\\K_Damage.TTF",     name = "YDIWingsM - |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
+
+}
+local defaultFont = 1
+if locale == "ruRU" then
+	defaultFont = 12 -- FRIZQT___CYR.TTF (same as defined in FontStyleOverrides.xml)
+elseif locale == "koKR" then
+	defaultFont = 1 -- 2002.ttf (same as defined in FontStyleOverrides.xml)
+elseif locale == "zhCN" then
+	defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml)
+elseif locale == "zhTW" then
+	defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml)
+end
+
+local fontPath = fontStyles[defaultFont].font
 
 local classcolors = {}
 for class, color in pairs(RAID_CLASS_COLORS) do -- Constants.lua
@@ -508,41 +535,7 @@ local function Print(...)
 	print("|cffffff7fBattlegroundTargets:|r", ...)
 end
 
-local function ClassHexColor(class)
-	local hex
-	if classcolors[class] then
-		hex = string_format("%.2x%.2x%.2x", classcolors[class].r*255, classcolors[class].g*255, classcolors[class].b*255)
-	end
-	return hex or "cccccc"
-end
-
 local function NOOP() end
-
-local function guildgroup_sortfunc(a, b)
-	if a.count < b.count then return true end
-end
-
-local function ggTexCol(num)
-	local tex = math_floor(num/6) -- #guildGrpTex
-	if tex < 1 then
-		tex = num
-	else
-		tex = num - (tex * 6)
-		if tex == 0 then
-			tex = ((tex+1) * 6)
-		end
-	end
-	local col = math_floor(num/5) -- #guildGrpCol
-	if col < 1 then
-		col = num
-	else
-		col = num - (col * 5)
-		if col == 0 then
-			col = ((col+1) * 5)
-		end
-	end
-	return tex, col
-end
 
 local function Desaturation(texture, desaturation)
 	local shaderSupported = texture:SetDesaturated(desaturation)
@@ -555,27 +548,34 @@ local function Desaturation(texture, desaturation)
 	end
 end
 
-local function SortByPullDownFunc(value) -- PDFUNC
-	BattlegroundTargets_Options.ButtonSortBy[currentSize] = value
-	                        OPT.ButtonSortBy[currentSize] = value
-	BattlegroundTargets:EnableConfigMode()
+local function ClassHexColor(class)
+	local hex
+	if classcolors[class] then
+		hex = string_format("%.2x%.2x%.2x", classcolors[class].r*255, classcolors[class].g*255, classcolors[class].b*255)
+	end
+	return hex or "cccccc"
 end
 
-local function SortDetailPullDownFunc(value) -- PDFUNC
-	BattlegroundTargets_Options.ButtonSortDetail[currentSize] = value
-	                        OPT.ButtonSortDetail[currentSize] = value
-	BattlegroundTargets:EnableConfigMode()
-end
-
-local function RangeCheckTypePullDownFunc(value) -- PDFUNC
-	BattlegroundTargets_Options.ButtonTypeRangeCheck[currentSize] = value
-	                        OPT.ButtonTypeRangeCheck[currentSize] = value
-end
-
-local function RangeDisplayPullDownFunc(value) -- PDFUNC
-	BattlegroundTargets_Options.ButtonRangeDisplay[currentSize] = value
-	                        OPT.ButtonRangeDisplay[currentSize] = value
-	BattlegroundTargets:EnableConfigMode()
+local function ggTexCol(num)
+	local tex = math_floor(num/6) -- #guildGrpTex
+	if tex < 1 then
+		tex = num
+	else
+		tex = num - (tex * 6)
+		if tex == 0 then
+			tex = 6
+		end
+	end
+	local col = math_floor(num/5) -- #guildGrpCol
+	if col < 1 then
+		col = num
+	else
+		col = num - (col * 5)
+		if col == 0 then
+			col = 5
+		end
+	end
+	return tex, col
 end
 
 local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
@@ -590,116 +590,116 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.ClassTexture:SetAlpha(1)
 		GVAR_TargetButton.ClassColorBackground:SetTexture(GVAR_TargetButton.colR5, GVAR_TargetButton.colG5, GVAR_TargetButton.colB5, 1)
 		GVAR_TargetButton.HealthBar:SetTexture(GVAR_TargetButton.colR, GVAR_TargetButton.colG, GVAR_TargetButton.colB, 1)
-	else
-		if display == 1 then -- Default 100
-			GVAR_TargetButton.Background:SetAlpha(1)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(1)
-			GVAR_TargetButton.RoleTexture:SetAlpha(1)
-			GVAR_TargetButton.SpecTexture:SetAlpha(1)
-			GVAR_TargetButton.ClassTexture:SetAlpha(1)
- 		elseif display == 2 then -- Default 100 m
-			GVAR_TargetButton.Background:SetAlpha(1)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(1)
-			GVAR_TargetButton.RoleTexture:SetAlpha(1)
-			GVAR_TargetButton.SpecTexture:SetAlpha(1)
-			GVAR_TargetButton.ClassTexture:SetAlpha(1)
-			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-		elseif display == 3 then -- Default 50
-			GVAR_TargetButton.Background:SetAlpha(0.5)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(0.5)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(0.5)
-			GVAR_TargetButton.RoleTexture:SetAlpha(0.5)
-			GVAR_TargetButton.SpecTexture:SetAlpha(0.5)
-			GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
- 		elseif display == 4 then -- Default 50 m
-			GVAR_TargetButton.Background:SetAlpha(0.5)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(0.5)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(0.5)
-			GVAR_TargetButton.RoleTexture:SetAlpha(0.5)
-			GVAR_TargetButton.SpecTexture:SetAlpha(0.5)
-			GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
-			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-		elseif display == 5 then -- Default 10
-			GVAR_TargetButton.Background:SetAlpha(0.3)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(0.1)
-			GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
-			GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
-			GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
-		elseif display == 6 then -- Default 10 m
-			GVAR_TargetButton.Background:SetAlpha(0.3)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(0.1)
-			GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
-			GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
-			GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
-			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
- 		elseif display == 7 then -- X 100 m
-			GVAR_TargetButton.Background:SetAlpha(1)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(1)
-			GVAR_TargetButton.RoleTexture:SetAlpha(1)
-			GVAR_TargetButton.SpecTexture:SetAlpha(1)
-			GVAR_TargetButton.ClassTexture:SetAlpha(1)
-			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
- 		elseif display == 8 then -- X 50 m
-			GVAR_TargetButton.Background:SetAlpha(0.5)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(0.5)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(0.5)
-			GVAR_TargetButton.RoleTexture:SetAlpha(0.5)
-			GVAR_TargetButton.SpecTexture:SetAlpha(0.5)
-			GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
-			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-		elseif display == 9 then -- X 10
-			GVAR_TargetButton.Background:SetAlpha(0.3)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(0.1)
-			GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
-			GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
-			GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
-		else--if display == 10 then -- X 10 m
-			GVAR_TargetButton.Background:SetAlpha(0.3)
-			GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
-			GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
-			GVAR_TargetButton.RangeTexture:SetAlpha(0)
-			GVAR_TargetButton.HealthBar:SetAlpha(0.1)
-			GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
-			GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
-			GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
-			GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-			GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-		end
+	elseif display == 1 then -- Default 100
+		GVAR_TargetButton.Background:SetAlpha(1)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(1)
+		GVAR_TargetButton.RoleTexture:SetAlpha(1)
+		GVAR_TargetButton.SpecTexture:SetAlpha(1)
+		GVAR_TargetButton.ClassTexture:SetAlpha(1)
+ 	elseif display == 2 then -- Default 100 m
+		GVAR_TargetButton.Background:SetAlpha(1)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(1)
+		GVAR_TargetButton.RoleTexture:SetAlpha(1)
+		GVAR_TargetButton.SpecTexture:SetAlpha(1)
+		GVAR_TargetButton.ClassTexture:SetAlpha(1)
+		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
+		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+	elseif display == 3 then -- Default 50
+		GVAR_TargetButton.Background:SetAlpha(0.5)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.5)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(0.5)
+		GVAR_TargetButton.RoleTexture:SetAlpha(0.5)
+		GVAR_TargetButton.SpecTexture:SetAlpha(0.5)
+		GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
+ 	elseif display == 4 then -- Default 50 m
+		GVAR_TargetButton.Background:SetAlpha(0.5)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.5)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(0.5)
+		GVAR_TargetButton.RoleTexture:SetAlpha(0.5)
+		GVAR_TargetButton.SpecTexture:SetAlpha(0.5)
+		GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
+		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
+		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+	elseif display == 5 then -- Default 10
+		GVAR_TargetButton.Background:SetAlpha(0.3)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(0.1)
+		GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
+		GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
+		GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
+	elseif display == 6 then -- Default 10 m
+		GVAR_TargetButton.Background:SetAlpha(0.3)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(0.1)
+		GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
+		GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
+		GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
+		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
+		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+ 	elseif display == 7 then -- X 100 m
+		GVAR_TargetButton.Background:SetAlpha(1)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(1)
+		GVAR_TargetButton.RoleTexture:SetAlpha(1)
+		GVAR_TargetButton.SpecTexture:SetAlpha(1)
+		GVAR_TargetButton.ClassTexture:SetAlpha(1)
+		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
+		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+ 	elseif display == 8 then -- X 50 m
+		GVAR_TargetButton.Background:SetAlpha(0.5)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.5)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(0.5)
+		GVAR_TargetButton.RoleTexture:SetAlpha(0.5)
+		GVAR_TargetButton.SpecTexture:SetAlpha(0.5)
+		GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
+		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
+		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+	elseif display == 9 then -- X 10
+		GVAR_TargetButton.Background:SetAlpha(0.3)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(0.1)
+		GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
+		GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
+		GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
+	else--if display == 10 then -- X 10 m
+		GVAR_TargetButton.Background:SetAlpha(0.3)
+		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
+		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
+		GVAR_TargetButton.RangeTexture:SetAlpha(0)
+		GVAR_TargetButton.HealthBar:SetAlpha(0.1)
+		GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
+		GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
+		GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
+		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
+		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
+
+
 -- ---------------------------------------------------------------------------------------------------------------------
--- Template BorderTRBL START ----------------------------------------
+-- -----------------------------------------------------------------------------
 TEMPLATE.BorderTRBL = function(frame) -- TRBL = Top-Right-Bottom-Left
 	frame.FrameBorder = frame:CreateTexture(nil, "BORDER")
 	frame.FrameBorder:SetPoint("TOPLEFT", 1, -1)
@@ -710,9 +710,9 @@ TEMPLATE.BorderTRBL = function(frame) -- TRBL = Top-Right-Bottom-Left
 	frame.FrameBackground:SetPoint("BOTTOMRIGHT", 0, 0)
 	frame.FrameBackground:SetTexture(0.8, 0.2, 0.2, 1)
 end
--- Template BorderTRBL END ----------------------------------------
+-- -----------------------------------------------------------------------------
 
--- Template TextButton START ----------------------------------------
+-- -----------------------------------------------------------------------------
 TEMPLATE.DisableTextButton = function(button)
 	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
 	button:Disable()
@@ -796,9 +796,9 @@ TEMPLATE.TextButton = function(button, text, action)
 	button:SetPushedTextOffset(1, -1)	
 	button:SetText(text)
 end
--- Template TextButton END ----------------------------------------
+-- -----------------------------------------------------------------------------
 
--- Template IconButton START ----------------------------------------
+-- -----------------------------------------------------------------------------
 --TEMPLATE.DisableIconButton = function(button)
 --	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
 --	button:Disable()
@@ -848,9 +848,9 @@ TEMPLATE.IconButton = function(button, cut)
 	button:SetDisabledTexture(button.Disabled)
 	Desaturation(button.Disabled, true)
 end
--- Template IconButton END ----------------------------------------
+-- -----------------------------------------------------------------------------
 
--- Template CheckButton START ----------------------------------------
+-- -----------------------------------------------------------------------------
 TEMPLATE.DisableCheckButton = function(button)
 	if button.Text then
 		button.Text:SetTextColor(0.5, 0.5, 0.5)
@@ -955,9 +955,9 @@ TEMPLATE.CheckButton = function(button, size, space, text, icon)
 	button:SetScript("OnEnter", function() button.Highlight:Show() end)
 	button:SetScript("OnLeave", function() button.Highlight:Hide() end)
 end
--- Template CheckButton END ----------------------------------------
+-- -----------------------------------------------------------------------------
 
--- Template TabButton START ----------------------------------------
+-- -----------------------------------------------------------------------------
 TEMPLATE.SetTabButton = function(button, show)
 	if show then
 		button.TextureBottom:SetTexture(0, 0, 0, 1)
@@ -1042,9 +1042,9 @@ TEMPLATE.TabButton = function(button, text, active)
 	button:SetScript("OnEnter", function() if not button.show then button.TextureBorder:SetTexture(0.4, 0.4, 0.4, 0.8) end end)
 	button:SetScript("OnLeave", function() if not button.show then button.TextureBorder:SetTexture(0.4, 0.4, 0.4, 0.4) end end)
 end
--- Template TabButton END ----------------------------------------
+-- -----------------------------------------------------------------------------
 
--- Template Slider START ----------------------------------------
+-- -----------------------------------------------------------------------------
 TEMPLATE.DisableSlider = function(slider)
 	slider.textMin:SetTextColor(0.5, 0.5, 0.5, 1)
 	slider.textMax:SetTextColor(0.5, 0.5, 0.5, 1)
@@ -1157,9 +1157,9 @@ TEMPLATE.Slider = function(slider, width, step, minVal, maxVal, curVal, func, me
 	slider:SetScript("OnEnter", function() slider.Background:SetTexture(1, 1, 1, 0.1) end)
 	slider:SetScript("OnLeave", function() slider.Background:SetTexture(0, 0, 0, 0) end)
 end
--- Template Slider END ----------------------------------------
+-- -----------------------------------------------------------------------------
 
--- Template PullDownMenu START ----------------------------------------
+-- -----------------------------------------------------------------------------
 TEMPLATE.DisablePullDownMenu = function(button)
 	button.PullDownMenu:Hide()
 	button.PullDownButtonBorder:SetTexture(0.4, 0.4, 0.4, 1)
@@ -1171,7 +1171,7 @@ TEMPLATE.EnablePullDownMenu = function(button)
 	button:Enable()
 end
 
-TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth, contentNum, func)
+TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth, contentNum, func, buttonOnEnterFunc, buttonOnLeaveFunc)
 	button.PullDownButtonBG = button:CreateTexture(nil, "BORDER")
 	button.PullDownButtonBG:SetPoint("TOPLEFT", 1, -1)
 	button.PullDownButtonBG:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -1242,7 +1242,12 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 		button.PullDownMenu.Button[i].Text:SetJustifyH("LEFT")
 		button.PullDownMenu.Button[i].Text:SetTextColor(1, 1, 1, 1)
 
-		button.PullDownMenu.Button[i]:SetScript("OnLeave", OnLeave)
+		if buttonOnEnterFunc and buttonOnLeaveFunc then
+			button.PullDownMenu.Button[i]:SetScript("OnEnter", function(self) buttonOnEnterFunc(self, button) end)
+			button.PullDownMenu.Button[i]:SetScript("OnLeave", function(self) buttonOnLeaveFunc(self, button) OnLeave() end)
+		else
+			button.PullDownMenu.Button[i]:SetScript("OnLeave", OnLeave)
+		end
 		button.PullDownMenu.Button[i]:SetScript("OnClick", function()
 			button.value1 = button.PullDownMenu.Button[i].value1
 			button.PullDownButtonText:SetText( button.PullDownMenu.Button[i].Text:GetText() )
@@ -1270,6 +1275,9 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 			button.PullDownMenu.Button[i].value1 = i
 		elseif contentName == "RangeDisplay" then
 			button.PullDownMenu.Button[i].Text:SetText(rangeDisplay[i])
+			button.PullDownMenu.Button[i].value1 = i
+		elseif contentName == "FontStyle" then
+			button.PullDownMenu.Button[i].Text:SetText(fontStyles[i].name)
 			button.PullDownMenu.Button[i].value1 = i
 		end
 		button.PullDownMenu.Button[i]:Show()
@@ -1318,7 +1326,7 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 		end
 	end)
 end
--- Template PullDownMenu END ----------------------------------------
+-- -----------------------------------------------------------------------------
 -- ---------------------------------------------------------------------------------------------------------------------
 
 
@@ -1335,6 +1343,21 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.version) ~= "number"   then
 		BattlegroundTargets_Options.version = 14
 	end
+
+	--  1 =   r2 | 40200-1  | 01 Aug 2011 | initial commit
+	--  2 =  r21 | 40200-8  | 13 Aug 2011
+	--  3 =  r25 | 40200-9  | 19 Aug 2011
+	--  4 =  r39 | 40200-12 | 10 Oct 2011
+	--  5 =  r40 | 40200-12 | 10 Oct 2011
+	--  6 =  r52 | 40200-13 | 20 Oct 2011
+	--  7 =  r54 | 40200-13 | 21 Oct 2011
+	--  8 =  r59 | 40300-2  | 09 Jan 2012
+	--  9 =  r79 | 40300-4  | 27 Jan 2012
+	-- 10 =  r85 | 40300-5  | 03 Feb 2012
+	-- 11 = r103 | 40300-9  | 23 Feb 2012
+	-- 12 = r107 | 40300-10 | 04 Mar 2012
+	-- 13 = r109 | 40300-10 | 04 Mar 2012
+	-- 14 = r126 | 40300-12 | 07 Jun 2012
 
 	if BattlegroundTargets_Options.version == 1 then
 		if BattlegroundTargets_Options.ButtonFontSize then
@@ -1612,6 +1635,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonSortBy)                 ~= "table"   then BattlegroundTargets_Options.ButtonSortBy                 = {}    end
 	if type(BattlegroundTargets_Options.ButtonSortDetail)             ~= "table"   then BattlegroundTargets_Options.ButtonSortDetail             = {}    end
 	if type(BattlegroundTargets_Options.ButtonFontSize)               ~= "table"   then BattlegroundTargets_Options.ButtonFontSize               = {}    end
+	if type(BattlegroundTargets_Options.ButtonFontStyle)              ~= "table"   then BattlegroundTargets_Options.ButtonFontStyle              = {}    end
 	if type(BattlegroundTargets_Options.ButtonScale)                  ~= "table"   then BattlegroundTargets_Options.ButtonScale                  = {}    end
 	if type(BattlegroundTargets_Options.ButtonWidth)                  ~= "table"   then BattlegroundTargets_Options.ButtonWidth                  = {}    end
 	if type(BattlegroundTargets_Options.ButtonHeight)                 ~= "table"   then BattlegroundTargets_Options.ButtonHeight                 = {}    end
@@ -1644,6 +1668,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonSortBy[10])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[10]             = 1     end
 	if type(BattlegroundTargets_Options.ButtonSortDetail[10])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[10]         = 3     end
 	if type(BattlegroundTargets_Options.ButtonFontSize[10])           ~= "number"  then BattlegroundTargets_Options.ButtonFontSize[10]           = 10    end
+	if type(BattlegroundTargets_Options.ButtonFontStyle[10])          ~= "number"  then BattlegroundTargets_Options.ButtonFontStyle[10]          = defaultFont end
 	if type(BattlegroundTargets_Options.ButtonScale[10])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[10]              = 1     end
 	if type(BattlegroundTargets_Options.ButtonWidth[10])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[10]              = 150   end
 	if type(BattlegroundTargets_Options.ButtonHeight[10])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[10]             = 18    end
@@ -1676,6 +1701,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonSortBy[15])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[15]             = 1     end
 	if type(BattlegroundTargets_Options.ButtonSortDetail[15])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[15]         = 3     end
 	if type(BattlegroundTargets_Options.ButtonFontSize[15])           ~= "number"  then BattlegroundTargets_Options.ButtonFontSize[15]           = 10    end
+	if type(BattlegroundTargets_Options.ButtonFontStyle[15])          ~= "number"  then BattlegroundTargets_Options.ButtonFontStyle[15]          = defaultFont end
 	if type(BattlegroundTargets_Options.ButtonScale[15])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[15]              = 1     end
 	if type(BattlegroundTargets_Options.ButtonWidth[15])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[15]              = 150   end
 	if type(BattlegroundTargets_Options.ButtonHeight[15])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[15]             = 18    end
@@ -1708,6 +1734,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonSortBy[40])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[40]             = 1     end
 	if type(BattlegroundTargets_Options.ButtonSortDetail[40])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[40]         = 3     end
 	if type(BattlegroundTargets_Options.ButtonFontSize[40])           ~= "number"  then BattlegroundTargets_Options.ButtonFontSize[40]           = 10    end
+	if type(BattlegroundTargets_Options.ButtonFontStyle[40])          ~= "number"  then BattlegroundTargets_Options.ButtonFontStyle[40]          = defaultFont end
 	if type(BattlegroundTargets_Options.ButtonScale[40])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[40]              = 1     end
 	if type(BattlegroundTargets_Options.ButtonWidth[40])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[40]              = 100   end
 	if type(BattlegroundTargets_Options.ButtonHeight[40])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[40]             = 16    end
@@ -1742,6 +1769,7 @@ function BattlegroundTargets:InitOptions()
 		if not OPT.ButtonSortBy             then OPT.ButtonSortBy             = {} end OPT.ButtonSortBy[sz]             = BattlegroundTargets_Options.ButtonSortBy[sz]
 		if not OPT.ButtonSortDetail         then OPT.ButtonSortDetail         = {} end OPT.ButtonSortDetail[sz]         = BattlegroundTargets_Options.ButtonSortDetail[sz]
 		if not OPT.ButtonFontSize           then OPT.ButtonFontSize           = {} end OPT.ButtonFontSize[sz]           = BattlegroundTargets_Options.ButtonFontSize[sz]
+		if not OPT.ButtonFontStyle          then OPT.ButtonFontStyle          = {} end OPT.ButtonFontStyle[sz]          = BattlegroundTargets_Options.ButtonFontStyle[sz]
 		if not OPT.ButtonScale              then OPT.ButtonScale              = {} end OPT.ButtonScale[sz]              = BattlegroundTargets_Options.ButtonScale[sz]
 		if not OPT.ButtonWidth              then OPT.ButtonWidth              = {} end OPT.ButtonWidth[sz]              = BattlegroundTargets_Options.ButtonWidth[sz]
 		if not OPT.ButtonHeight             then OPT.ButtonHeight             = {} end OPT.ButtonHeight[sz]             = BattlegroundTargets_Options.ButtonHeight[sz]
@@ -2270,7 +2298,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	BattlegroundTargets:DefaultShuffle()
 
 	local heightBase = 58 -- 10+16+10+22
-	local heightBracket = 497 -- 10+16+10  +1+  10+16 + 10+16 + 10+24+10 + (14*16) + (14*10)
+	local heightBracket = 523 -- 10+16+10  +1+  10+16 + 10+16 + 10+24+10 + (15*16) + (15*10)
 	local heightTotal = heightBase + heightBracket + 30 + 10
 
 	-- ####################################################################################################
@@ -2694,6 +2722,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.RangeDisplayPullDown:LockHighlight()
 		GVAR.OptionsFrame.SortByPullDown:LockHighlight()
 		GVAR.OptionsFrame.SortDetailPullDown:LockHighlight()----------
+		GVAR.OptionsFrame.FontStylePullDown:LockHighlight()
 		GVAR.OptionsFrame.FontSlider.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.ScaleSlider.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.WidthSlider.Background:SetTexture(1, 1, 1, 0.1)
@@ -2735,6 +2764,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.RangeDisplayPullDown:UnlockHighlight()
 		GVAR.OptionsFrame.SortByPullDown:UnlockHighlight()
 		GVAR.OptionsFrame.SortDetailPullDown:UnlockHighlight()----------
+		GVAR.OptionsFrame.FontStylePullDown:UnlockHighlight()
 		GVAR.OptionsFrame.FontSlider.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.ScaleSlider.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.WidthSlider.Background:SetTexture(0, 0, 0, 0)
@@ -3277,7 +3307,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 		buttonName,
 		-200,
 		4,
-		RangeCheckTypePullDownFunc
+		function(value) -- PDFUNC
+			BattlegroundTargets_Options.ButtonTypeRangeCheck[currentSize] = value
+			                        OPT.ButtonTypeRangeCheck[currentSize] = value
+		end
 	)
 	GVAR.OptionsFrame.RangeCheckTypePullDown:SetPoint("LEFT", GVAR.OptionsFrame.RangeCheckInfo, "RIGHT", 10, 0)
 	GVAR.OptionsFrame.RangeCheckTypePullDown:SetHeight(18)
@@ -3292,7 +3325,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 		rangeDisplay[ BattlegroundTargets_Options.ButtonRangeDisplay[currentSize] ],
 		0,
 		#rangeDisplay,
-		RangeDisplayPullDownFunc
+		function(value) -- PDFUNC
+			BattlegroundTargets_Options.ButtonRangeDisplay[currentSize] = value
+			                        OPT.ButtonRangeDisplay[currentSize] = value
+			BattlegroundTargets:EnableConfigMode()
+		end
 	)
 	GVAR.OptionsFrame.RangeDisplayPullDown:SetPoint("LEFT", GVAR.OptionsFrame.RangeCheckTypePullDown, "RIGHT", 10, 0)
 	GVAR.OptionsFrame.RangeDisplayPullDown:SetHeight(18)
@@ -3320,7 +3357,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 		sortBy[ OPT.ButtonSortBy[currentSize] ],
 		0,
 		#sortBy,
-		SortByPullDownFunc
+		function(value) -- PDFUNC
+			BattlegroundTargets_Options.ButtonSortBy[currentSize] = value
+			                        OPT.ButtonSortBy[currentSize] = value
+			BattlegroundTargets:EnableConfigMode()
+		end
 	)
 	GVAR.OptionsFrame.SortByPullDown:SetPoint("LEFT", GVAR.OptionsFrame.SortByTitle, "RIGHT", 10, 0)
 	GVAR.OptionsFrame.SortByPullDown:SetHeight(18)
@@ -3335,7 +3376,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 		sortBy[ OPT.ButtonSortDetail[currentSize] ],
 		0,
 		#sortDetail,
-		SortDetailPullDownFunc
+		function(value) -- PDFUNC
+			BattlegroundTargets_Options.ButtonSortDetail[currentSize] = value
+			                        OPT.ButtonSortDetail[currentSize] = value
+			BattlegroundTargets:EnableConfigMode()
+		end
 	)
 	GVAR.OptionsFrame.SortDetailPullDown:SetPoint("LEFT", GVAR.OptionsFrame.SortByPullDown, "RIGHT", 10, 0)
 	GVAR.OptionsFrame.SortDetailPullDown:SetHeight(18)
@@ -3420,13 +3465,86 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	-- ----- sliders ----------------------------------------
 	local equalTextWidthSliders = 0
+	-- fontstyle
+	local fontstyleW = 0
+	GVAR.OptionsFrame.FontStyleTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.FontStyleTitle:SetHeight(16)
+	GVAR.OptionsFrame.FontStyleTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.FontStyleTitle:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.FontStyleTitle:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.FontStyleTitle:SetText(L["Font"]..":")
+	GVAR.OptionsFrame.FontStyleTitle:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.FontStylePullDown = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.PullDownMenu(
+		GVAR.OptionsFrame.FontStylePullDown,
+		"FontStyle",
+		fontStyles[ OPT.ButtonFontStyle[currentSize] ].name,
+		0,
+		#fontStyles,
+		function(value) -- PDFUNC
+			BattlegroundTargets_Options.ButtonFontStyle[currentSize] = value
+			                        OPT.ButtonFontStyle[currentSize] = value
+			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button)
+			BattlegroundTargets:LocalizedFontTest(true, self.value1)
+		end,
+		function(self, button)
+			BattlegroundTargets:LocalizedFontTest(false, true)
+		end
+	)
+	GVAR.OptionsFrame.FontStylePullDown:SetPoint("LEFT", GVAR.OptionsFrame.FontStyleTitle, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.FontStylePullDown:SetHeight(18)
+	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontStylePullDown)
+
+	--GVAR.OptionsFrame.FontStyleInfo = GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	--GVAR.OptionsFrame.FontStyleInfo:SetHeight(16)
+	--GVAR.OptionsFrame.FontStyleInfo:SetPoint("TOP", GVAR.OptionsFrame.FontStylePullDown.PullDownMenu, "BOTTOM", 0, -2)
+	--GVAR.OptionsFrame.FontStyleInfo:SetJustifyH("CENTER")
+	--GVAR.OptionsFrame.FontStyleInfo:SetText(CTRL_KEY_TEXT.." "..SHIFT_KEY_TEXT.." "..ALT_KEY)
+	--GVAR.OptionsFrame.FontStyleInfo:SetTextColor(0.5, 0.5, 0.5, 1)
+	--GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetScript("OnKeyDown", function(self, key)
+	--	if key == "LSHIFT" or key == "RSHIFT" or key == "LCTRL" or key == "RCTRL" or key == "LALT" or key == "RALT" then
+	--		BattlegroundTargets:LocalizedFontTest(false, false)
+	--	end
+	--end)
+	--GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetScript("OnKeyUp", function(self, key)
+	--	BattlegroundTargets:LocalizedFontTest(true, false)
+	--end)
+
+	local oldOnEnter = GVAR.OptionsFrame.FontStylePullDown:GetScript("OnEnter")
+	local oldOnLeave = GVAR.OptionsFrame.FontStylePullDown:GetScript("OnLeave")
+	GVAR.OptionsFrame.FontStylePullDown:SetScript("OnEnter", function(self)
+		BattlegroundTargets:LocalizedFontTest(true)
+		if oldOnEnter then oldOnEnter() end
+	end)
+	GVAR.OptionsFrame.FontStylePullDown:SetScript("OnLeave", function(self)
+		BattlegroundTargets:LocalizedFontTest(false, true)
+		if oldOnLeave then oldOnLeave() end
+	end)	
+	local oldOnEnter = GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:GetScript("OnEnter")
+	local oldOnLeave = GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:GetScript("OnLeave")
+	GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetScript("OnEnter", function(self)
+		BattlegroundTargets:LocalizedFontTest(true)
+		if oldOnEnter then oldOnEnter() end
+	end)
+	GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetScript("OnLeave", function(self)
+		BattlegroundTargets:LocalizedFontTest(false, true)
+		if oldOnLeave then oldOnLeave() end
+	end)
+
+	local sw = GVAR.OptionsFrame.FontStyleTitle:GetStringWidth()
+	if sw > equalTextWidthSliders then
+		equalTextWidthSliders = sw
+	end
+
 	-- fontsize
 	GVAR.OptionsFrame.FontTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.FontSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
 	GVAR.OptionsFrame.FontValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.FontTitle:SetHeight(16)
 	GVAR.OptionsFrame.FontTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.FontTitle:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.FontTitle:SetPoint("TOP", GVAR.OptionsFrame.FontStyleTitle, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.FontTitle:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.FontTitle:SetText(L["Text Size"]..":")
 	GVAR.OptionsFrame.FontTitle:SetTextColor(1, 1, 1, 1)
@@ -3545,9 +3663,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	end
 
 	GVAR.OptionsFrame.FontSlider:SetPoint("LEFT", GVAR.OptionsFrame.FontTitle, "LEFT", equalTextWidthSliders+10, 0)
+	GVAR.OptionsFrame.FontStylePullDown:SetPoint("LEFT", GVAR.OptionsFrame.FontStyleTitle, "LEFT", equalTextWidthSliders+10, 0)
 	GVAR.OptionsFrame.ScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ScaleTitle, "LEFT", equalTextWidthSliders+10, 0)
 	GVAR.OptionsFrame.WidthSlider:SetPoint("LEFT", GVAR.OptionsFrame.WidthTitle, "LEFT", equalTextWidthSliders+10, 0)
 	GVAR.OptionsFrame.HeightSlider:SetPoint("LEFT", GVAR.OptionsFrame.HeightTitle, "LEFT", equalTextWidthSliders+10, 0)
+	fontstyleW = 10+ fontstyleW + equalTextWidthSliders+10 + GVAR.OptionsFrame.FontStylePullDown:GetWidth() +10
 		-- ----- sliders ----------------------------------------
 
 	-- testshuffler
@@ -3711,6 +3831,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	if iconW > frameWidth then frameWidth = iconW end
 	if rangeW > frameWidth then frameWidth = rangeW end
 	if sortW > frameWidth then frameWidth = sortW end
+	if fontstyleW > frameWidth then frameWidth = fontstyleW end
 	if frameWidth < 400 then frameWidth = 400 end
 	if frameWidth > 650 then frameWidth = 650 end
 	-- OptionsFrame
@@ -3839,6 +3960,8 @@ function BattlegroundTargets:SetOptions()
 		GVAR.OptionsFrame.SortDetailPullDown:Hide()
 		GVAR.OptionsFrame.SortInfo:Hide()
 	end
+
+	GVAR.OptionsFrame.FontStylePullDown.PullDownButtonText:SetText(fontStyles[ OPT.ButtonFontStyle[currentSize] ].name)
 
 	GVAR.OptionsFrame.FontSlider:SetValue(OPT.ButtonFontSize[currentSize])
 	GVAR.OptionsFrame.FontValue:SetText(OPT.ButtonFontSize[currentSize])
@@ -3970,6 +4093,8 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
 		GVAR.OptionsFrame.SortInfo:Enable() Desaturation(GVAR.OptionsFrame.SortInfo.Texture, false)
 
+		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontStylePullDown)
+		GVAR.OptionsFrame.FontStyleTitle:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontSlider)
 		GVAR.OptionsFrame.FontTitle:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.ScaleSlider)
@@ -4045,6 +4170,8 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
 		GVAR.OptionsFrame.SortInfo:Disable() Desaturation(GVAR.OptionsFrame.SortInfo.Texture, true)
 
+		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontStylePullDown)
+		GVAR.OptionsFrame.FontStyleTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontSlider)
 		GVAR.OptionsFrame.FontTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.ScaleSlider)
@@ -4122,6 +4249,8 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
 	GVAR.OptionsFrame.SortInfo:Disable() Desaturation(GVAR.OptionsFrame.SortInfo.Texture, true)
 
+	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontStylePullDown)
+	GVAR.OptionsFrame.FontStyleTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontSlider)
 	GVAR.OptionsFrame.FontTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.ScaleSlider)
@@ -4163,8 +4292,6 @@ function BattlegroundTargets:CreateMinimapButton()
 			return
 		end
 	end
-
-	if BattlegroundTargets_MinimapButton then return end
 
 	local function MoveMinimapButton()
 		local xpos
@@ -4355,6 +4482,7 @@ function BattlegroundTargets:SetupButtonLayout()
 	local ButtonWidth              = OPT.ButtonWidth[currentSize]
 	local ButtonHeight             = OPT.ButtonHeight[currentSize]
 	local ButtonFontSize           = OPT.ButtonFontSize[currentSize]
+	local ButtonFontStyle          = OPT.ButtonFontStyle[currentSize]
 	local ButtonShowRole           = OPT.ButtonShowRole[currentSize]
 	local ButtonShowSpec           = OPT.ButtonShowSpec[currentSize]
 	local ButtonClassIcon          = OPT.ButtonClassIcon[currentSize]
@@ -4630,7 +4758,7 @@ function BattlegroundTargets:SetupButtonLayout()
 			end
 		end
 
-		GVAR_TargetButton.Name:SetFont(fontPath, ButtonFontSize, "")
+		GVAR_TargetButton.Name:SetFont(fontStyles[ButtonFontStyle].font, ButtonFontSize, "")
 		GVAR_TargetButton.Name:SetShadowOffset(0, 0)
 		GVAR_TargetButton.Name:SetShadowColor(0, 0, 0, 0)
 		GVAR_TargetButton.Name:SetTextColor(0, 0, 0, 1)
@@ -4883,6 +5011,43 @@ function BattlegroundTargets:OptionsFrameShow()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:LocalizedFontTest(show, font)
+	if show then
+		if font then
+			for i = 1, currentSize do
+				GVAR.TargetButton[i].Name:SetFont(fontStyles[font].font, OPT.ButtonFontSize[currentSize], "")
+			end
+		end
+		if IsModifierKeyDown() then return end
+		GVAR.TargetButton[1].Name:SetText(L["TEST_abc_"])
+		GVAR.TargetButton[2].Name:SetText(L["TEST_ruRU_"])
+		GVAR.TargetButton[3].Name:SetText(L["TEST_zhCN_"])
+		GVAR.TargetButton[4].Name:SetText(L["TEST_zhTW_"])
+		GVAR.TargetButton[5].Name:SetText(L["TEST_koKR_"])
+		GVAR.TargetButton[6].Name:SetText(L["TEST_Latin1_"])
+		GVAR.TargetButton[7].Name:SetText(L["TEST_Latin2_"])
+		GVAR.TargetButton[8].Name:SetText(L["TEST_Latin3_"])
+		GVAR.TargetButton[9].Name:SetText(L["TEST_Latin4_"])
+		GVAR.TargetButton[10].Name:SetText(L["TEST_Latin5_"])
+	else
+		if font then
+			for i = 1, currentSize do
+				GVAR.TargetButton[i].Name:SetFont(fontStyles[ OPT.ButtonFontStyle[currentSize] ].font, OPT.ButtonFontSize[currentSize], "")
+			end
+		end
+		for i = 1, 10 do
+			local name = GVAR.TargetButton[i].name4button
+			if isLowLevel then
+				name = playerLevel.." "..name
+			end
+			GVAR.TargetButton[i].Name:SetText(name)
+		end
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:EnableConfigMode()
 	if inCombat or InCombatLockdown() then
@@ -4895,166 +5060,46 @@ function BattlegroundTargets:EnableConfigMode()
 	if not testDataLoaded then
 		table_wipe(ENEMY_Data)
 
-		ENEMY_Data[1] = {}
-		ENEMY_Data[1].name = TARGET.."_Aa-servername"
-		ENEMY_Data[1].classToken = "DRUID"
-		ENEMY_Data[1].talentSpec = classes["DRUID"].spec[3].specName
-		ENEMY_Data[2] = {}
-		ENEMY_Data[2].name = TARGET.."_Bb-servername"
-		ENEMY_Data[2].classToken = "PRIEST"
-		ENEMY_Data[2].talentSpec = classes["PRIEST"].spec[3].specName
-		ENEMY_Data[3] = {}
-		ENEMY_Data[3].name = TARGET.."_Cc-servername"
-		ENEMY_Data[3].classToken = "MONK"
-		ENEMY_Data[3].talentSpec = classes["MONK"].spec[2].specName
-		ENEMY_Data[4] = {}
-		ENEMY_Data[4].name = TARGET.."_Dd-servername"
-		ENEMY_Data[4].classToken = "HUNTER"
-		ENEMY_Data[4].talentSpec = classes["HUNTER"].spec[3].specName
-		ENEMY_Data[5] = {}
-		ENEMY_Data[5].name = TARGET.."_Ee-servername"
-		ENEMY_Data[5].classToken = "WARRIOR"
-		ENEMY_Data[5].talentSpec = classes["WARRIOR"].spec[3].specName
-		ENEMY_Data[6] = {}
-		ENEMY_Data[6].name = TARGET.."_Ff-servername"
-		ENEMY_Data[6].classToken = "ROGUE"
-		ENEMY_Data[6].talentSpec = classes["ROGUE"].spec[2].specName
-		ENEMY_Data[7] = {}
-		ENEMY_Data[7].name = TARGET.."_Gg-servername"
-		ENEMY_Data[7].classToken = "SHAMAN"
-		ENEMY_Data[7].talentSpec = classes["SHAMAN"].spec[3].specName
-		ENEMY_Data[8] = {}
-		ENEMY_Data[8].name = TARGET.."_Hh-servername"
-		ENEMY_Data[8].classToken = "PALADIN"
-		ENEMY_Data[8].talentSpec = classes["PALADIN"].spec[3].specName
-		ENEMY_Data[9] = {}
-		ENEMY_Data[9].name = TARGET.."_Ii-servername"
-		ENEMY_Data[9].classToken = "MAGE"
-		ENEMY_Data[9].talentSpec = classes["MAGE"].spec[3].specName
-		ENEMY_Data[10] = {}
-		ENEMY_Data[10].name = TARGET.."_Jj-servername"
-		ENEMY_Data[10].classToken = "DEATHKNIGHT"
-		ENEMY_Data[10].talentSpec = classes["DEATHKNIGHT"].spec[2].specName
-		ENEMY_Data[11] = {}
-		ENEMY_Data[11].name = TARGET.."_Kk-servername"
-		ENEMY_Data[11].classToken = "DRUID"
-		ENEMY_Data[11].talentSpec = classes["DRUID"].spec[1].specName
-		ENEMY_Data[12] = {}
-		ENEMY_Data[12].name = TARGET.."_Ll-servername"
-		ENEMY_Data[12].classToken = "DEATHKNIGHT"
-		ENEMY_Data[12].talentSpec = classes["DEATHKNIGHT"].spec[3].specName
-		ENEMY_Data[13] = {}
-		ENEMY_Data[13].name = TARGET.."_Mm-servername"
-		ENEMY_Data[13].classToken = "PALADIN"
-		ENEMY_Data[13].talentSpec = classes["PALADIN"].spec[3].specName
-		ENEMY_Data[14] = {}
-		ENEMY_Data[14].name = TARGET.."_Nn-servername"
-		ENEMY_Data[14].classToken = "MAGE"
-		ENEMY_Data[14].talentSpec = classes["MAGE"].spec[1].specName
-		ENEMY_Data[15] = {}
-		ENEMY_Data[15].name = TARGET.."_Oo-servername"
-		ENEMY_Data[15].classToken = "SHAMAN"
-		ENEMY_Data[15].talentSpec = classes["SHAMAN"].spec[2].specName
-		ENEMY_Data[16] = {}
-		ENEMY_Data[16].name = TARGET.."_Pp-servername"
-		ENEMY_Data[16].classToken = "ROGUE"
-		ENEMY_Data[16].talentSpec = classes["ROGUE"].spec[1].specName
-		ENEMY_Data[17] = {}
-		ENEMY_Data[17].name = TARGET.."_Qq-servername"
-		ENEMY_Data[17].classToken = "WARLOCK"
-		ENEMY_Data[17].talentSpec = classes["WARLOCK"].spec[2].specName
-		ENEMY_Data[18] = {}
-		ENEMY_Data[18].name = TARGET.."_Rr-servername"
-		ENEMY_Data[18].classToken = "PRIEST"
-		ENEMY_Data[18].talentSpec = classes["PRIEST"].spec[3].specName
-		ENEMY_Data[19] = {}
-		ENEMY_Data[19].name = TARGET.."_Ss-servername"
-		ENEMY_Data[19].classToken = "WARRIOR"
-		ENEMY_Data[19].talentSpec = classes["WARRIOR"].spec[1].specName
-		ENEMY_Data[20] = {}
-		ENEMY_Data[20].name = TARGET.."_Tt-servername"
-		ENEMY_Data[20].classToken = "DRUID"
-		ENEMY_Data[20].talentSpec = classes["DRUID"].spec[2].specName
-		ENEMY_Data[21] = {}
-		ENEMY_Data[21].name = TARGET.."_Uu-servername"
-		ENEMY_Data[21].classToken = "PRIEST"
-		ENEMY_Data[21].talentSpec = classes["PRIEST"].spec[3].specName
-		ENEMY_Data[22] = {}
-		ENEMY_Data[22].name = TARGET.."_Vv-servername"
-		ENEMY_Data[22].classToken = "MONK"
-		ENEMY_Data[22].talentSpec = classes["MONK"].spec[1].specName
-		ENEMY_Data[23] = {}
-		ENEMY_Data[23].name = TARGET.."_Ww-servername"
-		ENEMY_Data[23].classToken = "SHAMAN"
-		ENEMY_Data[23].talentSpec = classes["SHAMAN"].spec[1].specName
-		ENEMY_Data[24] = {}
-		ENEMY_Data[24].name = TARGET.."_Xx-servername"
-		ENEMY_Data[24].classToken = "HUNTER"
-		ENEMY_Data[24].talentSpec = classes["HUNTER"].spec[2].specName
-		ENEMY_Data[25] = {}
-		ENEMY_Data[25].name = TARGET.."_Yy-servername"
-		ENEMY_Data[25].classToken = "SHAMAN"
-		ENEMY_Data[25].talentSpec = classes["SHAMAN"].spec[2].specName
-		ENEMY_Data[26] = {}
-		ENEMY_Data[26].name = TARGET.."_Zz-servername"
-		ENEMY_Data[26].classToken = "WARLOCK"
-		ENEMY_Data[26].talentSpec = classes["WARLOCK"].spec[3].specName
-		ENEMY_Data[27] = {}
-		ENEMY_Data[27].name = TARGET.."_Ab-servername"
-		ENEMY_Data[27].classToken = "PRIEST"
-		ENEMY_Data[27].talentSpec = classes["PRIEST"].spec[2].specName
-		ENEMY_Data[28] = {}
-		ENEMY_Data[28].name = TARGET.."_Cd-servername"
-		ENEMY_Data[28].classToken = "MONK"
-		ENEMY_Data[28].talentSpec = classes["MONK"].spec[3].specName
-		ENEMY_Data[29] = {}
-		ENEMY_Data[29].name = TARGET.."_Ef-servername"
-		ENEMY_Data[29].classToken = "ROGUE"
-		ENEMY_Data[29].talentSpec = classes["ROGUE"].spec[3].specName
-		ENEMY_Data[30] = {}
-		ENEMY_Data[30].name = TARGET.."_Gh-servername"
-		ENEMY_Data[30].classToken = "DRUID"
-		ENEMY_Data[30].talentSpec = classes["DRUID"].spec[4].specName
-		ENEMY_Data[31] = {}
-		ENEMY_Data[31].name = TARGET.."_Ij-servername"
-		ENEMY_Data[31].classToken = "HUNTER"
-		ENEMY_Data[31].talentSpec = classes["HUNTER"].spec[3].specName
-		ENEMY_Data[32] = {}
-		ENEMY_Data[32].name = TARGET.."_Kl-servername"
-		ENEMY_Data[32].classToken = "WARRIOR"
-		ENEMY_Data[32].talentSpec = classes["WARRIOR"].spec[2].specName
-		ENEMY_Data[33] = {}
-		ENEMY_Data[33].name = TARGET.."_Mn-servername"
-		ENEMY_Data[33].classToken = "PALADIN"
-		ENEMY_Data[33].talentSpec = classes["PALADIN"].spec[1].specName
-		ENEMY_Data[34] = {}
-		ENEMY_Data[34].name = TARGET.."_Op-servername"
-		ENEMY_Data[34].classToken = "MAGE"
-		ENEMY_Data[34].talentSpec = classes["MAGE"].spec[3].specName
-		ENEMY_Data[35] = {}
-		ENEMY_Data[35].name = TARGET.."_Qr-servername"
-		ENEMY_Data[35].classToken = "DEATHKNIGHT"
-		ENEMY_Data[35].talentSpec = classes["DEATHKNIGHT"].spec[3].specName
-		ENEMY_Data[36] = {}
-		ENEMY_Data[36].name = TARGET.."_St-servername"
-		ENEMY_Data[36].classToken = "MAGE"
-		ENEMY_Data[36].talentSpec = classes["MAGE"].spec[2].specName
-		ENEMY_Data[37] = {}
-		ENEMY_Data[37].name = TARGET.."_Uv-servername"
-		ENEMY_Data[37].classToken = "HUNTER"
-		ENEMY_Data[37].talentSpec = classes["HUNTER"].spec[2].specName
-		ENEMY_Data[38] = {}
-		ENEMY_Data[38].name = TARGET.."_Wx-servername"
-		ENEMY_Data[38].classToken = "WARLOCK"
-		ENEMY_Data[38].talentSpec = classes["WARLOCK"].spec[1].specName
-		ENEMY_Data[39] = {}
-		ENEMY_Data[39].name = TARGET.."_Yz-servername"
-		ENEMY_Data[39].classToken = "WARLOCK"
-		ENEMY_Data[39].talentSpec = classes["WARLOCK"].spec[2].specName
-		ENEMY_Data[40] = {}
-		ENEMY_Data[40].name = TARGET.."_Zz-servername"
-		ENEMY_Data[40].classToken = "ROGUE"
-		ENEMY_Data[40].talentSpec = nil
+		ENEMY_Data[1]  = {name = TARGET.."_Aa-servername", classToken = "DRUID",       talentSpec = classes["DRUID"      ].spec[3].specName}
+		ENEMY_Data[2]  = {name = TARGET.."_Bb-servername", classToken = "PRIEST",      talentSpec = classes["PRIEST"     ].spec[3].specName}
+		ENEMY_Data[3]  = {name = TARGET.."_Cc-servername", classToken = "MONK",        talentSpec = classes["MONK"       ].spec[2].specName}
+		ENEMY_Data[4]  = {name = TARGET.."_Dd-servername", classToken = "HUNTER",      talentSpec = classes["HUNTER"     ].spec[3].specName}
+		ENEMY_Data[5]  = {name = TARGET.."_Ee-servername", classToken = "WARRIOR",     talentSpec = classes["WARRIOR"    ].spec[3].specName}
+		ENEMY_Data[6]  = {name = TARGET.."_Ff-servername", classToken = "ROGUE",       talentSpec = classes["ROGUE"      ].spec[2].specName}
+		ENEMY_Data[7]  = {name = TARGET.."_Gg-servername", classToken = "SHAMAN",      talentSpec = classes["SHAMAN"     ].spec[3].specName}
+		ENEMY_Data[8]  = {name = TARGET.."_Hh-servername", classToken = "PALADIN",     talentSpec = classes["PALADIN"    ].spec[3].specName}
+		ENEMY_Data[9]  = {name = TARGET.."_Ii-servername", classToken = "MAGE",        talentSpec = classes["MAGE"       ].spec[3].specName}
+		ENEMY_Data[10] = {name = TARGET.."_Jj-servername", classToken = "DEATHKNIGHT", talentSpec = classes["DEATHKNIGHT"].spec[2].specName}
+		ENEMY_Data[11] = {name = TARGET.."_Kk-servername", classToken = "DRUID",       talentSpec = classes["DRUID"      ].spec[1].specName}
+		ENEMY_Data[12] = {name = TARGET.."_Ll-servername", classToken = "DEATHKNIGHT", talentSpec = classes["DEATHKNIGHT"].spec[3].specName}
+		ENEMY_Data[13] = {name = TARGET.."_Mm-servername", classToken = "PALADIN",     talentSpec = classes["PALADIN"    ].spec[3].specName}
+		ENEMY_Data[14] = {name = TARGET.."_Nn-servername", classToken = "MAGE",        talentSpec = classes["MAGE"       ].spec[1].specName}
+		ENEMY_Data[15] = {name = TARGET.."_Oo-servername", classToken = "SHAMAN",      talentSpec = classes["SHAMAN"     ].spec[2].specName}
+		ENEMY_Data[16] = {name = TARGET.."_Pp-servername", classToken = "ROGUE",       talentSpec = classes["ROGUE"      ].spec[1].specName}
+		ENEMY_Data[17] = {name = TARGET.."_Qq-servername", classToken = "WARLOCK",     talentSpec = classes["WARLOCK"    ].spec[2].specName}
+		ENEMY_Data[18] = {name = TARGET.."_Rr-servername", classToken = "PRIEST",      talentSpec = classes["PRIEST"     ].spec[3].specName}
+		ENEMY_Data[19] = {name = TARGET.."_Ss-servername", classToken = "WARRIOR",     talentSpec = classes["WARRIOR"    ].spec[1].specName}
+		ENEMY_Data[20] = {name = TARGET.."_Tt-servername", classToken = "DRUID",       talentSpec = classes["DRUID"      ].spec[2].specName}
+		ENEMY_Data[21] = {name = TARGET.."_Uu-servername", classToken = "PRIEST",      talentSpec = classes["PRIEST"     ].spec[3].specName}
+		ENEMY_Data[22] = {name = TARGET.."_Vv-servername", classToken = "MONK",        talentSpec = classes["MONK"       ].spec[1].specName}
+		ENEMY_Data[23] = {name = TARGET.."_Ww-servername", classToken = "SHAMAN",      talentSpec = classes["SHAMAN"     ].spec[1].specName}
+		ENEMY_Data[24] = {name = TARGET.."_Xx-servername", classToken = "HUNTER",      talentSpec = classes["HUNTER"     ].spec[2].specName}
+		ENEMY_Data[25] = {name = TARGET.."_Yy-servername", classToken = "SHAMAN",      talentSpec = classes["SHAMAN"     ].spec[2].specName}
+		ENEMY_Data[26] = {name = TARGET.."_Zz-servername", classToken = "WARLOCK",     talentSpec = classes["WARLOCK"    ].spec[3].specName}
+		ENEMY_Data[27] = {name = TARGET.."_Ab-servername", classToken = "PRIEST",      talentSpec = classes["PRIEST"     ].spec[2].specName}
+		ENEMY_Data[28] = {name = TARGET.."_Cd-servername", classToken = "MONK",        talentSpec = classes["MONK"       ].spec[3].specName}
+		ENEMY_Data[29] = {name = TARGET.."_Ef-servername", classToken = "ROGUE",       talentSpec = classes["ROGUE"      ].spec[3].specName}
+		ENEMY_Data[30] = {name = TARGET.."_Gh-servername", classToken = "DRUID",       talentSpec = classes["DRUID"      ].spec[4].specName}
+		ENEMY_Data[31] = {name = TARGET.."_Ij-servername", classToken = "HUNTER",      talentSpec = classes["HUNTER"     ].spec[3].specName}
+		ENEMY_Data[32] = {name = TARGET.."_Kl-servername", classToken = "WARRIOR",     talentSpec = classes["WARRIOR"    ].spec[2].specName}
+		ENEMY_Data[33] = {name = TARGET.."_Mn-servername", classToken = "PALADIN",     talentSpec = classes["PALADIN"    ].spec[1].specName}
+		ENEMY_Data[34] = {name = TARGET.."_Op-servername", classToken = "MAGE",        talentSpec = classes["MAGE"       ].spec[3].specName}
+		ENEMY_Data[35] = {name = TARGET.."_Qr-servername", classToken = "DEATHKNIGHT", talentSpec = classes["DEATHKNIGHT"].spec[3].specName}
+		ENEMY_Data[36] = {name = TARGET.."_St-servername", classToken = "MAGE",        talentSpec = classes["MAGE"       ].spec[2].specName}
+		ENEMY_Data[37] = {name = TARGET.."_Uv-servername", classToken = "HUNTER",      talentSpec = classes["HUNTER"     ].spec[2].specName}
+		ENEMY_Data[38] = {name = TARGET.."_Wx-servername", classToken = "WARLOCK",     talentSpec = classes["WARLOCK"    ].spec[1].specName}
+		ENEMY_Data[39] = {name = TARGET.."_Yz-servername", classToken = "WARLOCK",     talentSpec = classes["WARLOCK"    ].spec[2].specName}
+		ENEMY_Data[40] = {name = TARGET.."_Zx-servername", classToken = "ROGUE",       talentSpec = nil}
 
 		for i = 1, 40 do
 			local role = 4
@@ -5601,22 +5646,18 @@ function BattlegroundTargets:ConfigGuildGroupEnemyUpdate(bracketSize)
 	end
 
 	-- prepare table for sorting
-	local i = 1
 	local count2 = {}
 	for guildCount, guildNum in pairs(count) do
-		count2[i] = {}
-		count2[i].count = guildCount
-		count2[i].total = guildNum
-		i = i + 1
+		tinsert(count2, {guildCount, guildNum})
 	end
 
 	-- sort
-	table_sort(count2, guildgroup_sortfunc)
+	table_sort(count2, function(a, b) if a[1] < b[1] then return true end end)
 
 	-- display
 	for i = 1, 7 do
 		if count2[i] then
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetText(count2[i].count..": "..count2[i].total.."x")
+			GVAR.GuildGroupSummaryEnemy[i].Text:SetText(count2[i][1]..": "..count2[i][2].."x")
 		else
 			GVAR.GuildGroupSummaryEnemy[i].Text:SetText("")
 		end
@@ -5691,6 +5732,8 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	                        OPT.ButtonSortBy[destinationSize]             =                         OPT.ButtonSortBy[sourceSize]
 	BattlegroundTargets_Options.ButtonSortDetail[destinationSize]         = BattlegroundTargets_Options.ButtonSortDetail[sourceSize]
 	                        OPT.ButtonSortDetail[destinationSize]         =                         OPT.ButtonSortDetail[sourceSize]
+	BattlegroundTargets_Options.ButtonFontStyle[destinationSize]          = BattlegroundTargets_Options.ButtonFontStyle[sourceSize]
+	                        OPT.ButtonFontStyle[destinationSize]          =                         OPT.ButtonFontStyle[sourceSize]
 	BattlegroundTargets_Options.ButtonFontSize[destinationSize]           = BattlegroundTargets_Options.ButtonFontSize[sourceSize]
 	                        OPT.ButtonFontSize[destinationSize]           =                         OPT.ButtonFontSize[sourceSize]
 	BattlegroundTargets_Options.ButtonScale[destinationSize]              = BattlegroundTargets_Options.ButtonScale[sourceSize]
@@ -7329,22 +7372,18 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 	end
 
 	-- prepare table for sorting
-	local i = 1
 	local count2 = {}
 	for guildCount, guildNum in pairs(count) do
-		count2[i] = {}
-		count2[i].count = guildCount
-		count2[i].total = guildNum
-		i = i + 1
+		tinsert(count2, {guildCount, guildNum})
 	end
 
 	-- sort
-	table_sort(count2, guildgroup_sortfunc)
+	table_sort(count2, function(a, b) if a[1] < b[1] then return true end end)
 
 	-- display
 	for i = 1, 7 do
 		if count2[i] then
-			GVAR.GuildGroupSummaryFriend[i].Text:SetText(count2[i].count..": "..count2[i].total.."x")
+			GVAR.GuildGroupSummaryFriend[i].Text:SetText(count2[i][1]..": "..count2[i][2].."x")
 		else
 			GVAR.GuildGroupSummaryFriend[i].Text:SetText("")
 		end
@@ -7370,22 +7409,18 @@ function BattlegroundTargets:GuildGroupEnemyUpdate() -- GLDGRP
 	end
 
 	-- prepare table for sorting
-	local i = 1
 	local count2 = {}
 	for guildCount, guildNum in pairs(count) do
-		count2[i] = {}
-		count2[i].count = guildCount
-		count2[i].total = guildNum
-		i = i + 1
+		tinsert(count2, {guildCount, guildNum})
 	end
 
 	-- sort
-	table_sort(count2, guildgroup_sortfunc)
+	table_sort(count2, function(a, b) if a[1] < b[1] then return true end end)
 
 	-- display
 	for i = 1, 7 do
 		if count2[i] then
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetText(count2[i].count..": "..count2[i].total.."x")
+			GVAR.GuildGroupSummaryEnemy[i].Text:SetText(count2[i][1]..": "..count2[i][2].."x")
 		else
 			GVAR.GuildGroupSummaryEnemy[i].Text:SetText("")
 		end

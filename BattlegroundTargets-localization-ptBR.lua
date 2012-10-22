@@ -36,6 +36,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
  ["(class dependent)"] = true,
  ["Disable this option if you have CPU/FPS problems in combat."] = "Desabilite esta opção se voce tiver problemas de CPU/QPS durante o combate.",
 ["Sort By"] = "Organizar por",
+["Font"] = "Fonte",
 ["Text Size"] = "Tamanho do texto",
 ["Scale"] = "Escala",
 ["Width"] = "Largura",

@@ -36,6 +36,7 @@ BattlegroundTargets_Localization = {
  ["(class dependent)"] = true,
  ["Disable this option if you have CPU/FPS problems in combat."] = true,
 ["Sort By"] = true,
+["Font"] = true,
 ["Text Size"] = true,
 ["Scale"] = true,
 ["Width"] = true,
@@ -48,6 +49,18 @@ BattlegroundTargets_Localization = {
 ["BattlegroundTargets does not update if this Tab is opened."] = true,
 
 ["Close Configuration"] = true,
+
+-- font test for all languages, do not translate
+["TEST_abc_"] = "abc_ABCXYZabcxyz_",
+["TEST_Latin1_"] = "Latin1_¡ÆâÜíßñØéùåçÏ_ŒŸ_",
+["TEST_Latin2_"] = "Latin2_ĄŁĽŤžŕęďňýţ_",
+["TEST_Latin3_"] = "Latin3_ĥĦ˘ËĵŜĊŭŝ_",
+["TEST_Latin4_"] = "Latin4_įĸæĨĻĀōÂųũūŊĪ_",
+["TEST_Latin5_"] = "Latin5_ĞİŞğışÿö_",
+["TEST_koKR_"] = "koKR_발수요있눈봉우렬드_",
+["TEST_ruRU_"] = "ruRU_бПдчжмШЭйФ_",
+["TEST_zhCN_"] = "zhCN_夺兰古手变命使用_",
+["TEST_zhTW_"] = "zhTW_對大顯以記已_",
 }
 
 function BattlegroundTargets_Localization:CreateLocaleTable(t)

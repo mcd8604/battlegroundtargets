@@ -36,6 +36,7 @@ BattlegroundTargets_Localization:CreateLocaleTable({
  ["(class dependent)"] = "（以職業）",
  ["Disable this option if you have CPU/FPS problems in combat."] = "當你 CPU/幀數在戰鬥中出現問題時禁用此選項。",
 ["Sort By"] = "排序",
+["Font"] = "字型設定",
 ["Text Size"] = "字體大小",
 ["Scale"] = "縮放",
 ["Width"] = "寬度",
