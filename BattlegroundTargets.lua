@@ -464,10 +464,10 @@ local ranges = {
 --print("IsSpellKnown", ranges[playerClassEN], "|", IsSpellKnown(ranges[playerClassEN]))
 
 local rangeTypeName = {
-	[1] = "1) CombatLog |cffffff79(0-73)|r", -- 1) combatlog
-	[2] = "2) ...",                          -- 2) class-spell based
-	[3] = "3) ...",                          -- 3) mix 1 class-spell based + combatlog (range: 0-45)
-	[4] = "4) ...",                          -- 4) mix 2 class-spell based + combatlog (range: class-spell dependent)
+	[1] = "1) CombatLog   |cffffff79(0-73)|r", -- 1) combatlog
+	[2] = "2) ...",                            -- 2) class-spell based
+	[3] = "3) ...",                            -- 3) mix 1 class-spell based + combatlog (range: 0-45)
+	[4] = "4) ...",                            -- 4) mix 2 class-spell based + combatlog (range: class-spell dependent)
 }
 
 local rangeDisplay = { -- RANGE_DISP_LAY
@@ -3217,9 +3217,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 		end
 		minRange = minRange or "?"
 		maxRange = maxRange or "?"
-		rangeTypeName[2] = "2) "..CLASS.." |cffffff79("..minRange.."-"..maxRange..")|r"
-		rangeTypeName[3] = "3) "..L["Mix"].." 1 |cffffff79("..minRange.."-"..maxRange..") + (0-45)|r"
-		rangeTypeName[4] = "4) "..L["Mix"].." 2 |cffffff79("..minRange.."-"..maxRange..") + ("..minRange.."-"..maxRange..")|r"
+		rangeTypeName[2] = "2) "..CLASS.."   |cffffff79("..minRange.."-"..maxRange..")|r"
+		rangeTypeName[3] = "3) "..L["Mix"].." 1   |cffffff79("..minRange.."-"..maxRange..") + (0-45)|r"
+		rangeTypeName[4] = "4) "..L["Mix"].." 2   |cffffff79("..minRange.."-"..maxRange..") + ("..minRange.."-"..maxRange..")|r"
 		local buttonName = rangeTypeName[1]
 		if OPT.ButtonTypeRangeCheck[currentSize] == 2 then
 			buttonName = rangeTypeName[2]
@@ -3230,7 +3230,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		end
 		local rangeInfoTxt = ""
 		rangeInfoTxt = rangeInfoTxt..rangeTypeName[1]..":\n"
-		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["This option uses the CombatLog to check range."].."|r\n\n\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["This option uses the CombatLog to check range."].."|r\n\n"
 		rangeInfoTxt = rangeInfoTxt..rangeTypeName[2]..":\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["This option uses a pre-defined spell to check range:"].."|r\n"
 		table_sort(class_IntegerSort, function(a, b) if a.loc < b.loc then return true end end)
@@ -3247,18 +3247,16 @@ function BattlegroundTargets:CreateOptionsFrame()
 			end
 			rangeInfoTxt = rangeInfoTxt.."\n"
 		end
-		rangeInfoTxt = rangeInfoTxt.."\n\n"..rangeTypeName[3]..":\n"
+		rangeInfoTxt = rangeInfoTxt.."\n"..rangeTypeName[3]..":\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..CLASS..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
-		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog:|r |cffffff79(0-45)|r\n"
-		rangeInfoTxt = rangeInfoTxt.."   |cffaaaaaa(CombatLog: "..L["if you are attacked only"]..")|r\n"
-		rangeInfoTxt = rangeInfoTxt.."\n\n"..rangeTypeName[4]..":\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog:|r |cffffff79(0-45)|r   |cffaaaaaa("..L["if you are attacked only"]..")|r\n"
+		rangeInfoTxt = rangeInfoTxt.."\n"..rangeTypeName[4]..":\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..CLASS..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
-		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog|r |cffaaaaaa"..L["(class dependent)"]..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
-		rangeInfoTxt = rangeInfoTxt.."   |cffaaaaaa(CombatLog: "..L["if you are attacked only"]..")|r\n"
-		rangeInfoTxt = rangeInfoTxt.."\n\n\n"
-		rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:24|t"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog|r |cffaaaaaa"..L["(class dependent)"]..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."   |cffaaaaaa("..L["if you are attacked only"]..")|r\n"
+		rangeInfoTxt = rangeInfoTxt.."\n"
+		rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:20|t"
 		rangeInfoTxt = rangeInfoTxt.."|cffffffff "..L["Disable this option if you have CPU/FPS problems in combat."].." |r"
-		rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:24|t"
+		rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:20|t"
 		----- text
 	-- range check
 	GVAR.OptionsFrame.RangeCheck = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -3479,8 +3477,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
-	-- ----- sliders ----------------------------------------
-	local equalTextWidthSliders = 0
 	-- fontstyle
 	local fontstyleW = 0
 	GVAR.OptionsFrame.FontStyleTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -3553,11 +3549,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		if oldOnLeave then oldOnLeave() end
 	end)
 
-	local sw = GVAR.OptionsFrame.FontStyleTitle:GetStringWidth()
-	if sw > equalTextWidthSliders then
-		equalTextWidthSliders = sw
-	end
-
 	-- fontsize
 	GVAR.OptionsFrame.FontTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.FontSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -3583,10 +3574,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FontValue:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.FontValue:SetText(OPT.ButtonFontSize[currentSize])
 	GVAR.OptionsFrame.FontValue:SetTextColor(1, 1, 0.49, 1)
-	local sw = GVAR.OptionsFrame.FontTitle:GetStringWidth()
-	if sw > equalTextWidthSliders then
-		equalTextWidthSliders = sw
-	end
 
 	-- scale
 	GVAR.OptionsFrame.ScaleTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -3617,10 +3604,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ScaleValue:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.ScaleValue:SetText((OPT.ButtonScale[currentSize]*100).."%")
 	GVAR.OptionsFrame.ScaleValue:SetTextColor(1, 1, 0.49, 1)
-	local sw = GVAR.OptionsFrame.ScaleTitle:GetStringWidth()
-	if sw > equalTextWidthSliders then
-		equalTextWidthSliders = sw
-	end
 
 	-- width
 	GVAR.OptionsFrame.WidthTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -3647,10 +3630,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.WidthValue:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.WidthValue:SetText(OPT.ButtonWidth[currentSize])
 	GVAR.OptionsFrame.WidthValue:SetTextColor(1, 1, 0.49, 1)
-	local sw = GVAR.OptionsFrame.WidthTitle:GetStringWidth()
-	if sw > equalTextWidthSliders then
-		equalTextWidthSliders = sw
-	end
 
 	-- height
 	GVAR.OptionsFrame.HeightTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -3677,18 +3656,19 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.HeightValue:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.HeightValue:SetText(OPT.ButtonHeight[currentSize])
 	GVAR.OptionsFrame.HeightValue:SetTextColor(1, 1, 0.49, 1)
-	local sw = GVAR.OptionsFrame.HeightTitle:GetStringWidth()
-	if sw > equalTextWidthSliders then
-		equalTextWidthSliders = sw
-	end
 
-	GVAR.OptionsFrame.FontSlider:SetPoint("LEFT", GVAR.OptionsFrame.FontTitle, "LEFT", equalTextWidthSliders+10, 0)
+	local equalTextWidthSliders, sw = 0, 0
+	sw = GVAR.OptionsFrame.FontStyleTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
+	sw = GVAR.OptionsFrame.FontTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
+	sw = GVAR.OptionsFrame.ScaleTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
+	sw = GVAR.OptionsFrame.WidthTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
+	sw = GVAR.OptionsFrame.HeightTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
 	GVAR.OptionsFrame.FontStylePullDown:SetPoint("LEFT", GVAR.OptionsFrame.FontStyleTitle, "LEFT", equalTextWidthSliders+10, 0)
+	GVAR.OptionsFrame.FontSlider:SetPoint("LEFT", GVAR.OptionsFrame.FontTitle, "LEFT", equalTextWidthSliders+10, 0)
 	GVAR.OptionsFrame.ScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ScaleTitle, "LEFT", equalTextWidthSliders+10, 0)
 	GVAR.OptionsFrame.WidthSlider:SetPoint("LEFT", GVAR.OptionsFrame.WidthTitle, "LEFT", equalTextWidthSliders+10, 0)
 	GVAR.OptionsFrame.HeightSlider:SetPoint("LEFT", GVAR.OptionsFrame.HeightTitle, "LEFT", equalTextWidthSliders+10, 0)
 	fontstyleW = 10+ fontstyleW + equalTextWidthSliders+10 + GVAR.OptionsFrame.FontStylePullDown:GetWidth() +10
-		-- ----- sliders ----------------------------------------
 
 	-- testshuffler
 	GVAR.OptionsFrame.TestShuffler = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -5057,12 +5037,14 @@ function BattlegroundTargets:LocalizedFontTest(show, font)
 				GVAR.TargetButton[i].Name:SetFont(fontStyles[ OPT.ButtonFontStyle[currentSize] ].font, OPT.ButtonFontSize[currentSize], "")
 			end
 		end
-		for i = 1, 10 do
-			local name = GVAR.TargetButton[i].name4button
-			if isLowLevel then
-				name = playerLevel.." "..name
+		if isLowLevel then
+			for i = 1, 10 do
+				GVAR.TargetButton[i].Name:SetText(playerLevel.." "..GVAR.TargetButton[i].name4button)
 			end
-			GVAR.TargetButton[i].Name:SetText(name)
+		else
+			for i = 1, 10 do
+				GVAR.TargetButton[i].Name:SetText(GVAR.TargetButton[i].name4button)
+			end
 		end
 	end
 end
@@ -5794,69 +5776,69 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-local sortfunc13 = function(a, b) -- ROLE / CLASS / NAME | 13
+local sortfunc13 = function(a, b) -- role / class / name | 13
 	if a.talentSpec == b.talentSpec then
 		if class_BlizzSort[ a.classToken ] == class_BlizzSort[ b.classToken ] then
 			if a.name < b.name then return true end
 		elseif class_BlizzSort[ a.classToken ] < class_BlizzSort[ b.classToken ] then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
-local sortfunc11 = function(a, b) -- ROLE / CLASS / NAME | 11
+local sortfunc11 = function(a, b) -- role / class / name | 11
 	if a.talentSpec == b.talentSpec then
 		if class_LocaSort[ a.classToken ] == class_LocaSort[ b.classToken ] then
 			if a.name < b.name then return true end
 		elseif class_LocaSort[ a.classToken ] < class_LocaSort[ b.classToken ] then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
-local sortfunc12 = function(a, b) -- ROLE / CLASS / NAME | 12
+local sortfunc12 = function(a, b) -- role / class / name | 12
 	if a.talentSpec == b.talentSpec then
 		if a.classToken == b.classToken then
 			if a.name < b.name then return true end
 		elseif a.classToken < b.classToken then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
-local sortfunc2 = function(a, b) -- ROLE / NAME | 2
+local sortfunc2 = function(a, b) -- role / name | 2
 	if a.talentSpec == b.talentSpec then
 		if a.name < b.name then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
-local sortfunc33 = function(a, b) -- CLASS / ROLE / NAME | 33
+local sortfunc33 = function(a, b) -- class / role / name | 33
 	if class_BlizzSort[ a.classToken ] == class_BlizzSort[ b.classToken ] then
 		if a.talentSpec == b.talentSpec then
 			if a.name < b.name then return true end
 		elseif a.talentSpec < b.talentSpec then return true end
 	elseif class_BlizzSort[ a.classToken ] < class_BlizzSort[ b.classToken ] then return true end
 end
-local sortfunc31 = function(a, b) -- CLASS / ROLE / NAME | 31
+local sortfunc31 = function(a, b) -- class / role / name | 31
 	if class_LocaSort[ a.classToken ] == class_LocaSort[ b.classToken ] then
 		if a.talentSpec == b.talentSpec then
 			if a.name < b.name then return true end
 		elseif a.talentSpec < b.talentSpec then return true end
 	elseif class_LocaSort[ a.classToken ] < class_LocaSort[ b.classToken ] then return true end
 end
-local sortfunc32 = function(a, b) -- CLASS / ROLE / NAME | 32
+local sortfunc32 = function(a, b) -- class / role / name | 32
 	if a.classToken == b.classToken then
 		if a.talentSpec == b.talentSpec then
 			if a.name < b.name then return true end
 		elseif a.talentSpec < b.talentSpec then return true end
 	elseif a.classToken < b.classToken then return true end
 end
-local sortfunc43 = function(a, b) -- CLASS / NAME | 43
+local sortfunc43 = function(a, b) -- class / name | 43
 	if class_BlizzSort[ a.classToken ] == class_BlizzSort[ b.classToken ] then
 		if a.name < b.name then return true end
 	elseif class_BlizzSort[ a.classToken ] < class_BlizzSort[ b.classToken ] then return true end
 end
-local sortfunc41 = function(a, b) -- CLASS / NAME | 41
+local sortfunc41 = function(a, b) -- class / name | 41
 	if class_LocaSort[ a.classToken ] == class_LocaSort[ b.classToken ] then
 		if a.name < b.name then return true end
 	elseif class_LocaSort[ a.classToken ] < class_LocaSort[ b.classToken ] then return true end
 end
-local sortfunc42 = function(a, b) -- CLASS / NAME | 42
+local sortfunc42 = function(a, b) -- class / name | 42
 	if a.classToken == b.classToken then
 		if a.name < b.name then return true end
 	elseif a.classToken < b.classToken then return true end
 end
-local sortfunc5 = function(a, b) -- NAME | 5
+local sortfunc5 = function(a, b) -- name | 5
 	if a.name < b.name then return true end
 end
 
@@ -5865,32 +5847,32 @@ function BattlegroundTargets:MainDataUpdate()
 	local ButtonSortDetail = OPT.ButtonSortDetail[currentSize]
 	if ButtonSortBy == 1 then
 		if ButtonSortDetail == 3 then
-			table_sort(ENEMY_Data, sortfunc13) -- ROLE / CLASS / NAME | 13
+			table_sort(ENEMY_Data, sortfunc13) -- role / class / name | 13
 		elseif ButtonSortDetail == 1 then
-			table_sort(ENEMY_Data, sortfunc11) -- ROLE / CLASS / NAME | 11
+			table_sort(ENEMY_Data, sortfunc11) -- role / class / name | 11
 		else
-			table_sort(ENEMY_Data, sortfunc12) -- ROLE / CLASS / NAME | 12
+			table_sort(ENEMY_Data, sortfunc12) -- role / class / name | 12
 		end
 	elseif ButtonSortBy == 2 then
-		table_sort(ENEMY_Data, sortfunc2) -- ROLE / NAME | 2
+		table_sort(ENEMY_Data, sortfunc2) -- role / name | 2
 	elseif ButtonSortBy == 3 then
 		if ButtonSortDetail == 3 then
-			table_sort(ENEMY_Data, sortfunc33) -- CLASS / ROLE / NAME | 33
+			table_sort(ENEMY_Data, sortfunc33) -- class / role / name | 33
 		elseif ButtonSortDetail == 1 then
-			table_sort(ENEMY_Data, sortfunc31) -- CLASS / ROLE / NAME | 31
+			table_sort(ENEMY_Data, sortfunc31) -- class / role / name | 31
 		else
-			table_sort(ENEMY_Data, sortfunc32) -- CLASS / ROLE / NAME | 32
+			table_sort(ENEMY_Data, sortfunc32) -- class / role / name | 32
 		end
 	elseif ButtonSortBy == 4 then
 		if ButtonSortDetail == 3 then
-			table_sort(ENEMY_Data, sortfunc43) -- CLASS / NAME | 43
+			table_sort(ENEMY_Data, sortfunc43) -- class / name | 43
 		elseif ButtonSortDetail == 1 then
-			table_sort(ENEMY_Data, sortfunc41) -- CLASS / NAME | 41
+			table_sort(ENEMY_Data, sortfunc41) -- class / name | 41
 		else
-			table_sort(ENEMY_Data, sortfunc42) -- CLASS / NAME | 42
+			table_sort(ENEMY_Data, sortfunc42) -- class / name | 42
 		end
 	else
-		table_sort(ENEMY_Data, sortfunc5) -- NAME | 5
+		table_sort(ENEMY_Data, sortfunc5) -- name | 5
 	end
 
 	local ButtonShowSpec        = OPT.ButtonShowSpec[currentSize]
@@ -5944,18 +5926,14 @@ function BattlegroundTargets:MainDataUpdate()
 			end
 
 			if ButtonHideRealm then
-				if isLowLevel then -- LVLCHK
-					GVAR_TargetButton.name4button = onlyname
-				end
+				GVAR_TargetButton.name4button = onlyname
 				if isLowLevel and ENEMY_Name2Level[qname] then
 					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..onlyname)
 				else
 					GVAR_TargetButton.Name:SetText(onlyname)
 				end
 			else
-				if isLowLevel then
-					GVAR_TargetButton.name4button = qname
-				end
+				GVAR_TargetButton.name4button = qname
 				if isLowLevel and ENEMY_Name2Level[qname] then
 					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..qname)
 				else
