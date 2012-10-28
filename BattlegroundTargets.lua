@@ -303,12 +303,6 @@ local function BuildBattlegroundMapTable()
   --for k, v in pairs(bgMaps) do print(k, v.bgSize, v.flagBG) end -- TEST
 end
 
-local bgSizeINT = {
-	[1] = 10,
-	[2] = 15,
-	[3] = 40,
-}
-
 local flagIDs = {
 	 [23333] = 1, -- Horde Flag
 	 [23335] = 1, -- Alliance Flag
@@ -359,20 +353,20 @@ local fontStyles = {
 
   local defaultFont = 1
 --    if locale == "deDE" then defaultFont =  1
---elseif locale == "enGB" then defaultFont =  1
+--elseif locale == "enGB" then defaultFont =  1 -> enUS
 --elseif locale == "enUS" then defaultFont =  1
 --elseif locale == "esES" then defaultFont =  1
 --elseif locale == "esMX" then defaultFont =  1
 --elseif locale == "frFR" then defaultFont =  1
 --elseif locale == "itIT" then defaultFont =  1
---elseif locale == "koKR" then defaultFont =  1 -- 2002.ttf (same as defined in FontStyleOverrides.xml)
+--elseif locale == "koKR" then defaultFont =  1 -- 2002.ttf (same as defined in FontStyleOverrides.xml/Fonts.xml)
 --elseif locale == "ptBR" then defaultFont =  1
---elseif locale == "ptPT" then defaultFont =  1
-      if locale == "ruRU" then defaultFont = 12 -- FRIZQT___CYR.TTF (same as defined in FontStyleOverrides.xml)
-  elseif locale == "zhCN" then defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml)
-  elseif locale == "zhTW" then defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml)
-  elseif locale == "enCN" then defaultFont = 10 -- TODO needs check
-  elseif locale == "enTW" then defaultFont = 10 -- TODO needs check
+--elseif locale == "ptPT" then defaultFont =  1 -> ptBR
+      if locale == "ruRU" then defaultFont = 12 -- FRIZQT___CYR.TTF (same as defined in FontStyleOverrides.xml/Fonts.xml)
+  elseif locale == "zhCN" then defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml/Fonts.xml)
+  elseif locale == "zhTW" then defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml/Fonts.xml)
+--elseif locale == "enCN" then defaultFont = 10 -- -> zhCN
+--elseif locale == "enTW" then defaultFont = 10 -- -> zhTW
   end
 
 local fontPath = fontStyles[defaultFont].font
@@ -1351,141 +1345,10 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 15
 	end
 
-	--  1 =   r2 | 40200-1  | 01 Aug 2011 | initial commit
-	--  2 =  r21 | 40200-8  | 13 Aug 2011
-	--  3 =  r25 | 40200-9  | 19 Aug 2011
-	--  4 =  r39 | 40200-12 | 10 Oct 2011
-	--  5 =  r40 | 40200-12 | 10 Oct 2011
-	--  6 =  r52 | 40200-13 | 20 Oct 2011
-	--  7 =  r54 | 40200-13 | 21 Oct 2011
-	--  8 =  r59 | 40300-2  | 09 Jan 2012
-	--  9 =  r79 | 40300-4  | 27 Jan 2012
-	-- 10 =  r85 | 40300-5  | 03 Feb 2012
-	-- 11 = r103 | 40300-9  | 23 Feb 2012
-	-- 12 = r107 | 40300-10 | 04 Mar 2012
-	-- 13 = r109 | 40300-10 | 04 Mar 2012
-	-- 14 = r126 | 40300-12 | 07 Jun 2012
-	-- 15 = r153 | 50001-4  | 22 Oct 2012
-
-	if BattlegroundTargets_Options.version == 1 then
-		if BattlegroundTargets_Options.ButtonFontSize then
-			if BattlegroundTargets_Options.ButtonFontSize[10] then
-				if     BattlegroundTargets_Options.ButtonFontSize[10] == 1 then BattlegroundTargets_Options.ButtonFontSize[10] =  9
-				elseif BattlegroundTargets_Options.ButtonFontSize[10] == 2 then BattlegroundTargets_Options.ButtonFontSize[10] = 10
-				elseif BattlegroundTargets_Options.ButtonFontSize[10] == 3 then BattlegroundTargets_Options.ButtonFontSize[10] = 12
-				elseif BattlegroundTargets_Options.ButtonFontSize[10] == 4 then BattlegroundTargets_Options.ButtonFontSize[10] = 14
-				elseif BattlegroundTargets_Options.ButtonFontSize[10] == 5 then BattlegroundTargets_Options.ButtonFontSize[10] = 16
-				end
-			end
-			if BattlegroundTargets_Options.ButtonFontSize[15] then
-				if     BattlegroundTargets_Options.ButtonFontSize[15] == 1 then BattlegroundTargets_Options.ButtonFontSize[15] =  9
-				elseif BattlegroundTargets_Options.ButtonFontSize[15] == 2 then BattlegroundTargets_Options.ButtonFontSize[15] = 10
-				elseif BattlegroundTargets_Options.ButtonFontSize[15] == 3 then BattlegroundTargets_Options.ButtonFontSize[15] = 12
-				elseif BattlegroundTargets_Options.ButtonFontSize[15] == 4 then BattlegroundTargets_Options.ButtonFontSize[15] = 14
-				elseif BattlegroundTargets_Options.ButtonFontSize[15] == 5 then BattlegroundTargets_Options.ButtonFontSize[15] = 16
-				end
-			end
-			if BattlegroundTargets_Options.ButtonFontSize[40] then
-				if     BattlegroundTargets_Options.ButtonFontSize[40] == 1 then BattlegroundTargets_Options.ButtonFontSize[40] =  9
-				elseif BattlegroundTargets_Options.ButtonFontSize[40] == 2 then BattlegroundTargets_Options.ButtonFontSize[40] = 10
-				elseif BattlegroundTargets_Options.ButtonFontSize[40] == 3 then BattlegroundTargets_Options.ButtonFontSize[40] = 12
-				elseif BattlegroundTargets_Options.ButtonFontSize[40] == 4 then BattlegroundTargets_Options.ButtonFontSize[40] = 14
-				elseif BattlegroundTargets_Options.ButtonFontSize[40] == 5 then BattlegroundTargets_Options.ButtonFontSize[40] = 16
-				end
-			end
-			Print("Fontsize update! Please check Configuration.")
-		end
-		BattlegroundTargets_Options.version = 2
-	end
-
-	if BattlegroundTargets_Options.version == 2 then
-		if BattlegroundTargets_Options.ButtonShowCrosshairs then -- rename ButtonShowCrosshairs to ButtonShowTargetIndicator
-			BattlegroundTargets_Options.ButtonShowTargetIndicator = {}
-			if BattlegroundTargets_Options.ButtonShowCrosshairs[10] then BattlegroundTargets_Options.ButtonShowTargetIndicator[10] = true else BattlegroundTargets_Options.ButtonShowTargetIndicator[10] = false end
-			if BattlegroundTargets_Options.ButtonShowCrosshairs[15] then BattlegroundTargets_Options.ButtonShowTargetIndicator[15] = true else BattlegroundTargets_Options.ButtonShowTargetIndicator[15] = false end
-			if BattlegroundTargets_Options.ButtonShowCrosshairs[40] then BattlegroundTargets_Options.ButtonShowTargetIndicator[40] = true else BattlegroundTargets_Options.ButtonShowTargetIndicator[40] = false end
-			BattlegroundTargets_Options.ButtonShowCrosshairs = nil
-		end
-		BattlegroundTargets_Options.version = 3
-	end
-
-	if BattlegroundTargets_Options.version == 3 then
-		if BattlegroundTargets_Options.ButtonShowTargetIndicator then -- rename ButtonShowTargetIndicator to ButtonShowTarget
-			BattlegroundTargets_Options.ButtonShowTarget = {}
-			if BattlegroundTargets_Options.ButtonShowTargetIndicator[10] then BattlegroundTargets_Options.ButtonShowTarget[10] = true else BattlegroundTargets_Options.ButtonShowTarget[10] = false end
-			if BattlegroundTargets_Options.ButtonShowTargetIndicator[15] then BattlegroundTargets_Options.ButtonShowTarget[15] = true else BattlegroundTargets_Options.ButtonShowTarget[15] = false end
-			if BattlegroundTargets_Options.ButtonShowTargetIndicator[40] then BattlegroundTargets_Options.ButtonShowTarget[40] = true else BattlegroundTargets_Options.ButtonShowTarget[40] = false end
-			BattlegroundTargets_Options.ButtonShowTargetIndicator = nil
-		end
-		if BattlegroundTargets_Options.ButtonShowFocusIndicator then -- rename ButtonShowFocusIndicator to ButtonShowFocus
-			BattlegroundTargets_Options.ButtonShowFocus = {}
-			if BattlegroundTargets_Options.ButtonShowFocusIndicator[10] then BattlegroundTargets_Options.ButtonShowFocus[10] = true else BattlegroundTargets_Options.ButtonShowFocus[10] = false end
-			if BattlegroundTargets_Options.ButtonShowFocusIndicator[15] then BattlegroundTargets_Options.ButtonShowFocus[15] = true else BattlegroundTargets_Options.ButtonShowFocus[15] = false end
-			if BattlegroundTargets_Options.ButtonShowFocusIndicator[40] then BattlegroundTargets_Options.ButtonShowFocus[40] = true else BattlegroundTargets_Options.ButtonShowFocus[40] = false end
-			BattlegroundTargets_Options.ButtonShowFocusIndicator = nil
-		end
-		BattlegroundTargets_Options.version = 4
-	end
-	
-	if BattlegroundTargets_Options.version == 4 then
-		if BattlegroundTargets_Options.ButtonShowRealm then -- rename ButtonShowRealm to ButtonHideRealm
-			BattlegroundTargets_Options.ButtonHideRealm = {}
-			if BattlegroundTargets_Options.ButtonShowRealm[10] then BattlegroundTargets_Options.ButtonHideRealm[10] = false else BattlegroundTargets_Options.ButtonHideRealm[10] = true end
-			if BattlegroundTargets_Options.ButtonShowRealm[15] then BattlegroundTargets_Options.ButtonHideRealm[15] = false else BattlegroundTargets_Options.ButtonHideRealm[15] = true end
-			if BattlegroundTargets_Options.ButtonShowRealm[40] then BattlegroundTargets_Options.ButtonHideRealm[40] = false else BattlegroundTargets_Options.ButtonHideRealm[40] = true end
-			BattlegroundTargets_Options.ButtonShowRealm = nil
-		end
-		BattlegroundTargets_Options.version = 5
-	end
-
-	if BattlegroundTargets_Options.version == 5 then
-		if BattlegroundTargets_Options.ButtonSortBySize then -- rename ButtonSortBySize to ButtonSortBy
-			BattlegroundTargets_Options.ButtonSortBy = {}
-			if BattlegroundTargets_Options.ButtonSortBySize[10] then BattlegroundTargets_Options.ButtonSortBy[10] = BattlegroundTargets_Options.ButtonSortBySize[10] end
-			if BattlegroundTargets_Options.ButtonSortBySize[15] then BattlegroundTargets_Options.ButtonSortBy[15] = BattlegroundTargets_Options.ButtonSortBySize[15] end
-			if BattlegroundTargets_Options.ButtonSortBySize[40] then BattlegroundTargets_Options.ButtonSortBy[40] = BattlegroundTargets_Options.ButtonSortBySize[40] end
-			BattlegroundTargets_Options.ButtonSortBySize = nil
-		end
-		local x
-		if BattlegroundTargets_Options.ButtonTargetScale then
-			if BattlegroundTargets_Options.ButtonTargetScale[10] > 2 then x=1 BattlegroundTargets_Options.ButtonTargetScale[10] = 2 end
-			if BattlegroundTargets_Options.ButtonTargetScale[15] > 2 then x=1 BattlegroundTargets_Options.ButtonTargetScale[15] = 2 end
-			if BattlegroundTargets_Options.ButtonTargetScale[40] > 2 then x=1 BattlegroundTargets_Options.ButtonTargetScale[40] = 2 end
-		end
-		if BattlegroundTargets_Options.ButtonFocusScale then
-			if BattlegroundTargets_Options.ButtonFocusScale[10] > 2 then x=1 BattlegroundTargets_Options.ButtonFocusScale[10] = 2 end
-			if BattlegroundTargets_Options.ButtonFocusScale[15] > 2 then x=1 BattlegroundTargets_Options.ButtonFocusScale[15] = 2 end
-			if BattlegroundTargets_Options.ButtonFocusScale[40] > 2 then x=1 BattlegroundTargets_Options.ButtonFocusScale[40] = 2 end
-		end
-		if BattlegroundTargets_Options.ButtonFlagScale then
-			if BattlegroundTargets_Options.ButtonFlagScale[10] > 2 then x=1 BattlegroundTargets_Options.ButtonFlagScale[10] = 2 end
-			if BattlegroundTargets_Options.ButtonFlagScale[15] > 2 then x=1 BattlegroundTargets_Options.ButtonFlagScale[15] = 2 end
-			if BattlegroundTargets_Options.ButtonFlagScale[40] > 2 then x=1 BattlegroundTargets_Options.ButtonFlagScale[40] = 2 end
-		end
-		if BattlegroundTargets_Options.ButtonAssistScale then
-			if BattlegroundTargets_Options.ButtonAssistScale[10] > 2 then x=1 BattlegroundTargets_Options.ButtonAssistScale[10] = 2 end
-			if BattlegroundTargets_Options.ButtonAssistScale[15] > 2 then x=1 BattlegroundTargets_Options.ButtonAssistScale[15] = 2 end
-			if BattlegroundTargets_Options.ButtonAssistScale[40] > 2 then x=1 BattlegroundTargets_Options.ButtonAssistScale[40] = 2 end
-		end
-		if x then
-			Print("Icon scale update! 200% is now maximum. Please check Configuration.")
-		end
-		BattlegroundTargets_Options.version = 6
-	end
-
-	if BattlegroundTargets_Options.version == 6 then
-		if BattlegroundTargets_Options.ButtonShowHealthBar then -- update for health bar and health text independence
-			if BattlegroundTargets_Options.ButtonShowHealthText[10] == true and BattlegroundTargets_Options.ButtonShowHealthBar[10] == false then
-				BattlegroundTargets_Options.ButtonShowHealthText[10] = false
-			end
-			if BattlegroundTargets_Options.ButtonShowHealthText[15] == true and BattlegroundTargets_Options.ButtonShowHealthBar[15] == false then
-				BattlegroundTargets_Options.ButtonShowHealthText[15] = false
-			end
-			if BattlegroundTargets_Options.ButtonShowHealthText[40] == true and BattlegroundTargets_Options.ButtonShowHealthBar[40] == false then
-				BattlegroundTargets_Options.ButtonShowHealthText[40] = false
-			end
-		end
-		BattlegroundTargets_Options.version = 7
+	if BattlegroundTargets_Options.version < 7 then
+		wipe(BattlegroundTargets_Options)
+		Print("Option reset.")
+		BattlegroundTargets_Options.version = 15
 	end
 
 	if BattlegroundTargets_Options.version == 7 then
@@ -1755,41 +1618,39 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonWidth[40])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[40]              = 100   end
 	if type(BattlegroundTargets_Options.ButtonHeight[40])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[40]             = 16    end
 
-	for i = 1, #bgSizeINT do
-		local sz = bgSizeINT[i]
-		if not OPT.ButtonShowRole           then OPT.ButtonShowRole           = {} end OPT.ButtonShowRole[sz]           = BattlegroundTargets_Options.ButtonShowRole[sz]
-		if not OPT.ButtonShowSpec           then OPT.ButtonShowSpec           = {} end OPT.ButtonShowSpec[sz]           = BattlegroundTargets_Options.ButtonShowSpec[sz]
-		if not OPT.ButtonClassIcon          then OPT.ButtonClassIcon          = {} end OPT.ButtonClassIcon[sz]          = BattlegroundTargets_Options.ButtonClassIcon[sz]
-		if not OPT.ButtonHideRealm          then OPT.ButtonHideRealm          = {} end OPT.ButtonHideRealm[sz]          = BattlegroundTargets_Options.ButtonHideRealm[sz]
-		if not OPT.ButtonShowLeader         then OPT.ButtonShowLeader         = {} end OPT.ButtonShowLeader[sz]         = BattlegroundTargets_Options.ButtonShowLeader[sz]
-		if not OPT.ButtonShowGuildGroup     then OPT.ButtonShowGuildGroup     = {} end OPT.ButtonShowGuildGroup[sz]     = BattlegroundTargets_Options.ButtonShowGuildGroup[sz]
-		if not OPT.ButtonGuildGroupPosition then OPT.ButtonGuildGroupPosition = {} end OPT.ButtonGuildGroupPosition[sz] = BattlegroundTargets_Options.ButtonGuildGroupPosition[sz]
-		if not OPT.ButtonShowTarget         then OPT.ButtonShowTarget         = {} end OPT.ButtonShowTarget[sz]         = BattlegroundTargets_Options.ButtonShowTarget[sz]
-		if not OPT.ButtonTargetScale        then OPT.ButtonTargetScale        = {} end OPT.ButtonTargetScale[sz]        = BattlegroundTargets_Options.ButtonTargetScale[sz]
-		if not OPT.ButtonTargetPosition     then OPT.ButtonTargetPosition     = {} end OPT.ButtonTargetPosition[sz]     = BattlegroundTargets_Options.ButtonTargetPosition[sz]
-		if not OPT.ButtonShowAssist         then OPT.ButtonShowAssist         = {} end OPT.ButtonShowAssist[sz]         = BattlegroundTargets_Options.ButtonShowAssist[sz]
-		if not OPT.ButtonAssistScale        then OPT.ButtonAssistScale        = {} end OPT.ButtonAssistScale[sz]        = BattlegroundTargets_Options.ButtonAssistScale[sz]
-		if not OPT.ButtonAssistPosition     then OPT.ButtonAssistPosition     = {} end OPT.ButtonAssistPosition[sz]     = BattlegroundTargets_Options.ButtonAssistPosition[sz]
-		if not OPT.ButtonShowFocus          then OPT.ButtonShowFocus          = {} end OPT.ButtonShowFocus[sz]          = BattlegroundTargets_Options.ButtonShowFocus[sz]
-		if not OPT.ButtonFocusScale         then OPT.ButtonFocusScale         = {} end OPT.ButtonFocusScale[sz]         = BattlegroundTargets_Options.ButtonFocusScale[sz]
-		if not OPT.ButtonFocusPosition      then OPT.ButtonFocusPosition      = {} end OPT.ButtonFocusPosition[sz]      = BattlegroundTargets_Options.ButtonFocusPosition[sz]
-		if not OPT.ButtonShowFlag           then OPT.ButtonShowFlag           = {} end OPT.ButtonShowFlag[sz]           = BattlegroundTargets_Options.ButtonShowFlag[sz]
-		if not OPT.ButtonFlagScale          then OPT.ButtonFlagScale          = {} end OPT.ButtonFlagScale[sz]          = BattlegroundTargets_Options.ButtonFlagScale[sz]
-		if not OPT.ButtonFlagPosition       then OPT.ButtonFlagPosition       = {} end OPT.ButtonFlagPosition[sz]       = BattlegroundTargets_Options.ButtonFlagPosition[sz]
-		if not OPT.ButtonShowTargetCount    then OPT.ButtonShowTargetCount    = {} end OPT.ButtonShowTargetCount[sz]    = BattlegroundTargets_Options.ButtonShowTargetCount[sz]
-		if not OPT.ButtonShowHealthBar      then OPT.ButtonShowHealthBar      = {} end OPT.ButtonShowHealthBar[sz]      = BattlegroundTargets_Options.ButtonShowHealthBar[sz]
-		if not OPT.ButtonShowHealthText     then OPT.ButtonShowHealthText     = {} end OPT.ButtonShowHealthText[sz]     = BattlegroundTargets_Options.ButtonShowHealthText[sz]
-		if not OPT.ButtonRangeCheck         then OPT.ButtonRangeCheck         = {} end OPT.ButtonRangeCheck[sz]         = BattlegroundTargets_Options.ButtonRangeCheck[sz]
-		if not OPT.ButtonTypeRangeCheck     then OPT.ButtonTypeRangeCheck     = {} end OPT.ButtonTypeRangeCheck[sz]     = BattlegroundTargets_Options.ButtonTypeRangeCheck[sz]
-		if not OPT.ButtonRangeDisplay       then OPT.ButtonRangeDisplay       = {} end OPT.ButtonRangeDisplay[sz]       = BattlegroundTargets_Options.ButtonRangeDisplay[sz]
-		if not OPT.ButtonSortBy             then OPT.ButtonSortBy             = {} end OPT.ButtonSortBy[sz]             = BattlegroundTargets_Options.ButtonSortBy[sz]
-		if not OPT.ButtonSortDetail         then OPT.ButtonSortDetail         = {} end OPT.ButtonSortDetail[sz]         = BattlegroundTargets_Options.ButtonSortDetail[sz]
-		if not OPT.ButtonFontSize           then OPT.ButtonFontSize           = {} end OPT.ButtonFontSize[sz]           = BattlegroundTargets_Options.ButtonFontSize[sz]
-		if not OPT.ButtonFontStyle          then OPT.ButtonFontStyle          = {} end OPT.ButtonFontStyle[sz]          = BattlegroundTargets_Options.ButtonFontStyle[sz]
-		if not OPT.ButtonScale              then OPT.ButtonScale              = {} end OPT.ButtonScale[sz]              = BattlegroundTargets_Options.ButtonScale[sz]
-		if not OPT.ButtonWidth              then OPT.ButtonWidth              = {} end OPT.ButtonWidth[sz]              = BattlegroundTargets_Options.ButtonWidth[sz]
-		if not OPT.ButtonHeight             then OPT.ButtonHeight             = {} end OPT.ButtonHeight[sz]             = BattlegroundTargets_Options.ButtonHeight[sz]
-	end	
+	local BTO = BattlegroundTargets_Options
+	OPT.ButtonShowRole           = {[10] = BTO.ButtonShowRole[10]          , [15] = BTO.ButtonShowRole[15]          , [40] = BTO.ButtonShowRole[40]          }
+	OPT.ButtonShowSpec           = {[10] = BTO.ButtonShowSpec[10]          , [15] = BTO.ButtonShowSpec[15]          , [40] = BTO.ButtonShowSpec[40]          }
+	OPT.ButtonClassIcon          = {[10] = BTO.ButtonClassIcon[10]         , [15] = BTO.ButtonClassIcon[15]         , [40] = BTO.ButtonClassIcon[40]         }
+	OPT.ButtonHideRealm          = {[10] = BTO.ButtonHideRealm[10]         , [15] = BTO.ButtonHideRealm[15]         , [40] = BTO.ButtonHideRealm[40]         }
+	OPT.ButtonShowLeader         = {[10] = BTO.ButtonShowLeader[10]        , [15] = BTO.ButtonShowLeader[15]        , [40] = BTO.ButtonShowLeader[40]        }
+	OPT.ButtonShowGuildGroup     = {[10] = BTO.ButtonShowGuildGroup[10]    , [15] = BTO.ButtonShowGuildGroup[15]    , [40] = BTO.ButtonShowGuildGroup[40]    }
+	OPT.ButtonGuildGroupPosition = {[10] = BTO.ButtonGuildGroupPosition[10], [15] = BTO.ButtonGuildGroupPosition[15], [40] = BTO.ButtonGuildGroupPosition[40]}
+	OPT.ButtonShowTarget         = {[10] = BTO.ButtonShowTarget[10]        , [15] = BTO.ButtonShowTarget[15]        , [40] = BTO.ButtonShowTarget[40]        }
+	OPT.ButtonTargetScale        = {[10] = BTO.ButtonTargetScale[10]       , [15] = BTO.ButtonTargetScale[15]       , [40] = BTO.ButtonTargetScale[40]       }
+	OPT.ButtonTargetPosition     = {[10] = BTO.ButtonTargetPosition[10]    , [15] = BTO.ButtonTargetPosition[15]    , [40] = BTO.ButtonTargetPosition[40]    }
+	OPT.ButtonShowAssist         = {[10] = BTO.ButtonShowAssist[10]        , [15] = BTO.ButtonShowAssist[15]        , [40] = BTO.ButtonShowAssist[40]        }
+	OPT.ButtonAssistScale        = {[10] = BTO.ButtonAssistScale[10]       , [15] = BTO.ButtonAssistScale[15]       , [40] = BTO.ButtonAssistScale[40]       }
+	OPT.ButtonAssistPosition     = {[10] = BTO.ButtonAssistPosition[10]    , [15] = BTO.ButtonAssistPosition[15]    , [40] = BTO.ButtonAssistPosition[40]    }
+	OPT.ButtonShowFocus          = {[10] = BTO.ButtonShowFocus[10]         , [15] = BTO.ButtonShowFocus[15]         , [40] = BTO.ButtonShowFocus[40]         }
+	OPT.ButtonFocusScale         = {[10] = BTO.ButtonFocusScale[10]        , [15] = BTO.ButtonFocusScale[15]        , [40] = BTO.ButtonFocusScale[40]        }
+	OPT.ButtonFocusPosition      = {[10] = BTO.ButtonFocusPosition[10]     , [15] = BTO.ButtonFocusPosition[15]     , [40] = BTO.ButtonFocusPosition[40]     }
+	OPT.ButtonShowFlag           = {[10] = BTO.ButtonShowFlag[10]          , [15] = BTO.ButtonShowFlag[15]          , [40] = BTO.ButtonShowFlag[40]          }
+	OPT.ButtonFlagScale          = {[10] = BTO.ButtonFlagScale[10]         , [15] = BTO.ButtonFlagScale[15]         , [40] = BTO.ButtonFlagScale[40]         }
+	OPT.ButtonFlagPosition       = {[10] = BTO.ButtonFlagPosition[10]      , [15] = BTO.ButtonFlagPosition[15]      , [40] = BTO.ButtonFlagPosition[40]      }
+	OPT.ButtonShowTargetCount    = {[10] = BTO.ButtonShowTargetCount[10]   , [15] = BTO.ButtonShowTargetCount[15]   , [40] = BTO.ButtonShowTargetCount[40]   }
+	OPT.ButtonShowHealthBar      = {[10] = BTO.ButtonShowHealthBar[10]     , [15] = BTO.ButtonShowHealthBar[15]     , [40] = BTO.ButtonShowHealthBar[40]     }
+	OPT.ButtonShowHealthText     = {[10] = BTO.ButtonShowHealthText[10]    , [15] = BTO.ButtonShowHealthText[15]    , [40] = BTO.ButtonShowHealthText[40]    }
+	OPT.ButtonRangeCheck         = {[10] = BTO.ButtonRangeCheck[10]        , [15] = BTO.ButtonRangeCheck[15]        , [40] = BTO.ButtonRangeCheck[40]        }
+	OPT.ButtonTypeRangeCheck     = {[10] = BTO.ButtonTypeRangeCheck[10]    , [15] = BTO.ButtonTypeRangeCheck[15]    , [40] = BTO.ButtonTypeRangeCheck[40]    }
+	OPT.ButtonRangeDisplay       = {[10] = BTO.ButtonRangeDisplay[10]      , [15] = BTO.ButtonRangeDisplay[15]      , [40] = BTO.ButtonRangeDisplay[40]      }
+	OPT.ButtonSortBy             = {[10] = BTO.ButtonSortBy[10]            , [15] = BTO.ButtonSortBy[15]            , [40] = BTO.ButtonSortBy[40]            }
+	OPT.ButtonSortDetail         = {[10] = BTO.ButtonSortDetail[10]        , [15] = BTO.ButtonSortDetail[15]        , [40] = BTO.ButtonSortDetail[40]        }
+	OPT.ButtonFontSize           = {[10] = BTO.ButtonFontSize[10]          , [15] = BTO.ButtonFontSize[15]          , [40] = BTO.ButtonFontSize[40]          }
+	OPT.ButtonFontStyle          = {[10] = BTO.ButtonFontStyle[10]         , [15] = BTO.ButtonFontStyle[15]         , [40] = BTO.ButtonFontStyle[40]         }
+	OPT.ButtonScale              = {[10] = BTO.ButtonScale[10]             , [15] = BTO.ButtonScale[15]             , [40] = BTO.ButtonScale[40]             }
+	OPT.ButtonWidth              = {[10] = BTO.ButtonWidth[10]             , [15] = BTO.ButtonWidth[15]             , [40] = BTO.ButtonWidth[40]             }
+	OPT.ButtonHeight             = {[10] = BTO.ButtonHeight[10]            , [15] = BTO.ButtonHeight[15]            , [40] = BTO.ButtonHeight[40]            }
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -2268,6 +2129,7 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:SummaryPosition() -- SUMMARY
+	local BattlegroundTargets_Options = BattlegroundTargets_Options
 	if BattlegroundTargets_Options.Summary[currentSize] then
 		GVAR.Summary:ClearAllPoints()
 		local LayoutTH = BattlegroundTargets_Options.LayoutTH[currentSize]
@@ -3868,6 +3730,7 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:SetOptions()
+	local BattlegroundTargets_Options = BattlegroundTargets_Options
 	GVAR.OptionsFrame.EnableBracket:SetChecked(BattlegroundTargets_Options.EnableBracket[currentSize])
 	GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options.IndependentPositioning[currentSize])
 
@@ -4390,18 +4253,19 @@ function BattlegroundTargets:SetupLayout()
 
 	local LayoutTH    = BattlegroundTargets_Options.LayoutTH[currentSize]
 	local LayoutSpace = BattlegroundTargets_Options.LayoutSpace[currentSize]
+	local GVAR_TargetButton = GVAR.TargetButton
 
 	if currentSize == 10 then
 		for i = 1, currentSize do
 			if LayoutTH == 81 then
 				if i == 6 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
 				end
 			elseif LayoutTH == 18 then
 				if i > 1 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
 				end
 			end
 		end
@@ -4409,15 +4273,15 @@ function BattlegroundTargets:SetupLayout()
 		for i = 1, currentSize do
 			if LayoutTH == 81 then
 				if i == 6 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 11 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[6], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[6], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
 				end
 			elseif LayoutTH == 18 then
 				if i > 1 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
 				end
 			end
 		end
@@ -4425,41 +4289,41 @@ function BattlegroundTargets:SetupLayout()
 		for i = 1, currentSize do
 			if LayoutTH == 81 then
 				if i == 6 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 11 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[6], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[6], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 16 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[11], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[11], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 21 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[16], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[16], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 26 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[21], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[21], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 31 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[26], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[26], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 36 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[31], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[31], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
 				end
 			elseif LayoutTH == 42 then
 				if i == 11 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 21 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[11], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[11], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 31 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[21], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[21], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
 				end
 			elseif LayoutTH == 24 then
 				if i == 21 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
 				end
 			elseif LayoutTH == 18 then
 				if i > 1 then
-					GVAR.TargetButton[i]:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
 				end
 			end
 		end
@@ -6171,8 +6035,6 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	ENEMY_Roles = {0,0,0,0} -- SUMMARY
 	FRIEND_Roles = {0,0,0,0}
 	
-	--print("GetNumBattlefieldScores() =", GetNumBattlefieldScores()) -- TEST
-	local x = 1
 	for index = 1, GetNumBattlefieldScores() do
 		local name, _, _, _, _, faction, race, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
 		if name then
@@ -6201,10 +6063,9 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 				end
 				--]]
 
-				ENEMY_Data[x] = {}
-
 				local role = 4
 				local spec = 5
+				local class = "ZZZFAILURE"
 				if classToken then
 					local token = classes[classToken]
 					if token then
@@ -6223,18 +6084,16 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 								spec = 4
 							end
 						end
-						ENEMY_Data[x].classToken = classToken
-					else
-						ENEMY_Data[x].classToken = "ZZZFAILURE"
+						class = classToken
 					end
-				else
-					ENEMY_Data[x].classToken = "ZZZFAILURE"
 				end
 
-				ENEMY_Data[x].name = name
-				ENEMY_Data[x].specNum = spec
-				ENEMY_Data[x].talentSpec = role
-				x = x + 1
+				tinsert(ENEMY_Data, {
+					name = name,
+					classToken = class,
+					specNum = spec,
+					talentSpec = role,
+				})
 
 				ENEMY_Roles[role] = ENEMY_Roles[role] + 1 -- SUMMARY
 
