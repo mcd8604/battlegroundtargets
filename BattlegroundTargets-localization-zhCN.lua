@@ -20,7 +20,7 @@ L["Copy this settings to %s"] = "复制此设置到 %s"
 L["Role"] = ROLE
 L["Specialization"] = SPECIALIZATION
 L["Class Icon"] = "职业图标" -- need check - old: ["Show Class Icon"] = "显示职业图标"
-L["Realm"] = true -- need check - old: ["Hide Realm"] = "隐藏服务器"
+L["Realm"] = "服务器" -- need check - old: ["Hide Realm"] = "隐藏服务器"
 L["Leader"] = "领袖" -- need check - old: ["Show Leader"] = "显示领袖"
 L["Guild Groups"] = "公会组" -- need check - old: ["Show Guild Groups"] = "显示公会组"
 L["Target"] = TARGET

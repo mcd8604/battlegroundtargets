@@ -759,7 +759,6 @@ TEMPLATE.ButtonColor = {
 }
 
 TEMPLATE.DisableTextButton = function(button)
-	button.r, button.g, button.b = button.Text:GetTextColor()
 	button.Text:SetTextColor(0.4, 0.4, 0.4, 1)
 	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
 	button:EnableMouse(false)
@@ -1359,13 +1358,13 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if type(BattlegroundTargets_Options.version) ~= "number" then
-		BattlegroundTargets_Options.version = 15
+		BattlegroundTargets_Options.version = 16
 	end
 
 	if BattlegroundTargets_Options.version < 7 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
-		BattlegroundTargets_Options.version = 15
+		BattlegroundTargets_Options.version = 16
 	end
 
 	if BattlegroundTargets_Options.version == 7 then
@@ -1461,6 +1460,17 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 15
 	end
 
+	if BattlegroundTargets_Options.version == 15 then -- realm logic switch
+		if BattlegroundTargets_Options.ButtonHideRealm then
+			BattlegroundTargets_Options.ButtonShowRealm = {}
+			if BattlegroundTargets_Options.ButtonHideRealm[10] == true then BattlegroundTargets_Options.ButtonShowRealm[10] = false else BattlegroundTargets_Options.ButtonShowRealm[10] = true end
+			if BattlegroundTargets_Options.ButtonHideRealm[15] == true then BattlegroundTargets_Options.ButtonShowRealm[15] = false else BattlegroundTargets_Options.ButtonShowRealm[15] = true end
+			if BattlegroundTargets_Options.ButtonHideRealm[40] == true then BattlegroundTargets_Options.ButtonShowRealm[40] = false else BattlegroundTargets_Options.ButtonShowRealm[40] = true end
+			BattlegroundTargets_Options.ButtonHideRealm = nil
+		end
+		BattlegroundTargets_Options.version = 16
+	end
+
 	if type(BattlegroundTargets_Options.pos)                        ~= "table"   then BattlegroundTargets_Options.pos                        = {}    end
 	if type(BattlegroundTargets_Options.MinimapButton)              ~= "boolean" then BattlegroundTargets_Options.MinimapButton              = false end
 	if type(BattlegroundTargets_Options.MinimapButtonPos)           ~= "number"  then BattlegroundTargets_Options.MinimapButtonPos           = -90   end
@@ -1506,7 +1516,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonShowRole)               ~= "table"   then BattlegroundTargets_Options.ButtonShowRole               = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowSpec)               ~= "table"   then BattlegroundTargets_Options.ButtonShowSpec               = {}    end
 	if type(BattlegroundTargets_Options.ButtonClassIcon)              ~= "table"   then BattlegroundTargets_Options.ButtonClassIcon              = {}    end
-	if type(BattlegroundTargets_Options.ButtonHideRealm)              ~= "table"   then BattlegroundTargets_Options.ButtonHideRealm              = {}    end
+	if type(BattlegroundTargets_Options.ButtonShowRealm)              ~= "table"   then BattlegroundTargets_Options.ButtonShowRealm              = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowLeader)             ~= "table"   then BattlegroundTargets_Options.ButtonShowLeader             = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowGuildGroup)         ~= "table"   then BattlegroundTargets_Options.ButtonShowGuildGroup         = {}    end
 	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition)     ~= "table"   then BattlegroundTargets_Options.ButtonGuildGroupPosition     = {}    end
@@ -1539,7 +1549,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonShowRole[10])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[10]           = true  end
 	if type(BattlegroundTargets_Options.ButtonShowSpec[10])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[10]           = false end
 	if type(BattlegroundTargets_Options.ButtonClassIcon[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[10]          = false end
-	if type(BattlegroundTargets_Options.ButtonHideRealm[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonHideRealm[10]          = false end
+	if type(BattlegroundTargets_Options.ButtonShowRealm[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[10]          = true  end
 	if type(BattlegroundTargets_Options.ButtonShowLeader[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[10]         = false end
 	if type(BattlegroundTargets_Options.ButtonShowGuildGroup[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[10]     = false end
 	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[10]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[10] = 4     end
@@ -1572,7 +1582,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonShowRole[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[15]           = true  end
 	if type(BattlegroundTargets_Options.ButtonShowSpec[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[15]           = false end
 	if type(BattlegroundTargets_Options.ButtonClassIcon[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[15]          = false end
-	if type(BattlegroundTargets_Options.ButtonHideRealm[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonHideRealm[15]          = false end
+	if type(BattlegroundTargets_Options.ButtonShowRealm[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[15]          = true  end
 	if type(BattlegroundTargets_Options.ButtonShowLeader[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[15]         = false end
 	if type(BattlegroundTargets_Options.ButtonShowGuildGroup[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[15]     = false end
 	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[15]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[15] = 4     end
@@ -1605,7 +1615,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonShowRole[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[40]           = true  end
 	if type(BattlegroundTargets_Options.ButtonShowSpec[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[40]           = false end
 	if type(BattlegroundTargets_Options.ButtonClassIcon[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[40]          = false end
-	if type(BattlegroundTargets_Options.ButtonHideRealm[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonHideRealm[40]          = true  end
+	if type(BattlegroundTargets_Options.ButtonShowRealm[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[40]          = false end
 	if type(BattlegroundTargets_Options.ButtonShowLeader[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[40]         = false end
 	if type(BattlegroundTargets_Options.ButtonShowGuildGroup[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[40]     = false end
 	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[40]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[40] = 4     end
@@ -1639,7 +1649,7 @@ function BattlegroundTargets:InitOptions()
 	OPT.ButtonShowRole           = {[10] = BTO.ButtonShowRole[10]          , [15] = BTO.ButtonShowRole[15]          , [40] = BTO.ButtonShowRole[40]          }
 	OPT.ButtonShowSpec           = {[10] = BTO.ButtonShowSpec[10]          , [15] = BTO.ButtonShowSpec[15]          , [40] = BTO.ButtonShowSpec[40]          }
 	OPT.ButtonClassIcon          = {[10] = BTO.ButtonClassIcon[10]         , [15] = BTO.ButtonClassIcon[15]         , [40] = BTO.ButtonClassIcon[40]         }
-	OPT.ButtonHideRealm          = {[10] = BTO.ButtonHideRealm[10]         , [15] = BTO.ButtonHideRealm[15]         , [40] = BTO.ButtonHideRealm[40]         }
+	OPT.ButtonShowRealm          = {[10] = BTO.ButtonShowRealm[10]         , [15] = BTO.ButtonShowRealm[15]         , [40] = BTO.ButtonShowRealm[40]         }
 	OPT.ButtonShowLeader         = {[10] = BTO.ButtonShowLeader[10]        , [15] = BTO.ButtonShowLeader[15]        , [40] = BTO.ButtonShowLeader[40]        }
 	OPT.ButtonShowGuildGroup     = {[10] = BTO.ButtonShowGuildGroup[10]    , [15] = BTO.ButtonShowGuildGroup[15]    , [40] = BTO.ButtonShowGuildGroup[40]    }
 	OPT.ButtonGuildGroupPosition = {[10] = BTO.ButtonGuildGroupPosition[10], [15] = BTO.ButtonGuildGroupPosition[15], [40] = BTO.ButtonGuildGroupPosition[40]}
@@ -2579,9 +2589,8 @@ function BattlegroundTargets:CreateOptionsFrame()
 	TEMPLATE.TextButton(GVAR.OptionsFrame.CopySettings, format(L["Copy this settings to %s"], "|cffffffff"..L["15 vs 15"].."|r"), 4)
 	-- BOOM GVAR.OptionsFrame.CopySettings:SetPoint()
 	GVAR.OptionsFrame.CopySettings:SetPoint("TOP", GVAR.OptionsFrame.Dummy1, "BOTTOM", 0, -62) -- 10+16+10+16+10
-	GVAR.OptionsFrame.CopySettings:SetWidth(GVAR.OptionsFrame.CopySettings.Text:GetStringWidth()+40)
+	GVAR.OptionsFrame.CopySettings:SetWidth(GVAR.OptionsFrame.CopySettings.Text:GetStringWidth()+60)
 	GVAR.OptionsFrame.CopySettings:SetHeight(24)
-	--GVAR.OptionsFrame.CopySettings.Text:SetTextColor(1, 1, 1, 1)
 	GVAR.OptionsFrame.CopySettings:SetScript("OnClick", function() BattlegroundTargets:CopySettings(currentSize) end)
 	GVAR.OptionsFrame.CopySettings:SetScript("OnEnter", function()
 		GVAR.OptionsFrame.LayoutTHText.Background:SetTexture(1, 1, 1, 0.1)
@@ -2731,11 +2740,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowRealm, 16, 4, L["Realm"])
 	GVAR.OptionsFrame.ShowRealm:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.ShowRealm:SetPoint("TOP", GVAR.OptionsFrame.ShowRole, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.ShowRealm:SetChecked(OPT.ButtonHideRealm[currentSize])
+	GVAR.OptionsFrame.ShowRealm:SetChecked(OPT.ButtonShowRealm[currentSize])
 	GVAR.OptionsFrame.ShowRealm:SetScript("OnClick", function()
-		BattlegroundTargets_Options.ButtonHideRealm[currentSize] = not BattlegroundTargets_Options.ButtonHideRealm[currentSize]
-		                        OPT.ButtonHideRealm[currentSize] = not                         OPT.ButtonHideRealm[currentSize]
-		GVAR.OptionsFrame.ShowRealm:SetChecked(OPT.ButtonHideRealm[currentSize])
+		BattlegroundTargets_Options.ButtonShowRealm[currentSize] = not BattlegroundTargets_Options.ButtonShowRealm[currentSize]
+		                        OPT.ButtonShowRealm[currentSize] = not                         OPT.ButtonShowRealm[currentSize]
+		GVAR.OptionsFrame.ShowRealm:SetChecked(OPT.ButtonShowRealm[currentSize])
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
@@ -3978,7 +3987,7 @@ function BattlegroundTargets:SetOptions()
 	GVAR.OptionsFrame.ShowSpec:SetChecked(OPT.ButtonShowSpec[currentSize])
 	GVAR.OptionsFrame.ClassIcon:SetChecked(OPT.ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ShowLeader:SetChecked(OPT.ButtonShowLeader[currentSize])
-	GVAR.OptionsFrame.ShowRealm:SetChecked(OPT.ButtonHideRealm[currentSize])
+	GVAR.OptionsFrame.ShowRealm:SetChecked(OPT.ButtonShowRealm[currentSize])
 	GVAR.OptionsFrame.ShowGuildGroup:SetChecked(OPT.ButtonShowGuildGroup[currentSize])
 	GVAR.OptionsFrame.GuildGroupPosition:SetValue(OPT.ButtonGuildGroupPosition[currentSize])
 	GVAR.OptionsFrame.GuildGroupPositionText:SetText(OPT.ButtonGuildGroupPosition[currentSize])
@@ -5839,8 +5848,8 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	                        OPT.ButtonClassIcon[destinationSize]          =                         OPT.ButtonClassIcon[sourceSize]
 	BattlegroundTargets_Options.ButtonShowLeader[destinationSize]         = BattlegroundTargets_Options.ButtonShowLeader[sourceSize]
 	                        OPT.ButtonShowLeader[destinationSize]         =                         OPT.ButtonShowLeader[sourceSize]
-	BattlegroundTargets_Options.ButtonHideRealm[destinationSize]          = BattlegroundTargets_Options.ButtonHideRealm[sourceSize]
-	                        OPT.ButtonHideRealm[destinationSize]          =                         OPT.ButtonHideRealm[sourceSize]
+	BattlegroundTargets_Options.ButtonShowRealm[destinationSize]          = BattlegroundTargets_Options.ButtonShowRealm[sourceSize]
+	                        OPT.ButtonShowRealm[destinationSize]          =                         OPT.ButtonShowRealm[sourceSize]
 	BattlegroundTargets_Options.ButtonShowGuildGroup[destinationSize]     = BattlegroundTargets_Options.ButtonShowGuildGroup[sourceSize]
 	                        OPT.ButtonShowGuildGroup[destinationSize]     =                         OPT.ButtonShowGuildGroup[sourceSize]
 	BattlegroundTargets_Options.ButtonGuildGroupPosition[destinationSize] = BattlegroundTargets_Options.ButtonGuildGroupPosition[sourceSize]
@@ -6029,7 +6038,7 @@ function BattlegroundTargets:MainDataUpdate()
 	local ButtonShowSpec        = OPT.ButtonShowSpec[currentSize]
 	local ButtonClassIcon       = OPT.ButtonClassIcon[currentSize]
 	local ButtonShowLeader      = OPT.ButtonShowLeader[currentSize]
-	local ButtonHideRealm       = OPT.ButtonHideRealm[currentSize]
+	local ButtonShowRealm       = OPT.ButtonShowRealm[currentSize]
 	local ButtonShowGuildGroup  = OPT.ButtonShowGuildGroup[currentSize]
 	local ButtonShowTargetCount = OPT.ButtonShowTargetCount[currentSize]
 	local ButtonShowHealthBar   = OPT.ButtonShowHealthBar[currentSize]
@@ -6069,14 +6078,14 @@ function BattlegroundTargets:MainDataUpdate()
 			GVAR_TargetButton.RoleTexture:SetTexCoord(Textures.RoleIcon[qtalentSpec][1], Textures.RoleIcon[qtalentSpec][2], Textures.RoleIcon[qtalentSpec][3], Textures.RoleIcon[qtalentSpec][4])
 
 			local onlyname = qname
-			if ButtonShowFlag or ButtonHideRealm then
+			if ButtonShowFlag or not ButtonShowRealm then
 				if strfind(qname, "-", 1, true) then
 					onlyname = strmatch(qname, "(.-)%-(.*)$")
 				end
 				ENEMY_Names4Flag[onlyname] = i
 			end
 
-			if ButtonHideRealm then
+			if not ButtonShowRealm then
 				GVAR_TargetButton.name4button = onlyname
 				if isLowLevel and ENEMY_Name2Level[qname] then
 					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..onlyname)
@@ -6467,6 +6476,7 @@ function BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
 			flags = flags + 1
 			
 			local oID = orbIDs[spellId]
+			local val3 = floor((val3/10)+0.5)
 			hasOrb[ oID.color ].name = enemyName
 			hasOrb[ oID.color ].orbval = val3
 			GVAR_TargetButton.orbColor = oID.color
@@ -6546,6 +6556,7 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 					local GVAR_TargetButton = GVAR.TargetButton[button]
 					if GVAR_TargetButton then
 						local oID = orbIDs[spellId]
+						local val3 = floor((val3/10)+0.5)
 						hasOrb[ oID.color ].name = targetName
 						hasOrb[ oID.color ].orbval = val3
 						GVAR_TargetButton.orbColor = oID.color
@@ -6619,7 +6630,7 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 		-- friend debuff check
 		for num = 1, GetNumGroupMembers() do
 			for i = 1, 40 do
-				local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, val1, val2, val3 = UnitDebuff("raid"..num, i)
+				local _, _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("raid"..num, i)
 				if not spellId then break end
 				if orbIDs[spellId] then
 					flags = flags + 1
@@ -7243,6 +7254,8 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		end
 	end
 
+	if not ENEMY_Names[enemyName] then return end
+
 	-- real faction check
 	-- NOTE: This check is here because with MoP the Pandaren race has the same name on Alliance and Horde side, and so
 	--       it's not possible with GetBattlefieldScore() to get the real opposite faction if all enemy chars are Pandaren.
@@ -7257,8 +7270,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 			oppositeFactionREAL = 1
 		end
 	end
-
-	if not ENEMY_Names[enemyName] then return end
 
 	-- health
 	if OPT.ButtonShowHealthBar[currentSize] or OPT.ButtonShowHealthText[currentSize] then
