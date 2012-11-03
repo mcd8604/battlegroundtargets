@@ -3,70 +3,65 @@
 -- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 
-BattlegroundTargets_Localization = {
-["Open Configuration"] = true,
+local L, _, prg = {}, ...
+if prg.L then L = prg.L else prg.L = L end
 
-["Configuration"] = true,
-["10 vs 10"] = true,
-["15 vs 15"] = true,
-["40 vs 40"] = true,
-["Enable"] = true,
-["Independent Positioning"] = true,
-["Layout"] = true,
-["Summary"] = true,
-["Copy this settings to '%s'"] = true,
-["Show Role"] = true,
-["Show Specialization"] = true,
-["Show Class Icon"] = true,
-["Hide Realm"] = true,
-["Show Leader"] = true,
-["Show Guild Groups"] = true,
-["Show Target"] = true,
-["Show Focus"] = true,
-["Show Flag Carrier"] = true,
-["Show Main Assist Target"] = true,
-["Show Target Count"] = true,
-["Show Health Bar"] = true,
-["Show Percent"] = true,
-["Show Range"] = true,
- ["This option uses the CombatLog to check range."] = true,
- ["This option uses a pre-defined spell to check range:"] = true,
- ["Mix"] = true,
- ["if you are attacked only"] = true,
- ["(class dependent)"] = true,
- ["Disable this option if you have CPU/FPS problems in combat."] = true,
-["Sort By"] = true,
-["Font"] = true,
-["Text Size"] = true,
-["Scale"] = true,
-["Width"] = true,
-["Height"] = true,
+L["Open Configuration"] = true
 
-["General Settings"] = true,
-["Show Minimap-Button"] = true,
+L["Configuration"] = true
+L["10 vs 10"] = true
+L["15 vs 15"] = true
+L["40 vs 40"] = true
+L["Enable"] = ENABLE
+L["Independent Positioning"] = true
+L["Layout"] = true
+L["Summary"] = true
+L["Copy this settings to %s"] = true
+L["Role"] = ROLE
+L["Specialization"] = SPECIALIZATION
+L["Class Icon"] = true
+L["Realm"] = true
+L["Leader"] = true
+L["Guild Groups"] = true
+L["Target"] = TARGET
+L["Focus"] = FOCUS
+L["Flag + Orb"] = true
+L["Main Assist Target"] = true
+L["Target Count"] = true
+L["Health Bar"] = true
+L["Percentage"] = true
+L["Range"] = true
+ L["This option uses the CombatLog to check range."] = true
+ L["This option uses a pre-defined spell to check range:"] = true
+ L["Mix"] = true
+ L["if you are attacked only"] = true
+ L["(class dependent)"] = true
+ L["Disable this option if you have CPU/FPS problems in combat."] = true
+L["Sort By"] = true
+L["Class"] = CLASS
+L["Name"] = NAME
+L["Font"] = true
+L["Text Size"] = true
+L["Scale"] = true
+L["Width"] = true
+L["Height"] = true
 
-["click & move"] = true,
-["BattlegroundTargets does not update if this Tab is opened."] = true,
+L["General Settings"] = true
+L["Show Minimap-Button"] = true
 
-["Close Configuration"] = true,
+L["click & move"] = true
+L["BattlegroundTargets does not update if this Tab is opened."] = true
+
+L["Close Configuration"] = true
 
 -- font test for all languages, do not translate
-["TEST_abc_"] = "abc_ABCXYZabcxyz_",
-["TEST_koKR_"] = "koKR_발수요있눈봉우렬드_",
-["TEST_ruRU_"] = "ruRU_бПдчжмШЭйФ_",
-["TEST_zhCN_"] = "zhCN_夺兰古手变命使用_",
-["TEST_zhTW_"] = "zhTW_對大顯以記已_",
-["TEST_Latin1_"] = "Latin1_¡ÆâÜíßñØéùåçÏ_ŒŸ_",
-["TEST_Latin2_"] = "Latin2_ĄŁĽŤžŕęďňýţ_",
-["TEST_Latin3_"] = "Latin3_ĥĦ˘ËĵŜĊŭŝ_",
-["TEST_Latin4_"] = "Latin4_įĸæĨĻĀōÂųũūŊĪ_",
-["TEST_Latin5_"] = "Latin5_ĞİŞğışÿö_",
-}
-
-function BattlegroundTargets_Localization:CreateLocaleTable(t)
-	for k,v in pairs(t) do
-		self[k] = (v == true and k) or v
-	end
-end
-
-BattlegroundTargets_Localization:CreateLocaleTable(BattlegroundTargets_Localization)
+L["TEST_abc_"] = "abc_ABCXYZabcxyz_"
+L["TEST_koKR_"] = "koKR_발수요있눈봉우렬드_"
+L["TEST_ruRU_"] = "ruRU_бПдчжмШЭйФ_"
+L["TEST_zhCN_"] = "zhCN_夺兰古手变命使用_"
+L["TEST_zhTW_"] = "zhTW_對大顯以記已_"
+L["TEST_Latin1_"] = "Latin1_¡ÆâÜíßñØéùåçÏ_ŒŸ_"
+L["TEST_Latin2_"] = "Latin2_ĄŁĽŤžŕęďňýţ_"
+L["TEST_Latin3_"] = "Latin3_ĥĦ˘ËĵŜĊŭŝ_"
+L["TEST_Latin4_"] = "Latin4_įĸæĨĻĀōÂųũūŊĪ_"
+L["TEST_Latin5_"] = "Latin5_ĞİŞğışÿö_"

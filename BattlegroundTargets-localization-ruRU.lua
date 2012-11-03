@@ -3,50 +3,53 @@
 -- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 if GetLocale() ~= "ruRU" then return end
-BattlegroundTargets_Localization:CreateLocaleTable({
-["Open Configuration"] = "Открыть настройки",
+local L, _, prg = {}, ...
+if prg.L then L = prg.L else prg.L = L end
 
-["Configuration"] = "Настройки",
-["10 vs 10"] = "10 на 10",
-["15 vs 15"] = "15 на 15",
-["40 vs 40"] = "40 на 40",
-["Enable"] = "Включить",
-["Independent Positioning"] = "Независимое позиционирование",
-["Layout"] = "Расположение",
-["Summary"] = "Подсчет ролей",
-["Copy this settings to '%s'"] = "Копировать эти настройки в '%s'",
-["Show Role"] = "Отображать роль",
-["Show Specialization"] = "Отображать специализацию",
-["Show Class Icon"] = "Отображать иконку класса",
-["Hide Realm"] = "Не отображать сервер",
-["Show Leader"] = "Отображать лидера",
-["Show Guild Groups"] = "Показывать гильдейские группы",
-["Show Target"] = "Отображать цель",
-["Show Focus"] = "Отображать фокус",
-["Show Flag Carrier"] = "Отображать флагоносца",
-["Show Main Assist Target"] = "Отображать главного наводчика",
-["Show Target Count"] = "Отображать подсчет нацеливаний",
-["Show Health Bar"] = "Отображать полоску здоровья",
-["Show Percent"] = "Отображать проценты здоровья",
-["Show Range"] = "Отображать расстояние",
- ["This option uses the CombatLog to check range."] = "Эта опция использует лог событий для проверки расстояния.",
- ["This option uses a pre-defined spell to check range:"] = "Эта опция использует выбранное заклинание для проверки расстояния:",
- ["Mix"] = "Смешанная проверка расстояния",
- ["if you are attacked only"] = "если вы атакованы",
- ["(class dependent)"] = "(зависит от класса)",
- ["Disable this option if you have CPU/FPS problems in combat."] = "Отключить эту опцию, если у вас есть проблемы с производительностью в бою.",
-["Sort By"] = "Сортировать по",
-["Font"] = "Шрифт",
-["Text Size"] = "Размер шрифта",
-["Scale"] = "Масштаб",
-["Width"] = "Ширина",
-["Height"] = "Высота",
+L["Open Configuration"] = "Открыть настройки"
 
-["General Settings"] = "Общие настройки",
-["Show Minimap-Button"] = "Отображать кнопку на мини-карте",
+L["Configuration"] = "Настройки"
+L["10 vs 10"] = "10 на 10"
+L["15 vs 15"] = "15 на 15"
+L["40 vs 40"] = "40 на 40"
+L["Enable"] = ENABLE
+L["Independent Positioning"] = "Независимое позиционирование"
+L["Layout"] = "Расположение"
+L["Summary"] = "Подсчет ролей"
+L["Copy this settings to %s"] = "Копировать эти настройки в %s"
+L["Role"] = ROLE
+L["Specialization"] = SPECIALIZATION
+L["Class Icon"] = "Иконку класса" -- need check - old: ["Show Class Icon"] = "Отображать иконку класса"
+L["Realm"] = "Сервер" -- need check - old: ["Hide Realm"] = "Не отображать сервер"
+L["Leader"] = "Лидера" -- need check - old: ["Show Leader"] = "Отображать лидера"
+L["Guild Groups"] = "Показывать гильдейские группы" -- need check - old: ["Show Guild Groups"] = "Показывать гильдейские группы"
+L["Target"] = TARGET
+L["Focus"] = FOCUS
+L["Flag + Orb"] = "Флаг + Сферу" -- Сфера -- need check
+L["Main Assist Target"] = "Главного наводчика" -- need check - old: ["Show Main Assist Target"] = "Отображать главного наводчика"
+L["Target Count"] = "Подсчет нацеливаний" -- need check - old: ["Show Target Count"] = "Отображать подсчет нацеливаний"
+L["Health Bar"] = "Полоску здоровья" -- need check - old: ["Show Health Bar"] = "Отображать полоску здоровья"
+L["Percentage"] = "Проценты здоровья" -- need check - old: ["Show Percent"] = "Отображать проценты здоровья"
+L["Range"] = "Расстояние" -- need check - old: ["Show Range"] = "Отображать расстояние"
+ L["This option uses the CombatLog to check range."] = "Эта опция использует лог событий для проверки расстояния."
+ L["This option uses a pre-defined spell to check range:"] = "Эта опция использует выбранное заклинание для проверки расстояния:"
+ L["Mix"] = "Смешанная проверка расстояния"
+ L["if you are attacked only"] = "если вы атакованы"
+ L["(class dependent)"] = "(зависит от класса)"
+ L["Disable this option if you have CPU/FPS problems in combat."] = "Отключить эту опцию, если у вас есть проблемы с производительностью в бою."
+L["Sort By"] = "Сортировать по"
+L["Class"] = CLASS
+L["Name"] = NAME
+L["Font"] = "Шрифт"
+L["Text Size"] = "Размер шрифта"
+L["Scale"] = "Масштаб"
+L["Width"] = "Ширина"
+L["Height"] = "Высота"
 
-["click & move"] = "Нажмите & перемещайте",
-["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets не обновляет информацию если эта вкладка открыта.",
+L["General Settings"] = "Общие настройки"
+L["Show Minimap-Button"] = "Отображать кнопку на мини-карте"
 
-["Close Configuration"] = "Закрыть настройки",
-})
+L["click & move"] = "Нажмите & перемещайте"
+L["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets не обновляет информацию если эта вкладка открыта."
+
+L["Close Configuration"] = "Закрыть настройки"
