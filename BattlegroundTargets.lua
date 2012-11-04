@@ -15,7 +15,7 @@
 -- # Target                                                                   --
 -- # Main Assist Target                                                       --
 -- # Focus                                                                    --
--- # Enemy Flag Carrier                                                       --
+-- # Enemy Flag/Orb Carrier                                                   --
 -- # Target Count                                                             --
 -- # Health                                                                   --
 -- # Range Check                                                              --
@@ -188,14 +188,13 @@ local locale = GetLocale()
 local inWorld
 local inBattleground
 local inCombat
+local isConfig
 
 local reCheckBG
 local reCheckScore
-local reSizeCheck = 0 -- check bgname if normal bgname check fails (reason: sometimes GetBattlefieldStatus and GetRealZoneText returns nil)
+local reSizeCheck = 0
 local reSetLayout
 local rePosMain
-
-local isConfig
 
 local isTarget = 0
 local hasFlag
@@ -213,24 +212,21 @@ local flagflag
 local groupMembers = 0
 local groupMemChk = 0
 
--- THROTTLE (reduce CPU usage)
-local range_SPELL_Frequency     = 0.2       -- rangecheck: [class-spell]: the 0.2 second freq is per enemy (variable: ENEMY_Name2Range[enemyname]) 
-local range_CL_Throttle         = 0         -- rangecheck: [combatlog] C.ombatLogRangeCheck()
-local range_CL_Frequency        = 3         -- rangecheck: [combatlog] 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% combatlog messages filtered (36% vs overhead: two variables, one addition, one number comparison and if filtered one math.random)
-local range_CL_DisplayThrottle  = GetTime() -- rangecheck: [combatlog] display update
-local range_CL_DisplayFrequency = 0.33      -- rangecheck: [combatlog] display update
-local leaderThrottle  = 0                   -- leader: C.heckUnitTarget()
-local leaderFrequency = 5                   -- leader: if isLeader is true then pause 5 times(events) until next check (reason: leader does not change often in a bg, irrelevant info anyway)
--- FORCE UPDATE (precise results)
-local assistForceUpdate = GetTime()         -- assist: C.heckUnitTarget()
-local assistFrequency   = 0.5               -- assist: immediate assist target check (reason: target loss and I don't know why... -> brute force)
-local targetCountForceUpdate = GetTime()    -- targetcount: C.heckUnitTarget()
-local targetCountFrequency   = 30           -- targetcount: a complete raid/raidtarget check every 30 seconds (reason: target loss and I don't know why... -> brute force)
--- WARNING
-local latestScoreUpdate  = GetTime()        -- scoreupdate: B.attlefieldScoreUpdate()
-local latestScoreWarning = 60               -- scoreupdate: inCombat-warning icon if latest score update is >= 60 seconds
--- MISC
-local range_DisappearTime = 8               -- rangecheck: display update - clears range display if an enemy was not seen for 8 seconds
+-- THROTTLE (reduce CPU usage) | FORCE UPDATE (precise results) | WARNING | MISC
+local range_SPELL_Frequency     = 0.2       -- T rangecheck: [class-spell]: in second per enemy (variable: ENEMY_Name2Range[enemyname]) 
+local range_CL_Throttle         = 0         -- T rangecheck: [combatlog] C.ombatLogRangeCheck()
+local range_CL_Frequency        = 3         -- T rangecheck: [combatlog] 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% combatlog messages filtered (36% vs overhead: two variables, one addition, one number comparison and if filtered one math.random)
+local range_CL_DisplayThrottle  = GetTime() -- T rangecheck: [combatlog] display update
+local range_CL_DisplayFrequency = 0.33      -- T rangecheck: [combatlog] display update
+local range_DisappearTime       = 8         -- M rangecheck: display update - clears range display if an enemy was not seen for 8 seconds
+local leaderThrottle  = 0                   -- T leader: C.heckUnitTarget()
+local leaderFrequency = 5                   -- T leader: if isLeader is true then pause 5 times(events) until next check
+local assistUpdate    = GetTime()           -- F assist: C.heckUnitTarget()
+local assistFrequency = 0.5                 -- F assist: immediate assist target check (brute force)
+local targetCountUpdate    = GetTime()      -- F targetcount: C.heckUnitTarget()
+local targetCountFrequency = 30             -- F targetcount: a complete raid/raidtarget check every 30 seconds (brute force)
+local latestScoreUpdate  = GetTime()        -- W scoreupdate: B.attlefieldScoreUpdate()
+local latestScoreWarning = 60               -- W scoreupdate: inCombat-warning icon
 
 local playerLevel = UnitLevel("player") -- LVLCHK
 local isLowLevel
@@ -1956,6 +1952,11 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.FlagDebuff:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.FlagDebuff:SetPoint("CENTER", GVAR_TargetButton.FlagTexture, "CENTER", 0, 0)
 		GVAR_TargetButton.FlagDebuff:SetJustifyH("CENTER")
+		GVAR_TargetButton.OrbDebuff = GVAR_TargetButton.FlagDebuffButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		GVAR_TargetButton.OrbDebuff:SetWidth(40)
+		GVAR_TargetButton.OrbDebuff:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.OrbDebuff:SetPoint("TOP", GVAR_TargetButton.FlagTexture, "TOP", 0, 0)
+		GVAR_TargetButton.OrbDebuff:SetJustifyH("CENTER")
 
 		GVAR_TargetButton.AssistTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.AssistTexture = GVAR_TargetButton.AssistTextureButton:CreateTexture(nil, "OVERLAY")
@@ -4947,9 +4948,17 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR_TargetButton.FlagDebuff:SetHeight(backfallFontSize)
 			GVAR_TargetButton.FlagDebuff:SetAlpha(1)
 			GVAR_TargetButton.FlagDebuff:Show()
+			GVAR_TargetButton.OrbDebuff:SetFont(fontPath, ButtonFontSize-2, "OUTLINE")
+			GVAR_TargetButton.OrbDebuff:SetShadowOffset(0, 0)
+			GVAR_TargetButton.OrbDebuff:SetShadowColor(0, 0, 0, 0)
+			GVAR_TargetButton.OrbDebuff:SetTextColor(1, 1, 1, 1)
+			GVAR_TargetButton.OrbDebuff:SetHeight(backfallFontSize)
+			GVAR_TargetButton.OrbDebuff:SetAlpha(1)
+			GVAR_TargetButton.OrbDebuff:Show()
 		else
 			GVAR_TargetButton.FlagTexture:Hide()
 			GVAR_TargetButton.FlagDebuff:Hide()
+			GVAR_TargetButton.OrbDebuff:Hide()
 		end
 
 		if ButtonShowAssist then
@@ -5301,7 +5310,7 @@ function BattlegroundTargets:DisableConfigMode()
 							GVAR_TargetButton.orbColor = k
 							GVAR_TargetButton.FlagTexture:SetAlpha(1)
 							GVAR_TargetButton.FlagTexture:SetTexture(orbIDs[ orbColIDs[k] ].texture)
-							BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton, v.orbval)
+							BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, v.orbval)
 						end
 					end
 				end
@@ -5365,6 +5374,7 @@ function BattlegroundTargets:SetConfigButtonValues()
 		GVAR_TargetButton.FocusTexture:SetAlpha(0)
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
 		GVAR_TargetButton.FlagDebuff:SetText("")
+		GVAR_TargetButton.OrbDebuff:SetText("")
 		GVAR_TargetButton.AssistTexture:SetAlpha(0)
 		GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 
@@ -5433,9 +5443,6 @@ function BattlegroundTargets:SetConfigButtonValues()
 				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetTexture(flagTexture)
 				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetTexCoord(0.15625001, 0.84374999, 0.15625001, 0.84374999)--(5/32, 27/32, 5/32, 27/32)
 				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetAlpha(1)
-				GVAR.TargetButton[testData.IconFlag.button].FlagDebuff:ClearAllPoints()
-				GVAR.TargetButton[testData.IconFlag.button].FlagDebuff:SetPoint("CENTER", GVAR.TargetButton[testData.IconFlag.button].FlagTexture, "CENTER", 0, 0)
-				GVAR.TargetButton[testData.IconFlag.button].FlagDebuff:SetJustifyH("CENTER")
 				GVAR.TargetButton[testData.IconFlag.button].FlagDebuff:SetText(testData.IconFlag.txt)
 			elseif testData.CarrierDisplay == "orb" then
 				local quad = ( (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] ) * 1.3
@@ -5446,10 +5453,7 @@ function BattlegroundTargets:SetConfigButtonValues()
 						GVAR.TargetButton[v.button].FlagTexture:SetTexture(orbIDs[ k ].texture)
 						GVAR.TargetButton[v.button].FlagTexture:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)--(2/32, 30/32, 2/32, 30/32)
 						GVAR.TargetButton[v.button].FlagTexture:SetAlpha(1)
-						GVAR.TargetButton[v.button].FlagDebuff:ClearAllPoints()
-						GVAR.TargetButton[v.button].FlagDebuff:SetPoint("RIGHT", GVAR.TargetButton[v.button].FlagTexture, "RIGHT", 0, 0)
-						GVAR.TargetButton[v.button].FlagDebuff:SetJustifyH("RIGHT")
-						GVAR.TargetButton[v.button].FlagDebuff:SetText(v.orbval)
+						GVAR.TargetButton[v.button].OrbDebuff:SetText(v.orbval)
 					end
 				end
 			end
@@ -5483,6 +5487,7 @@ function BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, clearRan
 	GVAR_TargetButton.FocusTexture:SetAlpha(0)
 	GVAR_TargetButton.FlagTexture:SetAlpha(0)
 	GVAR_TargetButton.FlagDebuff:SetText("")
+	GVAR_TargetButton.OrbDebuff:SetText("")
 	GVAR_TargetButton.AssistTexture:SetAlpha(0)
 	GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 
@@ -5529,9 +5534,9 @@ function BattlegroundTargets:DefaultShuffle()
 	-- orb
 	local count = 1
 	for k, v in pairs(testData.IconOrb) do
-		if count == 1 then         --    n*30    --  30   60   90  120  150  180  210  240  270  300
-		   v.button = random(1,10) --    -(n*5)  --  -5  -10  -15  -20  -25  -30  -35  -40  -45  -50
-		   v.orbval = random(1,10) --->  n*10    --  10   20   30   40   50   60   70   80   90  100 (1, 2, 3, ... for better readability)
+		if count == 1 then            --    10   20   30   40   50   60   70   80   90  100  100  100  100  100  100  100  100  100  100  100 - Increases damage done by x%.
+		   v.button = random(1,10)    --    -5  -10  -15  -20  -25  -30  -35  -40  -45  -50  -55  -60  -65  -70  -75  -80  -85  -90  -95 -100 - Reduces healing received by x%.
+		   v.orbval = random(1,20)*30 --->  30   60   90  120  150  180  210  240  270  300  330  360  390  420  450  480  510  540  570  600 - Increases damage taken by x%.
 		   count = 2
 		else
 			v.button = nil
@@ -5547,7 +5552,7 @@ function BattlegroundTargets:DefaultShuffle()
 				end
 				if not numExists then
 					v.button = b
-					v.orbval = random(1,10)
+					v.orbval = random(1,20)*30
 				end
 			end
 		end
@@ -5704,7 +5709,7 @@ function BattlegroundTargets:Shuffle(shuffleStyle)
 		for k, v in pairs(testData.IconOrb) do
 			if v.button then
 				v.button = BattlegroundTargets.progNum
-				v.orbval = BattlegroundTargets.progNum
+				v.orbval = BattlegroundTargets.progNum * 2 * 30
 			end
 		end
 		
@@ -6174,19 +6179,19 @@ function BattlegroundTargets:MainDataUpdate()
 				elseif qname == hasOrb.Blue.name then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
 					GVAR_TargetButton.FlagTexture:SetTexture("Interface\\MiniMap\\TempleofKotmogu_ball_cyan")
-					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton, hasOrb.Blue.orbval)
+					BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, hasOrb.Blue.orbval)
 				elseif qname == hasOrb.Purple.name then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
 					GVAR_TargetButton.FlagTexture:SetTexture("Interface\\MiniMap\\TempleofKotmogu_ball_purple")
-					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton, hasOrb.Purple.orbval)
+					BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, hasOrb.Purple.orbval)
 				elseif qname == hasOrb.Green.name then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
 					GVAR_TargetButton.FlagTexture:SetTexture("Interface\\MiniMap\\TempleofKotmogu_ball_green")
-					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton, hasOrb.Green.orbval)
+					BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, hasOrb.Green.orbval)
 				elseif qname == hasOrb.Orange.name then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
 					GVAR_TargetButton.FlagTexture:SetTexture("Interface\\MiniMap\\TempleofKotmogu_ball_orange")
-					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton, hasOrb.Orange.orbval)
+					BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, hasOrb.Orange.orbval)
 				else
 					GVAR_TargetButton.FlagTexture:SetAlpha(0)
 					GVAR_TargetButton.FlagDebuff:SetText("")
@@ -6476,14 +6481,13 @@ function BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
 			flags = flags + 1
 			
 			local oID = orbIDs[spellId]
-			local val3 = floor((val3/10)+0.5)
 			hasOrb[ oID.color ].name = enemyName
-			hasOrb[ oID.color ].orbval = val3
+			hasOrb[ oID.color ].orbval = val1
 			GVAR_TargetButton.orbColor = oID.color
 			GVAR_TargetButton.FlagTexture:SetAlpha(1)
 			GVAR_TargetButton.FlagTexture:SetTexture(oID.texture)
 			GVAR_TargetButton.FlagTexture:SetTexCoord(0, 1, 0, 1)
-			BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton, val3)
+			BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, val1)
 
 			if flagCHK and flags >= 4 then
 				BattlegroundTargets:CheckFlagCarrierEND()
@@ -6556,14 +6560,13 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 					local GVAR_TargetButton = GVAR.TargetButton[button]
 					if GVAR_TargetButton then
 						local oID = orbIDs[spellId]
-						local val3 = floor((val3/10)+0.5)
 						hasOrb[ oID.color ].name = targetName
-						hasOrb[ oID.color ].orbval = val3
+						hasOrb[ oID.color ].orbval = val1
 						GVAR_TargetButton.orbColor = oID.color
 						GVAR_TargetButton.FlagTexture:SetAlpha(1)
 						GVAR_TargetButton.FlagTexture:SetTexture(oID.texture)
 						GVAR_TargetButton.FlagTexture:SetTexCoord(0, 1, 0, 1)
-						BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton, val3)
+						BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, val1)
 					end
 				end
 
@@ -6808,19 +6811,16 @@ function BattlegroundTargets:IsBattleground()
 						GVAR.TargetButton[i].FlagTexture:SetHeight(quad)
 						GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
 						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.15625001, 0.84374999, 0.15625001, 0.84374999)--(5/32, 27/32, 5/32, 27/32)
-						GVAR.TargetButton[i].FlagDebuff:ClearAllPoints()
-						GVAR.TargetButton[i].FlagDebuff:SetPoint("CENTER", GVAR.TargetButton[i].FlagTexture, "CENTER", 0, 0)
-						GVAR.TargetButton[i].FlagDebuff:SetJustifyH("CENTER")
+						GVAR.TargetButton[i].orbDebuffUpdate = nil
 					end
 				elseif isFlagBG == 5 then
 					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] * 1.3
+					local curTime = GetTime() - 2.1
 					for i = 1, currentSize do
 						GVAR.TargetButton[i].FlagTexture:SetWidth(quad)
 						GVAR.TargetButton[i].FlagTexture:SetHeight(quad)
 						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)--(2/32, 30/32, 2/32, 30/32)
-						GVAR.TargetButton[i].FlagDebuff:ClearAllPoints()
-						GVAR.TargetButton[i].FlagDebuff:SetPoint("RIGHT", GVAR.TargetButton[i].FlagTexture, "RIGHT", 0, 0)
-						GVAR.TargetButton[i].FlagDebuff:SetJustifyH("RIGHT")
+						GVAR.TargetButton[i].orbDebuffUpdate = curTime
 					end
 				end
 
@@ -7203,8 +7203,8 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 	-- target count
 	if OPT.ButtonShowTargetCount[currentSize] then
-		if curTime > targetCountForceUpdate + targetCountFrequency then
-			targetCountForceUpdate = curTime
+		if curTime > targetCountUpdate + targetCountFrequency then
+			targetCountUpdate = curTime
 			wipe(TARGET_Names)
 			for num = 1, GetNumGroupMembers() do
 				local uID = "raid"..num
@@ -7368,8 +7368,8 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 	-- assist_
 	if isAssistName and OPT.ButtonShowAssist[currentSize] then
-		if curTime > assistForceUpdate + assistFrequency then
-			assistForceUpdate = curTime
+		if curTime > assistUpdate + assistFrequency then
+			assistUpdate = curTime
 			assistTargetName, assistTargetRealm = UnitName(isAssistUnitId)
 			if assistTargetRealm and assistTargetRealm ~= "" then
 				assistTargetName = assistTargetName.."-"..assistTargetRealm
@@ -7429,11 +7429,8 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	end
 
 	-- carrier_orb
-	if isFlagBG == 5 and OPT.ButtonShowFlag[currentSize] then
-		if not GVAR_TargetButton.orbDebuffUpdate then
-			GVAR_TargetButton.orbDebuffUpdate = curTime
-			BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
-		elseif curTime > GVAR_TargetButton.orbDebuffUpdate + 1 then -- max. 1 update in 1 second per button
+	if isFlagBG == 5 and GVAR_TargetButton.orbColor and OPT.ButtonShowFlag[currentSize] then
+		if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
 			GVAR_TargetButton.orbDebuffUpdate = curTime
 			BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
 		end
@@ -7525,10 +7522,17 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 
 	if healthonly then return end
 
-	-- FLAGSPY
-	if flagCHK and isFlagBG > 0 then
-		if OPT.ButtonShowFlag[currentSize] then
+	-- FLAGSPY -- carrier_orb
+	if isFlagBG > 0 and OPT.ButtonShowFlag[currentSize] then
+		if flagCHK then
 			BattlegroundTargets:CheckFlagCarrierCHECK(targetID, targetName)
+		end
+		if isFlagBG == 5 and GVAR_TargetButton.orbColor then
+			local curTime = GetTime()
+			if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
+				GVAR_TargetButton.orbDebuffUpdate = curTime
+				BattlegroundTargets:CheckOrb(targetID, targetName, GVAR_TargetButton)
+			end
 		end
 	end
 
@@ -7690,15 +7694,19 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton, value)
-	if value and value == 0 then
-		GVAR_TargetButton.FlagDebuff:SetText("")
-	elseif value then
-		GVAR_TargetButton.FlagDebuff:SetText(value)
-	elseif flagDebuff > 0 then
+function BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
+	if flagDebuff > 0 then
 		GVAR_TargetButton.FlagDebuff:SetText(flagDebuff)
 	else
 		GVAR_TargetButton.FlagDebuff:SetText("")
+	end
+end
+
+function BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, value)
+	if value > 0 then
+		GVAR_TargetButton.OrbDebuff:SetText(value)
+	else
+		GVAR_TargetButton.OrbDebuff:SetText("")
 	end
 end
 
@@ -7710,7 +7718,7 @@ function BattlegroundTargets:FlagDebuffCheck(message) --print("F.lagDebuffCheck"
 			if Name2Button then
 				local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
 				if GVAR_TargetButton then
-					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton, flagDebuff)
+					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 				end
 			end
 		end
@@ -7728,7 +7736,7 @@ function BattlegroundTargets:OrbReturnCheck(message) --print("O.rbReturnCheck", 
 			if GVAR_TargetButton[i].orbColor == color then
 				GVAR_TargetButton[i].orbColor = nil
 				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-				GVAR_TargetButton[i].FlagDebuff:SetText("")
+				GVAR_TargetButton[i].OrbDebuff:SetText("")
 				break
 			end
 		end
@@ -7926,7 +7934,7 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 					if GVAR_TargetButton[i].orbColor == color then
 						GVAR_TargetButton[i].orbColor = nil
 						GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-						GVAR_TargetButton[i].FlagDebuff:SetText("")
+						GVAR_TargetButton[i].OrbDebuff:SetText("")
 						break
 					end
 				end
@@ -7948,7 +7956,7 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 					if GVAR_TargetButton[i].orbColor == color then
 						GVAR_TargetButton[i].orbColor = nil
 						GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-						GVAR_TargetButton[i].FlagDebuff:SetText("")
+						GVAR_TargetButton[i].OrbDebuff:SetText("")
 						break
 					end
 				end
@@ -7959,7 +7967,7 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 							GVAR_TargetButton.orbColor = color
 							GVAR_TargetButton.FlagTexture:SetAlpha(1)
 							GVAR_TargetButton.FlagTexture:SetTexture(texture)
-							GVAR_TargetButton.FlagDebuff:SetText("")
+							GVAR_TargetButton.OrbDebuff:SetText("")
 							for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Names4Flag have same buttonID
 								if button == fullnameButton then
 									hasOrb[color].name = fullname
