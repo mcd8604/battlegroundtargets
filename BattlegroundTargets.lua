@@ -5289,7 +5289,7 @@ function BattlegroundTargets:DisableConfigMode()
 	end
 
 	if OPT.ButtonShowFlag[currentSize] then
-		if isFlagBG <= 3 then -- if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
+		if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
 			if hasFlag then
 				local Name2Button = ENEMY_Name2Button[hasFlag]
 				if Name2Button then
@@ -5698,21 +5698,21 @@ function BattlegroundTargets:Shuffle(shuffleStyle)
 			BattlegroundTargets.progNum = 1
 			BattlegroundTargets.progMod = 0
 		end
-		testData.IconTarget  = BattlegroundTargets.progNum
-		testData.IconFocus  = BattlegroundTargets.progNum
-		testData.IconAssi  = BattlegroundTargets.progNum
+		testData.IconTarget = BattlegroundTargets.progNum
+		testData.IconFocus = BattlegroundTargets.progNum
+		testData.IconAssi = BattlegroundTargets.progNum
 		testData.Leader = BattlegroundTargets.progNum
-		
+
 		testData.IconFlag.button  = BattlegroundTargets.progNum
 		testData.IconFlag.txt  = BattlegroundTargets.progNum
-		
+
 		for k, v in pairs(testData.IconOrb) do
 			if v.button then
 				v.button = BattlegroundTargets.progNum
 				v.orbval = BattlegroundTargets.progNum * 2 * 30
 			end
 		end
-		
+
 		local num = BattlegroundTargets.progNum*10
 		for i = 1, 40 do
 			testData.Health[i] = num
@@ -6502,7 +6502,7 @@ end
 function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 	if not ENEMY_FirstFlagCheck[targetName] then return end
 
-	if isFlagBG <= 3 then -- isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
+	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
 
 		-- enemy buff & debuff check
 		for i = 1, 40 do
@@ -6602,7 +6602,7 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 		ENEMY_FirstFlagCheck[ENEMY_Data[i].name] = 1
 	end
 
-	if isFlagBG <= 3 then -- isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
+	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
 
 		local function chk() -- friend buff & debuff check
 			for num = 1, GetNumGroupMembers() do
@@ -6637,6 +6637,7 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 				if not spellId then break end
 				if orbIDs[spellId] then
 					flags = flags + 1
+					break
 				end
 			end
 		end
@@ -6788,7 +6789,7 @@ function BattlegroundTargets:IsBattleground()
 			-- The orb texture is defined at the MainDataUpdate() function.
 			if OPT.ButtonShowFlag[currentSize] then
 
-				if isFlagBG <= 3 then -- isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
+				if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
 					local flagIcon -- setup_flag_texture
 					if playerFactionBG ~= playerFactionDEF then
 						flagIcon = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral_flag
