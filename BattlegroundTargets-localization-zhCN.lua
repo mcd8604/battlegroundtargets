@@ -29,7 +29,7 @@ L["Flag + Orb"] = true
 L["Main Assist Target"] = "主助理目标" -- need check - old: ["Show Main Assist Target"] = "显示主助理目标"
 L["Target Count"] = "目标计数" -- need check - old: ["Show Target Count"] = "显示目标计数"
 L["Health Bar"] = "生命条" -- need check - old: ["Show Health Bar"] = "显示生命条"
-L["Percentage"] = "百分比" -- need check - old: ["Show Percent"] = "显示百分比"
+L["Percent"] = "百分比" -- need check - old: ["Show Percent"] = "显示百分比"
 L["Range"] = "范围" -- need check - old: ["Show Range"] = "显示范围"
  L["This option uses the CombatLog to check range."] = "此选项使用战斗记录检查范围。"
  L["This option uses a pre-defined spell to check range:"] = "此选项使用预定法术范围检查："
@@ -40,8 +40,8 @@ L["Range"] = "范围" -- need check - old: ["Show Range"] = "显示范围"
 L["Sort By"] = "排序"
 L["Class"] = CLASS
 L["Name"] = NAME
-L["Font"] = "字体"
-L["Text Size"] = "字体尺寸"
+L["Text"] = "文本" -- need check
+L["Number"] = "编号" -- need check
 L["Scale"] = "缩放"
 L["Width"] = "宽度"
 L["Height"] = "高度"

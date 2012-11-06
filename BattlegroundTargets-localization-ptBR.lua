@@ -29,7 +29,7 @@ L["Flag + Orb"] = "Bandeira + Orbe" -- need check
 L["Main Assist Target"] = "Alvo do assistente principal" -- need check - old: ["Show Main Assist Target"] = "Mostrar o alvo do assistente principal"
 L["Target Count"] = "Contagem de mirados" -- need check - old: ["Show Target Count"] = "Mostrar contagem de mirados"
 L["Health Bar"] = "Barra de vida" -- need check - old: ["Show Health Bar"] = "Mostrar barra de vida"
-L["Percentage"] = "Porcentagem" -- need check - old: ["Show Percent"] = "Mostrar porcentagem"
+L["Percent"] = "Porcentagem" -- need check - old: ["Show Percent"] = "Mostrar porcentagem"
 L["Range"] = "Distância" -- need check - old: ["Show Range"] = "Mostrar distância"
  L["This option uses the CombatLog to check range."] = true
  L["This option uses a pre-defined spell to check range:"] = "Esta opção usa uma magia previamente definida para checar a distância:"
@@ -40,8 +40,8 @@ L["Range"] = "Distância" -- need check - old: ["Show Range"] = "Mostrar distân
 L["Sort By"] = "Organizar por"
 L["Class"] = CLASS
 L["Name"] = NAME
-L["Font"] = "Fonte"
-L["Text Size"] = "Tamanho do texto"
+L["Text"] = "Texto" -- need check
+L["Number"] = "Número" -- need check
 L["Scale"] = "Escala"
 L["Width"] = "Largura"
 L["Height"] = "Altura"

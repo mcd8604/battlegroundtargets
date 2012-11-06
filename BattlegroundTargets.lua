@@ -1292,6 +1292,10 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 		elseif contentName == "FontStyle" then
 			button.PullDownMenu.Button[i].Text:SetText(fontStyles[i].name)
 			button.PullDownMenu.Button[i].value1 = i
+		elseif contentName == "FontStyleNumber" then
+			local fontname = strmatch(fontStyles[i].name, "(.*) %- .*")
+			button.PullDownMenu.Button[i].Text:SetText(fontname)
+			button.PullDownMenu.Button[i].value1 = i
 		end
 		button.PullDownMenu.Button[i]:Show()
 
@@ -1354,24 +1358,13 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if type(BattlegroundTargets_Options.version) ~= "number" then
-		BattlegroundTargets_Options.version = 16
+		BattlegroundTargets_Options.version = 17
 	end
 
-	if BattlegroundTargets_Options.version < 7 then
+	if BattlegroundTargets_Options.version < 8 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
-		BattlegroundTargets_Options.version = 16
-	end
-
-	if BattlegroundTargets_Options.version == 7 then
-		if BattlegroundTargets_Options.ButtonEnableBracket then -- rename ButtonEnableBracket to EnableBracket
-			BattlegroundTargets_Options.EnableBracket = {}
-			if BattlegroundTargets_Options.ButtonEnableBracket[10] == true then BattlegroundTargets_Options.EnableBracket[10] = true else BattlegroundTargets_Options.EnableBracket[10] = false end
-			if BattlegroundTargets_Options.ButtonEnableBracket[15] == true then BattlegroundTargets_Options.EnableBracket[15] = true else BattlegroundTargets_Options.EnableBracket[15] = false end
-			if BattlegroundTargets_Options.ButtonEnableBracket[40] == true then BattlegroundTargets_Options.EnableBracket[40] = true else BattlegroundTargets_Options.EnableBracket[40] = false end
-			BattlegroundTargets_Options.ButtonEnableBracket = nil
-		end
-		BattlegroundTargets_Options.version = 8
+		BattlegroundTargets_Options.version = 17
 	end
 
 	if BattlegroundTargets_Options.version == 8 then
@@ -1467,6 +1460,24 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 16
 	end
 
+	if BattlegroundTargets_Options.version == 16 then -- font update
+		BattlegroundTargets_Options.ButtonFontNameSize = {}
+		BattlegroundTargets_Options.ButtonFontNameStyle = {}
+		if type(BattlegroundTargets_Options.ButtonFontSize) == "table" then
+			if type(BattlegroundTargets_Options.ButtonFontSize[10]) == "number" then BattlegroundTargets_Options.ButtonFontNameSize[10] = BattlegroundTargets_Options.ButtonFontSize[10] end
+			if type(BattlegroundTargets_Options.ButtonFontSize[15]) == "number" then BattlegroundTargets_Options.ButtonFontNameSize[15] = BattlegroundTargets_Options.ButtonFontSize[15] end
+			if type(BattlegroundTargets_Options.ButtonFontSize[40]) == "number" then BattlegroundTargets_Options.ButtonFontNameSize[40] = BattlegroundTargets_Options.ButtonFontSize[40] end
+		end
+		if type(BattlegroundTargets_Options.ButtonFontStyle) == "table" then
+			if type(BattlegroundTargets_Options.ButtonFontStyle[10]) == "number" then BattlegroundTargets_Options.ButtonFontNameStyle[10] = BattlegroundTargets_Options.ButtonFontStyle[10] end
+			if type(BattlegroundTargets_Options.ButtonFontStyle[15]) == "number" then BattlegroundTargets_Options.ButtonFontNameStyle[15] = BattlegroundTargets_Options.ButtonFontStyle[15] end
+			if type(BattlegroundTargets_Options.ButtonFontStyle[40]) == "number" then BattlegroundTargets_Options.ButtonFontNameStyle[40] = BattlegroundTargets_Options.ButtonFontStyle[40] end
+		end
+		BattlegroundTargets_Options.ButtonFontSize = nil
+		BattlegroundTargets_Options.ButtonFontStyle = nil
+		BattlegroundTargets_Options.version = 17
+	end
+
 	if type(BattlegroundTargets_Options.pos)                        ~= "table"   then BattlegroundTargets_Options.pos                        = {}    end
 	if type(BattlegroundTargets_Options.MinimapButton)              ~= "boolean" then BattlegroundTargets_Options.MinimapButton              = false end
 	if type(BattlegroundTargets_Options.MinimapButtonPos)           ~= "number"  then BattlegroundTargets_Options.MinimapButtonPos           = -90   end
@@ -1536,8 +1547,10 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonRangeDisplay)           ~= "table"   then BattlegroundTargets_Options.ButtonRangeDisplay           = {}    end
 	if type(BattlegroundTargets_Options.ButtonSortBy)                 ~= "table"   then BattlegroundTargets_Options.ButtonSortBy                 = {}    end
 	if type(BattlegroundTargets_Options.ButtonSortDetail)             ~= "table"   then BattlegroundTargets_Options.ButtonSortDetail             = {}    end
-	if type(BattlegroundTargets_Options.ButtonFontSize)               ~= "table"   then BattlegroundTargets_Options.ButtonFontSize               = {}    end
-	if type(BattlegroundTargets_Options.ButtonFontStyle)              ~= "table"   then BattlegroundTargets_Options.ButtonFontStyle              = {}    end
+	if type(BattlegroundTargets_Options.ButtonFontNameSize)           ~= "table"   then BattlegroundTargets_Options.ButtonFontNameSize           = {}    end
+	if type(BattlegroundTargets_Options.ButtonFontNameStyle)          ~= "table"   then BattlegroundTargets_Options.ButtonFontNameStyle          = {}    end
+	if type(BattlegroundTargets_Options.ButtonFontNumberSize)         ~= "table"   then BattlegroundTargets_Options.ButtonFontNumberSize         = {}    end
+	if type(BattlegroundTargets_Options.ButtonFontNumberStyle)        ~= "table"   then BattlegroundTargets_Options.ButtonFontNumberStyle        = {}    end
 	if type(BattlegroundTargets_Options.ButtonScale)                  ~= "table"   then BattlegroundTargets_Options.ButtonScale                  = {}    end
 	if type(BattlegroundTargets_Options.ButtonWidth)                  ~= "table"   then BattlegroundTargets_Options.ButtonWidth                  = {}    end
 	if type(BattlegroundTargets_Options.ButtonHeight)                 ~= "table"   then BattlegroundTargets_Options.ButtonHeight                 = {}    end
@@ -1557,10 +1570,10 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonAssistPosition[10])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[10]     = 70    end
 	if type(BattlegroundTargets_Options.ButtonShowFocus[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowFocus[10]          = false end
 	if type(BattlegroundTargets_Options.ButtonFocusScale[10])         ~= "number"  then BattlegroundTargets_Options.ButtonFocusScale[10]         = 1     end
-	if type(BattlegroundTargets_Options.ButtonFocusPosition[10])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[10]      = 65    end
+	if type(BattlegroundTargets_Options.ButtonFocusPosition[10])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[10]      = 70    end
 	if type(BattlegroundTargets_Options.ButtonShowFlag[10])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowFlag[10]           = true  end
 	if type(BattlegroundTargets_Options.ButtonFlagScale[10])          ~= "number"  then BattlegroundTargets_Options.ButtonFlagScale[10]          = 1.2   end
-	if type(BattlegroundTargets_Options.ButtonFlagPosition[10])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[10]       = 55    end
+	if type(BattlegroundTargets_Options.ButtonFlagPosition[10])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[10]       = 60    end
 	if type(BattlegroundTargets_Options.ButtonShowTargetCount[10])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[10]    = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthBar[10])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[10]      = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthText[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[10]     = false end
@@ -1569,11 +1582,13 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonRangeDisplay[10])       ~= "number"  then BattlegroundTargets_Options.ButtonRangeDisplay[10]       = 1     end
 	if type(BattlegroundTargets_Options.ButtonSortBy[10])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[10]             = 1     end
 	if type(BattlegroundTargets_Options.ButtonSortDetail[10])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[10]         = 3     end
-	if type(BattlegroundTargets_Options.ButtonFontSize[10])           ~= "number"  then BattlegroundTargets_Options.ButtonFontSize[10]           = 10    end
-	if type(BattlegroundTargets_Options.ButtonFontStyle[10])          ~= "number"  then BattlegroundTargets_Options.ButtonFontStyle[10]          = defaultFont end
+	if type(BattlegroundTargets_Options.ButtonFontNameSize[10])       ~= "number"  then BattlegroundTargets_Options.ButtonFontNameSize[10]       = 12    end
+	if type(BattlegroundTargets_Options.ButtonFontNameStyle[10])      ~= "number"  then BattlegroundTargets_Options.ButtonFontNameStyle[10]      = defaultFont end
+	if type(BattlegroundTargets_Options.ButtonFontNumberSize[10])     ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberSize[10]     = 10    end
+	if type(BattlegroundTargets_Options.ButtonFontNumberStyle[10])    ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberStyle[10]    = 1     end
 	if type(BattlegroundTargets_Options.ButtonScale[10])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[10]              = 1     end
-	if type(BattlegroundTargets_Options.ButtonWidth[10])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[10]              = 150   end
-	if type(BattlegroundTargets_Options.ButtonHeight[10])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[10]             = 18    end
+	if type(BattlegroundTargets_Options.ButtonWidth[10])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[10]              = 175   end
+	if type(BattlegroundTargets_Options.ButtonHeight[10])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[10]             = 20    end
 
 	if type(BattlegroundTargets_Options.ButtonShowRole[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[15]           = true  end
 	if type(BattlegroundTargets_Options.ButtonShowSpec[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[15]           = false end
@@ -1590,10 +1605,10 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonAssistPosition[15])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[15]     = 100   end
 	if type(BattlegroundTargets_Options.ButtonShowFocus[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowFocus[15]          = false end
 	if type(BattlegroundTargets_Options.ButtonFocusScale[15])         ~= "number"  then BattlegroundTargets_Options.ButtonFocusScale[15]         = 1     end
-	if type(BattlegroundTargets_Options.ButtonFocusPosition[15])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[15]      = 65    end
+	if type(BattlegroundTargets_Options.ButtonFocusPosition[15])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[15]      = 70    end
 	if type(BattlegroundTargets_Options.ButtonShowFlag[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowFlag[15]           = true  end
 	if type(BattlegroundTargets_Options.ButtonFlagScale[15])          ~= "number"  then BattlegroundTargets_Options.ButtonFlagScale[15]          = 1.2   end
-	if type(BattlegroundTargets_Options.ButtonFlagPosition[15])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[15]       = 55    end
+	if type(BattlegroundTargets_Options.ButtonFlagPosition[15])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[15]       = 60    end
 	if type(BattlegroundTargets_Options.ButtonShowTargetCount[15])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[15]    = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthBar[15])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[15]      = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthText[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[15]     = false end
@@ -1602,11 +1617,13 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonRangeDisplay[15])       ~= "number"  then BattlegroundTargets_Options.ButtonRangeDisplay[15]       = 1     end
 	if type(BattlegroundTargets_Options.ButtonSortBy[15])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[15]             = 1     end
 	if type(BattlegroundTargets_Options.ButtonSortDetail[15])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[15]         = 3     end
-	if type(BattlegroundTargets_Options.ButtonFontSize[15])           ~= "number"  then BattlegroundTargets_Options.ButtonFontSize[15]           = 10    end
-	if type(BattlegroundTargets_Options.ButtonFontStyle[15])          ~= "number"  then BattlegroundTargets_Options.ButtonFontStyle[15]          = defaultFont end
+	if type(BattlegroundTargets_Options.ButtonFontNameSize[15])       ~= "number"  then BattlegroundTargets_Options.ButtonFontNameSize[15]       = 12    end
+	if type(BattlegroundTargets_Options.ButtonFontNameStyle[15])      ~= "number"  then BattlegroundTargets_Options.ButtonFontNameStyle[15]      = defaultFont end
+	if type(BattlegroundTargets_Options.ButtonFontNumberSize[15])     ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberSize[15]     = 10    end
+	if type(BattlegroundTargets_Options.ButtonFontNumberStyle[15])    ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberStyle[15]    = 1     end
 	if type(BattlegroundTargets_Options.ButtonScale[15])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[15]              = 1     end
-	if type(BattlegroundTargets_Options.ButtonWidth[15])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[15]              = 150   end
-	if type(BattlegroundTargets_Options.ButtonHeight[15])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[15]             = 18    end
+	if type(BattlegroundTargets_Options.ButtonWidth[15])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[15]              = 175   end
+	if type(BattlegroundTargets_Options.ButtonHeight[15])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[15]             = 20    end
 
 	if type(BattlegroundTargets_Options.ButtonShowRole[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[40]           = true  end
 	if type(BattlegroundTargets_Options.ButtonShowSpec[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[40]           = false end
@@ -1635,8 +1652,10 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonRangeDisplay[40])       ~= "number"  then BattlegroundTargets_Options.ButtonRangeDisplay[40]       = 9     end
 	if type(BattlegroundTargets_Options.ButtonSortBy[40])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[40]             = 1     end
 	if type(BattlegroundTargets_Options.ButtonSortDetail[40])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[40]         = 3     end
-	if type(BattlegroundTargets_Options.ButtonFontSize[40])           ~= "number"  then BattlegroundTargets_Options.ButtonFontSize[40]           = 10    end
-	if type(BattlegroundTargets_Options.ButtonFontStyle[40])          ~= "number"  then BattlegroundTargets_Options.ButtonFontStyle[40]          = defaultFont end
+	if type(BattlegroundTargets_Options.ButtonFontNameSize[40])       ~= "number"  then BattlegroundTargets_Options.ButtonFontNameSize[40]       = 10    end
+	if type(BattlegroundTargets_Options.ButtonFontNameStyle[40])      ~= "number"  then BattlegroundTargets_Options.ButtonFontNameStyle[40]      = defaultFont end
+	if type(BattlegroundTargets_Options.ButtonFontNumberSize[40])     ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberSize[40]     = 10    end
+	if type(BattlegroundTargets_Options.ButtonFontNumberStyle[40])    ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberStyle[40]    = 1     end
 	if type(BattlegroundTargets_Options.ButtonScale[40])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[40]              = 1     end
 	if type(BattlegroundTargets_Options.ButtonWidth[40])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[40]              = 100   end
 	if type(BattlegroundTargets_Options.ButtonHeight[40])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[40]             = 16    end
@@ -1669,8 +1688,10 @@ function BattlegroundTargets:InitOptions()
 	OPT.ButtonRangeDisplay       = {[10] = BTO.ButtonRangeDisplay[10]      , [15] = BTO.ButtonRangeDisplay[15]      , [40] = BTO.ButtonRangeDisplay[40]      }
 	OPT.ButtonSortBy             = {[10] = BTO.ButtonSortBy[10]            , [15] = BTO.ButtonSortBy[15]            , [40] = BTO.ButtonSortBy[40]            }
 	OPT.ButtonSortDetail         = {[10] = BTO.ButtonSortDetail[10]        , [15] = BTO.ButtonSortDetail[15]        , [40] = BTO.ButtonSortDetail[40]        }
-	OPT.ButtonFontSize           = {[10] = BTO.ButtonFontSize[10]          , [15] = BTO.ButtonFontSize[15]          , [40] = BTO.ButtonFontSize[40]          }
-	OPT.ButtonFontStyle          = {[10] = BTO.ButtonFontStyle[10]         , [15] = BTO.ButtonFontStyle[15]         , [40] = BTO.ButtonFontStyle[40]         }
+	OPT.ButtonFontNameSize       = {[10] = BTO.ButtonFontNameSize[10]      , [15] = BTO.ButtonFontNameSize[15]      , [40] = BTO.ButtonFontNameSize[40]      }
+	OPT.ButtonFontNameStyle      = {[10] = BTO.ButtonFontNameStyle[10]     , [15] = BTO.ButtonFontNameStyle[15]     , [40] = BTO.ButtonFontNameStyle[40]     }
+	OPT.ButtonFontNumberSize     = {[10] = BTO.ButtonFontNumberSize[10]    , [15] = BTO.ButtonFontNumberSize[15]    , [40] = BTO.ButtonFontNumberSize[40]    }
+	OPT.ButtonFontNumberStyle    = {[10] = BTO.ButtonFontNumberStyle[10]   , [15] = BTO.ButtonFontNumberStyle[15]   , [40] = BTO.ButtonFontNumberStyle[40]   }
 	OPT.ButtonScale              = {[10] = BTO.ButtonScale[10]             , [15] = BTO.ButtonScale[15]             , [40] = BTO.ButtonScale[40]             }
 	OPT.ButtonWidth              = {[10] = BTO.ButtonWidth[10]             , [15] = BTO.ButtonWidth[15]             , [40] = BTO.ButtonWidth[40]             }
 	OPT.ButtonHeight             = {[10] = BTO.ButtonHeight[10]            , [15] = BTO.ButtonHeight[15]            , [40] = BTO.ButtonHeight[40]            }
@@ -1952,11 +1973,13 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.FlagDebuff:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.FlagDebuff:SetPoint("CENTER", GVAR_TargetButton.FlagTexture, "CENTER", 0, 0)
 		GVAR_TargetButton.FlagDebuff:SetJustifyH("CENTER")
+		GVAR_TargetButton.FlagDebuff:SetJustifyV("MIDDLE")
 		GVAR_TargetButton.OrbDebuff = GVAR_TargetButton.FlagDebuffButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		GVAR_TargetButton.OrbDebuff:SetWidth(40)
 		GVAR_TargetButton.OrbDebuff:SetHeight(buttonHeight-2)
-		GVAR_TargetButton.OrbDebuff:SetPoint("TOP", GVAR_TargetButton.FlagTexture, "TOP", 0, 0)
+		GVAR_TargetButton.OrbDebuff:SetPoint("TOP", GVAR_TargetButton.FlagTexture, "TOP", 0, -4)
 		GVAR_TargetButton.OrbDebuff:SetJustifyH("CENTER")
+		GVAR_TargetButton.OrbDebuff:SetJustifyV("TOP")
 
 		GVAR_TargetButton.AssistTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.AssistTexture = GVAR_TargetButton.AssistTextureButton:CreateTexture(nil, "OVERLAY")
@@ -2067,7 +2090,7 @@ function BattlegroundTargets:CreateFrames()
 	GVAR.GuildGroupSummary:SetToplevel(true)
 
 	local function FONT_TEMPLATE2(button, jus)
-		button:SetWidth(50)
+		button:SetWidth(100)
 		button:SetHeight(10)
 		button:SetJustifyH(jus)
 		button:SetFont(fontPath, 12, "OUTLINE")
@@ -2404,17 +2427,17 @@ function BattlegroundTargets:CreateOptionsFrame()
 	end)
 
 	-- dummy 1
-	GVAR.OptionsFrame.Dummy1 = CreateFrame("Frame", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.Dummy1)
+	GVAR.OptionsFrame.Dummy1 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
 	-- BOOM GVAR.OptionsFrame.Dummy1:SetWidth()
 	GVAR.OptionsFrame.Dummy1:SetHeight(1)
 	GVAR.OptionsFrame.Dummy1:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 26, 0)
 	GVAR.OptionsFrame.Dummy1:SetPoint("TOP", GVAR.OptionsFrame.IndependentPos, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.Dummy1:SetTexture(0.8, 0.2, 0.2, 1)
 
 	-- layout
 	GVAR.OptionsFrame.LayoutTHText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.LayoutTHText:SetHeight(16)
-	GVAR.OptionsFrame.LayoutTHText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 30, 0)
+	-- BOOM GVAR.OptionsFrame.LayoutTHText:SetPoint()
 	GVAR.OptionsFrame.LayoutTHText:SetPoint("TOP", GVAR.OptionsFrame.Dummy1, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.LayoutTHText:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.LayoutTHText:SetText(L["Layout"]..":")
@@ -2484,19 +2507,19 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.LayoutSpaceText:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.LayoutSpaceText:SetText(BattlegroundTargets_Options.LayoutSpace[currentSize])
 	GVAR.OptionsFrame.LayoutSpaceText:SetTextColor(1, 1, 0.49, 1)
-	local layoutW = 30 + GVAR.OptionsFrame.LayoutTHText:GetStringWidth() + 10 +
-	                     GVAR.OptionsFrame.LayoutTHx18:GetWidth() + 0 +
-	                     GVAR.OptionsFrame.LayoutTHx24:GetWidth() + 0 +
-	                     GVAR.OptionsFrame.LayoutTHx42:GetWidth() + 0 +
-	                     GVAR.OptionsFrame.LayoutTHx81:GetWidth() + 0 +
-	                     GVAR.OptionsFrame.LayoutSpace:GetWidth() + 50
+	local layoutW = GVAR.OptionsFrame.LayoutTHText:GetStringWidth() + 10 +
+	                GVAR.OptionsFrame.LayoutTHx18:GetWidth() + 0 +
+	                GVAR.OptionsFrame.LayoutTHx24:GetWidth() + 0 +
+	                GVAR.OptionsFrame.LayoutTHx42:GetWidth() + 0 +
+	                GVAR.OptionsFrame.LayoutTHx81:GetWidth() + 0 +
+	                GVAR.OptionsFrame.LayoutSpace:GetWidth() + 50
 
 
 
 	-- summary
 	GVAR.OptionsFrame.SummaryText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.SummaryText:SetHeight(16)
-	GVAR.OptionsFrame.SummaryText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 30, 0)
+	-- BOOM GVAR.OptionsFrame.SummaryText:SetPoint()
 	GVAR.OptionsFrame.SummaryText:SetPoint("TOP", GVAR.OptionsFrame.LayoutTHText, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.SummaryText:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.SummaryText:SetText(L["Summary"]..":")
@@ -2579,10 +2602,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleRole)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
 	end
-	local summaryW = 30 + GVAR.OptionsFrame.SummaryText:GetStringWidth() + 10 +
-	                      GVAR.OptionsFrame.Summary:GetWidth() + 10 +
-	                      GVAR.OptionsFrame.SummaryScaleRole:GetWidth() + 50 +
-	                      GVAR.OptionsFrame.SummaryScaleGuildGroup:GetWidth() + 50
+	local summaryW = GVAR.OptionsFrame.SummaryText:GetStringWidth() + 10 +
+	                 GVAR.OptionsFrame.Summary:GetWidth() + 10 +
+	                 GVAR.OptionsFrame.SummaryScaleRole:GetWidth() + 50 +
+	                 GVAR.OptionsFrame.SummaryScaleGuildGroup:GetWidth() + 50
+
 
 
 	-- copy settings
@@ -2590,7 +2614,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	TEMPLATE.TextButton(GVAR.OptionsFrame.CopySettings, format(L["Copy this settings to %s"], "|cffffffff"..L["15 vs 15"].."|r"), 4)
 	-- BOOM GVAR.OptionsFrame.CopySettings:SetPoint()
 	GVAR.OptionsFrame.CopySettings:SetPoint("TOP", GVAR.OptionsFrame.Dummy1, "BOTTOM", 0, -62) -- 10+16+10+16+10
-	GVAR.OptionsFrame.CopySettings:SetWidth(GVAR.OptionsFrame.CopySettings.Text:GetStringWidth()+60)
+	-- BOOM GVAR.OptionsFrame.CopySettings:SetWidth()
 	GVAR.OptionsFrame.CopySettings:SetHeight(24)
 	GVAR.OptionsFrame.CopySettings:SetScript("OnClick", function() BattlegroundTargets:CopySettings(currentSize) end)
 	GVAR.OptionsFrame.CopySettings:SetScript("OnEnter", function()
@@ -2632,10 +2656,12 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.SortByTitle.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.SortByPullDown:LockHighlight()
 		GVAR.OptionsFrame.SortDetailPullDown:LockHighlight()----------
-		GVAR.OptionsFrame.FontStyleTitle.Background:SetTexture(1, 1, 1, 0.1)
-		GVAR.OptionsFrame.FontStylePullDown:LockHighlight()
-		GVAR.OptionsFrame.FontTitle.Background:SetTexture(1, 1, 1, 0.1)
-		GVAR.OptionsFrame.FontSlider.Background:SetTexture(1, 1, 1, 0.1)
+		GVAR.OptionsFrame.FontNameTitle.Background:SetTexture(1, 1, 1, 0.1)
+		GVAR.OptionsFrame.FontNamePullDown:LockHighlight()
+		GVAR.OptionsFrame.FontNameSlider.Background:SetTexture(1, 1, 1, 0.1)
+		GVAR.OptionsFrame.FontNumberTitle.Background:SetTexture(1, 1, 1, 0.1)
+		GVAR.OptionsFrame.FontNumberPullDown:LockHighlight()
+		GVAR.OptionsFrame.FontNumberSlider.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.ScaleTitle.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.ScaleSlider.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.WidthTitle.Background:SetTexture(1, 1, 1, 0.1)
@@ -2682,10 +2708,12 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.SortByTitle.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.SortByPullDown:UnlockHighlight()
 		GVAR.OptionsFrame.SortDetailPullDown:UnlockHighlight()----------
-		GVAR.OptionsFrame.FontStyleTitle.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.FontStylePullDown:UnlockHighlight()
-		GVAR.OptionsFrame.FontTitle.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.FontSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FontNameTitle.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FontNamePullDown:UnlockHighlight()
+		GVAR.OptionsFrame.FontNameSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FontNumberTitle.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FontNumberPullDown:UnlockHighlight()
+		GVAR.OptionsFrame.FontNumberSlider.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.ScaleTitle.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.ScaleSlider.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.WidthTitle.Background:SetTexture(0, 0, 0, 0)
@@ -2712,7 +2740,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- show spec
 	GVAR.OptionsFrame.ShowSpec = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowSpec, 16, 4, L["Specialization"])
-	GVAR.OptionsFrame.ShowSpec:SetPoint("LEFT", GVAR.OptionsFrame.ShowRole, "RIGHT", 20, 0)
+	--GVAR.OptionsFrame.ShowSpec:SetPoint()
 	GVAR.OptionsFrame.ShowSpec:SetChecked(OPT.ButtonShowSpec[currentSize])
 	GVAR.OptionsFrame.ShowSpec:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonShowSpec[currentSize] = not BattlegroundTargets_Options.ButtonShowSpec[currentSize]
@@ -2724,7 +2752,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- class icon
 	GVAR.OptionsFrame.ClassIcon = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ClassIcon, 16, 4, L["Class Icon"])
-	GVAR.OptionsFrame.ClassIcon:SetPoint("LEFT", GVAR.OptionsFrame.ShowSpec, "RIGHT", 20, 0)
+	--GVAR.OptionsFrame.ClassIcon:SetPoint()
 	GVAR.OptionsFrame.ClassIcon:SetChecked(OPT.ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ClassIcon:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonClassIcon[currentSize] = not BattlegroundTargets_Options.ButtonClassIcon[currentSize]
@@ -2732,9 +2760,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.ClassIcon:SetChecked(OPT.ButtonClassIcon[currentSize])
 		BattlegroundTargets:EnableConfigMode()
 	end)
-	local generalIconW = 10 + GVAR.OptionsFrame.ShowRole:GetWidth() + 20 +
-	                          GVAR.OptionsFrame.ShowSpec:GetWidth() + 20 +
-	                          GVAR.OptionsFrame.ClassIcon:GetWidth() + 10
 
 	-- show realm
 	GVAR.OptionsFrame.ShowRealm = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -2752,8 +2777,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- show leader
 	GVAR.OptionsFrame.ShowLeader = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowLeader, 16, 4, L["Leader"])
-	-- BOOM GVAR.OptionsFrame.ShowLeader:SetPoint()
-	GVAR.OptionsFrame.ShowLeader:SetPoint("TOP", GVAR.OptionsFrame.ShowRealm, "TOP", 0, 0)
+	--GVAR.OptionsFrame.ShowLeader:SetPoint()
 	GVAR.OptionsFrame.ShowLeader:SetChecked(OPT.ButtonShowLeader[currentSize])
 	GVAR.OptionsFrame.ShowLeader:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonShowLeader[currentSize] = not BattlegroundTargets_Options.ButtonShowLeader[currentSize]
@@ -2778,8 +2802,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- show guildgroup
 	GVAR.OptionsFrame.ShowGuildGroup = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowGuildGroup, 16, 4, L["Guild Groups"])
-	GVAR.OptionsFrame.ShowGuildGroup:SetPoint("LEFT", GVAR.OptionsFrame.ShowLeader, "LEFT", 0, 0)
-	GVAR.OptionsFrame.ShowGuildGroup:SetPoint("TOP", GVAR.OptionsFrame.ShowRealm, "BOTTOM", 0, -10)
+	--GVAR.OptionsFrame.ShowGuildGroup:SetPoint()
 	GVAR.OptionsFrame.ShowGuildGroup:SetChecked(OPT.ButtonShowGuildGroup[currentSize])
 	GVAR.OptionsFrame.ShowGuildGroup:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonShowGuildGroup[currentSize] = not BattlegroundTargets_Options.ButtonShowGuildGroup[currentSize]
@@ -2819,6 +2842,20 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.GuildGroupPositionText:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.GuildGroupPositionText:SetText(BattlegroundTargets_Options.ButtonGuildGroupPosition[currentSize])
 	GVAR.OptionsFrame.GuildGroupPositionText:SetTextColor(1, 1, 0.49, 1)
+
+	local eq, sw = 0, 0
+	sw = GVAR.OptionsFrame.ShowRole:GetWidth() if sw > eq then eq = sw end
+	sw = GVAR.OptionsFrame.ShowRealm:GetWidth() if sw > eq then eq = sw end
+	sw = GVAR.OptionsFrame.ShowTargetCount:GetWidth() if sw > eq then eq = sw end
+	GVAR.OptionsFrame.ShowLeader:SetPoint("LEFT", GVAR.OptionsFrame.ShowRealm, "LEFT", eq+50, 0)
+	GVAR.OptionsFrame.ShowGuildGroup:SetPoint("LEFT", GVAR.OptionsFrame.ShowTargetCount, "LEFT", eq+50, 0)
+	GVAR.OptionsFrame.ShowSpec:SetPoint("LEFT", GVAR.OptionsFrame.ShowRole, "LEFT", eq+50, 0)
+	GVAR.OptionsFrame.ClassIcon:SetPoint("LEFT", GVAR.OptionsFrame.ShowSpec, "LEFT", GVAR.OptionsFrame.ShowSpec:GetWidth()+50, 0)
+
+	local generalIconW = math_max(
+		10 + eq + 50 + GVAR.OptionsFrame.ShowSpec:GetWidth() + 50 + GVAR.OptionsFrame.ClassIcon:GetWidth() + 10,
+		10 + eq + 50 + GVAR.OptionsFrame.ShowGuildGroup:GetWidth() + 10 + 50 + 50
+	)
 
 
 
@@ -3245,7 +3282,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	-- health percent
 	GVAR.OptionsFrame.ShowHealthText = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowHealthText, 16, 4, L["Percentage"])
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowHealthText, 16, 4, L["Percent"])
 	GVAR.OptionsFrame.ShowHealthText:SetPoint("LEFT", GVAR.OptionsFrame.ShowHealthBar.Text, "RIGHT", 20, 0)
 	GVAR.OptionsFrame.ShowHealthText:SetChecked(OPT.ButtonShowHealthText[currentSize])
 	GVAR.OptionsFrame.ShowHealthText:SetScript("OnClick", function()
@@ -3532,29 +3569,50 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
-	-- fontstyle
-	local fontstyleW = 0
-	GVAR.OptionsFrame.FontStyleTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.FontStyleTitle:SetHeight(16)
-	GVAR.OptionsFrame.FontStyleTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.FontStyleTitle:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.FontStyleTitle:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.FontStyleTitle:SetText(L["Font"]..":")
-	GVAR.OptionsFrame.FontStyleTitle:SetTextColor(1, 1, 1, 1)
-	GVAR.OptionsFrame.FontStyleTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
-	GVAR.OptionsFrame.FontStyleTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.FontStyleTitle, "TOPLEFT", 0, 0)
-	GVAR.OptionsFrame.FontStyleTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.FontStyleTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.FontStyleTitle.Background:SetTexture(0, 0, 0, 0)
-	GVAR.OptionsFrame.FontStylePullDown = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+	-- font name
+	GVAR.OptionsFrame.FontNameTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.FontNameTitle:SetHeight(16)
+	GVAR.OptionsFrame.FontNameTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.FontNameTitle:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.FontNameTitle:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.FontNameTitle:SetText(L["Text"]..": "..L["Name"])
+	GVAR.OptionsFrame.FontNameTitle:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.FontNameTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
+	GVAR.OptionsFrame.FontNameTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.FontNameTitle, "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.FontNameTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.FontNameTitle, "BOTTOMRIGHT", 0, 0)
+	GVAR.OptionsFrame.FontNameTitle.Background:SetTexture(0, 0, 0, 0)
+
+	-- font name size
+	GVAR.OptionsFrame.FontNameSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.Slider(GVAR.OptionsFrame.FontNameSlider, 80, 1, 5, 20, OPT.ButtonFontNameSize[currentSize],
+	function(self, value)
+		if value == BattlegroundTargets_Options.ButtonFontNameSize[currentSize] then return end
+		BattlegroundTargets_Options.ButtonFontNameSize[currentSize] = value
+		                        OPT.ButtonFontNameSize[currentSize] = value
+		GVAR.OptionsFrame.FontNameValue:SetText(value)
+		BattlegroundTargets:EnableConfigMode()
+	end,
+	"blank")
+	GVAR.OptionsFrame.FontNameSlider:SetPoint("LEFT", GVAR.OptionsFrame.FontNameTitle, "RIGHT", 10, 0)
+
+	GVAR.OptionsFrame.FontNameValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.FontNameValue:SetHeight(20)
+	GVAR.OptionsFrame.FontNameValue:SetPoint("LEFT", GVAR.OptionsFrame.FontNameSlider, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.FontNameValue:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.FontNameValue:SetText(OPT.ButtonFontNameSize[currentSize])
+	GVAR.OptionsFrame.FontNameValue:SetTextColor(1, 1, 0.49, 1)
+
+	-- font name style
+	GVAR.OptionsFrame.FontNamePullDown = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.PullDownMenu(
-		GVAR.OptionsFrame.FontStylePullDown,
+		GVAR.OptionsFrame.FontNamePullDown,
 		"FontStyle",
-		fontStyles[ OPT.ButtonFontStyle[currentSize] ].name,
+		fontStyles[ OPT.ButtonFontNameStyle[currentSize] ].name,
 		0,
 		#fontStyles,
 		function(value) -- PDFUNC
-			BattlegroundTargets_Options.ButtonFontStyle[currentSize] = value
-			                        OPT.ButtonFontStyle[currentSize] = value
+			BattlegroundTargets_Options.ButtonFontNameStyle[currentSize] = value
+			                        OPT.ButtonFontNameStyle[currentSize] = value
 			BattlegroundTargets:EnableConfigMode()
 		end,
 		function(self, button)
@@ -3564,79 +3622,127 @@ function BattlegroundTargets:CreateOptionsFrame()
 			BattlegroundTargets:LocalizedFontTest(false, true)
 		end
 	)
-	GVAR.OptionsFrame.FontStylePullDown:SetPoint("LEFT", GVAR.OptionsFrame.FontStyleTitle, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.FontStylePullDown:SetHeight(18)
-	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontStylePullDown)
+	GVAR.OptionsFrame.FontNamePullDown:SetPoint("LEFT", GVAR.OptionsFrame.FontNameSlider, "RIGHT", 30, 0)
+	GVAR.OptionsFrame.FontNamePullDown:SetHeight(18)
+	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNamePullDown)
 
-	GVAR.OptionsFrame.FontStyleInfo = GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.FontStyleInfo:SetHeight(16)
-	GVAR.OptionsFrame.FontStyleInfo:SetPoint("TOP", GVAR.OptionsFrame.FontStylePullDown.PullDownMenu, "BOTTOM", 0, -2)
-	GVAR.OptionsFrame.FontStyleInfo:SetJustifyH("CENTER")
-	GVAR.OptionsFrame.FontStyleInfo:SetText(CTRL_KEY_TEXT.." "..SHIFT_KEY_TEXT.." "..ALT_KEY)
-	GVAR.OptionsFrame.FontStyleInfo:SetTextColor(0.5, 0.5, 0.5, 1)
+	GVAR.OptionsFrame.FontNameInfo = GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.FontNameInfo:SetHeight(16)
+	GVAR.OptionsFrame.FontNameInfo:SetPoint("TOP", GVAR.OptionsFrame.FontNamePullDown.PullDownMenu, "BOTTOM", 0, -2)
+	GVAR.OptionsFrame.FontNameInfo:SetJustifyH("CENTER")
+	GVAR.OptionsFrame.FontNameInfo:SetText(CTRL_KEY_TEXT.." "..SHIFT_KEY_TEXT.." "..ALT_KEY)
+	GVAR.OptionsFrame.FontNameInfo:SetTextColor(0.5, 0.5, 0.5, 1)
 
-	GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetPropagateKeyboardInput(true)
-	GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetScript("OnKeyDown", function(self, key)
+	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetPropagateKeyboardInput(true)
+	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetScript("OnKeyDown", function(self, key)
 		if key == "LSHIFT" or key == "RSHIFT" or key == "LCTRL" or key == "RCTRL" or key == "LALT" or key == "RALT" then
-			GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetPropagateKeyboardInput(false)
+			GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetPropagateKeyboardInput(false)
 			BattlegroundTargets:LocalizedFontTest(false, false)
 		end
 	end)
-	GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetScript("OnKeyUp", function(self, key)
-		GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetPropagateKeyboardInput(true)
+	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetScript("OnKeyUp", function(self, key)
+		GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetPropagateKeyboardInput(true)
 		BattlegroundTargets:LocalizedFontTest(true, false)
 	end)
 
-	local oldOnEnter = GVAR.OptionsFrame.FontStylePullDown:GetScript("OnEnter")
-	local oldOnLeave = GVAR.OptionsFrame.FontStylePullDown:GetScript("OnLeave")
-	GVAR.OptionsFrame.FontStylePullDown:SetScript("OnEnter", function(self)
+	local oldOnEnter = GVAR.OptionsFrame.FontNamePullDown:GetScript("OnEnter")
+	local oldOnLeave = GVAR.OptionsFrame.FontNamePullDown:GetScript("OnLeave")
+	GVAR.OptionsFrame.FontNamePullDown:SetScript("OnEnter", function(self)
 		BattlegroundTargets:LocalizedFontTest(true)
 		if oldOnEnter then oldOnEnter() end
 	end)
-	GVAR.OptionsFrame.FontStylePullDown:SetScript("OnLeave", function(self)
+	GVAR.OptionsFrame.FontNamePullDown:SetScript("OnLeave", function(self)
 		BattlegroundTargets:LocalizedFontTest(false, true)
 		if oldOnLeave then oldOnLeave() end
 	end)	
-	local oldOnEnter = GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:GetScript("OnEnter")
-	local oldOnLeave = GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:GetScript("OnLeave")
-	GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetScript("OnEnter", function(self)
+	local oldOnEnter = GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:GetScript("OnEnter")
+	local oldOnLeave = GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:GetScript("OnLeave")
+	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetScript("OnEnter", function(self)
 		BattlegroundTargets:LocalizedFontTest(true)
 		if oldOnEnter then oldOnEnter() end
 	end)
-	GVAR.OptionsFrame.FontStylePullDown.PullDownMenu:SetScript("OnLeave", function(self)
+	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetScript("OnLeave", function(self)
 		BattlegroundTargets:LocalizedFontTest(false, true)
 		if oldOnLeave then oldOnLeave() end
 	end)
 
-	-- fontsize
-	GVAR.OptionsFrame.FontTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.FontSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
-	GVAR.OptionsFrame.FontValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.FontTitle:SetHeight(16)
-	GVAR.OptionsFrame.FontTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.FontTitle:SetPoint("TOP", GVAR.OptionsFrame.FontStyleTitle, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.FontTitle:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.FontTitle:SetText(L["Text Size"]..":")
-	GVAR.OptionsFrame.FontTitle:SetTextColor(1, 1, 1, 1)
-	GVAR.OptionsFrame.FontTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
-	GVAR.OptionsFrame.FontTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.FontTitle, "TOPLEFT", 0, 0)
-	GVAR.OptionsFrame.FontTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.FontTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.FontTitle.Background:SetTexture(0, 0, 0, 0)
-	TEMPLATE.Slider(GVAR.OptionsFrame.FontSlider, 150, 1, 5, 20, OPT.ButtonFontSize[currentSize],
+	-- font number
+	GVAR.OptionsFrame.FontNumberTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.FontNumberTitle:SetHeight(16)
+	GVAR.OptionsFrame.FontNumberTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.FontNumberTitle:SetPoint("TOP", GVAR.OptionsFrame.FontNameSlider, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.FontNumberTitle:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.FontNumberTitle:SetText(L["Text"]..": "..L["Number"])
+	GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.FontNumberTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
+	GVAR.OptionsFrame.FontNumberTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.FontNumberTitle, "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.FontNumberTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.FontNumberTitle, "BOTTOMRIGHT", 0, 0)
+	GVAR.OptionsFrame.FontNumberTitle.Background:SetTexture(0, 0, 0, 0)
+
+	-- font number size
+	GVAR.OptionsFrame.FontNumberSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.Slider(GVAR.OptionsFrame.FontNumberSlider, 80, 1, 5, 20, OPT.ButtonFontNumberSize[currentSize],
 	function(self, value)
-		if value == BattlegroundTargets_Options.ButtonFontSize[currentSize] then return end
-		BattlegroundTargets_Options.ButtonFontSize[currentSize] = value
-		                        OPT.ButtonFontSize[currentSize] = value
-		GVAR.OptionsFrame.FontValue:SetText(value)
+		if value == BattlegroundTargets_Options.ButtonFontNumberSize[currentSize] then return end
+		BattlegroundTargets_Options.ButtonFontNumberSize[currentSize] = value
+		                        OPT.ButtonFontNumberSize[currentSize] = value
+		GVAR.OptionsFrame.FontNumberValue:SetText(value)
 		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
-	GVAR.OptionsFrame.FontSlider:SetPoint("LEFT", GVAR.OptionsFrame.FontTitle, "RIGHT", 20, 0)
-	GVAR.OptionsFrame.FontValue:SetHeight(20)
-	GVAR.OptionsFrame.FontValue:SetPoint("LEFT", GVAR.OptionsFrame.FontSlider, "RIGHT", 5, 0)
-	GVAR.OptionsFrame.FontValue:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.FontValue:SetText(OPT.ButtonFontSize[currentSize])
-	GVAR.OptionsFrame.FontValue:SetTextColor(1, 1, 0.49, 1)
+	GVAR.OptionsFrame.FontNumberSlider:SetPoint("LEFT", GVAR.OptionsFrame.FontNumberTitle, "RIGHT", 10, 0)
+
+	GVAR.OptionsFrame.FontNumberValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.FontNumberValue:SetHeight(20)
+	GVAR.OptionsFrame.FontNumberValue:SetPoint("LEFT", GVAR.OptionsFrame.FontNumberSlider, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.FontNumberValue:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.FontNumberValue:SetText(OPT.ButtonFontNumberSize[currentSize])
+	GVAR.OptionsFrame.FontNumberValue:SetTextColor(1, 1, 0.49, 1)
+
+	-- font number style
+	GVAR.OptionsFrame.FontNumberPullDown = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.PullDownMenu(
+		GVAR.OptionsFrame.FontNumberPullDown,
+		"FontStyleNumber",
+		strmatch(fontStyles[ OPT.ButtonFontNumberStyle[currentSize] ].name, "(.*) %- .*"),
+		0,
+		#fontStyles,
+		function(value) -- PDFUNC
+			BattlegroundTargets_Options.ButtonFontNumberStyle[currentSize] = value
+			                        OPT.ButtonFontNumberStyle[currentSize] = value
+			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button)
+			BattlegroundTargets:LocalizedFontNumberTest(true, self.value1)
+		end,
+		function(self, button)
+			BattlegroundTargets:LocalizedFontNumberTest(false)
+		end
+	)
+	GVAR.OptionsFrame.FontNumberPullDown:SetPoint("LEFT", GVAR.OptionsFrame.FontNumberSlider, "RIGHT", 30, 0)
+	GVAR.OptionsFrame.FontNumberPullDown:SetHeight(18)
+	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+
+	local oldOnLeave = GVAR.OptionsFrame.FontNumberPullDown:GetScript("OnLeave")
+	GVAR.OptionsFrame.FontNumberPullDown:SetScript("OnLeave", function(self)
+		BattlegroundTargets:LocalizedFontNumberTest(false)
+		if oldOnLeave then oldOnLeave() end
+	end)	
+	local oldOnLeave = GVAR.OptionsFrame.FontNumberPullDown.PullDownMenu:GetScript("OnLeave")
+	GVAR.OptionsFrame.FontNumberPullDown.PullDownMenu:SetScript("OnLeave", function(self)
+		BattlegroundTargets:LocalizedFontNumberTest(false)
+		if oldOnLeave then oldOnLeave() end
+	end)
+
+	local eq, sw = 0, 0
+	sw = GVAR.OptionsFrame.FontNameTitle:GetStringWidth() if sw > eq then eq = sw end
+	sw = GVAR.OptionsFrame.FontNumberTitle:GetStringWidth() if sw > eq then eq = sw end
+	GVAR.OptionsFrame.FontNameSlider:SetPoint("LEFT", GVAR.OptionsFrame.FontNameTitle, "LEFT", eq+10, 0)
+	GVAR.OptionsFrame.FontNumberSlider:SetPoint("LEFT", GVAR.OptionsFrame.FontNumberTitle, "LEFT", eq+10, 0)
+
+	local fontstyleW = 10+ eq+10 + GVAR.OptionsFrame.FontNameSlider:GetWidth() + 30 + GVAR.OptionsFrame.FontNamePullDown:GetWidth() + 10
+
+
 
 	-- scale
 	GVAR.OptionsFrame.ScaleTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -3644,7 +3750,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ScaleValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.ScaleTitle:SetHeight(16)
 	GVAR.OptionsFrame.ScaleTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ScaleTitle:SetPoint("TOP", GVAR.OptionsFrame.FontSlider, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ScaleTitle:SetPoint("TOP", GVAR.OptionsFrame.FontNumberSlider, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.ScaleTitle:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.ScaleTitle:SetText(L["Scale"]..":")
 	GVAR.OptionsFrame.ScaleTitle:SetTextColor(1, 1, 1, 1)
@@ -3733,17 +3839,12 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.HeightValue:SetTextColor(1, 1, 0.49, 1)
 
 	local equalTextWidthSliders, sw = 0, 0
-	sw = GVAR.OptionsFrame.FontStyleTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
-	sw = GVAR.OptionsFrame.FontTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
 	sw = GVAR.OptionsFrame.ScaleTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
 	sw = GVAR.OptionsFrame.WidthTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
 	sw = GVAR.OptionsFrame.HeightTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
-	GVAR.OptionsFrame.FontStylePullDown:SetPoint("LEFT", GVAR.OptionsFrame.FontStyleTitle, "LEFT", equalTextWidthSliders+10, 0)
-	GVAR.OptionsFrame.FontSlider:SetPoint("LEFT", GVAR.OptionsFrame.FontTitle, "LEFT", equalTextWidthSliders+10, 0)
 	GVAR.OptionsFrame.ScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ScaleTitle, "LEFT", equalTextWidthSliders+10, 0)
 	GVAR.OptionsFrame.WidthSlider:SetPoint("LEFT", GVAR.OptionsFrame.WidthTitle, "LEFT", equalTextWidthSliders+10, 0)
 	GVAR.OptionsFrame.HeightSlider:SetPoint("LEFT", GVAR.OptionsFrame.HeightTitle, "LEFT", equalTextWidthSliders+10, 0)
-	fontstyleW = 10+ fontstyleW + equalTextWidthSliders+10 + GVAR.OptionsFrame.FontStylePullDown:GetWidth() +10
 
 	-- testshuffler
 	GVAR.OptionsFrame.TestShuffler = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -3900,9 +4001,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- ####################################################################################################
 	-- xMx width BOOM
 	local frameWidth = 400
-	if generalIconW > frameWidth then frameWidth = generalIconW end
 	if layoutW > frameWidth then frameWidth = layoutW end
 	if summaryW > frameWidth then frameWidth = summaryW end
+	if generalIconW > frameWidth then frameWidth = generalIconW end
 	if iconW > frameWidth then frameWidth = iconW end
 	if rangeW > frameWidth then frameWidth = rangeW end
 	if sortW > frameWidth then frameWidth = sortW end
@@ -3928,9 +4029,16 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TabRaidSize15:SetPoint("BOTTOMLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", spacer+tabWidth1+spacer+((tabWidth2+spacer)*1), -1)
 	GVAR.OptionsFrame.TabRaidSize40:SetPoint("BOTTOMLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", spacer+tabWidth1+spacer+((tabWidth2+spacer)*2), -1)
 	GVAR.OptionsFrame.Dummy1:SetWidth(frameWidth-26-26)
+	GVAR.OptionsFrame.LayoutTHText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", (frameWidth-layoutW)/2, 0)
+	GVAR.OptionsFrame.SummaryText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", (frameWidth-summaryW)/2, 0)
+	local w1 = frameWidth/2
+	local w2 = GVAR.OptionsFrame.CopySettings.Text:GetStringWidth() + 60
+	if w2 > w1 then
+		w1 = w2
+	end
+	GVAR.OptionsFrame.CopySettings:SetWidth(w1)
 	-- ConfigBrackets
 	GVAR.OptionsFrame.ConfigBrackets:SetWidth(frameWidth)
-	GVAR.OptionsFrame.ShowLeader:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", (frameWidth-10-10)/2, 0)
 	-- ConfigGeneral
 	GVAR.OptionsFrame.ConfigGeneral:SetWidth(frameWidth)
 	-- Mover
@@ -4037,10 +4145,12 @@ function BattlegroundTargets:SetOptions()
 		GVAR.OptionsFrame.SortInfo:Hide()
 	end
 
-	GVAR.OptionsFrame.FontStylePullDown.PullDownButtonText:SetText(fontStyles[ OPT.ButtonFontStyle[currentSize] ].name)
-
-	GVAR.OptionsFrame.FontSlider:SetValue(OPT.ButtonFontSize[currentSize])
-	GVAR.OptionsFrame.FontValue:SetText(OPT.ButtonFontSize[currentSize])
+	GVAR.OptionsFrame.FontNamePullDown.PullDownButtonText:SetText(fontStyles[ OPT.ButtonFontNameStyle[currentSize] ].name)
+	GVAR.OptionsFrame.FontNameSlider:SetValue(OPT.ButtonFontNameSize[currentSize])
+	GVAR.OptionsFrame.FontNameValue:SetText(OPT.ButtonFontNameSize[currentSize])
+	GVAR.OptionsFrame.FontNumberPullDown.PullDownButtonText:SetText(strmatch(fontStyles[ OPT.ButtonFontNumberStyle[currentSize] ].name, "(.*) %- .*"))
+	GVAR.OptionsFrame.FontNumberSlider:SetValue(OPT.ButtonFontNumberSize[currentSize])
+	GVAR.OptionsFrame.FontNumberValue:SetText(OPT.ButtonFontNumberSize[currentSize])
 
 	GVAR.OptionsFrame.ScaleSlider:SetValue(OPT.ButtonScale[currentSize]*100)
 	GVAR.OptionsFrame.ScaleValue:SetText((OPT.ButtonScale[currentSize]*100).."%")
@@ -4172,10 +4282,13 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
 		GVAR.OptionsFrame.SortInfo:Enable() Desaturation(GVAR.OptionsFrame.SortInfo.Texture, false)
 
-		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontStylePullDown)
-		GVAR.OptionsFrame.FontStyleTitle:SetTextColor(1, 1, 1, 1)
-		TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontSlider)
-		GVAR.OptionsFrame.FontTitle:SetTextColor(1, 1, 1, 1)
+		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNamePullDown)
+		GVAR.OptionsFrame.FontNameTitle:SetTextColor(1, 1, 1, 1)
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNameSlider)
+		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+		GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNumberSlider)
+
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.ScaleSlider)
 		GVAR.OptionsFrame.ScaleTitle:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.WidthSlider)
@@ -4250,10 +4363,13 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
 		GVAR.OptionsFrame.SortInfo:Disable() Desaturation(GVAR.OptionsFrame.SortInfo.Texture, true)
 
-		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontStylePullDown)
-		GVAR.OptionsFrame.FontStyleTitle:SetTextColor(0.5, 0.5, 0.5, 1)
-		TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontSlider)
-		GVAR.OptionsFrame.FontTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNamePullDown)
+		GVAR.OptionsFrame.FontNameTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+		TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNameSlider)
+		TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+		GVAR.OptionsFrame.FontNumberTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+		TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNumberSlider)
+
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.ScaleSlider)
 		GVAR.OptionsFrame.ScaleTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.WidthSlider)
@@ -4330,10 +4446,13 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
 	GVAR.OptionsFrame.SortInfo:Disable() Desaturation(GVAR.OptionsFrame.SortInfo.Texture, true)
 
-	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontStylePullDown)
-	GVAR.OptionsFrame.FontStyleTitle:SetTextColor(0.5, 0.5, 0.5, 1)
-	TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontSlider)
-	GVAR.OptionsFrame.FontTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNamePullDown)
+	GVAR.OptionsFrame.FontNameTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+	TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNameSlider)
+	TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+	GVAR.OptionsFrame.FontNumberTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+	TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNumberSlider)
+
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.ScaleSlider)
 	GVAR.OptionsFrame.ScaleTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.WidthSlider)
@@ -4563,8 +4682,10 @@ function BattlegroundTargets:SetupButtonLayout()
 	local ButtonScale              = OPT.ButtonScale[currentSize]
 	local ButtonWidth              = OPT.ButtonWidth[currentSize]
 	local ButtonHeight             = OPT.ButtonHeight[currentSize]
-	local ButtonFontSize           = OPT.ButtonFontSize[currentSize]
-	local ButtonFontStyle          = OPT.ButtonFontStyle[currentSize]
+	local ButtonFontNameSize       = OPT.ButtonFontNameSize[currentSize]
+	local fButtonFontNameStyle     = fontStyles[ OPT.ButtonFontNameStyle[currentSize] ].font
+	local ButtonFontNumberSize     = OPT.ButtonFontNumberSize[currentSize]
+	local fButtonFontNumberStyle   = fontStyles[ OPT.ButtonFontNumberStyle[currentSize] ].font
 	local ButtonShowRole           = OPT.ButtonShowRole[currentSize]
 	local ButtonShowSpec           = OPT.ButtonShowSpec[currentSize]
 	local ButtonClassIcon          = OPT.ButtonClassIcon[currentSize]
@@ -4594,8 +4715,8 @@ function BattlegroundTargets:SetupButtonLayout()
 	local ButtonWidth_2  = ButtonWidth-2
 	local ButtonHeight_2 = ButtonHeight-2
 
-	local backfallFontSize = ButtonFontSize
-	if ButtonHeight < ButtonFontSize then
+	local backfallFontSize = ButtonFontNameSize
+	if ButtonHeight < ButtonFontNameSize then
 		backfallFontSize = ButtonHeight
 	end
 
@@ -4840,13 +4961,13 @@ function BattlegroundTargets:SetupButtonLayout()
 			end
 		end
 
-		GVAR_TargetButton.Name:SetFont(fontStyles[ButtonFontStyle].font, ButtonFontSize, "")
+		GVAR_TargetButton.Name:SetFont(fButtonFontNameStyle, ButtonFontNameSize, "")
 		GVAR_TargetButton.Name:SetShadowOffset(0, 0)
 		GVAR_TargetButton.Name:SetShadowColor(0, 0, 0, 0)
 		GVAR_TargetButton.Name:SetTextColor(0, 0, 0, 1)
 		GVAR_TargetButton.Name:SetHeight(backfallFontSize)
 
-		GVAR_TargetButton.HealthText:SetFont(fontPath, ButtonFontSize, "OUTLINE")
+		GVAR_TargetButton.HealthText:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize, "OUTLINE")
 		GVAR_TargetButton.HealthText:SetShadowOffset(0, 0)
 		GVAR_TargetButton.HealthText:SetShadowColor(0, 0, 0, 0)
 		GVAR_TargetButton.HealthText:SetTextColor(1, 1, 1, 1)
@@ -4868,7 +4989,7 @@ function BattlegroundTargets:SetupButtonLayout()
 			end
 			GVAR_TargetButton.TargetCountBackground:SetHeight(ButtonHeight_2)
 			GVAR_TargetButton.TargetCountBackground:Show()
-			GVAR_TargetButton.TargetCount:SetFont(fontPath, ButtonFontSize, "")
+			GVAR_TargetButton.TargetCount:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize, "")
 			GVAR_TargetButton.TargetCount:SetShadowOffset(0, 0)
 			GVAR_TargetButton.TargetCount:SetShadowColor(0, 0, 0, 0)
 			GVAR_TargetButton.TargetCount:SetHeight(backfallFontSize)
@@ -4941,14 +5062,14 @@ function BattlegroundTargets:SetupButtonLayout()
 			end
 			GVAR_TargetButton.FlagTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", leftPos, 0)
 			GVAR_TargetButton.FlagTexture:Show()
-			GVAR_TargetButton.FlagDebuff:SetFont(fontPath, ButtonFontSize, "OUTLINE")
+			GVAR_TargetButton.FlagDebuff:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize, "OUTLINE")
 			GVAR_TargetButton.FlagDebuff:SetShadowOffset(0, 0)
 			GVAR_TargetButton.FlagDebuff:SetShadowColor(0, 0, 0, 0)
 			GVAR_TargetButton.FlagDebuff:SetTextColor(1, 1, 1, 1)
 			GVAR_TargetButton.FlagDebuff:SetHeight(backfallFontSize)
 			GVAR_TargetButton.FlagDebuff:SetAlpha(1)
 			GVAR_TargetButton.FlagDebuff:Show()
-			GVAR_TargetButton.OrbDebuff:SetFont(fontPath, ButtonFontSize-2, "OUTLINE")
+			GVAR_TargetButton.OrbDebuff:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize-2, "OUTLINE")
 			GVAR_TargetButton.OrbDebuff:SetShadowOffset(0, 0)
 			GVAR_TargetButton.OrbDebuff:SetShadowColor(0, 0, 0, 0)
 			GVAR_TargetButton.OrbDebuff:SetTextColor(1, 1, 1, 1)
@@ -4977,6 +5098,20 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR_TargetButton.AssistTexture:Hide()
 		end
 	end
+
+	if BattlegroundTargets_Options.Summary[currentSize] then
+		GVAR.Summary.HealerFriend:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*2, "OUTLINE")
+		GVAR.Summary.HealerEnemy:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*2, "OUTLINE")
+		GVAR.Summary.TankFriend:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*2, "OUTLINE")
+		GVAR.Summary.TankEnemy:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*2, "OUTLINE")
+		GVAR.Summary.DamageFriend:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*2, "OUTLINE")
+		GVAR.Summary.DamageEnemy:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*2, "OUTLINE")
+		for i = 1, 7 do
+			GVAR.GuildGroupSummaryFriend[i].Text:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*1.2, "OUTLINE")
+			GVAR.GuildGroupSummaryEnemy[i].Text:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*1.2, "OUTLINE")
+		end
+	end
+
 	reSetLayout = false
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -5106,8 +5241,11 @@ end
 function BattlegroundTargets:LocalizedFontTest(show, font)
 	if show then
 		if font then
+			local f = fontStyles[font].font
+			local s = OPT.ButtonFontNameSize[currentSize]
+			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, currentSize do
-				GVAR.TargetButton[i].Name:SetFont(fontStyles[font].font, OPT.ButtonFontSize[currentSize], "")
+				GVAR_TargetButton[i].Name:SetFont(f, s, "")
 			end
 		end
 		if IsModifierKeyDown() then return end
@@ -5123,18 +5261,67 @@ function BattlegroundTargets:LocalizedFontTest(show, font)
 		GVAR.TargetButton[10].Name:SetText(L["TEST_Latin5_"])
 	else
 		if font then
+			local f = fontStyles[ OPT.ButtonFontNameStyle[currentSize] ].font
+			local s = OPT.ButtonFontNameSize[currentSize]
+			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, currentSize do
-				GVAR.TargetButton[i].Name:SetFont(fontStyles[ OPT.ButtonFontStyle[currentSize] ].font, OPT.ButtonFontSize[currentSize], "")
+				GVAR_TargetButton[i].Name:SetFont(f, s, "")
 			end
 		end
 		if isLowLevel then
+			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, 10 do
-				GVAR.TargetButton[i].Name:SetText(playerLevel.." "..GVAR.TargetButton[i].name4button)
+				GVAR_TargetButton[i].Name:SetText(playerLevel.." "..GVAR_TargetButton[i].name4button)
 			end
 		else
+			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, 10 do
-				GVAR.TargetButton[i].Name:SetText(GVAR.TargetButton[i].name4button)
+				GVAR_TargetButton[i].Name:SetText(GVAR_TargetButton[i].name4button)
 			end
+		end
+	end
+end
+
+function BattlegroundTargets:LocalizedFontNumberTest(show, font)
+	if show then
+		local f = fontStyles[font].font
+		local s = OPT.ButtonFontNumberSize[currentSize]
+		for i = 1, currentSize do
+			local GVAR_TargetButton = GVAR.TargetButton[i]
+			GVAR_TargetButton.HealthText:SetFont(f, s, "OUTLINE")
+			GVAR_TargetButton.TargetCount:SetFont(f, s, "")
+			GVAR_TargetButton.FlagDebuff:SetFont(f, s, "OUTLINE")
+			GVAR_TargetButton.OrbDebuff:SetFont(f, s-2, "OUTLINE")
+		end
+		GVAR.Summary.HealerFriend:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.HealerEnemy:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.TankFriend:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.TankEnemy:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.DamageFriend:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.DamageEnemy:SetFont(f, s*2, "OUTLINE")
+		for i = 1, 7 do
+			GVAR.GuildGroupSummaryFriend[i].Text:SetFont(f, s*1.2, "OUTLINE")
+			GVAR.GuildGroupSummaryEnemy[i].Text:SetFont(f, s*1.2, "OUTLINE")
+		end
+	else
+		local f = fontStyles[ OPT.ButtonFontNumberStyle[currentSize] ].font
+		local s = OPT.ButtonFontNumberSize[currentSize]
+		for i = 1, currentSize do
+			local GVAR_TargetButton = GVAR.TargetButton[i]
+			GVAR_TargetButton.HealthText:SetFont(f, s, "OUTLINE")
+			GVAR_TargetButton.TargetCount:SetFont(f, s, "")
+			GVAR_TargetButton.FlagDebuff:SetFont(f, s, "OUTLINE")
+			GVAR_TargetButton.OrbDebuff:SetFont(f, s-2, "OUTLINE")
+		end
+		GVAR.Summary.HealerFriend:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.HealerEnemy:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.TankFriend:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.TankEnemy:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.DamageFriend:SetFont(f, s*2, "OUTLINE")
+		GVAR.Summary.DamageEnemy:SetFont(f, s*2, "OUTLINE")
+		for i = 1, 7 do
+			GVAR.GuildGroupSummaryFriend[i].Text:SetFont(f, s*1.2, "OUTLINE")
+			GVAR.GuildGroupSummaryEnemy[i].Text:SetFont(f, s*1.2, "OUTLINE")
 		end
 	end
 end
@@ -5899,10 +6086,14 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	                        OPT.ButtonSortBy[destinationSize]             =                         OPT.ButtonSortBy[sourceSize]
 	BattlegroundTargets_Options.ButtonSortDetail[destinationSize]         = BattlegroundTargets_Options.ButtonSortDetail[sourceSize]
 	                        OPT.ButtonSortDetail[destinationSize]         =                         OPT.ButtonSortDetail[sourceSize]
-	BattlegroundTargets_Options.ButtonFontStyle[destinationSize]          = BattlegroundTargets_Options.ButtonFontStyle[sourceSize]
-	                        OPT.ButtonFontStyle[destinationSize]          =                         OPT.ButtonFontStyle[sourceSize]
-	BattlegroundTargets_Options.ButtonFontSize[destinationSize]           = BattlegroundTargets_Options.ButtonFontSize[sourceSize]
-	                        OPT.ButtonFontSize[destinationSize]           =                         OPT.ButtonFontSize[sourceSize]
+	BattlegroundTargets_Options.ButtonFontNameStyle[destinationSize]      = BattlegroundTargets_Options.ButtonFontNameStyle[sourceSize]
+	                        OPT.ButtonFontNameStyle[destinationSize]      =                         OPT.ButtonFontNameStyle[sourceSize]
+	BattlegroundTargets_Options.ButtonFontNameSize[destinationSize]       = BattlegroundTargets_Options.ButtonFontNameSize[sourceSize]
+	                        OPT.ButtonFontNameSize[destinationSize]       =                         OPT.ButtonFontNameSize[sourceSize]
+	BattlegroundTargets_Options.ButtonFontNumberStyle[destinationSize]    = BattlegroundTargets_Options.ButtonFontNumberStyle[sourceSize]
+	                        OPT.ButtonFontNumberStyle[destinationSize]    =                         OPT.ButtonFontNumberStyle[sourceSize]
+	BattlegroundTargets_Options.ButtonFontNumberSize[destinationSize]     = BattlegroundTargets_Options.ButtonFontNumberSize[sourceSize]
+	                        OPT.ButtonFontNumberSize[destinationSize]     =                         OPT.ButtonFontNumberSize[sourceSize]
 	BattlegroundTargets_Options.ButtonScale[destinationSize]              = BattlegroundTargets_Options.ButtonScale[sourceSize]
 	                        OPT.ButtonScale[destinationSize]              =                         OPT.ButtonScale[sourceSize]
 	BattlegroundTargets_Options.ButtonWidth[destinationSize]              = BattlegroundTargets_Options.ButtonWidth[sourceSize]
