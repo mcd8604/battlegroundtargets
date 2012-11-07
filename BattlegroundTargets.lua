@@ -1358,13 +1358,13 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if type(BattlegroundTargets_Options.version) ~= "number" then
-		BattlegroundTargets_Options.version = 17
+		BattlegroundTargets_Options.version = 18
 	end
 
 	if BattlegroundTargets_Options.version < 8 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
-		BattlegroundTargets_Options.version = 17
+		BattlegroundTargets_Options.version = 18
 	end
 
 	if BattlegroundTargets_Options.version == 8 then
@@ -1478,6 +1478,19 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 17
 	end
 
+	if BattlegroundTargets_Options.version == 17 then -- reset size
+		if type(BattlegroundTargets_Options.ButtonFontNumberSize) == "table" then
+			Print("'Text: Number' size reset.")
+		end
+		BattlegroundTargets_Options.ButtonFontNumberSize = {}
+		if type(BattlegroundTargets_Options.ButtonFontNameSize) == "table" then
+			if type(BattlegroundTargets_Options.ButtonFontNameSize[10]) == "number" then BattlegroundTargets_Options.ButtonFontNumberSize[10] = BattlegroundTargets_Options.ButtonFontNameSize[10] end
+			if type(BattlegroundTargets_Options.ButtonFontNameSize[15]) == "number" then BattlegroundTargets_Options.ButtonFontNumberSize[15] = BattlegroundTargets_Options.ButtonFontNameSize[15] end
+			if type(BattlegroundTargets_Options.ButtonFontNameSize[40]) == "number" then BattlegroundTargets_Options.ButtonFontNumberSize[40] = BattlegroundTargets_Options.ButtonFontNameSize[40] end
+		end
+		BattlegroundTargets_Options.version = 18
+	end
+
 	if type(BattlegroundTargets_Options.pos)                        ~= "table"   then BattlegroundTargets_Options.pos                        = {}    end
 	if type(BattlegroundTargets_Options.MinimapButton)              ~= "boolean" then BattlegroundTargets_Options.MinimapButton              = false end
 	if type(BattlegroundTargets_Options.MinimapButtonPos)           ~= "number"  then BattlegroundTargets_Options.MinimapButtonPos           = -90   end
@@ -1567,7 +1580,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonTargetPosition[10])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[10]     = 100   end
 	if type(BattlegroundTargets_Options.ButtonShowAssist[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowAssist[10]         = false end
 	if type(BattlegroundTargets_Options.ButtonAssistScale[10])        ~= "number"  then BattlegroundTargets_Options.ButtonAssistScale[10]        = 1.2   end
-	if type(BattlegroundTargets_Options.ButtonAssistPosition[10])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[10]     = 70    end
+	if type(BattlegroundTargets_Options.ButtonAssistPosition[10])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[10]     = 100   end
 	if type(BattlegroundTargets_Options.ButtonShowFocus[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowFocus[10]          = false end
 	if type(BattlegroundTargets_Options.ButtonFocusScale[10])         ~= "number"  then BattlegroundTargets_Options.ButtonFocusScale[10]         = 1     end
 	if type(BattlegroundTargets_Options.ButtonFocusPosition[10])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[10]      = 70    end
@@ -1599,7 +1612,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[15]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[15] = 4     end
 	if type(BattlegroundTargets_Options.ButtonShowTarget[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[15]         = true  end
 	if type(BattlegroundTargets_Options.ButtonTargetScale[15])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[15]        = 1.5   end
-	if type(BattlegroundTargets_Options.ButtonTargetPosition[15])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[15]     = 70    end
+	if type(BattlegroundTargets_Options.ButtonTargetPosition[15])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[15]     = 100   end
 	if type(BattlegroundTargets_Options.ButtonShowAssist[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowAssist[15]         = false end
 	if type(BattlegroundTargets_Options.ButtonAssistScale[15])        ~= "number"  then BattlegroundTargets_Options.ButtonAssistScale[15]        = 1.2   end
 	if type(BattlegroundTargets_Options.ButtonAssistPosition[15])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[15]     = 100   end
