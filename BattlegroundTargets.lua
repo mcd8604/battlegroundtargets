@@ -589,6 +589,10 @@ local function ClassHexColor(class)
 	return hex or "cccccc"
 end
 
+local function ggSortFunc(a, b)
+	return a[1] < b[1]
+end
+
 local function ggTexCol(num)
 	local tex = floor(num/6) -- #guildGrpTex
 	if tex < 1 then
@@ -1478,7 +1482,7 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 17
 	end
 
-	if BattlegroundTargets_Options.version == 17 then -- reset size
+	if BattlegroundTargets_Options.version == 17 then -- reset font number size
 		if type(BattlegroundTargets_Options.ButtonFontNumberSize) == "table" then
 			Print("'Text: Number' size reset.")
 		end
@@ -3334,7 +3338,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["This option uses the CombatLog to check range."].."|r\n\n"
 		rangeInfoTxt = rangeInfoTxt..rangeTypeName[2]..":\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["This option uses a pre-defined spell to check range:"].."|r\n"
-		table_sort(class_IntegerSort, function(a, b) if a.loc < b.loc then return true end end)
+		table_sort(class_IntegerSort, function(a, b) return a.loc < b.loc end)
 		local playerMClass = "?"
 		for i = 1, #class_IntegerSort do
 			local classEN = class_IntegerSort[i].cid
@@ -3509,7 +3513,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- sort info
 		----- text
 		local infoTxt1 = sortDetail[1]..":\n"
-		table_sort(class_IntegerSort, function(a, b) if a.loc < b.loc then return true end end)
+		table_sort(class_IntegerSort, function(a, b) return a.loc < b.loc end)
 		for i = 1, #class_IntegerSort do
 			infoTxt1 = infoTxt1.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].loc.."|r"
 			if i <= #class_IntegerSort then
@@ -3517,7 +3521,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 			end
 		end
 		local infoTxt2 = sortDetail[2]..":\n"
-		table_sort(class_IntegerSort, function(a, b) if a.eng < b.eng then return true end end)
+		table_sort(class_IntegerSort, function(a, b) return a.eng < b.eng end)
 		for i = 1, #class_IntegerSort do
 			infoTxt2 = infoTxt2.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].eng.." ("..class_IntegerSort[i].loc..")|r"
 			if i <= #class_IntegerSort then
@@ -3525,7 +3529,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 			end
 		end
 		local infoTxt3 = sortDetail[3]..":\n"
-		table_sort(class_IntegerSort, function(a, b) if a.blizz < b.blizz then return true end end)
+		table_sort(class_IntegerSort, function(a, b) return a.blizz < b.blizz end)
 		for i = 1, #class_IntegerSort do
 			infoTxt3 = infoTxt3.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].loc.."|r"
 			if i <= #class_IntegerSort then
@@ -6019,7 +6023,7 @@ function BattlegroundTargets:ConfigGuildGroupEnemyUpdate(bracketSize)
 	end
 
 	-- sort
-	table_sort(count2, function(a, b) if a[1] < b[1] then return true end end)
+	table_sort(count2, ggSortFunc)
 
 	-- display
 	for i = 1, 7 do
@@ -6145,69 +6149,69 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-local sortfunc13 = function(a, b) -- role / class / name | 13
+local function sortfunc13(a, b) -- role / class / name | 13
 	if a.talentSpec == b.talentSpec then
 		if class_BlizzSort[ a.classToken ] == class_BlizzSort[ b.classToken ] then
 			if a.name < b.name then return true end
 		elseif class_BlizzSort[ a.classToken ] < class_BlizzSort[ b.classToken ] then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
-local sortfunc11 = function(a, b) -- role / class / name | 11
+local function sortfunc11(a, b) -- role / class / name | 11
 	if a.talentSpec == b.talentSpec then
 		if class_LocaSort[ a.classToken ] == class_LocaSort[ b.classToken ] then
 			if a.name < b.name then return true end
 		elseif class_LocaSort[ a.classToken ] < class_LocaSort[ b.classToken ] then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
-local sortfunc12 = function(a, b) -- role / class / name | 12
+local function sortfunc12(a, b) -- role / class / name | 12
 	if a.talentSpec == b.talentSpec then
 		if a.classToken == b.classToken then
 			if a.name < b.name then return true end
 		elseif a.classToken < b.classToken then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
-local sortfunc2 = function(a, b) -- role / name | 2
+local function sortfunc2(a, b) -- role / name | 2
 	if a.talentSpec == b.talentSpec then
 		if a.name < b.name then return true end
 	elseif a.talentSpec < b.talentSpec then return true end
 end
-local sortfunc33 = function(a, b) -- class / role / name | 33
+local function sortfunc33(a, b) -- class / role / name | 33
 	if class_BlizzSort[ a.classToken ] == class_BlizzSort[ b.classToken ] then
 		if a.talentSpec == b.talentSpec then
 			if a.name < b.name then return true end
 		elseif a.talentSpec < b.talentSpec then return true end
 	elseif class_BlizzSort[ a.classToken ] < class_BlizzSort[ b.classToken ] then return true end
 end
-local sortfunc31 = function(a, b) -- class / role / name | 31
+local function sortfunc31(a, b) -- class / role / name | 31
 	if class_LocaSort[ a.classToken ] == class_LocaSort[ b.classToken ] then
 		if a.talentSpec == b.talentSpec then
 			if a.name < b.name then return true end
 		elseif a.talentSpec < b.talentSpec then return true end
 	elseif class_LocaSort[ a.classToken ] < class_LocaSort[ b.classToken ] then return true end
 end
-local sortfunc32 = function(a, b) -- class / role / name | 32
+local function sortfunc32(a, b) -- class / role / name | 32
 	if a.classToken == b.classToken then
 		if a.talentSpec == b.talentSpec then
 			if a.name < b.name then return true end
 		elseif a.talentSpec < b.talentSpec then return true end
 	elseif a.classToken < b.classToken then return true end
 end
-local sortfunc43 = function(a, b) -- class / name | 43
+local function sortfunc43(a, b) -- class / name | 43
 	if class_BlizzSort[ a.classToken ] == class_BlizzSort[ b.classToken ] then
 		if a.name < b.name then return true end
 	elseif class_BlizzSort[ a.classToken ] < class_BlizzSort[ b.classToken ] then return true end
 end
-local sortfunc41 = function(a, b) -- class / name | 41
+local function sortfunc41(a, b) -- class / name | 41
 	if class_LocaSort[ a.classToken ] == class_LocaSort[ b.classToken ] then
 		if a.name < b.name then return true end
 	elseif class_LocaSort[ a.classToken ] < class_LocaSort[ b.classToken ] then return true end
 end
-local sortfunc42 = function(a, b) -- class / name | 42
+local function sortfunc42(a, b) -- class / name | 42
 	if a.classToken == b.classToken then
 		if a.name < b.name then return true end
 	elseif a.classToken < b.classToken then return true end
 end
-local sortfunc5 = function(a, b) -- name | 5
+local function sortfunc5(a, b) -- name | 5
 	if a.name < b.name then return true end
 end
 
@@ -7848,7 +7852,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 	end
 
 	-- sort
-	table_sort(count2, function(a, b) if a[1] < b[1] then return true end end)
+	table_sort(count2, ggSortFunc)
 
 	-- display
 	for i = 1, 7 do
@@ -7885,7 +7889,7 @@ function BattlegroundTargets:GuildGroupEnemyUpdate() -- GLDGRP
 	end
 
 	-- sort
-	table_sort(count2, function(a, b) if a[1] < b[1] then return true end end)
+	table_sort(count2, ggSortFunc)
 
 	-- display
 	for i = 1, 7 do
