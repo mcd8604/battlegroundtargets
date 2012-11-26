@@ -91,7 +91,7 @@
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
 --                         - CHAT_MSG_BG_SYSTEM_NEUTRAL                       --
 --                         - CHAT_MSG_RAID_BOSS_EMOTE                         --
---   Flag detection in case of disconnect, UI reload or mid-battle-joins:     --
+--   Flag/Orb detection in case of disconnect, UI reload or mid-battle-joins: --
 --   (temporarily registered until each enemy is scanned)                     --
 --                         - UNIT_TARGET                                      --
 --                         - UPDATE_MOUSEOVER_UNIT                            --
@@ -162,7 +162,7 @@ local UnitFactionGroup = UnitFactionGroup
 local UnitHealth = UnitHealth
 local UnitHealthMax = UnitHealthMax
 local UnitIsGroupLeader = UnitIsGroupLeader
-local UnitIsVisible = UnitIsVisible -- TODO_MoP needs check
+local UnitIsVisible = UnitIsVisible
 local UnitLevel = UnitLevel
 local UnitName = UnitName
 
@@ -246,22 +246,23 @@ local oppositeFactionREAL    -- real opposite faction
 
 --local eventTest = {} -- TEST event order
 
-local ENEMY_Data = {}           -- numerical | all data
-local ENEMY_Names = {}          -- key/value | key = enemyName, value = count
-local ENEMY_Names4Flag = {}     -- key/value | key = enemyName without realm, value = button number
-local ENEMY_Name2Button = {}    -- key/value | key = enemyName, value = button number
-local ENEMY_Name2Percent = {}   -- key/value | key = enemyName, value = health in percent
-local ENEMY_Name2Range = {}     -- key/value | key = enemyName, value = time of last contact
-local ENEMY_Name2Level = {}     -- key/value | key = enemyName, value = level
-local ENEMY_FirstFlagCheck = {} -- key/value | key = enemyName, value = 1
-local ENEMY_Guild = {}          -- key/value | key = enemyName, value = guild name
-local ENEMY_GuildCount = {}     -- key/value | key = guildName, value = number of guild members
-local ENEMY_GroupNum = {}       -- key/value | key = enemyName, value = number of guild group
-local FRIEND_Names = {}         -- key/value | key = friendName, value = 1
-local FRIEND_GuildCount = {}    -- key/value | key = guildName, value = number of guild members
-local FRIEND_GuildName = {}     -- key/value | key = friendName, value = 1
-local TARGET_Names = {}         -- key/value | key = friendName, value = enemyName
-local SPELL_Range = {}          -- key/value | key = spellId, value = maxRange
+local ENEMY_Data = {}           -- key = numerical | all data
+local ENEMY_Names = {}          -- key = enemyName | value = count
+local ENEMY_Names4Flag = {}     -- key = enemyName without realm | value = button number
+local ENEMY_Name2Button = {}    -- key = enemyName | value = button number
+local ENEMY_Name2Percent = {}   -- key = enemyName | value = health in percent
+local ENEMY_Name2Range = {}     -- key = enemyName | value = time of last contact
+local ENEMY_Name2Level = {}     -- key = enemyName | value = level
+local ENEMY_FirstFlagCheck = {} -- key = enemyName | value = 1
+local ENEMY_GuildName = {}      -- key = enemyName | value = guild name
+local ENEMY_GuildTry = {}       -- key = enemyName | value = num of guild name checks
+local ENEMY_GuildCount = {}     -- key = guildName | value = number of guild members
+local ENEMY_GroupNum = {}       -- key = enemyName | value = number of guild group
+local FRIEND_Names = {}         -- key = friendName | value = 1
+local FRIEND_GuildCount = {}    -- key = guildName | value = number of guild members
+local FRIEND_GuildName = {}     -- key = friendName | value = 1
+local TARGET_Names = {}         -- key = friendName | value = enemyName
+local SPELL_Range = {}          -- key = spellId | value = maxRange
 
 local ENEMY_Roles = {0,0,0,0}
 local FRIEND_Roles = {0,0,0,0}
@@ -292,7 +293,7 @@ local testData = {
 local bgMaps = {}
 local function BuildBattlegroundMapTable()
   for i = 1, GetNumBattlegroundTypes() do
-    local localizedName, _, _, _, bgID = GetBattlegroundInfo(i) -- localizedName, canEnter, isHoliday, isRandom, BattleGroundID, mapDescription, BGMapID
+    local localizedName, _, _, _, bgID = GetBattlegroundInfo(i)
     --print(i, localizedName, bgID) -- TEST
         if bgID ==   1 then bgMaps[localizedName] = {bgSize = 40, flagBG = 0} -- Alterac Valley
     elseif bgID ==   2 then bgMaps[localizedName] = {bgSize = 10, flagBG = 1} -- Warsong Gulch
@@ -398,8 +399,8 @@ local fontStyles = {
       if locale == "ruRU" then defaultFont = 12 -- FRIZQT___CYR.TTF (same as defined in FontStyleOverrides.xml/Fonts.xml)
   elseif locale == "zhCN" then defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml/Fonts.xml)
   elseif locale == "zhTW" then defaultFont = 10 -- ARKai_T.ttf (same as defined in FontStyleOverrides.xml/Fonts.xml)
---elseif locale == "enCN" then defaultFont = 10 -- -> zhCN
---elseif locale == "enTW" then defaultFont = 10 -- -> zhTW
+--elseif locale == "enCN" then defaultFont = 10 -> zhCN
+--elseif locale == "enTW" then defaultFont = 10 -> zhTW
   end
 
 local fontPath = fontStyles[defaultFont].font
@@ -491,10 +492,10 @@ local ranges = {
 --print("IsSpellKnown", ranges[playerClassEN], "|", IsSpellKnown(ranges[playerClassEN]))
 
 local rangeTypeName = {
-	[1] = "1) CombatLog   |cffffff79(0-73)|r", -- 1) combatlog
-	[2] = "2) ...",                            -- 2) class-spell based
-	[3] = "3) ...",                            -- 3) mix 1 class-spell based + combatlog (range: 0-45)
-	[4] = "4) ...",                            -- 4) mix 2 class-spell based + combatlog (range: class-spell dependent)
+	[1] = "1) CombatLog |cffffff790-73|r", -- 1) combatlog
+	[2] = "2) ...",                        -- 2) class-spell based
+	[3] = "3) ...",                        -- 3) mix 1 class-spell based + combatlog (range: 0-45)
+	[4] = "4) ...",                        -- 4) mix 2 class-spell based + combatlog (range: class-spell dependent)
 }
 
 local rangeDisplay = { -- RANGE_DISP_LAY
@@ -627,7 +628,7 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.ClassTexture:SetAlpha(1)
 		GVAR_TargetButton.ClassColorBackground:SetTexture(GVAR_TargetButton.colR5, GVAR_TargetButton.colG5, GVAR_TargetButton.colB5, 1)
 		GVAR_TargetButton.HealthBar:SetTexture(GVAR_TargetButton.colR, GVAR_TargetButton.colG, GVAR_TargetButton.colB, 1)
-	elseif display == 1 then -- Default 100
+	elseif display == 1 then -- STD 100
 		GVAR_TargetButton.Background:SetAlpha(1)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
@@ -636,7 +637,7 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.RoleTexture:SetAlpha(1)
 		GVAR_TargetButton.SpecTexture:SetAlpha(1)
 		GVAR_TargetButton.ClassTexture:SetAlpha(1)
- 	elseif display == 2 then -- Default 100 m
+ 	elseif display == 2 then -- STD 100 mono
 		GVAR_TargetButton.Background:SetAlpha(1)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
@@ -647,7 +648,7 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.ClassTexture:SetAlpha(1)
 		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-	elseif display == 3 then -- Default 50
+	elseif display == 3 then -- STD 50
 		GVAR_TargetButton.Background:SetAlpha(0.5)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.5)
@@ -656,7 +657,7 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.RoleTexture:SetAlpha(0.5)
 		GVAR_TargetButton.SpecTexture:SetAlpha(0.5)
 		GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
- 	elseif display == 4 then -- Default 50 m
+ 	elseif display == 4 then -- STD 50 mono
 		GVAR_TargetButton.Background:SetAlpha(0.5)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.5)
@@ -667,7 +668,7 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.ClassTexture:SetAlpha(0.5)
 		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
-	elseif display == 5 then -- Default 10
+	elseif display == 5 then -- STD 10
 		GVAR_TargetButton.Background:SetAlpha(0.3)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
@@ -676,7 +677,7 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
 		GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
 		GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
-	elseif display == 6 then -- Default 10 m
+	elseif display == 6 then -- STD 10 mono
 		GVAR_TargetButton.Background:SetAlpha(0.3)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
@@ -687,7 +688,7 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
 		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
- 	elseif display == 7 then -- X 100 m
+ 	elseif display == 7 then -- X 100 mono
 		GVAR_TargetButton.Background:SetAlpha(1)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(1)
@@ -698,7 +699,7 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.ClassTexture:SetAlpha(1)
 		GVAR_TargetButton.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 		GVAR_TargetButton.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
- 	elseif display == 8 then -- X 50 m
+ 	elseif display == 8 then -- X 50 mono
 		GVAR_TargetButton.Background:SetAlpha(0.5)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.5)
@@ -718,7 +719,7 @@ local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LA
 		GVAR_TargetButton.RoleTexture:SetAlpha(0.25)
 		GVAR_TargetButton.SpecTexture:SetAlpha(0.25)
 		GVAR_TargetButton.ClassTexture:SetAlpha(0.25)
-	else--if display == 10 then -- X 10 m
+	else--if display == 10 then -- X 10 mono
 		GVAR_TargetButton.Background:SetAlpha(0.3)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(0.1)
 		GVAR_TargetButton.ClassColorBackground:SetAlpha(0.25)
@@ -1495,189 +1496,192 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 18
 	end
 
-	if type(BattlegroundTargets_Options.pos)                        ~= "table"   then BattlegroundTargets_Options.pos                        = {}    end
-	if type(BattlegroundTargets_Options.MinimapButton)              ~= "boolean" then BattlegroundTargets_Options.MinimapButton              = false end
-	if type(BattlegroundTargets_Options.MinimapButtonPos)           ~= "number"  then BattlegroundTargets_Options.MinimapButtonPos           = -90   end
+	local BTO = BattlegroundTargets_Options
 
-	if type(BattlegroundTargets_Options.TargetIcon)                 ~= "string"  then BattlegroundTargets_Options.TargetIcon                 = "default" end
+	if type(BTO.pos)                          ~= "table"   then BattlegroundTargets_Options.pos                          = {}    end
+	if type(BTO.MinimapButton)                ~= "boolean" then BattlegroundTargets_Options.MinimapButton                = false end
+	if type(BTO.MinimapButtonPos)             ~= "number"  then BattlegroundTargets_Options.MinimapButtonPos             = -90   end
 
-	if type(BattlegroundTargets_Options.EnableBracket)              ~= "table"   then BattlegroundTargets_Options.EnableBracket              = {}    end
-	if type(BattlegroundTargets_Options.EnableBracket[10])          ~= "boolean" then BattlegroundTargets_Options.EnableBracket[10]          = false end
-	if type(BattlegroundTargets_Options.EnableBracket[15])          ~= "boolean" then BattlegroundTargets_Options.EnableBracket[15]          = false end
-	if type(BattlegroundTargets_Options.EnableBracket[40])          ~= "boolean" then BattlegroundTargets_Options.EnableBracket[40]          = false end
+	if type(BTO.TargetIcon)                   ~= "string"  then BattlegroundTargets_Options.TargetIcon                   = "default" end
 
-	if type(BattlegroundTargets_Options.IndependentPositioning)     ~= "table"   then BattlegroundTargets_Options.IndependentPositioning     = {}    end
-	if type(BattlegroundTargets_Options.IndependentPositioning[10]) ~= "boolean" then BattlegroundTargets_Options.IndependentPositioning[10] = false end
-	if type(BattlegroundTargets_Options.IndependentPositioning[15]) ~= "boolean" then BattlegroundTargets_Options.IndependentPositioning[15] = false end
-	if type(BattlegroundTargets_Options.IndependentPositioning[40]) ~= "boolean" then BattlegroundTargets_Options.IndependentPositioning[40] = false end
+	if type(BTO.EnableBracket)                ~= "table"   then BattlegroundTargets_Options.EnableBracket                = {}    end
+	if type(BTO.EnableBracket[10])            ~= "boolean" then BattlegroundTargets_Options.EnableBracket[10]            = false end
+	if type(BTO.EnableBracket[15])            ~= "boolean" then BattlegroundTargets_Options.EnableBracket[15]            = false end
+	if type(BTO.EnableBracket[40])            ~= "boolean" then BattlegroundTargets_Options.EnableBracket[40]            = false end
 
-	if type(BattlegroundTargets_Options.LayoutTH)                   ~= "table"   then BattlegroundTargets_Options.LayoutTH                   = {}    end
-	if type(BattlegroundTargets_Options.LayoutTH[10])               ~= "number"  then BattlegroundTargets_Options.LayoutTH[10]               = 18    end
-	if type(BattlegroundTargets_Options.LayoutTH[15])               ~= "number"  then BattlegroundTargets_Options.LayoutTH[15]               = 18    end
-	if type(BattlegroundTargets_Options.LayoutTH[40])               ~= "number"  then BattlegroundTargets_Options.LayoutTH[40]               = 24    end
-	if type(BattlegroundTargets_Options.LayoutSpace)                ~= "table"   then BattlegroundTargets_Options.LayoutSpace                = {}    end
-	if type(BattlegroundTargets_Options.LayoutSpace[10])            ~= "number"  then BattlegroundTargets_Options.LayoutSpace[10]            = 0     end
-	if type(BattlegroundTargets_Options.LayoutSpace[15])            ~= "number"  then BattlegroundTargets_Options.LayoutSpace[15]            = 0     end
-	if type(BattlegroundTargets_Options.LayoutSpace[40])            ~= "number"  then BattlegroundTargets_Options.LayoutSpace[40]            = 0     end
-	if type(BattlegroundTargets_Options.LayoutButtonSpace)          ~= "table"   then BattlegroundTargets_Options.LayoutButtonSpace          = {}    end
-	if type(BattlegroundTargets_Options.LayoutButtonSpace[10])      ~= "number"  then BattlegroundTargets_Options.LayoutButtonSpace[10]      = 0     end
-	if type(BattlegroundTargets_Options.LayoutButtonSpace[15])      ~= "number"  then BattlegroundTargets_Options.LayoutButtonSpace[15]      = 0     end
-	if type(BattlegroundTargets_Options.LayoutButtonSpace[40])      ~= "number"  then BattlegroundTargets_Options.LayoutButtonSpace[40]      = 0     end
+	if type(BTO.IndependentPositioning)       ~= "table"   then BattlegroundTargets_Options.IndependentPositioning       = {}    end
+	if type(BTO.IndependentPositioning[10])   ~= "boolean" then BattlegroundTargets_Options.IndependentPositioning[10]   = false end
+	if type(BTO.IndependentPositioning[15])   ~= "boolean" then BattlegroundTargets_Options.IndependentPositioning[15]   = false end
+	if type(BTO.IndependentPositioning[40])   ~= "boolean" then BattlegroundTargets_Options.IndependentPositioning[40]   = false end
 
-	if type(BattlegroundTargets_Options.Summary)                    ~= "table"   then BattlegroundTargets_Options.Summary                    = {}    end
-	if type(BattlegroundTargets_Options.Summary[10])                ~= "boolean" then BattlegroundTargets_Options.Summary[10]                = false end
-	if type(BattlegroundTargets_Options.Summary[15])                ~= "boolean" then BattlegroundTargets_Options.Summary[15]                = false end
-	if type(BattlegroundTargets_Options.Summary[40])                ~= "boolean" then BattlegroundTargets_Options.Summary[40]                = false end
-	if type(BattlegroundTargets_Options.SummaryScaleRole)           ~= "table"   then BattlegroundTargets_Options.SummaryScaleRole           = {}    end
-	if type(BattlegroundTargets_Options.SummaryScaleRole[10])       ~= "number"  then BattlegroundTargets_Options.SummaryScaleRole[10]       = 0.6   end
-	if type(BattlegroundTargets_Options.SummaryScaleRole[15])       ~= "number"  then BattlegroundTargets_Options.SummaryScaleRole[15]       = 0.6   end
-	if type(BattlegroundTargets_Options.SummaryScaleRole[40])       ~= "number"  then BattlegroundTargets_Options.SummaryScaleRole[40]       = 0.5   end
-	if type(BattlegroundTargets_Options.SummaryScaleGuildGroup)     ~= "table"   then BattlegroundTargets_Options.SummaryScaleGuildGroup     = {}    end
-	if type(BattlegroundTargets_Options.SummaryScaleGuildGroup[10]) ~= "number"  then BattlegroundTargets_Options.SummaryScaleGuildGroup[10] = 1.25  end
-	if type(BattlegroundTargets_Options.SummaryScaleGuildGroup[15]) ~= "number"  then BattlegroundTargets_Options.SummaryScaleGuildGroup[15] = 1.25  end
-	if type(BattlegroundTargets_Options.SummaryScaleGuildGroup[40]) ~= "number"  then BattlegroundTargets_Options.SummaryScaleGuildGroup[40] = 1.4   end
+	if type(BTO.LayoutTH)                     ~= "table"   then BattlegroundTargets_Options.LayoutTH                     = {}    end
+	if type(BTO.LayoutTH[10])                 ~= "number"  then BattlegroundTargets_Options.LayoutTH[10]                 = 18    end
+	if type(BTO.LayoutTH[15])                 ~= "number"  then BattlegroundTargets_Options.LayoutTH[15]                 = 18    end
+	if type(BTO.LayoutTH[40])                 ~= "number"  then BattlegroundTargets_Options.LayoutTH[40]                 = 24    end
+	if type(BTO.LayoutSpace)                  ~= "table"   then BattlegroundTargets_Options.LayoutSpace                  = {}    end
+	if type(BTO.LayoutSpace[10])              ~= "number"  then BattlegroundTargets_Options.LayoutSpace[10]              = 0     end
+	if type(BTO.LayoutSpace[15])              ~= "number"  then BattlegroundTargets_Options.LayoutSpace[15]              = 0     end
+	if type(BTO.LayoutSpace[40])              ~= "number"  then BattlegroundTargets_Options.LayoutSpace[40]              = 0     end
+	if type(BTO.LayoutButtonSpace)            ~= "table"   then BattlegroundTargets_Options.LayoutButtonSpace            = {}    end
+	if type(BTO.LayoutButtonSpace[10])        ~= "number"  then BattlegroundTargets_Options.LayoutButtonSpace[10]        = 0     end
+	if type(BTO.LayoutButtonSpace[15])        ~= "number"  then BattlegroundTargets_Options.LayoutButtonSpace[15]        = 0     end
+	if type(BTO.LayoutButtonSpace[40])        ~= "number"  then BattlegroundTargets_Options.LayoutButtonSpace[40]        = 0     end
 
-	if type(BattlegroundTargets_Options.ButtonShowRole)               ~= "table"   then BattlegroundTargets_Options.ButtonShowRole               = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowSpec)               ~= "table"   then BattlegroundTargets_Options.ButtonShowSpec               = {}    end
-	if type(BattlegroundTargets_Options.ButtonClassIcon)              ~= "table"   then BattlegroundTargets_Options.ButtonClassIcon              = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowRealm)              ~= "table"   then BattlegroundTargets_Options.ButtonShowRealm              = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowLeader)             ~= "table"   then BattlegroundTargets_Options.ButtonShowLeader             = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowGuildGroup)         ~= "table"   then BattlegroundTargets_Options.ButtonShowGuildGroup         = {}    end
-	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition)     ~= "table"   then BattlegroundTargets_Options.ButtonGuildGroupPosition     = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowTarget)             ~= "table"   then BattlegroundTargets_Options.ButtonShowTarget             = {}    end
-	if type(BattlegroundTargets_Options.ButtonTargetScale)            ~= "table"   then BattlegroundTargets_Options.ButtonTargetScale            = {}    end
-	if type(BattlegroundTargets_Options.ButtonTargetPosition)         ~= "table"   then BattlegroundTargets_Options.ButtonTargetPosition         = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowAssist)             ~= "table"   then BattlegroundTargets_Options.ButtonShowAssist             = {}    end
-	if type(BattlegroundTargets_Options.ButtonAssistScale)            ~= "table"   then BattlegroundTargets_Options.ButtonAssistScale            = {}    end
-	if type(BattlegroundTargets_Options.ButtonAssistPosition)         ~= "table"   then BattlegroundTargets_Options.ButtonAssistPosition         = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowFocus)              ~= "table"   then BattlegroundTargets_Options.ButtonShowFocus              = {}    end
-	if type(BattlegroundTargets_Options.ButtonFocusScale)             ~= "table"   then BattlegroundTargets_Options.ButtonFocusScale             = {}    end
-	if type(BattlegroundTargets_Options.ButtonFocusPosition)          ~= "table"   then BattlegroundTargets_Options.ButtonFocusPosition          = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowFlag)               ~= "table"   then BattlegroundTargets_Options.ButtonShowFlag               = {}    end
-	if type(BattlegroundTargets_Options.ButtonFlagScale)              ~= "table"   then BattlegroundTargets_Options.ButtonFlagScale              = {}    end
-	if type(BattlegroundTargets_Options.ButtonFlagPosition)           ~= "table"   then BattlegroundTargets_Options.ButtonFlagPosition           = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowTargetCount)        ~= "table"   then BattlegroundTargets_Options.ButtonShowTargetCount        = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowHealthBar)          ~= "table"   then BattlegroundTargets_Options.ButtonShowHealthBar          = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowHealthText)         ~= "table"   then BattlegroundTargets_Options.ButtonShowHealthText         = {}    end
-	if type(BattlegroundTargets_Options.ButtonRangeCheck)             ~= "table"   then BattlegroundTargets_Options.ButtonRangeCheck             = {}    end
-	if type(BattlegroundTargets_Options.ButtonTypeRangeCheck)         ~= "table"   then BattlegroundTargets_Options.ButtonTypeRangeCheck         = {}    end
-	if type(BattlegroundTargets_Options.ButtonRangeDisplay)           ~= "table"   then BattlegroundTargets_Options.ButtonRangeDisplay           = {}    end
-	if type(BattlegroundTargets_Options.ButtonSortBy)                 ~= "table"   then BattlegroundTargets_Options.ButtonSortBy                 = {}    end
-	if type(BattlegroundTargets_Options.ButtonSortDetail)             ~= "table"   then BattlegroundTargets_Options.ButtonSortDetail             = {}    end
-	if type(BattlegroundTargets_Options.ButtonFontNameSize)           ~= "table"   then BattlegroundTargets_Options.ButtonFontNameSize           = {}    end
-	if type(BattlegroundTargets_Options.ButtonFontNameStyle)          ~= "table"   then BattlegroundTargets_Options.ButtonFontNameStyle          = {}    end
-	if type(BattlegroundTargets_Options.ButtonFontNumberSize)         ~= "table"   then BattlegroundTargets_Options.ButtonFontNumberSize         = {}    end
-	if type(BattlegroundTargets_Options.ButtonFontNumberStyle)        ~= "table"   then BattlegroundTargets_Options.ButtonFontNumberStyle        = {}    end
-	if type(BattlegroundTargets_Options.ButtonScale)                  ~= "table"   then BattlegroundTargets_Options.ButtonScale                  = {}    end
-	if type(BattlegroundTargets_Options.ButtonWidth)                  ~= "table"   then BattlegroundTargets_Options.ButtonWidth                  = {}    end
-	if type(BattlegroundTargets_Options.ButtonHeight)                 ~= "table"   then BattlegroundTargets_Options.ButtonHeight                 = {}    end
+	if type(BTO.Summary)                      ~= "table"   then BattlegroundTargets_Options.Summary                      = {}    end
+	if type(BTO.Summary[10])                  ~= "boolean" then BattlegroundTargets_Options.Summary[10]                  = false end
+	if type(BTO.Summary[15])                  ~= "boolean" then BattlegroundTargets_Options.Summary[15]                  = false end
+	if type(BTO.Summary[40])                  ~= "boolean" then BattlegroundTargets_Options.Summary[40]                  = false end
+	if type(BTO.SummaryScaleRole)             ~= "table"   then BattlegroundTargets_Options.SummaryScaleRole             = {}    end
+	if type(BTO.SummaryScaleRole[10])         ~= "number"  then BattlegroundTargets_Options.SummaryScaleRole[10]         = 0.6   end
+	if type(BTO.SummaryScaleRole[15])         ~= "number"  then BattlegroundTargets_Options.SummaryScaleRole[15]         = 0.6   end
+	if type(BTO.SummaryScaleRole[40])         ~= "number"  then BattlegroundTargets_Options.SummaryScaleRole[40]         = 0.5   end
+	if type(BTO.SummaryScaleGuildGroup)       ~= "table"   then BattlegroundTargets_Options.SummaryScaleGuildGroup       = {}    end
+	if type(BTO.SummaryScaleGuildGroup[10])   ~= "number"  then BattlegroundTargets_Options.SummaryScaleGuildGroup[10]   = 1.25  end
+	if type(BTO.SummaryScaleGuildGroup[15])   ~= "number"  then BattlegroundTargets_Options.SummaryScaleGuildGroup[15]   = 1.25  end
+	if type(BTO.SummaryScaleGuildGroup[40])   ~= "number"  then BattlegroundTargets_Options.SummaryScaleGuildGroup[40]   = 1.4   end
 
-	if type(BattlegroundTargets_Options.ButtonShowRole[10])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[10]           = true  end
-	if type(BattlegroundTargets_Options.ButtonShowSpec[10])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[10]           = false end
-	if type(BattlegroundTargets_Options.ButtonClassIcon[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[10]          = false end
-	if type(BattlegroundTargets_Options.ButtonShowRealm[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[10]          = true  end
-	if type(BattlegroundTargets_Options.ButtonShowLeader[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[10]         = false end
-	if type(BattlegroundTargets_Options.ButtonShowGuildGroup[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[10]     = false end
-	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[10]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[10] = 4     end
-	if type(BattlegroundTargets_Options.ButtonShowTarget[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[10]         = true  end
-	if type(BattlegroundTargets_Options.ButtonTargetScale[10])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[10]        = 1.5   end
-	if type(BattlegroundTargets_Options.ButtonTargetPosition[10])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[10]     = 100   end
-	if type(BattlegroundTargets_Options.ButtonShowAssist[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowAssist[10]         = false end
-	if type(BattlegroundTargets_Options.ButtonAssistScale[10])        ~= "number"  then BattlegroundTargets_Options.ButtonAssistScale[10]        = 1.2   end
-	if type(BattlegroundTargets_Options.ButtonAssistPosition[10])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[10]     = 100   end
-	if type(BattlegroundTargets_Options.ButtonShowFocus[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowFocus[10]          = false end
-	if type(BattlegroundTargets_Options.ButtonFocusScale[10])         ~= "number"  then BattlegroundTargets_Options.ButtonFocusScale[10]         = 1     end
-	if type(BattlegroundTargets_Options.ButtonFocusPosition[10])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[10]      = 70    end
-	if type(BattlegroundTargets_Options.ButtonShowFlag[10])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowFlag[10]           = true  end
-	if type(BattlegroundTargets_Options.ButtonFlagScale[10])          ~= "number"  then BattlegroundTargets_Options.ButtonFlagScale[10]          = 1.2   end
-	if type(BattlegroundTargets_Options.ButtonFlagPosition[10])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[10]       = 60    end
-	if type(BattlegroundTargets_Options.ButtonShowTargetCount[10])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[10]    = false end
-	if type(BattlegroundTargets_Options.ButtonShowHealthBar[10])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[10]      = false end
-	if type(BattlegroundTargets_Options.ButtonShowHealthText[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[10]     = false end
-	if type(BattlegroundTargets_Options.ButtonRangeCheck[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[10]         = false end
-	if type(BattlegroundTargets_Options.ButtonTypeRangeCheck[10])     ~= "number"  then BattlegroundTargets_Options.ButtonTypeRangeCheck[10]     = 2     end
-	if type(BattlegroundTargets_Options.ButtonRangeDisplay[10])       ~= "number"  then BattlegroundTargets_Options.ButtonRangeDisplay[10]       = 1     end
-	if type(BattlegroundTargets_Options.ButtonSortBy[10])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[10]             = 1     end
-	if type(BattlegroundTargets_Options.ButtonSortDetail[10])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[10]         = 3     end
-	if type(BattlegroundTargets_Options.ButtonFontNameSize[10])       ~= "number"  then BattlegroundTargets_Options.ButtonFontNameSize[10]       = 12    end
-	if type(BattlegroundTargets_Options.ButtonFontNameStyle[10])      ~= "number"  then BattlegroundTargets_Options.ButtonFontNameStyle[10]      = defaultFont end
-	if type(BattlegroundTargets_Options.ButtonFontNumberSize[10])     ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberSize[10]     = 10    end
-	if type(BattlegroundTargets_Options.ButtonFontNumberStyle[10])    ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberStyle[10]    = 1     end
-	if type(BattlegroundTargets_Options.ButtonScale[10])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[10]              = 1     end
-	if type(BattlegroundTargets_Options.ButtonWidth[10])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[10]              = 175   end
-	if type(BattlegroundTargets_Options.ButtonHeight[10])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[10]             = 20    end
+	if type(BTO.ButtonShowRole)               ~= "table"   then BattlegroundTargets_Options.ButtonShowRole               = {}    end
+	if type(BTO.ButtonShowSpec)               ~= "table"   then BattlegroundTargets_Options.ButtonShowSpec               = {}    end
+	if type(BTO.ButtonClassIcon)              ~= "table"   then BattlegroundTargets_Options.ButtonClassIcon              = {}    end
+	if type(BTO.ButtonShowRealm)              ~= "table"   then BattlegroundTargets_Options.ButtonShowRealm              = {}    end
+	if type(BTO.ButtonShowLeader)             ~= "table"   then BattlegroundTargets_Options.ButtonShowLeader             = {}    end
+	if type(BTO.ButtonShowGuildGroup)         ~= "table"   then BattlegroundTargets_Options.ButtonShowGuildGroup         = {}    end
+	if type(BTO.ButtonGuildGroupPosition)     ~= "table"   then BattlegroundTargets_Options.ButtonGuildGroupPosition     = {}    end
+	if type(BTO.ButtonShowTarget)             ~= "table"   then BattlegroundTargets_Options.ButtonShowTarget             = {}    end
+	if type(BTO.ButtonTargetScale)            ~= "table"   then BattlegroundTargets_Options.ButtonTargetScale            = {}    end
+	if type(BTO.ButtonTargetPosition)         ~= "table"   then BattlegroundTargets_Options.ButtonTargetPosition         = {}    end
+	if type(BTO.ButtonShowAssist)             ~= "table"   then BattlegroundTargets_Options.ButtonShowAssist             = {}    end
+	if type(BTO.ButtonAssistScale)            ~= "table"   then BattlegroundTargets_Options.ButtonAssistScale            = {}    end
+	if type(BTO.ButtonAssistPosition)         ~= "table"   then BattlegroundTargets_Options.ButtonAssistPosition         = {}    end
+	if type(BTO.ButtonShowFocus)              ~= "table"   then BattlegroundTargets_Options.ButtonShowFocus              = {}    end
+	if type(BTO.ButtonFocusScale)             ~= "table"   then BattlegroundTargets_Options.ButtonFocusScale             = {}    end
+	if type(BTO.ButtonFocusPosition)          ~= "table"   then BattlegroundTargets_Options.ButtonFocusPosition          = {}    end
+	if type(BTO.ButtonShowFlag)               ~= "table"   then BattlegroundTargets_Options.ButtonShowFlag               = {}    end
+	if type(BTO.ButtonFlagScale)              ~= "table"   then BattlegroundTargets_Options.ButtonFlagScale              = {}    end
+	if type(BTO.ButtonFlagPosition)           ~= "table"   then BattlegroundTargets_Options.ButtonFlagPosition           = {}    end
+	if type(BTO.ButtonShowTargetCount)        ~= "table"   then BattlegroundTargets_Options.ButtonShowTargetCount        = {}    end
+	if type(BTO.ButtonShowHealthBar)          ~= "table"   then BattlegroundTargets_Options.ButtonShowHealthBar          = {}    end
+	if type(BTO.ButtonShowHealthText)         ~= "table"   then BattlegroundTargets_Options.ButtonShowHealthText         = {}    end
+	if type(BTO.ButtonRangeCheck)             ~= "table"   then BattlegroundTargets_Options.ButtonRangeCheck             = {}    end
+	if type(BTO.ButtonTypeRangeCheck)         ~= "table"   then BattlegroundTargets_Options.ButtonTypeRangeCheck         = {}    end
+	if type(BTO.ButtonRangeDisplay)           ~= "table"   then BattlegroundTargets_Options.ButtonRangeDisplay           = {}    end
+	if type(BTO.ButtonSortBy)                 ~= "table"   then BattlegroundTargets_Options.ButtonSortBy                 = {}    end
+	if type(BTO.ButtonSortDetail)             ~= "table"   then BattlegroundTargets_Options.ButtonSortDetail             = {}    end
+	if type(BTO.ButtonFontNameSize)           ~= "table"   then BattlegroundTargets_Options.ButtonFontNameSize           = {}    end
+	if type(BTO.ButtonFontNameStyle)          ~= "table"   then BattlegroundTargets_Options.ButtonFontNameStyle          = {}    end
+	if type(BTO.ButtonFontNumberSize)         ~= "table"   then BattlegroundTargets_Options.ButtonFontNumberSize         = {}    end
+	if type(BTO.ButtonFontNumberStyle)        ~= "table"   then BattlegroundTargets_Options.ButtonFontNumberStyle        = {}    end
+	if type(BTO.ButtonScale)                  ~= "table"   then BattlegroundTargets_Options.ButtonScale                  = {}    end
+	if type(BTO.ButtonWidth)                  ~= "table"   then BattlegroundTargets_Options.ButtonWidth                  = {}    end
+	if type(BTO.ButtonHeight)                 ~= "table"   then BattlegroundTargets_Options.ButtonHeight                 = {}    end
 
-	if type(BattlegroundTargets_Options.ButtonShowRole[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[15]           = true  end
-	if type(BattlegroundTargets_Options.ButtonShowSpec[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[15]           = false end
-	if type(BattlegroundTargets_Options.ButtonClassIcon[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[15]          = false end
-	if type(BattlegroundTargets_Options.ButtonShowRealm[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[15]          = true  end
-	if type(BattlegroundTargets_Options.ButtonShowLeader[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[15]         = false end
-	if type(BattlegroundTargets_Options.ButtonShowGuildGroup[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[15]     = false end
-	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[15]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[15] = 4     end
-	if type(BattlegroundTargets_Options.ButtonShowTarget[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[15]         = true  end
-	if type(BattlegroundTargets_Options.ButtonTargetScale[15])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[15]        = 1.5   end
-	if type(BattlegroundTargets_Options.ButtonTargetPosition[15])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[15]     = 100   end
-	if type(BattlegroundTargets_Options.ButtonShowAssist[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowAssist[15]         = false end
-	if type(BattlegroundTargets_Options.ButtonAssistScale[15])        ~= "number"  then BattlegroundTargets_Options.ButtonAssistScale[15]        = 1.2   end
-	if type(BattlegroundTargets_Options.ButtonAssistPosition[15])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[15]     = 100   end
-	if type(BattlegroundTargets_Options.ButtonShowFocus[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowFocus[15]          = false end
-	if type(BattlegroundTargets_Options.ButtonFocusScale[15])         ~= "number"  then BattlegroundTargets_Options.ButtonFocusScale[15]         = 1     end
-	if type(BattlegroundTargets_Options.ButtonFocusPosition[15])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[15]      = 70    end
-	if type(BattlegroundTargets_Options.ButtonShowFlag[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowFlag[15]           = true  end
-	if type(BattlegroundTargets_Options.ButtonFlagScale[15])          ~= "number"  then BattlegroundTargets_Options.ButtonFlagScale[15]          = 1.2   end
-	if type(BattlegroundTargets_Options.ButtonFlagPosition[15])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[15]       = 60    end
-	if type(BattlegroundTargets_Options.ButtonShowTargetCount[15])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[15]    = false end
-	if type(BattlegroundTargets_Options.ButtonShowHealthBar[15])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[15]      = false end
-	if type(BattlegroundTargets_Options.ButtonShowHealthText[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[15]     = false end
-	if type(BattlegroundTargets_Options.ButtonRangeCheck[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[15]         = false end
-	if type(BattlegroundTargets_Options.ButtonTypeRangeCheck[15])     ~= "number"  then BattlegroundTargets_Options.ButtonTypeRangeCheck[15]     = 2     end
-	if type(BattlegroundTargets_Options.ButtonRangeDisplay[15])       ~= "number"  then BattlegroundTargets_Options.ButtonRangeDisplay[15]       = 1     end
-	if type(BattlegroundTargets_Options.ButtonSortBy[15])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[15]             = 1     end
-	if type(BattlegroundTargets_Options.ButtonSortDetail[15])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[15]         = 3     end
-	if type(BattlegroundTargets_Options.ButtonFontNameSize[15])       ~= "number"  then BattlegroundTargets_Options.ButtonFontNameSize[15]       = 12    end
-	if type(BattlegroundTargets_Options.ButtonFontNameStyle[15])      ~= "number"  then BattlegroundTargets_Options.ButtonFontNameStyle[15]      = defaultFont end
-	if type(BattlegroundTargets_Options.ButtonFontNumberSize[15])     ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberSize[15]     = 10    end
-	if type(BattlegroundTargets_Options.ButtonFontNumberStyle[15])    ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberStyle[15]    = 1     end
-	if type(BattlegroundTargets_Options.ButtonScale[15])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[15]              = 1     end
-	if type(BattlegroundTargets_Options.ButtonWidth[15])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[15]              = 175   end
-	if type(BattlegroundTargets_Options.ButtonHeight[15])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[15]             = 20    end
+	if type(BTO.ButtonShowRole[10])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[10]           = true  end
+	if type(BTO.ButtonShowSpec[10])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[10]           = false end
+	if type(BTO.ButtonClassIcon[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[10]          = false end
+	if type(BTO.ButtonShowRealm[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[10]          = true  end
+	if type(BTO.ButtonShowLeader[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[10]         = false end
+	if type(BTO.ButtonShowGuildGroup[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[10]     = false end
+	if type(BTO.ButtonGuildGroupPosition[10]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[10] = 4     end
+	if type(BTO.ButtonShowTarget[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[10]         = true  end
+	if type(BTO.ButtonTargetScale[10])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[10]        = 1.5   end
+	if type(BTO.ButtonTargetPosition[10])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[10]     = 100   end
+	if type(BTO.ButtonShowAssist[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowAssist[10]         = false end
+	if type(BTO.ButtonAssistScale[10])        ~= "number"  then BattlegroundTargets_Options.ButtonAssistScale[10]        = 1.2   end
+	if type(BTO.ButtonAssistPosition[10])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[10]     = 100   end
+	if type(BTO.ButtonShowFocus[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowFocus[10]          = false end
+	if type(BTO.ButtonFocusScale[10])         ~= "number"  then BattlegroundTargets_Options.ButtonFocusScale[10]         = 1     end
+	if type(BTO.ButtonFocusPosition[10])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[10]      = 70    end
+	if type(BTO.ButtonShowFlag[10])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowFlag[10]           = true  end
+	if type(BTO.ButtonFlagScale[10])          ~= "number"  then BattlegroundTargets_Options.ButtonFlagScale[10]          = 1.2   end
+	if type(BTO.ButtonFlagPosition[10])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[10]       = 60    end
+	if type(BTO.ButtonShowTargetCount[10])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[10]    = false end
+	if type(BTO.ButtonShowHealthBar[10])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[10]      = false end
+	if type(BTO.ButtonShowHealthText[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[10]     = false end
+	if type(BTO.ButtonRangeCheck[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[10]         = false end
+	if type(BTO.ButtonTypeRangeCheck[10])     ~= "number"  then BattlegroundTargets_Options.ButtonTypeRangeCheck[10]     = 2     end
+	if type(BTO.ButtonRangeDisplay[10])       ~= "number"  then BattlegroundTargets_Options.ButtonRangeDisplay[10]       = 1     end
+	if type(BTO.ButtonSortBy[10])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[10]             = 1     end
+	if type(BTO.ButtonSortDetail[10])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[10]         = 3     end
+	if type(BTO.ButtonFontNameSize[10])       ~= "number"  then BattlegroundTargets_Options.ButtonFontNameSize[10]       = 12    end
+	if type(BTO.ButtonFontNameStyle[10])      ~= "number"  then BattlegroundTargets_Options.ButtonFontNameStyle[10]      = defaultFont end
+	if type(BTO.ButtonFontNumberSize[10])     ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberSize[10]     = 10    end
+	if type(BTO.ButtonFontNumberStyle[10])    ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberStyle[10]    = 1     end
+	if type(BTO.ButtonScale[10])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[10]              = 1     end
+	if type(BTO.ButtonWidth[10])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[10]              = 175   end
+	if type(BTO.ButtonHeight[10])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[10]             = 20    end
 
-	if type(BattlegroundTargets_Options.ButtonShowRole[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[40]           = true  end
-	if type(BattlegroundTargets_Options.ButtonShowSpec[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[40]           = false end
-	if type(BattlegroundTargets_Options.ButtonClassIcon[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[40]          = false end
-	if type(BattlegroundTargets_Options.ButtonShowRealm[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[40]          = false end
-	if type(BattlegroundTargets_Options.ButtonShowLeader[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[40]         = false end
-	if type(BattlegroundTargets_Options.ButtonShowGuildGroup[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[40]     = false end
-	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[40]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[40] = 4     end
-	if type(BattlegroundTargets_Options.ButtonShowTarget[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[40]         = true  end
-	if type(BattlegroundTargets_Options.ButtonTargetScale[40])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[40]        = 1     end
-	if type(BattlegroundTargets_Options.ButtonTargetPosition[40])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[40]     = 85    end
-	if type(BattlegroundTargets_Options.ButtonShowAssist[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowAssist[40]         = false end
-	if type(BattlegroundTargets_Options.ButtonAssistScale[40])        ~= "number"  then BattlegroundTargets_Options.ButtonAssistScale[40]        = 1     end
-	if type(BattlegroundTargets_Options.ButtonAssistPosition[40])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[40]     = 70    end
-	if type(BattlegroundTargets_Options.ButtonShowFocus[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowFocus[40]          = false end
-	if type(BattlegroundTargets_Options.ButtonFocusScale[40])         ~= "number"  then BattlegroundTargets_Options.ButtonFocusScale[40]         = 1     end
-	if type(BattlegroundTargets_Options.ButtonFocusPosition[40])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[40]      = 55    end
-	if type(BattlegroundTargets_Options.ButtonShowFlag[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowFlag[40]           = false end
-	if type(BattlegroundTargets_Options.ButtonFlagScale[40])          ~= "number"  then BattlegroundTargets_Options.ButtonFlagScale[40]          = 1     end
-	if type(BattlegroundTargets_Options.ButtonFlagPosition[40])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[40]       = 100   end
-	if type(BattlegroundTargets_Options.ButtonShowTargetCount[40])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[40]    = false end
-	if type(BattlegroundTargets_Options.ButtonShowHealthBar[40])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[40]      = false end
-	if type(BattlegroundTargets_Options.ButtonShowHealthText[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[40]     = false end
-	if type(BattlegroundTargets_Options.ButtonRangeCheck[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[40]         = false end
-	if type(BattlegroundTargets_Options.ButtonTypeRangeCheck[40])     ~= "number"  then BattlegroundTargets_Options.ButtonTypeRangeCheck[40]     = 2     end
-	if type(BattlegroundTargets_Options.ButtonRangeDisplay[40])       ~= "number"  then BattlegroundTargets_Options.ButtonRangeDisplay[40]       = 9     end
-	if type(BattlegroundTargets_Options.ButtonSortBy[40])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[40]             = 1     end
-	if type(BattlegroundTargets_Options.ButtonSortDetail[40])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[40]         = 3     end
-	if type(BattlegroundTargets_Options.ButtonFontNameSize[40])       ~= "number"  then BattlegroundTargets_Options.ButtonFontNameSize[40]       = 10    end
-	if type(BattlegroundTargets_Options.ButtonFontNameStyle[40])      ~= "number"  then BattlegroundTargets_Options.ButtonFontNameStyle[40]      = defaultFont end
-	if type(BattlegroundTargets_Options.ButtonFontNumberSize[40])     ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberSize[40]     = 10    end
-	if type(BattlegroundTargets_Options.ButtonFontNumberStyle[40])    ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberStyle[40]    = 1     end
-	if type(BattlegroundTargets_Options.ButtonScale[40])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[40]              = 1     end
-	if type(BattlegroundTargets_Options.ButtonWidth[40])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[40]              = 100   end
-	if type(BattlegroundTargets_Options.ButtonHeight[40])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[40]             = 16    end
+	if type(BTO.ButtonShowRole[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[15]           = true  end
+	if type(BTO.ButtonShowSpec[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[15]           = false end
+	if type(BTO.ButtonClassIcon[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[15]          = false end
+	if type(BTO.ButtonShowRealm[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[15]          = true  end
+	if type(BTO.ButtonShowLeader[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[15]         = false end
+	if type(BTO.ButtonShowGuildGroup[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[15]     = false end
+	if type(BTO.ButtonGuildGroupPosition[15]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[15] = 4     end
+	if type(BTO.ButtonShowTarget[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[15]         = true  end
+	if type(BTO.ButtonTargetScale[15])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[15]        = 1.5   end
+	if type(BTO.ButtonTargetPosition[15])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[15]     = 100   end
+	if type(BTO.ButtonShowAssist[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowAssist[15]         = false end
+	if type(BTO.ButtonAssistScale[15])        ~= "number"  then BattlegroundTargets_Options.ButtonAssistScale[15]        = 1.2   end
+	if type(BTO.ButtonAssistPosition[15])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[15]     = 100   end
+	if type(BTO.ButtonShowFocus[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowFocus[15]          = false end
+	if type(BTO.ButtonFocusScale[15])         ~= "number"  then BattlegroundTargets_Options.ButtonFocusScale[15]         = 1     end
+	if type(BTO.ButtonFocusPosition[15])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[15]      = 70    end
+	if type(BTO.ButtonShowFlag[15])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowFlag[15]           = true  end
+	if type(BTO.ButtonFlagScale[15])          ~= "number"  then BattlegroundTargets_Options.ButtonFlagScale[15]          = 1.2   end
+	if type(BTO.ButtonFlagPosition[15])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[15]       = 60    end
+	if type(BTO.ButtonShowTargetCount[15])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[15]    = false end
+	if type(BTO.ButtonShowHealthBar[15])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[15]      = false end
+	if type(BTO.ButtonShowHealthText[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[15]     = false end
+	if type(BTO.ButtonRangeCheck[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[15]         = false end
+	if type(BTO.ButtonTypeRangeCheck[15])     ~= "number"  then BattlegroundTargets_Options.ButtonTypeRangeCheck[15]     = 2     end
+	if type(BTO.ButtonRangeDisplay[15])       ~= "number"  then BattlegroundTargets_Options.ButtonRangeDisplay[15]       = 1     end
+	if type(BTO.ButtonSortBy[15])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[15]             = 1     end
+	if type(BTO.ButtonSortDetail[15])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[15]         = 3     end
+	if type(BTO.ButtonFontNameSize[15])       ~= "number"  then BattlegroundTargets_Options.ButtonFontNameSize[15]       = 12    end
+	if type(BTO.ButtonFontNameStyle[15])      ~= "number"  then BattlegroundTargets_Options.ButtonFontNameStyle[15]      = defaultFont end
+	if type(BTO.ButtonFontNumberSize[15])     ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberSize[15]     = 10    end
+	if type(BTO.ButtonFontNumberStyle[15])    ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberStyle[15]    = 1     end
+	if type(BTO.ButtonScale[15])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[15]              = 1     end
+	if type(BTO.ButtonWidth[15])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[15]              = 175   end
+	if type(BTO.ButtonHeight[15])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[15]             = 20    end
+
+	if type(BTO.ButtonShowRole[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowRole[40]           = true  end
+	if type(BTO.ButtonShowSpec[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowSpec[40]           = false end
+	if type(BTO.ButtonClassIcon[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[40]          = false end
+	if type(BTO.ButtonShowRealm[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[40]          = false end
+	if type(BTO.ButtonShowLeader[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[40]         = false end
+	if type(BTO.ButtonShowGuildGroup[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[40]     = false end
+	if type(BTO.ButtonGuildGroupPosition[40]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[40] = 4     end
+	if type(BTO.ButtonShowTarget[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[40]         = true  end
+	if type(BTO.ButtonTargetScale[40])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[40]        = 1     end
+	if type(BTO.ButtonTargetPosition[40])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[40]     = 85    end
+	if type(BTO.ButtonShowAssist[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowAssist[40]         = false end
+	if type(BTO.ButtonAssistScale[40])        ~= "number"  then BattlegroundTargets_Options.ButtonAssistScale[40]        = 1     end
+	if type(BTO.ButtonAssistPosition[40])     ~= "number"  then BattlegroundTargets_Options.ButtonAssistPosition[40]     = 70    end
+	if type(BTO.ButtonShowFocus[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowFocus[40]          = false end
+	if type(BTO.ButtonFocusScale[40])         ~= "number"  then BattlegroundTargets_Options.ButtonFocusScale[40]         = 1     end
+	if type(BTO.ButtonFocusPosition[40])      ~= "number"  then BattlegroundTargets_Options.ButtonFocusPosition[40]      = 55    end
+	if type(BTO.ButtonShowFlag[40])           ~= "boolean" then BattlegroundTargets_Options.ButtonShowFlag[40]           = false end
+	if type(BTO.ButtonFlagScale[40])          ~= "number"  then BattlegroundTargets_Options.ButtonFlagScale[40]          = 1     end
+	if type(BTO.ButtonFlagPosition[40])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[40]       = 100   end
+	if type(BTO.ButtonShowTargetCount[40])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[40]    = false end
+	if type(BTO.ButtonShowHealthBar[40])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[40]      = false end
+	if type(BTO.ButtonShowHealthText[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[40]     = false end
+	if type(BTO.ButtonRangeCheck[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[40]         = false end
+	if type(BTO.ButtonTypeRangeCheck[40])     ~= "number"  then BattlegroundTargets_Options.ButtonTypeRangeCheck[40]     = 2     end
+	if type(BTO.ButtonRangeDisplay[40])       ~= "number"  then BattlegroundTargets_Options.ButtonRangeDisplay[40]       = 9     end
+	if type(BTO.ButtonSortBy[40])             ~= "number"  then BattlegroundTargets_Options.ButtonSortBy[40]             = 1     end
+	if type(BTO.ButtonSortDetail[40])         ~= "number"  then BattlegroundTargets_Options.ButtonSortDetail[40]         = 3     end
+	if type(BTO.ButtonFontNameSize[40])       ~= "number"  then BattlegroundTargets_Options.ButtonFontNameSize[40]       = 10    end
+	if type(BTO.ButtonFontNameStyle[40])      ~= "number"  then BattlegroundTargets_Options.ButtonFontNameStyle[40]      = defaultFont end
+	if type(BTO.ButtonFontNumberSize[40])     ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberSize[40]     = 10    end
+	if type(BTO.ButtonFontNumberStyle[40])    ~= "number"  then BattlegroundTargets_Options.ButtonFontNumberStyle[40]    = 1     end
+	if type(BTO.ButtonScale[40])              ~= "number"  then BattlegroundTargets_Options.ButtonScale[40]              = 1     end
+	if type(BTO.ButtonWidth[40])              ~= "number"  then BattlegroundTargets_Options.ButtonWidth[40]              = 100   end
+	if type(BTO.ButtonHeight[40])             ~= "number"  then BattlegroundTargets_Options.ButtonHeight[40]             = 16    end
 
 	local BTO = BattlegroundTargets_Options
+
 	OPT.ButtonShowRole           = {[10] = BTO.ButtonShowRole[10]          , [15] = BTO.ButtonShowRole[15]          , [40] = BTO.ButtonShowRole[40]          }
 	OPT.ButtonShowSpec           = {[10] = BTO.ButtonShowSpec[10]          , [15] = BTO.ButtonShowSpec[15]          , [40] = BTO.ButtonShowSpec[40]          }
 	OPT.ButtonClassIcon          = {[10] = BTO.ButtonClassIcon[10]         , [15] = BTO.ButtonClassIcon[15]         , [40] = BTO.ButtonClassIcon[40]         }
@@ -1986,17 +1990,34 @@ function BattlegroundTargets:CreateFrames()
 
 		GVAR_TargetButton.FlagDebuffButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.FlagDebuff = GVAR_TargetButton.FlagDebuffButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		GVAR_TargetButton.FlagDebuff:SetWidth(40)
+		GVAR_TargetButton.FlagDebuff:SetWidth(50)
 		GVAR_TargetButton.FlagDebuff:SetHeight(buttonHeight-2)
 		GVAR_TargetButton.FlagDebuff:SetPoint("CENTER", GVAR_TargetButton.FlagTexture, "CENTER", 0, 0)
 		GVAR_TargetButton.FlagDebuff:SetJustifyH("CENTER")
 		GVAR_TargetButton.FlagDebuff:SetJustifyV("MIDDLE")
 		GVAR_TargetButton.OrbDebuff = GVAR_TargetButton.FlagDebuffButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		GVAR_TargetButton.OrbDebuff:SetWidth(40)
+		GVAR_TargetButton.OrbDebuff:SetWidth(50)
 		GVAR_TargetButton.OrbDebuff:SetHeight(buttonHeight-2)
-		GVAR_TargetButton.OrbDebuff:SetPoint("TOP", GVAR_TargetButton.FlagTexture, "TOP", 0, -4)
+		GVAR_TargetButton.OrbDebuff:SetPoint("TOP", GVAR_TargetButton, "TOP", 0, 0)
+		GVAR_TargetButton.OrbDebuff:SetPoint("LEFT", GVAR_TargetButton.FlagDebuff, "LEFT", 0, 0)
 		GVAR_TargetButton.OrbDebuff:SetJustifyH("CENTER")
 		GVAR_TargetButton.OrbDebuff:SetJustifyV("TOP")
+		GVAR_TargetButton.OrbCornerTL = GVAR_TargetButton.FlagDebuffButton:CreateTexture(nil, "OVERLAY")
+		GVAR_TargetButton.OrbCornerTL:SetPoint("LEFT", GVAR_TargetButton.FlagTexture, "LEFT", 0, 0)
+		GVAR_TargetButton.OrbCornerTL:SetPoint("TOP", GVAR_TargetButton, "TOP", 0, -2)
+		GVAR_TargetButton.OrbCornerTL:SetTexture(0, 0, 0, 1)
+		GVAR_TargetButton.OrbCornerTR = GVAR_TargetButton.FlagDebuffButton:CreateTexture(nil, "OVERLAY")
+		GVAR_TargetButton.OrbCornerTR:SetPoint("RIGHT", GVAR_TargetButton.FlagTexture, "RIGHT", 0, 0)
+		GVAR_TargetButton.OrbCornerTR:SetPoint("TOP", GVAR_TargetButton, "TOP", 0, -2)
+		GVAR_TargetButton.OrbCornerTR:SetTexture(0, 0, 0, 1)
+		GVAR_TargetButton.OrbCornerBL = GVAR_TargetButton.FlagDebuffButton:CreateTexture(nil, "OVERLAY")
+		GVAR_TargetButton.OrbCornerBL:SetPoint("LEFT", GVAR_TargetButton.FlagTexture, "LEFT", 0, 0)
+		GVAR_TargetButton.OrbCornerBL:SetPoint("BOTTOM", GVAR_TargetButton, "BOTTOM", 0, 2)
+		GVAR_TargetButton.OrbCornerBL:SetTexture(0, 0, 0, 1)
+		GVAR_TargetButton.OrbCornerBR = GVAR_TargetButton.FlagDebuffButton:CreateTexture(nil, "OVERLAY")
+		GVAR_TargetButton.OrbCornerBR:SetPoint("RIGHT", GVAR_TargetButton.FlagTexture, "RIGHT", 0, 0)
+		GVAR_TargetButton.OrbCornerBR:SetPoint("BOTTOM", GVAR_TargetButton, "BOTTOM", 0, 2)
+		GVAR_TargetButton.OrbCornerBR:SetTexture(0, 0, 0, 1)
 
 		GVAR_TargetButton.AssistTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.AssistTexture = GVAR_TargetButton.AssistTextureButton:CreateTexture(nil, "OVERLAY")
@@ -3322,9 +3343,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 		end
 		minRange = minRange or "?"
 		maxRange = maxRange or "?"
-		rangeTypeName[2] = "2) "..L["Class"].."   |cffffff79("..minRange.."-"..maxRange..")|r"
-		rangeTypeName[3] = "3) "..L["Mix"].." 1   |cffffff79("..minRange.."-"..maxRange..") + (0-45)|r"
-		rangeTypeName[4] = "4) "..L["Mix"].." 2   |cffffff79("..minRange.."-"..maxRange..") + ("..minRange.."-"..maxRange..")|r"
+		rangeTypeName[2] = "2) "..L["Class"].." |cffffff79"..minRange.."-"..maxRange.."|r"
+		rangeTypeName[3] = "3) "..L["Mix"].."1 |cffffff79"..minRange.."-"..maxRange.." + 0-45|r"
+		rangeTypeName[4] = "4) "..L["Mix"].."2 |cffffff79"..minRange.."-"..maxRange.." + "..minRange.."-"..maxRange.."|r"
 		local buttonName = rangeTypeName[1]
 		if OPT.ButtonTypeRangeCheck[currentSize] == 2 then
 			buttonName = rangeTypeName[2]
@@ -3353,15 +3374,14 @@ function BattlegroundTargets:CreateOptionsFrame()
 			rangeInfoTxt = rangeInfoTxt.."\n"
 		end
 		rangeInfoTxt = rangeInfoTxt.."\n"..rangeTypeName[3]..":\n"
-		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["Class"]..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
-		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog:|r |cffffff79(0-45)|r   |cffaaaaaa("..L["if you are attacked only"]..")|r\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["Class"]..":|r |cffffff79"..minRange.."-"..maxRange.."|r "..playerMClass.."\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog:|r |cffffff790-45|r |cffaaaaaa("..L["if you are attacked only"]..")|r\n"
 		rangeInfoTxt = rangeInfoTxt.."\n"..rangeTypeName[4]..":\n"
-		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["Class"]..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."\n"
-		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog|r |cffaaaaaa"..L["(class dependent)"]..":|r |cffffff79("..minRange.."-"..maxRange..")|r "..playerMClass.."   |cffaaaaaa("..L["if you are attacked only"]..")|r\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["Class"]..":|r |cffffff79"..minRange.."-"..maxRange.."|r "..playerMClass.."\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog|r |cffaaaaaa"..L["(class dependent)"]..":|r |cffffff79"..minRange.."-"..maxRange.."|r "..playerMClass.." |cffaaaaaa("..L["if you are attacked only"]..")|r\n"
 		rangeInfoTxt = rangeInfoTxt.."\n"
-		rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:20|t"
-		rangeInfoTxt = rangeInfoTxt.."|cffffffff "..L["Disable this option if you have CPU/FPS problems in combat."].." |r"
-		rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:20|t"
+		rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:28:32:0:0:64:64:0:64:0:56|t"
+		rangeInfoTxt = rangeInfoTxt.."|cffffff00 "..L["Disable this option if you have CPU/FPS problems in combat."].." |r"
 		----- text
 	-- range check
 	GVAR.OptionsFrame.RangeCheck = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -3633,10 +3653,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 			BattlegroundTargets:EnableConfigMode()
 		end,
 		function(self, button)
-			BattlegroundTargets:LocalizedFontTest(true, self.value1)
+			BattlegroundTargets:LocalizedFontNameTest(true, self.value1)
 		end,
 		function(self, button)
-			BattlegroundTargets:LocalizedFontTest(false, true)
+			BattlegroundTargets:LocalizedFontNameTest(false, true)
 		end
 	)
 	GVAR.OptionsFrame.FontNamePullDown:SetPoint("LEFT", GVAR.OptionsFrame.FontNameSlider, "RIGHT", 30, 0)
@@ -3654,32 +3674,32 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetScript("OnKeyDown", function(self, key)
 		if key == "LSHIFT" or key == "RSHIFT" or key == "LCTRL" or key == "RCTRL" or key == "LALT" or key == "RALT" then
 			GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetPropagateKeyboardInput(false)
-			BattlegroundTargets:LocalizedFontTest(false, false)
+			BattlegroundTargets:LocalizedFontNameTest(false, false)
 		end
 	end)
 	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetScript("OnKeyUp", function(self, key)
 		GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetPropagateKeyboardInput(true)
-		BattlegroundTargets:LocalizedFontTest(true, false)
+		BattlegroundTargets:LocalizedFontNameTest(true, false)
 	end)
 
 	local oldOnEnter = GVAR.OptionsFrame.FontNamePullDown:GetScript("OnEnter")
 	local oldOnLeave = GVAR.OptionsFrame.FontNamePullDown:GetScript("OnLeave")
 	GVAR.OptionsFrame.FontNamePullDown:SetScript("OnEnter", function(self)
-		BattlegroundTargets:LocalizedFontTest(true)
+		BattlegroundTargets:LocalizedFontNameTest(true)
 		if oldOnEnter then oldOnEnter() end
 	end)
 	GVAR.OptionsFrame.FontNamePullDown:SetScript("OnLeave", function(self)
-		BattlegroundTargets:LocalizedFontTest(false, true)
+		BattlegroundTargets:LocalizedFontNameTest(false, true)
 		if oldOnLeave then oldOnLeave() end
 	end)	
 	local oldOnEnter = GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:GetScript("OnEnter")
 	local oldOnLeave = GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:GetScript("OnLeave")
 	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetScript("OnEnter", function(self)
-		BattlegroundTargets:LocalizedFontTest(true)
+		BattlegroundTargets:LocalizedFontNameTest(true)
 		if oldOnEnter then oldOnEnter() end
 	end)
 	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetScript("OnLeave", function(self)
-		BattlegroundTargets:LocalizedFontTest(false, true)
+		BattlegroundTargets:LocalizedFontNameTest(false, true)
 		if oldOnLeave then oldOnLeave() end
 	end)
 
@@ -4769,31 +4789,24 @@ function BattlegroundTargets:SetupButtonLayout()
 
 		GVAR_TargetButton:SetScale(ButtonScale)
 
-		GVAR_TargetButton:SetWidth(ButtonWidth)
-		GVAR_TargetButton:SetHeight(ButtonHeight)
+		GVAR_TargetButton:SetSize(ButtonWidth, ButtonHeight)
 		GVAR_TargetButton.HighlightT:SetWidth(ButtonWidth)
 		GVAR_TargetButton.HighlightR:SetHeight(ButtonHeight)
 		GVAR_TargetButton.HighlightB:SetWidth(ButtonWidth)
 		GVAR_TargetButton.HighlightL:SetHeight(ButtonHeight)
-		GVAR_TargetButton.Background:SetWidth(ButtonWidth_2)
-		GVAR_TargetButton.Background:SetHeight(ButtonHeight_2)
+		GVAR_TargetButton.Background:SetSize(ButtonWidth_2, ButtonHeight_2)
 
 		if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
 			GVAR_TargetButton.RangeTexture:Show()
-			GVAR_TargetButton.RangeTexture:SetWidth(ButtonHeight_2/2)
-			GVAR_TargetButton.RangeTexture:SetHeight(ButtonHeight_2)
+			GVAR_TargetButton.RangeTexture:SetSize(ButtonHeight_2/2, ButtonHeight_2)
 		else
 			GVAR_TargetButton.RangeTexture:Hide()
 		end
-		GVAR_TargetButton.RoleTexture:SetWidth(ButtonHeight_2)
-		GVAR_TargetButton.RoleTexture:SetHeight(ButtonHeight_2)
-		GVAR_TargetButton.SpecTexture:SetWidth(ButtonHeight_2)
-		GVAR_TargetButton.SpecTexture:SetHeight(ButtonHeight_2)
-		GVAR_TargetButton.ClassTexture:SetWidth(ButtonHeight_2)
-		GVAR_TargetButton.ClassTexture:SetHeight(ButtonHeight_2)
+		GVAR_TargetButton.RoleTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
+		GVAR_TargetButton.SpecTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
+		GVAR_TargetButton.ClassTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
 
-		GVAR_TargetButton.LeaderTexture:SetWidth(ButtonHeight_2/1.5)
-		GVAR_TargetButton.LeaderTexture:SetHeight(ButtonHeight_2/1.5)
+		GVAR_TargetButton.LeaderTexture:SetSize(ButtonHeight_2/1.5, ButtonHeight_2/1.5)
 		if ButtonShowGuildGroup and ButtonGuildGroupPosition == 1 then
 			GVAR_TargetButton.LeaderTexture:ClearAllPoints()
 			GVAR_TargetButton.LeaderTexture:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", 0, 0)
@@ -4802,8 +4815,7 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR_TargetButton.LeaderTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", -(ButtonHeight_2/1.5)/2, 0)
 		end
 
-		GVAR_TargetButton.GuildGroup:SetWidth(ButtonHeight_2*0.4)
-		GVAR_TargetButton.GuildGroup:SetHeight(ButtonHeight_2*0.4)
+		GVAR_TargetButton.GuildGroup:SetSize(ButtonHeight_2*0.4, ButtonHeight_2*0.4)
 
 		GVAR_TargetButton.ClassColorBackground:SetHeight(ButtonHeight_2)
 		GVAR_TargetButton.HealthBar:SetHeight(ButtonHeight_2)
@@ -5038,8 +5050,7 @@ function BattlegroundTargets:SetupButtonLayout()
 			end
 			local quad = ButtonHeight_2 * ButtonTargetScale
 			local leftPos = -quad
-			GVAR_TargetButton.TargetTexture:SetWidth(quad)
-			GVAR_TargetButton.TargetTexture:SetHeight(quad)
+			GVAR_TargetButton.TargetTexture:SetSize(quad, quad)
 			if ButtonTargetPosition >= 100 then
 				leftPos = ButtonWidth
 			elseif ButtonTargetPosition > 0 then
@@ -5054,8 +5065,7 @@ function BattlegroundTargets:SetupButtonLayout()
 		if ButtonShowFocus then
 			local quad = ButtonHeight_2 * ButtonFocusScale
 			local leftPos = -quad
-			GVAR_TargetButton.FocusTexture:SetWidth(quad)
-			GVAR_TargetButton.FocusTexture:SetHeight(quad)
+			GVAR_TargetButton.FocusTexture:SetSize(quad, quad)
 			if ButtonFocusPosition >= 100 then
 				leftPos = ButtonWidth
 			elseif ButtonFocusPosition > 0 then
@@ -5070,8 +5080,7 @@ function BattlegroundTargets:SetupButtonLayout()
 		if ButtonShowFlag then
 			local quad = ButtonHeight_2 * ButtonFlagScale
 			local leftPos = -quad
-			GVAR_TargetButton.FlagTexture:SetWidth(quad)
-			GVAR_TargetButton.FlagTexture:SetHeight(quad)
+			GVAR_TargetButton.FlagTexture:SetSize(quad, quad)
 			if ButtonFlagPosition >= 100 then
 				leftPos = ButtonWidth
 			elseif ButtonFlagPosition > 0 then
@@ -5093,17 +5102,28 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR_TargetButton.OrbDebuff:SetHeight(backfallFontSize)
 			GVAR_TargetButton.OrbDebuff:SetAlpha(1)
 			GVAR_TargetButton.OrbDebuff:Show()
+			GVAR_TargetButton.OrbCornerTL:SetSize(ButtonHeight_2/4, ButtonHeight_2/4)
+			GVAR_TargetButton.OrbCornerTR:SetSize(ButtonHeight_2/4, ButtonHeight_2/4)
+			GVAR_TargetButton.OrbCornerBL:SetSize(ButtonHeight_2/4, ButtonHeight_2/4)
+			GVAR_TargetButton.OrbCornerBR:SetSize(ButtonHeight_2/4, ButtonHeight_2/4)
+			GVAR_TargetButton.OrbCornerTL:Show()
+			GVAR_TargetButton.OrbCornerTR:Show()
+			GVAR_TargetButton.OrbCornerBL:Show()
+			GVAR_TargetButton.OrbCornerBR:Show()
 		else
 			GVAR_TargetButton.FlagTexture:Hide()
 			GVAR_TargetButton.FlagDebuff:Hide()
 			GVAR_TargetButton.OrbDebuff:Hide()
+			GVAR_TargetButton.OrbCornerTL:Hide()
+			GVAR_TargetButton.OrbCornerTR:Hide()
+			GVAR_TargetButton.OrbCornerBL:Hide()
+			GVAR_TargetButton.OrbCornerBR:Hide()
 		end
 
 		if ButtonShowAssist then
 			local quad = ButtonHeight_2 * ButtonAssistScale
 			local leftPos = -quad
-			GVAR_TargetButton.AssistTexture:SetWidth(quad)
-			GVAR_TargetButton.AssistTexture:SetHeight(quad)
+			GVAR_TargetButton.AssistTexture:SetSize(quad, quad)
 			if ButtonAssistPosition >= 100 then
 				leftPos = ButtonWidth
 			elseif ButtonAssistPosition > 0 then
@@ -5255,7 +5275,7 @@ end
 
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:LocalizedFontTest(show, font)
+function BattlegroundTargets:LocalizedFontNameTest(show, font)
 	if show then
 		if font then
 			local f = fontStyles[font].font
@@ -5579,6 +5599,10 @@ function BattlegroundTargets:SetConfigButtonValues()
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
 		GVAR_TargetButton.FlagDebuff:SetText("")
 		GVAR_TargetButton.OrbDebuff:SetText("")
+		GVAR_TargetButton.OrbCornerTL:SetAlpha(0)
+		GVAR_TargetButton.OrbCornerTR:SetAlpha(0)
+		GVAR_TargetButton.OrbCornerBL:SetAlpha(0)
+		GVAR_TargetButton.OrbCornerBR:SetAlpha(0)
 		GVAR_TargetButton.AssistTexture:SetAlpha(0)
 		GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 
@@ -5642,8 +5666,7 @@ function BattlegroundTargets:SetConfigButtonValues()
 		if currentSize == 10 or currentSize == 15 then
 			if testData.CarrierDisplay == "flag" then
 				local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] 
-				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetWidth(quad)
-				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetHeight(quad)
+				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetSize(quad, quad)
 				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetTexture(flagTexture)
 				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetTexCoord(0.15625001, 0.84374999, 0.15625001, 0.84374999)--(5/32, 27/32, 5/32, 27/32)
 				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetAlpha(1)
@@ -5652,12 +5675,32 @@ function BattlegroundTargets:SetConfigButtonValues()
 				local quad = ( (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] ) * 1.3
 				for k, v in pairs(testData.IconOrb) do
 					if v.button then
-						GVAR.TargetButton[v.button].FlagTexture:SetWidth(quad)
-						GVAR.TargetButton[v.button].FlagTexture:SetHeight(quad)
+						GVAR.TargetButton[v.button].FlagTexture:SetSize(quad, quad)
 						GVAR.TargetButton[v.button].FlagTexture:SetTexture(orbIDs[ k ].texture)
 						GVAR.TargetButton[v.button].FlagTexture:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)--(2/32, 30/32, 2/32, 30/32)
 						GVAR.TargetButton[v.button].FlagTexture:SetAlpha(1)
 						GVAR.TargetButton[v.button].OrbDebuff:SetText(v.orbval)
+						if orbIDs[k].color == "Blue" then
+							GVAR.TargetButton[v.button].OrbCornerTL:SetAlpha(0.15)
+							GVAR.TargetButton[v.button].OrbCornerTR:SetAlpha(0.15)
+							GVAR.TargetButton[v.button].OrbCornerBL:SetAlpha(0.15)
+							GVAR.TargetButton[v.button].OrbCornerBR:SetAlpha(1)
+						elseif orbIDs[k].color == "Purple" then
+							GVAR.TargetButton[v.button].OrbCornerTL:SetAlpha(1)
+							GVAR.TargetButton[v.button].OrbCornerTR:SetAlpha(0.15)
+							GVAR.TargetButton[v.button].OrbCornerBL:SetAlpha(0.15)
+							GVAR.TargetButton[v.button].OrbCornerBR:SetAlpha(0.15)
+						elseif orbIDs[k].color == "Green" then
+							GVAR.TargetButton[v.button].OrbCornerTL:SetAlpha(0.15)
+							GVAR.TargetButton[v.button].OrbCornerTR:SetAlpha(0.15)
+							GVAR.TargetButton[v.button].OrbCornerBL:SetAlpha(1)
+							GVAR.TargetButton[v.button].OrbCornerBR:SetAlpha(0.15)
+						elseif orbIDs[k].color == "Orange" then
+							GVAR.TargetButton[v.button].OrbCornerTL:SetAlpha(0.15)
+							GVAR.TargetButton[v.button].OrbCornerTR:SetAlpha(1)
+							GVAR.TargetButton[v.button].OrbCornerBL:SetAlpha(0.15)
+							GVAR.TargetButton[v.button].OrbCornerBR:SetAlpha(0.15)
+						end
 					end
 				end
 			end
@@ -5692,6 +5735,10 @@ function BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, clearRan
 	GVAR_TargetButton.FlagTexture:SetAlpha(0)
 	GVAR_TargetButton.FlagDebuff:SetText("")
 	GVAR_TargetButton.OrbDebuff:SetText("")
+	GVAR_TargetButton.OrbCornerTL:SetAlpha(0)
+	GVAR_TargetButton.OrbCornerTR:SetAlpha(0)
+	GVAR_TargetButton.OrbCornerBL:SetAlpha(0)
+	GVAR_TargetButton.OrbCornerBR:SetAlpha(0)
 	GVAR_TargetButton.AssistTexture:SetAlpha(0)
 	GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 
@@ -5725,16 +5772,16 @@ function BattlegroundTargets:DefaultShuffle()
 	-- health range
 	for i = 1, 40 do
 		testData.Health[i] = random(0,100)
-		testData.Range[i]  = random(0,100)
+		testData.Range[i] = random(0,100)
 	end
 	-- target focus assi leader
-	testData.IconTarget  = random(1,10)
-	testData.IconFocus  = random(1,10)
-	testData.IconAssi  = random(1,10)
+	testData.IconTarget = random(1,10)
+	testData.IconFocus = random(1,10)
+	testData.IconAssi = random(1,10)
 	testData.Leader = random(1,10)
 	-- flag
-	testData.IconFlag.button  = random(1,10)
-	testData.IconFlag.txt  = random(1,10)
+	testData.IconFlag.button = random(1,10)
+	testData.IconFlag.txt = random(1,10)
 	-- orb
 	local count = 1
 	for k, v in pairs(testData.IconOrb) do
@@ -5828,10 +5875,8 @@ end
 function BattlegroundTargets:ShufflerFunc(what)
 	if what == "OnLeave" then
 		GVAR.OptionsFrame:SetScript("OnUpdate", nil)
-		GVAR.OptionsFrame.TestShuffler.Texture:SetWidth(32)
-		GVAR.OptionsFrame.TestShuffler.Texture:SetHeight(32)
-		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetWidth(32)
-		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetHeight(32)
+		GVAR.OptionsFrame.TestShuffler.Texture:SetSize(32, 32)
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetSize(32, 32)
 	elseif what == "OnEnter" then
 		BattlegroundTargets.elapsed = 1
 		BattlegroundTargets.progBit = true
@@ -5845,10 +5890,8 @@ function BattlegroundTargets:ShufflerFunc(what)
 			BattlegroundTargets:Shuffle(BattlegroundTargets.shuffleStyle)
 		end)
 	elseif what == "OnClick" then
-		GVAR.OptionsFrame.TestShuffler.Texture:SetWidth(32)
-		GVAR.OptionsFrame.TestShuffler.Texture:SetHeight(32)
-		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetWidth(32)
-		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetHeight(32)
+		GVAR.OptionsFrame.TestShuffler.Texture:SetSize(32, 32)
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetSize(32, 32)
 		BattlegroundTargets.shuffleStyle = not BattlegroundTargets.shuffleStyle
 		if BattlegroundTargets.shuffleStyle then
 			GVAR.OptionsFrame.TestShuffler.Texture:SetTexture("Interface\\Icons\\INV_Sigil_Thorim")
@@ -5856,10 +5899,8 @@ function BattlegroundTargets:ShufflerFunc(what)
 			GVAR.OptionsFrame.TestShuffler.Texture:SetTexture("Interface\\Icons\\INV_Sigil_Mimiron")
 		end
 	elseif what == "OnMouseDown" then
-		GVAR.OptionsFrame.TestShuffler.Texture:SetWidth(30)
-		GVAR.OptionsFrame.TestShuffler.Texture:SetHeight(30)
-		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetWidth(30)
-		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetHeight(30)
+		GVAR.OptionsFrame.TestShuffler.Texture:SetSize(30, 30)
+		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetSize(30, 30)
 	elseif what == "ShuffleCheck" then
 		local num = 0
 		if OPT.ButtonShowLeader[currentSize]     then num = num + 1 end
@@ -5910,14 +5951,15 @@ function BattlegroundTargets:Shuffle(shuffleStyle)
 		testData.IconFlag.button  = BattlegroundTargets.progNum
 		testData.IconFlag.txt  = BattlegroundTargets.progNum
 
+		local num = BattlegroundTargets.progNum * 60 -- * 2 * 30
 		for k, v in pairs(testData.IconOrb) do
 			if v.button then
 				v.button = BattlegroundTargets.progNum
-				v.orbval = BattlegroundTargets.progNum * 2 * 30
+				v.orbval = num
 			end
 		end
 
-		local num = BattlegroundTargets.progNum*10
+		local num = BattlegroundTargets.progNum * 10
 		for i = 1, 40 do
 			testData.Health[i] = num
 			testData.Range[i] = 100
@@ -6388,18 +6430,34 @@ function BattlegroundTargets:MainDataUpdate()
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
 					GVAR_TargetButton.FlagTexture:SetTexture("Interface\\MiniMap\\TempleofKotmogu_ball_cyan")
 					BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, hasOrb.Blue.orbval)
+					GVAR_TargetButton.OrbCornerTL:SetAlpha(0.15)
+					GVAR_TargetButton.OrbCornerTR:SetAlpha(0.15)
+					GVAR_TargetButton.OrbCornerBL:SetAlpha(0.15)
+					GVAR_TargetButton.OrbCornerBR:SetAlpha(1)
 				elseif qname == hasOrb.Purple.name then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
 					GVAR_TargetButton.FlagTexture:SetTexture("Interface\\MiniMap\\TempleofKotmogu_ball_purple")
 					BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, hasOrb.Purple.orbval)
+					GVAR_TargetButton.OrbCornerTL:SetAlpha(1)
+					GVAR_TargetButton.OrbCornerTR:SetAlpha(0.15)
+					GVAR_TargetButton.OrbCornerBL:SetAlpha(0.15)
+					GVAR_TargetButton.OrbCornerBR:SetAlpha(0.15)
 				elseif qname == hasOrb.Green.name then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
 					GVAR_TargetButton.FlagTexture:SetTexture("Interface\\MiniMap\\TempleofKotmogu_ball_green")
 					BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, hasOrb.Green.orbval)
+					GVAR_TargetButton.OrbCornerTL:SetAlpha(0.15)
+					GVAR_TargetButton.OrbCornerTR:SetAlpha(0.15)
+					GVAR_TargetButton.OrbCornerBL:SetAlpha(1)
+					GVAR_TargetButton.OrbCornerBR:SetAlpha(0.15)
 				elseif qname == hasOrb.Orange.name then
 					GVAR_TargetButton.FlagTexture:SetAlpha(1)
 					GVAR_TargetButton.FlagTexture:SetTexture("Interface\\MiniMap\\TempleofKotmogu_ball_orange")
 					BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, hasOrb.Orange.orbval)
+					GVAR_TargetButton.OrbCornerTL:SetAlpha(0.15)
+					GVAR_TargetButton.OrbCornerTR:SetAlpha(1)
+					GVAR_TargetButton.OrbCornerBL:SetAlpha(0.15)
+					GVAR_TargetButton.OrbCornerBR:SetAlpha(0.15)
 				else
 					GVAR_TargetButton.FlagTexture:SetAlpha(0)
 					GVAR_TargetButton.FlagDebuff:SetText("")
@@ -6482,13 +6540,13 @@ function BattlegroundTargets:MainDataUpdate()
 	if ButtonShowGuildGroup then
 		-- check if a guild group member left battleground
 		local doUpdate
-		for enemyName, guildName in pairs(ENEMY_Guild) do
+		for enemyName, guildName in pairs(ENEMY_GuildName) do
 			if not ENEMY_Name2Button[enemyName] and ENEMY_GroupNum[enemyName] > 0 then
 				ENEMY_GuildCount[guildName] = ENEMY_GuildCount[guildName] - 1
 				doUpdate = true
 
 				if ENEMY_GuildCount[guildName] < 2 then
-					for enemyName2, guildName2 in pairs(ENEMY_Guild) do
+					for enemyName2, guildName2 in pairs(ENEMY_GuildName) do
 						if guildName == guildName2 then
 							ENEMY_GroupNum[enemyName2] = 0
 
@@ -6559,88 +6617,95 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	wipe(FRIEND_Names)
 	ENEMY_Roles = {0,0,0,0} -- SUMMARY
 	FRIEND_Roles = {0,0,0,0}
-	
-	for index = 1, GetNumBattlefieldScores() do
-		local name, _, _, _, _, faction, race, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
-		if name then
-			if faction == oppositeFactionBG then
 
-				if oppositeFactionREAL == nil and race then
-					local n = RNA[race]
-					if n == 0 then -- summary_flag_texture
-						GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
-						oppositeFactionREAL = n
-					elseif n == 1 then
-						GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-						oppositeFactionREAL = n
-					end
+	local numScore = GetNumBattlefieldScores()
+
+	if not oppositeFactionREAL then
+		for index = 1, numScore do
+			local _, _, _, _, _, faction, race = GetBattlefieldScore(index)
+			if race and faction == oppositeFactionBG then
+				local n = RNA[race]
+				if n == 0 then -- summary_flag_texture
+					GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+					oppositeFactionREAL = 0
+					break
+				elseif n == 1 then
+					GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+					oppositeFactionREAL = 1
+					break
 				end
+			end
+		end
+	end
 
-				local role = 4
-				local spec = 5
-				local class = "ZZZFAILURE"
-				if classToken then
-					local token = classes[classToken]
-					if token then
-						if talentSpec then
-							if token.spec[1] and talentSpec == token.spec[1].specName then
-								role = classes[classToken].spec[1].role
-								spec = 1
-							elseif token.spec[2] and talentSpec == token.spec[2].specName then
-								role = classes[classToken].spec[2].role
-								spec = 2
-							elseif token.spec[3] and talentSpec == token.spec[3].specName then
-								role = classes[classToken].spec[3].role
-								spec = 3
-							elseif token.spec[4] and talentSpec == token.spec[4].specName then
-								role = classes[classToken].spec[4].role
-								spec = 4
-							end
-						end
-						class = classToken
-					end
-				end
+	for index = 1, numScore do
+		local name, _, _, _, _, faction, _, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
+		if not name then break end
+		if faction == oppositeFactionBG then
 
-				tinsert(ENEMY_Data, {
-					name = name,
-					classToken = class,
-					specNum = spec,
-					talentSpec = role,
-				})
-
-				ENEMY_Roles[role] = ENEMY_Roles[role] + 1 -- SUMMARY
-
-				if not ENEMY_Names[name] then
-					ENEMY_Names[name] = 0
-				end
-
-			else
-
-				FRIEND_Names[name] = 1
-
-				local role = 4
-				--local spec = 5
-				if classToken and talentSpec then
-					local token = classes[classToken]
-					if token then
+			local role = 4
+			local spec = 5
+			local class = "ZZZFAILURE"
+			if classToken then
+				local token = classes[classToken]
+				if token then
+					if talentSpec then
 						if token.spec[1] and talentSpec == token.spec[1].specName then
 							role = classes[classToken].spec[1].role
-							--spec = 1
+							spec = 1
 						elseif token.spec[2] and talentSpec == token.spec[2].specName then
 							role = classes[classToken].spec[2].role
-							--spec = 2
+							spec = 2
 						elseif token.spec[3] and talentSpec == token.spec[3].specName then
 							role = classes[classToken].spec[3].role
-							--spec = 3
+							spec = 3
 						elseif token.spec[4] and talentSpec == token.spec[4].specName then
 							role = classes[classToken].spec[4].role
-							--spec = 4
+							spec = 4
 						end
 					end
+					class = classToken
 				end
-				FRIEND_Roles[role] = FRIEND_Roles[role] + 1 -- SUMMARY
-
 			end
+
+			tinsert(ENEMY_Data, {
+				name = name,
+				classToken = class,
+				specNum = spec,
+				talentSpec = role,
+			})
+
+			ENEMY_Roles[role] = ENEMY_Roles[role] + 1 -- SUMMARY
+			if not ENEMY_Names[name] then
+				ENEMY_Names[name] = 0
+			end
+
+		else
+
+			local role = 4
+			--local spec = 5
+			if classToken and talentSpec then
+				local token = classes[classToken]
+				if token then
+					if token.spec[1] and talentSpec == token.spec[1].specName then
+						role = classes[classToken].spec[1].role
+						--spec = 1
+					elseif token.spec[2] and talentSpec == token.spec[2].specName then
+						role = classes[classToken].spec[2].role
+						--spec = 2
+					elseif token.spec[3] and talentSpec == token.spec[3].specName then
+						role = classes[classToken].spec[3].role
+						--spec = 3
+					elseif token.spec[4] and talentSpec == token.spec[4].specName then
+						role = classes[classToken].spec[4].role
+						--spec = 4
+					end
+				end
+			end
+
+			FRIEND_Roles[role] = FRIEND_Roles[role] + 1 -- SUMMARY
+			FRIEND_Names[name] = 1
+
 		end
 	end
 
@@ -6680,10 +6745,8 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
-	--print("C.heckOrb", enemyID, enemyName, GVAR_TargetButton)
 	for i = 1, 40 do
-		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, val1, val2, val3 = UnitDebuff(enemyID, i)
-		--print( "C.heckOrb -enemy-", enemyID, UnitName(enemyID), spellId, val1, val2, val3 )
+		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, val1 = UnitDebuff(enemyID, i)
 		if not spellId then return end
 		if orbIDs[spellId] then
 			flags = flags + 1
@@ -6758,7 +6821,7 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 		end
 		-- enemy debuff check
 		for i = 1, 40 do
-			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, val1, val2, val3 = UnitDebuff(unit, i)
+			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, val1 = UnitDebuff(unit, i)
 			if not spellId then break end
 			if orbIDs[spellId] then
 				flags = flags + 1
@@ -7016,8 +7079,7 @@ function BattlegroundTargets:IsBattleground()
 					end
 					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] 
 					for i = 1, currentSize do
-						GVAR.TargetButton[i].FlagTexture:SetWidth(quad)
-						GVAR.TargetButton[i].FlagTexture:SetHeight(quad)
+						GVAR.TargetButton[i].FlagTexture:SetSize(quad, quad)
 						GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
 						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.15625001, 0.84374999, 0.15625001, 0.84374999)--(5/32, 27/32, 5/32, 27/32)
 						GVAR.TargetButton[i].orbDebuffUpdate = nil
@@ -7026,8 +7088,7 @@ function BattlegroundTargets:IsBattleground()
 					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] * 1.3
 					local curTime = GetTime() - 2.1
 					for i = 1, currentSize do
-						GVAR.TargetButton[i].FlagTexture:SetWidth(quad)
-						GVAR.TargetButton[i].FlagTexture:SetHeight(quad)
+						GVAR.TargetButton[i].FlagTexture:SetSize(quad, quad)
 						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)--(2/32, 30/32, 2/32, 30/32)
 						GVAR.TargetButton[i].orbDebuffUpdate = curTime
 					end
@@ -7228,7 +7289,8 @@ function BattlegroundTargets:IsNotBattleground()
 	wipe(ENEMY_Name2Percent)
 	wipe(ENEMY_Name2Range)
 	wipe(ENEMY_Name2Level)
-	wipe(ENEMY_Guild)
+	wipe(ENEMY_GuildName)
+	wipe(ENEMY_GuildTry)
 	wipe(ENEMY_GuildCount)
 	wipe(ENEMY_GroupNum)
 	wipe(FRIEND_GuildCount)
@@ -7403,13 +7465,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	local curTime = GetTime()
 	local OPT = OPT
 
-	-- FLAGSPY
-	if flagCHK and isFlagBG > 0 then
-		if OPT.ButtonShowFlag[currentSize] then
-			BattlegroundTargets:CheckFlagCarrierCHECK(enemyID, enemyName)
-		end
-	end
-
 	-- target count
 	if OPT.ButtonShowTargetCount[currentSize] then
 		if curTime > targetCountUpdate + targetCountFrequency then
@@ -7465,11 +7520,18 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 	if not ENEMY_Names[enemyName] then return end
 
-	-- real faction check
-	-- NOTE: This check is here because with MoP the Pandaren race has the same name on Alliance and Horde side, and so
-	--       it's not possible with GetBattlefieldScore() to get the real opposite faction if all enemy chars are Pandaren.
-	--       This check covers such a rare case...but it will only work if 'Target' is enabled...
-	if oppositeFactionREAL == nil then -- summary_flag_texture
+	-- FLAGSPY
+	if flagCHK and isFlagBG > 0 then
+		if OPT.ButtonShowFlag[currentSize] then
+			BattlegroundTargets:CheckFlagCarrierCHECK(enemyID, enemyName)
+		end
+	end
+
+	-- real opposite faction check
+	-- NOTE: The Pandaren race name is the same on Alliance and Horde side, and so it's not possible
+	--       to get the real opposite faction with GetBattlefieldScore() if all enemies are Pandaren.
+	--       This check covers such a rare case...but it will only work if the option 'Target' is enabled...
+	if not oppositeFactionREAL then -- summary_flag_texture
 		local factionGroup = UnitFactionGroup(enemyID)
 		if factionGroup == "Horde" then
 			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
@@ -7487,12 +7549,13 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 	-- GLDGRP
 	if OPT.ButtonShowGuildGroup[currentSize] then
-		if not ENEMY_Guild[enemyName] then
-			if UnitIsVisible(enemyID) then -- vis -- TODO_MoP needs check
+		if not ENEMY_GuildTry[enemyName] or ENEMY_GuildTry[enemyName] < 5 then
+			if UnitIsVisible(enemyID) then -- vis
 
 				local guildName = GetGuildInfo(enemyID)
 				if guildName and guildName ~= "" then
-					ENEMY_Guild[enemyName] = guildName
+					ENEMY_GuildTry[enemyName] = 5
+					ENEMY_GuildName[enemyName] = guildName
 					ENEMY_GroupNum[enemyName] = 0
 
 					if not ENEMY_GuildCount[guildName] then
@@ -7519,7 +7582,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 						if gCount > 1 then
 						
 							local num2 = 0
-							for eName2, gName2 in pairs(ENEMY_Guild) do
+							for eName2, gName2 in pairs(ENEMY_GuildName) do
 								if gName == gName2 then
 									local gldNum = ENEMY_GroupNum[eName2]
 									if gldNum and gldNum > 0 then
@@ -7535,7 +7598,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 								num = num2
 							end
 
-							for eName2, gName2 in pairs(ENEMY_Guild) do
+							for eName2, gName2 in pairs(ENEMY_GuildName) do
 								if gName == gName2 then
 									ENEMY_GroupNum[eName2] = num
 
@@ -7560,9 +7623,13 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 
 					BattlegroundTargets:GuildGroupEnemyUpdate()
 
+				elseif ENEMY_GuildTry[enemyName] then
+					ENEMY_GuildTry[enemyName] = ENEMY_GuildTry[enemyName] + 1
+				else
+					ENEMY_GuildTry[enemyName] = 1
 				end
 
-			end -- vis -- TODO_MoP needs check
+			end -- vis
 		end
 	end
 
@@ -7777,7 +7844,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 	--print("0---START -----", caller, GetTime()) -- TEST
 	for num = 1, groupMembers do
 		local unitID = "raid"..num
-		if UnitIsVisible(unitID) then -- vis -- TODO_MoP needs check
+		if UnitIsVisible(unitID) then -- vis
 			local name, realm = UnitName(unitID)
 			if realm and realm ~= "" then
 				name = name.."-"..realm
@@ -7830,7 +7897,7 @@ function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
 
 				end
 			end
-		end -- vis -- TODO_MoP needs check
+		end -- vis
 	end
 
 	-- build table with guildCount as key and number of groups with same membersize as value
@@ -8201,7 +8268,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 local function CombatLogRangeCheck(sourceName, destName, spellId)
 	if not SPELL_Range[spellId] then
-		local _, _, _, _, _, _, _, _, maxRange = GetSpellInfo(spellId) -- local name, rank, icon, cost, isFunnel, powerType, castTime, minRange, maxRange = GetSpellInfo(spellId)
+		local _, _, _, _, _, _, _, _, maxRange = GetSpellInfo(spellId)
 		if not maxRange then return end
 		SPELL_Range[spellId] = maxRange
 	end
@@ -8493,7 +8560,7 @@ local function OnEvent(self, event, ...)
 		if isConfig then return end
 		if isDeadUpdateStop then return end
 
-		local _, _, _, _, sourceName, _, _, _, destName, _, _, spellId = ... -- timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, spellSchool = ...
+		local _, _, _, _, sourceName, _, _, _, destName, _, _, spellId = ...
 		if not sourceName then return end
 		if not destName then return end
 		if sourceName == destName then return end
@@ -8559,7 +8626,6 @@ local function OnEvent(self, event, ...)
 		BattlegroundTargets:CheckIfPlayerIsGhost()
 
 	elseif event == "ZONE_CHANGED_NEW_AREA" then
-		if not inWorld then return end
 		if isConfig then return end
 		BattlegroundTargets:BattlefieldCheck()
 
