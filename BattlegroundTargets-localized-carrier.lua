@@ -162,22 +162,22 @@ elseif locale == "ruRU" then
 
 elseif locale == "zhCN" then
 
-	-- Warsong Gulch & Twin Peaks: --> zhCN: tested with Patch 4.3.2.15211 (PTR)
+	-- Warsong Gulch & Twin Peaks: --> zhCN: tested with Patch 5.1.0.16135
 	FLG["WSG_TP_STRING_FLAG_DEBUFF1"] = "旗手变得脆弱了！"
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "旗手变得更加脆弱了！"
 	FLG["WSG_TP_PATTERN_PICKED1"] = "旗帜被([^%s]+)拔起了！"
 	FLG["WSG_TP_PATTERN_PICKED2"] = "旗帜被([^%s]+)拔起了！" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "丢掉了"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "夺取"
-	-- Eye of the Storm: --> zhCN: tested with Patch 4.3.2.15211 (PTR)
+	-- Eye of the Storm: --> zhCN: tested with Patch 5.1.0.16135
 	FLG["EOTS_PATTERN_PICKED"] = "(.+)夺走了旗帜！"
 	FLG["EOTS_STRING_DROPPED"] = "旗帜被扔掉了！"
 	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "联盟夺得了旗帜！"
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "部落夺得了旗帜！"
-	-- Temple of Kotmogu: --> zhCN: TODO -no PTR client available-
-	FLG["TOK_PATTERN_TAKEN"] = "(.+) has taken the (.+) orb!" -- TODO
-	FLG["TOK_PATTERN_RETURNED1"] = "The (.+) orb has been returned!" -- TODO
-	FLG["TOK_PATTERN_RETURNED2"] = "The (.+) orb has been returned!" -- TODO -- zhTW special
+	-- Temple of Kotmogu: --> zhCN: tested with Patch 5.1.0.16135
+	FLG["TOK_PATTERN_TAKEN"] = "(.+)取走了(.+)的球！"
+	FLG["TOK_PATTERN_RETURNED1"] = "(.+)宝珠被放回了！"
+	FLG["TOK_PATTERN_RETURNED2"] = "(.+)宝珠被放回了！" -- zhTW special
 
 elseif locale == "zhTW" then
 
