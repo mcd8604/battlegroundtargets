@@ -118,6 +118,7 @@
 local _G = _G
 local pairs = pairs
 local type = type
+local unpack = unpack
 local math_min = math.min
 local math_max = math.max
 local floor = math.floor
@@ -233,7 +234,7 @@ local isLowLevel
 local maxLevel = 90
 
 local playerName = UnitName("player")
-local playerClass, playerClassEN = UnitClass("player")
+local _, playerClassEN = UnitClass("player")
 local targetName, targetRealm
 local focusName, focusRealm
 local assistTargetName, assistTargetRealm
@@ -364,25 +365,25 @@ local sortDetail = {
 }
 
 local fontStyles = {
- [1] = {font = "Fonts\\2002.ttf",         name = "2002 - |cffa070ddLatin-1|r  |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
- [2] = {font = "Fonts\\2002B.ttf",        name = "2002 Bold - |cffa070ddLatin-1|r  |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
- [3] = {font = "Fonts\\ARIALN.TTF",       name = "Arial Narrow - |cffa070ddLatin|r  |cffff7c0aruRU|r"},
- [4] = {font = "Fonts\\ARHei.ttf",        name = "AR CrystalzcuheiGBK Demibold - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
- [5] = {font = "Fonts\\bHEI00M.ttf",      name = "AR Heiti2 Medium B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
- [6] = {font = "Fonts\\bHEI01B.ttf",      name = "AR Heiti2 Bold B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
- [7] = {font = "Fonts\\bKAI00M.ttf",      name = "AR Kaiti Medium B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
- [8] = {font = "Fonts\\bLEI00D.ttf",      name = "AR Leisu Demi B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"},
- [9] = {font = "Fonts\\ARKai_C.ttf",      name = "AR ZhongkaiGBK Medium C - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
-[10] = {font = "Fonts\\ARKai_T.ttf",      name = "AR ZhongkaiGBK Medium T - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"},
-[11] = {font = "Fonts\\FRIZQT__.TTF",     name = "Friz Quadrata TT - |cffa070ddLatin-1|r"},
-[12] = {font = "Fonts\\FRIZQT___CYR.TTF", name = "Friz Quadrata TT Cyr - |cffff7c0aruRU|r"},
-[13] = {font = "Fonts\\MORPHEUS.TTF",     name = "Morpheus - |cffa070ddLatin-1|r"},
-[14] = {font = "Fonts\\MORPHEUS_CYR.TTF", name = "Morpheus Cyr - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"},
-[15] = {font = "Fonts\\NIM_____.ttf",     name = "Nimrod MT - |cffa070ddLatin|r  |cffff7c0aruRU|r"},
-[16] = {font = "Fonts\\SKURRI.TTF",       name = "Skurri - |cffa070ddLatin-1|r"},
-[17] = {font = "Fonts\\SKURRI_CYR.TTF",   name = "Skurri Cyr - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"},
-[18] = {font = "Fonts\\K_Pagetext.TTF",   name = "YDIMokM - |cffa070ddLatin-1|r  |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
-[19] = {font = "Fonts\\K_Damage.TTF",     name = "YDIWingsM - |cff68ccefkoKR|r  |cffff7c0aruRU|r"},
+	{font = "Fonts\\2002.ttf",         name = "2002 - |cffa070ddLatin-1|r  |cff68ccefkoKR|r  |cffff7c0aruRU|r"}, -- 1
+	{font = "Fonts\\2002B.ttf",        name = "2002 Bold - |cffa070ddLatin-1|r  |cff68ccefkoKR|r  |cffff7c0aruRU|r"}, -- 2
+	{font = "Fonts\\ARIALN.TTF",       name = "Arial Narrow - |cffa070ddLatin|r  |cffff7c0aruRU|r"}, -- 3
+	{font = "Fonts\\ARHei.ttf",        name = "AR CrystalzcuheiGBK Demibold - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"}, -- 4
+	{font = "Fonts\\bHEI00M.ttf",      name = "AR Heiti2 Medium B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"}, -- 5
+	{font = "Fonts\\bHEI01B.ttf",      name = "AR Heiti2 Bold B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"}, -- 6
+	{font = "Fonts\\bKAI00M.ttf",      name = "AR Kaiti Medium B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"}, -- 7
+	{font = "Fonts\\bLEI00D.ttf",      name = "AR Leisu Demi B5 - |cffff7c0aruRU|r  |cffc41e3azhTW|r"}, -- 8
+	{font = "Fonts\\ARKai_C.ttf",      name = "AR ZhongkaiGBK Medium C - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"}, -- 9
+	{font = "Fonts\\ARKai_T.ttf",      name = "AR ZhongkaiGBK Medium T - |cffff7c0aruRU|r  |cffc69b6dzhCN|r  |cffc41e3azhTW|r"}, -- 10
+	{font = "Fonts\\FRIZQT__.TTF",     name = "Friz Quadrata TT - |cffa070ddLatin-1|r"}, -- 11
+	{font = "Fonts\\FRIZQT___CYR.TTF", name = "Friz Quadrata TT Cyr - |cffff7c0aruRU|r"}, -- 12
+	{font = "Fonts\\MORPHEUS.TTF",     name = "Morpheus - |cffa070ddLatin-1|r"}, -- 13
+	{font = "Fonts\\MORPHEUS_CYR.TTF", name = "Morpheus Cyr - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"}, -- 14
+	{font = "Fonts\\NIM_____.ttf",     name = "Nimrod MT - |cffa070ddLatin|r  |cffff7c0aruRU|r"}, -- 15
+	{font = "Fonts\\SKURRI.TTF",       name = "Skurri - |cffa070ddLatin-1|r"}, -- 16
+	{font = "Fonts\\SKURRI_CYR.TTF",   name = "Skurri Cyr - |cffa070ddLatin-1|r  |cffff7c0aruRU|r"}, -- 17
+	{font = "Fonts\\K_Pagetext.TTF",   name = "YDIMokM - |cffa070ddLatin-1|r  |cff68ccefkoKR|r  |cffff7c0aruRU|r"}, -- 18
+	{font = "Fonts\\K_Damage.TTF",     name = "YDIWingsM - |cff68ccefkoKR|r  |cffff7c0aruRU|r"}, -- 19
 }
 
   local defaultFont = 1
@@ -414,17 +415,17 @@ end
 -- coords : 2 62 66 126 130 190 194 254
 -- role   : 1 = HEALER | 2 = TANK | 3 = DAMAGER | 4 = UNKNOWN
 local classes = {
-	DEATHKNIGHT = {coords = {0.25781250, 0.49218750, 0.50781250, 0.74218750}}, -- ( 66/256, 126/256, 130/256, 190/256)
-	DRUID       = {coords = {0.75781250, 0.99218750, 0.00781250, 0.24218750}}, -- (194/256, 254/256,   2/256,  62/256)
-	HUNTER      = {coords = {0.00781250, 0.24218750, 0.25781250, 0.49218750}}, -- (  2/256,  62/256,  66/256, 126/256)
-	MAGE        = {coords = {0.25781250, 0.49218750, 0.00781250, 0.24218750}}, -- ( 66/256, 126/256,   2/256,  62/256)
-	MONK        = {coords = {0.50781250, 0.74218750, 0.50781250, 0.74218750}}, -- (130/256, 190/256, 130/256, 190/256)
-	PALADIN     = {coords = {0.00781250, 0.24218750, 0.50781250, 0.74218750}}, -- (  2/256,  62/256, 130/256, 190/256)
-	PRIEST      = {coords = {0.50781250, 0.74218750, 0.25781250, 0.49218750}}, -- (130/256, 190/256,  66/256, 126/256)
-	ROGUE       = {coords = {0.50781250, 0.74218750, 0.00781250, 0.24218750}}, -- (130/256, 190/256,   2/256,  62/256)
-	SHAMAN      = {coords = {0.25781250, 0.49218750, 0.25781250, 0.49218750}}, -- ( 66/256, 126/256,  66/256, 126/256)
-	WARLOCK     = {coords = {0.75781250, 0.99218750, 0.25781250, 0.49218750}}, -- (194/256, 254/256,  66/256, 126/256)
-	WARRIOR     = {coords = {0.00781250, 0.24218750, 0.00781250, 0.24218750}}, -- (  2/256,  62/256,   2/256,  62/256)
+	DEATHKNIGHT = {coords = {0.2578125, 0.4921875, 0.5078125, 0.7421875}}, -- ( 66/256, 126/256, 130/256, 190/256)
+	DRUID       = {coords = {0.7578125, 0.9921875, 0.0078125, 0.2421875}}, -- (194/256, 254/256,   2/256,  62/256)
+	HUNTER      = {coords = {0.0078125, 0.2421875, 0.2578125, 0.4921875}}, -- (  2/256,  62/256,  66/256, 126/256)
+	MAGE        = {coords = {0.2578125, 0.4921875, 0.0078125, 0.2421875}}, -- ( 66/256, 126/256,   2/256,  62/256)
+	MONK        = {coords = {0.5078125, 0.7421875, 0.5078125, 0.7421875}}, -- (130/256, 190/256, 130/256, 190/256)
+	PALADIN     = {coords = {0.0078125, 0.2421875, 0.5078125, 0.7421875}}, -- (  2/256,  62/256, 130/256, 190/256)
+	PRIEST      = {coords = {0.5078125, 0.7421875, 0.2578125, 0.4921875}}, -- (130/256, 190/256,  66/256, 126/256)
+	ROGUE       = {coords = {0.5078125, 0.7421875, 0.0078125, 0.2421875}}, -- (130/256, 190/256,   2/256,  62/256)
+	SHAMAN      = {coords = {0.2578125, 0.4921875, 0.2578125, 0.4921875}}, -- ( 66/256, 126/256,  66/256, 126/256)
+	WARLOCK     = {coords = {0.7578125, 0.9921875, 0.2578125, 0.4921875}}, -- (194/256, 254/256,  66/256, 126/256)
+	WARRIOR     = {coords = {0.0078125, 0.2421875, 0.0078125, 0.2421875}}, -- (  2/256,  62/256,   2/256,  62/256)
 	ZZZFAILURE  = {coords = {0, 0, 0, 0},
 	               spec   = {{role = 4, icon = nil, specName = ""},   -- 1 unknown
 	                         {role = 4, icon = nil, specName = ""},   -- 2 unknown
@@ -462,17 +463,17 @@ for i = 1, #CLASS_SORT_ORDER do -- Constants.lua
 end
 
 local class_IntegerSort = { -- .cid .blizz .eng .loc
- [1] = {cid = "DEATHKNIGHT", blizz = class_BlizzSort.DEATHKNIGHT or  2, eng = "Death Knight", loc = class_LocaSort.DEATHKNIGHT or "Death Knight"},
- [2] = {cid = "DRUID",       blizz = class_BlizzSort.DRUID       or  7, eng = "Druid",        loc = class_LocaSort.DRUID or "Druid"},
- [3] = {cid = "HUNTER",      blizz = class_BlizzSort.HUNTER      or 11, eng = "Hunter",       loc = class_LocaSort.HUNTER or "Hunter"},
- [4] = {cid = "MAGE",        blizz = class_BlizzSort.MAGE        or  9, eng = "Mage",         loc = class_LocaSort.MAGE or "Mage"},
- [5] = {cid = "MONK",        blizz = class_BlizzSort.MONK        or  4, eng = "Monk",         loc = class_LocaSort.MONK or "Monk"},
- [6] = {cid = "PALADIN",     blizz = class_BlizzSort.PALADIN     or  3, eng = "Paladin",      loc = class_LocaSort.PALADIN or "Paladin"},
- [7] = {cid = "PRIEST",      blizz = class_BlizzSort.PRIEST      or  5, eng = "Priest",       loc = class_LocaSort.PRIEST or "Priest"},
- [8] = {cid = "ROGUE",       blizz = class_BlizzSort.ROGUE       or  8, eng = "Rogue",        loc = class_LocaSort.ROGUE or "Rogue"},
- [9] = {cid = "SHAMAN",      blizz = class_BlizzSort.SHAMAN      or  6, eng = "Shaman",       loc = class_LocaSort.SHAMAN or "Shaman"},
-[10] = {cid = "WARLOCK",     blizz = class_BlizzSort.WARLOCK     or 10, eng = "Warlock",      loc = class_LocaSort.WARLOCK or "Warlock"},
-[11] = {cid = "WARRIOR",     blizz = class_BlizzSort.WARRIOR     or  1, eng = "Warrior",      loc = class_LocaSort.WARRIOR or "Warrior"},
+	{cid = "DEATHKNIGHT", blizz = class_BlizzSort.DEATHKNIGHT or  2, eng = "Death Knight", loc = class_LocaSort.DEATHKNIGHT or "Death Knight"}, -- 1
+	{cid = "DRUID",       blizz = class_BlizzSort.DRUID       or  7, eng = "Druid",        loc = class_LocaSort.DRUID or "Druid"},              -- 2
+	{cid = "HUNTER",      blizz = class_BlizzSort.HUNTER      or 11, eng = "Hunter",       loc = class_LocaSort.HUNTER or "Hunter"},            -- 3
+	{cid = "MAGE",        blizz = class_BlizzSort.MAGE        or  9, eng = "Mage",         loc = class_LocaSort.MAGE or "Mage"},                -- 4
+	{cid = "MONK",        blizz = class_BlizzSort.MONK        or  4, eng = "Monk",         loc = class_LocaSort.MONK or "Monk"},                -- 5
+	{cid = "PALADIN",     blizz = class_BlizzSort.PALADIN     or  3, eng = "Paladin",      loc = class_LocaSort.PALADIN or "Paladin"},          -- 6
+	{cid = "PRIEST",      blizz = class_BlizzSort.PRIEST      or  5, eng = "Priest",       loc = class_LocaSort.PRIEST or "Priest"},            -- 7
+	{cid = "ROGUE",       blizz = class_BlizzSort.ROGUE       or  8, eng = "Rogue",        loc = class_LocaSort.ROGUE or "Rogue"},              -- 8
+	{cid = "SHAMAN",      blizz = class_BlizzSort.SHAMAN      or  6, eng = "Shaman",       loc = class_LocaSort.SHAMAN or "Shaman"},            -- 9
+	{cid = "WARLOCK",     blizz = class_BlizzSort.WARLOCK     or 10, eng = "Warlock",      loc = class_LocaSort.WARLOCK or "Warlock"},          -- 10
+	{cid = "WARRIOR",     blizz = class_BlizzSort.WARRIOR     or  1, eng = "Warrior",      loc = class_LocaSort.WARRIOR or "Warrior"},          -- 11
 }
 
 local ranges = {
@@ -492,47 +493,46 @@ local ranges = {
 --print("IsSpellKnown", ranges[playerClassEN], "|", IsSpellKnown(ranges[playerClassEN]))
 
 local rangeTypeName = {
-	[1] = "1) CombatLog |cffffff790-73|r", -- 1) combatlog
-	[2] = "2) ...",                        -- 2) class-spell based
-	[3] = "3) ...",                        -- 3) mix 1 class-spell based + combatlog (range: 0-45)
-	[4] = "4) ...",                        -- 4) mix 2 class-spell based + combatlog (range: class-spell dependent)
+	"1) CombatLog |cffffff790-73|r", -- 1 1) combatlog
+	"2) ...",                        -- 2 2) class-spell based
+	"3) ...",                        -- 3 3) mix 1 class-spell based + combatlog (range: 0-45)
+	"4) ...",                        -- 4 4) mix 2 class-spell based + combatlog (range: class-spell dependent)
 }
 
 local rangeDisplay = { -- RANGE_DISP_LAY
-	 [1] = "STD 100", -- STD = Standard
-	 [2] = "STD 100 mono",
-	 [3] = "STD 50",
-	 [4] = "STD 50 mono",
-	 [5] = "STD 10",
-	 [6] = "STD 10 mono",
-	 [7] = "X 100 mono", -- X = without block
-	 [8] = "X 50 mono",
-	 [9] = "X 10",
-	[10] = "X 10 mono",
+	"STD 100",      -- 1 STD = Standard
+	"STD 100 mono", -- 2
+	"STD 50",       -- 3
+	"STD 50 mono",  -- 4
+	"STD 10",       -- 5
+	"STD 10 mono",  -- 6
+	"X 100 mono",   -- 7 X = without block
+	"X 50 mono",    -- 8
+	"X 10",         -- 9
+	"X 10 mono",    -- 10
 }
 
-local Textures = {
-	BattlegroundTargetsIcons = {path= "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-icons.tga"}, -- Textures.BattlegroundTargetsIcons.path
-	SliderKnob       = {coords     =    {19/64, 30/64,  1/64, 18/64}},
-	SliderBG         = {coordsL    =    {19/64, 24/64, 27/64, 33/64},
-	                    coordsM    =    {25/64, 26/64, 27/64, 33/64},
-	                    coordsR    =    {26/64, 31/64, 27/64, 33/64},
-	                    coordsLdis =    {19/64, 24/64, 19/64, 25/64},
-	                    coordsMdis =    {25/64, 26/64, 19/64, 25/64},
-	                    coordsRdis =    {26/64, 31/64, 19/64, 25/64}},
-	Expand           = {coords     =    { 1/64, 18/64,  1/64, 18/64}},
-	Collapse         = {coords     =    {0.28125, 0.28125, 0.28125, 0.015625, 0.015625, 0.28125, 0.015625, 0.015625}},
-	Close            = {coords     =    { 1/64, 18/64, 19/64, 36/64}},
-	RoleIcon         = {[1]        =    {32/64, 48/64, 16/64, 32/64},   -- HEALER
-	                    [2]        =    {48/64, 64/64,  0/64, 16/64},   -- TANK
-	                    [3]        =    {32/64, 48/64,  0/64, 16/64},   -- DAMAGER
-	                    [4]        =    {48/64, 64/64, 16/64, 32/64}},  -- UNKNOWN
-	l40_18           = {coords     =    {36/64, 41/64, 37/64, 51/64}, width =  5*2, height = 14*2},
-	l40_24           = {coords     =    {27/64, 36/64, 37/64, 47/64}, width =  9*2, height = 10*2},
-	l40_42           = {coords     =    {14/64, 27/64, 37/64, 44/64}, width = 13*2, height =  7*2},
-	l40_81           = {coords     =    { 0/64, 14/64, 37/64, 42/64}, width = 14*2, height =  5*2},
-	UpdateWarning    = {coords     =    { 0/64, 35/64, 47/64, 63/64}, width = 35/1.5, height = 16/1.5},
-}
+local Textures = {}
+Textures.Path          = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-icons"
+Textures.SliderKnob    = {0.296875, 0.46875,  0.015625, 0.28125}  -- {19/64, 30/64,  1/64, 18/64},
+Textures.SliderBG_Lnor = {0.296875, 0.375,    0.421875, 0.515625} -- {19/64, 24/64, 27/64, 33/64},
+Textures.SliderBG_Mnor = {0.390625, 0.40625,  0.421875, 0.515625} -- {25/64, 26/64, 27/64, 33/64},
+Textures.SliderBG_Rnor = {0.40625,  0.484375, 0.421875, 0.515625} -- {26/64, 31/64, 27/64, 33/64},
+Textures.SliderBG_Ldis = {0.296875, 0.375,    0.296875, 0.390625} -- {19/64, 24/64, 19/64, 25/64},
+Textures.SliderBG_Mdis = {0.390625, 0.40625,  0.296875, 0.390625} -- {25/64, 26/64, 19/64, 25/64},
+Textures.SliderBG_Rdis = {0.40625,  0.484375, 0.296875, 0.390625} -- {26/64, 31/64, 19/64, 25/64},
+Textures.Expand        = {0.015625, 0.28125,  0.015625, 0.28125}  -- { 1/64, 18/64,  1/64, 18/64},
+Textures.Collapse      = {0.28125,  0.28125,  0.28125,  0.015625, 0.015625, 0.28125,  0.015625, 0.015625}
+Textures.Close         = {0.015625, 0.28125,  0.296875, 0.5625}   -- { 1/64, 18/64, 19/64, 36/64},
+Textures.RoleIcon      ={{0.5,      0.75,     0.25,     0.5},     -- {32/64, 48/64, 16/64, 32/64},  -- 1 HEALER
+                         {0.75,     1,        0,        0.25},    -- {48/64, 64/64,  0/64, 16/64},  -- 2 TANK
+                         {0.5,      0.75,     0,        0.25},    -- {32/64, 48/64,  0/64, 16/64},  -- 3 DAMAGER
+                         {0.75,     1,        0.25,     0.5}}     -- {48/64, 64/64, 16/64, 32/64}}, -- 4 UNKNOWN
+Textures.l40_18        = {coords = {0.5625,   0.640625, 0.578125, 0.796875}, width = 10, height = 28} -- {36/64, 41/64, 37/64, 51/64}, width =  5*2, height = 14*2},
+Textures.l40_24        = {coords = {0.421875, 0.5625,   0.578125, 0.734375}, width = 18, height = 20} -- {27/64, 36/64, 37/64, 47/64}, width =  9*2, height = 10*2},
+Textures.l40_42        = {coords = {0.21875,  0.421875, 0.578125, 0.6875},   width = 26, height = 14} -- {14/64, 27/64, 37/64, 44/64}, width = 13*2, height =  7*2},
+Textures.l40_81        = {coords = {0,        0.21875,  0.578125, 0.65625},  width = 28, height = 10} -- { 0/64, 14/64, 37/64, 42/64}, width = 14*2, height =  5*2},
+Textures.UpdateWarning = {0,        0.546875, 0.734375, 0.984375} -- { 0/64, 35/64, 47/64, 63/64},
 
 local guildGrpTex = { -- GRP_TEX
 	{0.6875,  0.828125, 0.53125, 0.671875}, -- 1 {44/64, 53/64, 34/64, 43/64}
@@ -847,22 +847,22 @@ TEMPLATE.IconButton = function(button, cut)
 	button.Normal = button:CreateTexture(nil, "ARTWORK")
 	button.Normal:SetPoint("TOPLEFT", 3, -3)
 	button.Normal:SetPoint("BOTTOMRIGHT", -3, 3)
-	button.Normal:SetTexture(Textures.BattlegroundTargetsIcons.path)
-	button.Normal:SetTexCoord(unpack(Textures.Close.coords))
+	button.Normal:SetTexture(Textures.Path)
+	button.Normal:SetTexCoord(unpack(Textures.Close))
 	button:SetNormalTexture(button.Normal)
 
 	button.Push = button:CreateTexture(nil, "ARTWORK")
 	button.Push:SetPoint("TOPLEFT", 4, -4)
 	button.Push:SetPoint("BOTTOMRIGHT", -4, 4)
-	button.Push:SetTexture(Textures.BattlegroundTargetsIcons.path)
-	button.Push:SetTexCoord(unpack(Textures.Close.coords))
+	button.Push:SetTexture(Textures.Path)
+	button.Push:SetTexCoord(unpack(Textures.Close))
 	button:SetPushedTexture(button.Push)
 
 	button.Disabled = button:CreateTexture(nil, "ARTWORK")
 	button.Disabled:SetPoint("TOPLEFT", 3, -3)
 	button.Disabled:SetPoint("BOTTOMRIGHT", -3, 3)
-	button.Disabled:SetTexture(Textures.BattlegroundTargetsIcons.path)
-	button.Disabled:SetTexCoord(unpack(Textures.Close.coords))
+	button.Disabled:SetTexture(Textures.Path)
+	button.Disabled:SetTexCoord(unpack(Textures.Close))
 	button:SetDisabledTexture(button.Disabled)
 	Desaturation(button.Disabled, true)
 end
@@ -948,7 +948,7 @@ TEMPLATE.CheckButton = function(button, size, space, text, icon)
 			button.Icon:SetWidth(Textures[icon].width)
 			button.Icon:SetHeight(Textures[icon].height)
 			button.Icon:SetPoint("LEFT", button.Normal, "RIGHT", space, 0)
-			button.Icon:SetTexture(Textures.BattlegroundTargetsIcons.path)
+			button.Icon:SetTexture(Textures.Path)
 			button.Icon:SetTexCoord(unpack(Textures[icon].coords))
 			button:SetWidth(size + space + Textures[icon].width + space)
 			button:SetHeight(size)
@@ -1066,9 +1066,9 @@ end
 TEMPLATE.DisableSlider = function(slider)
 	slider.textMin:SetTextColor(0.5, 0.5, 0.5, 1)
 	slider.textMax:SetTextColor(0.5, 0.5, 0.5, 1)
-	slider.sliderBGL:SetTexCoord(unpack(Textures.SliderBG.coordsLdis))
-	slider.sliderBGM:SetTexCoord(unpack(Textures.SliderBG.coordsMdis))
-	slider.sliderBGR:SetTexCoord(unpack(Textures.SliderBG.coordsRdis))
+	slider.sliderBGL:SetTexCoord(unpack(Textures.SliderBG_Ldis))
+	slider.sliderBGM:SetTexCoord(unpack(Textures.SliderBG_Mdis))
+	slider.sliderBGR:SetTexCoord(unpack(Textures.SliderBG_Rdis))
 	slider.thumb:SetTexCoord(0, 0, 0, 0)
 	slider.Background:SetTexture(0, 0, 0, 0)
 	slider:SetScript("OnEnter", NOOP)
@@ -1079,10 +1079,10 @@ end
 TEMPLATE.EnableSlider = function(slider)
 	slider.textMin:SetTextColor(0.8, 0.8, 0.8, 1)
 	slider.textMax:SetTextColor(0.8, 0.8, 0.8, 1)
-	slider.sliderBGL:SetTexCoord(unpack(Textures.SliderBG.coordsL))
-	slider.sliderBGM:SetTexCoord(unpack(Textures.SliderBG.coordsM))
-	slider.sliderBGR:SetTexCoord(unpack(Textures.SliderBG.coordsR))
-	slider.thumb:SetTexCoord(unpack(Textures.SliderKnob.coords))
+	slider.sliderBGL:SetTexCoord(unpack(Textures.SliderBG_Lnor))
+	slider.sliderBGM:SetTexCoord(unpack(Textures.SliderBG_Mnor))
+	slider.sliderBGR:SetTexCoord(unpack(Textures.SliderBG_Rnor))
+	slider.thumb:SetTexCoord(unpack(Textures.SliderKnob))
 	slider:SetScript("OnEnter", function() slider.Background:SetTexture(1, 1, 1, 0.1) end)
 	slider:SetScript("OnLeave", function() slider.Background:SetTexture(0, 0, 0, 0) end)
 	slider:Enable()
@@ -1143,26 +1143,26 @@ TEMPLATE.Slider = function(slider, width, step, minVal, maxVal, curVal, func, me
 	slider.sliderBGL:SetWidth(5)
 	slider.sliderBGL:SetHeight(6)
 	slider.sliderBGL:SetPoint("LEFT", slider, "LEFT", 0, 0)
-	slider.sliderBGL:SetTexture(Textures.BattlegroundTargetsIcons.path)
-	slider.sliderBGL:SetTexCoord(unpack(Textures.SliderBG.coordsL))
+	slider.sliderBGL:SetTexture(Textures.Path)
+	slider.sliderBGL:SetTexCoord(unpack(Textures.SliderBG_Lnor))
 	slider.sliderBGM = slider:CreateTexture(nil, "BACKGROUND")
 	slider.sliderBGM:SetWidth(width-5-5)
 	slider.sliderBGM:SetHeight(6)
 	slider.sliderBGM:SetPoint("LEFT", slider.sliderBGL, "RIGHT", 0, 0)
-	slider.sliderBGM:SetTexture(Textures.BattlegroundTargetsIcons.path)
-	slider.sliderBGM:SetTexCoord(unpack(Textures.SliderBG.coordsM))
+	slider.sliderBGM:SetTexture(Textures.Path)
+	slider.sliderBGM:SetTexCoord(unpack(Textures.SliderBG_Mnor))
 	slider.sliderBGR = slider:CreateTexture(nil, "BACKGROUND")
 	slider.sliderBGR:SetWidth(5)
 	slider.sliderBGR:SetHeight(6)
 	slider.sliderBGR:SetPoint("LEFT", slider.sliderBGM, "RIGHT", 0, 0)
-	slider.sliderBGR:SetTexture(Textures.BattlegroundTargetsIcons.path)
-	slider.sliderBGR:SetTexCoord(unpack(Textures.SliderBG.coordsR))
+	slider.sliderBGR:SetTexture(Textures.Path)
+	slider.sliderBGR:SetTexCoord(unpack(Textures.SliderBG_Rnor))
 
 	slider.thumb = slider:CreateTexture(nil, "BORDER")
 	slider.thumb:SetWidth(11)
 	slider.thumb:SetHeight(17)
-	slider.thumb:SetTexture(Textures.BattlegroundTargetsIcons.path)
-	slider.thumb:SetTexCoord(unpack(Textures.SliderKnob.coords))
+	slider.thumb:SetTexture(Textures.Path)
+	slider.thumb:SetTexCoord(unpack(Textures.SliderKnob))
 	slider:SetThumbTexture(slider.thumb)
 
 	slider:SetScript("OnValueChanged", function(self, value)
@@ -1204,8 +1204,8 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 	button.PullDownButtonExpand:SetHeight(14)
 	button.PullDownButtonExpand:SetWidth(14)
 	button.PullDownButtonExpand:SetPoint("RIGHT", button, "RIGHT", -2, 0)
-	button.PullDownButtonExpand:SetTexture(Textures.BattlegroundTargetsIcons.path)
-	button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Expand.coords))
+	button.PullDownButtonExpand:SetTexture(Textures.Path)
+	button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Expand))
 	button:SetNormalTexture(button.PullDownButtonExpand)
 
 	button.PullDownButtonDisabled = button:CreateTexture(nil, "OVERLAY")
@@ -1238,7 +1238,7 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 	local function OnLeave()
 		if not button:IsMouseOver() and not button.PullDownMenu:IsMouseOver() then
 			button.PullDownMenu:Hide()
-			button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Expand.coords))
+			button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Expand))
 		end
 	end
 
@@ -1270,7 +1270,7 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 			button.value1 = button.PullDownMenu.Button[i].value1
 			button.PullDownButtonText:SetText( button.PullDownMenu.Button[i].Text:GetText() )
 			button.PullDownMenu:Hide()
-			button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Expand.coords))
+			button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Expand))
 			if func then
 				func(button.value1) -- PDFUNC
 			end
@@ -1341,10 +1341,10 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 	button:SetScript("OnClick", function()
 		if button.PullDownMenu:IsShown() then
 			button.PullDownMenu:Hide()
-			button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Expand.coords))
+			button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Expand))
 		else
 			button.PullDownMenu:Show()
-			button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Collapse.coords))
+			button.PullDownButtonExpand:SetTexCoord(unpack(Textures.Collapse))
 		end
 	end)
 end
@@ -1834,6 +1834,8 @@ function BattlegroundTargets:CreateFrames()
 
 	local buttonWidth = 150
 	local buttonHeight = 20
+	local buttonWidth_2 = buttonWidth-2
+	local buttonHeight_2 = buttonHeight-2
 
 	GVAR.TargetButton = {}
 	for i = 1, 40 do
@@ -1879,81 +1881,81 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.HighlightL:SetTexture(0, 0, 0, 1)
 
 		GVAR_TargetButton.Background = GVAR_TargetButton:CreateTexture(nil, "BACKGROUND")
-		GVAR_TargetButton.Background:SetWidth(buttonWidth-2)
-		GVAR_TargetButton.Background:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.Background:SetWidth(buttonWidth_2)
+		GVAR_TargetButton.Background:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.Background:SetPoint("TOPLEFT", 1, -1)
 		GVAR_TargetButton.Background:SetTexture(0, 0, 0, 1)
 
 		GVAR_TargetButton.RangeTexture = GVAR_TargetButton:CreateTexture(nil, "BORDER")
-		GVAR_TargetButton.RangeTexture:SetWidth((buttonHeight-2)/2)
-		GVAR_TargetButton.RangeTexture:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.RangeTexture:SetWidth(buttonHeight_2/2)
+		GVAR_TargetButton.RangeTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.RangeTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
 		GVAR_TargetButton.RangeTexture:SetTexture(0, 0, 0, 0)
 
 		GVAR_TargetButton.RoleTexture = GVAR_TargetButton:CreateTexture(nil, "BORDER")
-		GVAR_TargetButton.RoleTexture:SetWidth(buttonHeight-2)
-		GVAR_TargetButton.RoleTexture:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.RoleTexture:SetWidth(buttonHeight_2)
+		GVAR_TargetButton.RoleTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
-		GVAR_TargetButton.RoleTexture:SetTexture(Textures.BattlegroundTargetsIcons.path)
+		GVAR_TargetButton.RoleTexture:SetTexture(Textures.Path)
 		GVAR_TargetButton.RoleTexture:SetTexCoord(0, 0, 0, 0)
 
 		GVAR_TargetButton.SpecTexture = GVAR_TargetButton:CreateTexture(nil, "BORDER")
-		GVAR_TargetButton.SpecTexture:SetWidth(buttonHeight-2)
-		GVAR_TargetButton.SpecTexture:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.SpecTexture:SetWidth(buttonHeight_2)
+		GVAR_TargetButton.SpecTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
 		GVAR_TargetButton.SpecTexture:SetTexCoord(0.07812501, 0.92187499, 0.07812501, 0.92187499)--(5/64, 59/64, 5/64, 59/64)
 		GVAR_TargetButton.SpecTexture:SetTexture(nil)
 
 		GVAR_TargetButton.ClassTexture = GVAR_TargetButton:CreateTexture(nil, "BORDER")
-		GVAR_TargetButton.ClassTexture:SetWidth(buttonHeight-2)
-		GVAR_TargetButton.ClassTexture:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.ClassTexture:SetWidth(buttonHeight_2)
+		GVAR_TargetButton.ClassTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
 		GVAR_TargetButton.ClassTexture:SetTexture("Interface\\WorldStateFrame\\Icons-Classes")
 		GVAR_TargetButton.ClassTexture:SetTexCoord(0, 0, 0, 0)
 
 		GVAR_TargetButton.LeaderTexture = GVAR_TargetButton:CreateTexture(nil, "ARTWORK")
-		GVAR_TargetButton.LeaderTexture:SetWidth((buttonHeight-2)/1.5)
-		GVAR_TargetButton.LeaderTexture:SetHeight((buttonHeight-2)/1.5)
+		GVAR_TargetButton.LeaderTexture:SetWidth(buttonHeight_2/1.5)
+		GVAR_TargetButton.LeaderTexture:SetHeight(buttonHeight_2/1.5)
 		GVAR_TargetButton.LeaderTexture:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", 0, 0)
 		GVAR_TargetButton.LeaderTexture:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
 		GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 
 		GVAR_TargetButton.GuildGroupButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.GuildGroup = GVAR_TargetButton.GuildGroupButton:CreateTexture(nil, "OVERLAY") -- GLDGRP
-		GVAR_TargetButton.GuildGroup:SetWidth((buttonHeight-2)*0.4)
-		GVAR_TargetButton.GuildGroup:SetHeight((buttonHeight-2)*0.4)
+		GVAR_TargetButton.GuildGroup:SetWidth(buttonHeight_2*0.4)
+		GVAR_TargetButton.GuildGroup:SetHeight(buttonHeight_2*0.4)
 		GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
-		GVAR_TargetButton.GuildGroup:SetTexture(Textures.BattlegroundTargetsIcons.path)
+		GVAR_TargetButton.GuildGroup:SetTexture(Textures.Path)
 		GVAR_TargetButton.GuildGroup:SetTexCoord(0, 0, 0, 0)
 
 		GVAR_TargetButton.ClassColorBackground = GVAR_TargetButton:CreateTexture(nil, "BORDER")
-		GVAR_TargetButton.ClassColorBackground:SetWidth((buttonWidth-2) - (buttonHeight-2) - (buttonHeight-2))
-		GVAR_TargetButton.ClassColorBackground:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.ClassColorBackground:SetWidth(buttonWidth_2 - buttonHeight_2 - buttonHeight_2)
+		GVAR_TargetButton.ClassColorBackground:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
 		GVAR_TargetButton.ClassColorBackground:SetTexture(0, 0, 0, 0)
 
 		GVAR_TargetButton.HealthBar = GVAR_TargetButton:CreateTexture(nil, "ARTWORK")
-		GVAR_TargetButton.HealthBar:SetWidth((buttonWidth-2) - (buttonHeight-2) - (buttonHeight-2))
-		GVAR_TargetButton.HealthBar:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.HealthBar:SetWidth(buttonWidth_2 - buttonHeight_2 - buttonHeight_2)
+		GVAR_TargetButton.HealthBar:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.HealthBar:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 0, 0)
 		GVAR_TargetButton.HealthBar:SetTexture(0, 0, 0, 0)
 
 		GVAR_TargetButton.HealthTextButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.HealthText = GVAR_TargetButton.HealthTextButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		GVAR_TargetButton.HealthText:SetWidth((buttonWidth-2) - (buttonHeight-2) - (buttonHeight-2) -2)
-		GVAR_TargetButton.HealthText:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.HealthText:SetWidth(buttonWidth_2 - buttonHeight_2 - buttonHeight_2 - 2)
+		GVAR_TargetButton.HealthText:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.HealthText:SetPoint("RIGHT", GVAR_TargetButton.ClassColorBackground, "RIGHT", 0, 0)
 		GVAR_TargetButton.HealthText:SetJustifyH("RIGHT")
 
 		GVAR_TargetButton.Name = GVAR_TargetButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		GVAR_TargetButton.Name:SetWidth((buttonWidth-2) - (buttonHeight-2) - (buttonHeight-2) -2)
-		GVAR_TargetButton.Name:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.Name:SetWidth(buttonWidth_2 - buttonHeight_2 - buttonHeight_2 - 2)
+		GVAR_TargetButton.Name:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 2, 0)
 		GVAR_TargetButton.Name:SetJustifyH("LEFT")
 
 		GVAR_TargetButton.TargetCountBackground = GVAR_TargetButton:CreateTexture(nil, "ARTWORK")
 		GVAR_TargetButton.TargetCountBackground:SetWidth(20)
-		GVAR_TargetButton.TargetCountBackground:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.TargetCountBackground:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.TargetCountBackground:SetPoint("RIGHT", GVAR_TargetButton, "RIGHT", -1, 0)
 		GVAR_TargetButton.TargetCountBackground:SetTexture(0, 0, 0, 1)
 		GVAR_TargetButton.TargetCountBackground:SetAlpha(1)
@@ -1966,24 +1968,24 @@ function BattlegroundTargets:CreateFrames()
 
 		GVAR_TargetButton.TargetTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.TargetTexture = GVAR_TargetButton.TargetTextureButton:CreateTexture(nil, "OVERLAY")
-		GVAR_TargetButton.TargetTexture:SetWidth(buttonHeight-2)
-		GVAR_TargetButton.TargetTexture:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.TargetTexture:SetWidth(buttonHeight_2)
+		GVAR_TargetButton.TargetTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.TargetTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
 		GVAR_TargetButton.TargetTexture:SetTexture(AddonIcon)
 		GVAR_TargetButton.TargetTexture:SetAlpha(0)
 
 		GVAR_TargetButton.FocusTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.FocusTexture = GVAR_TargetButton.FocusTextureButton:CreateTexture(nil, "OVERLAY")
-		GVAR_TargetButton.FocusTexture:SetWidth(buttonHeight-2)
-		GVAR_TargetButton.FocusTexture:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.FocusTexture:SetWidth(buttonHeight_2)
+		GVAR_TargetButton.FocusTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.FocusTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
 		GVAR_TargetButton.FocusTexture:SetTexture("Interface\\Minimap\\Tracking\\Focus")
 		GVAR_TargetButton.FocusTexture:SetAlpha(0)
 
 		GVAR_TargetButton.FlagTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.FlagTexture = GVAR_TargetButton.FlagTextureButton:CreateTexture(nil, "OVERLAY")
-		GVAR_TargetButton.FlagTexture:SetWidth(buttonHeight-2)
-		GVAR_TargetButton.FlagTexture:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.FlagTexture:SetWidth(buttonHeight_2)
+		GVAR_TargetButton.FlagTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.FlagTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
 		GVAR_TargetButton.FlagTexture:SetTexture(flagTexture)
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
@@ -1991,13 +1993,13 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.FlagDebuffButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.FlagDebuff = GVAR_TargetButton.FlagDebuffButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		GVAR_TargetButton.FlagDebuff:SetWidth(50)
-		GVAR_TargetButton.FlagDebuff:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.FlagDebuff:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.FlagDebuff:SetPoint("CENTER", GVAR_TargetButton.FlagTexture, "CENTER", 0, 0)
 		GVAR_TargetButton.FlagDebuff:SetJustifyH("CENTER")
 		GVAR_TargetButton.FlagDebuff:SetJustifyV("MIDDLE")
 		GVAR_TargetButton.OrbDebuff = GVAR_TargetButton.FlagDebuffButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		GVAR_TargetButton.OrbDebuff:SetWidth(50)
-		GVAR_TargetButton.OrbDebuff:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.OrbDebuff:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.OrbDebuff:SetPoint("TOP", GVAR_TargetButton, "TOP", 0, 0)
 		GVAR_TargetButton.OrbDebuff:SetPoint("LEFT", GVAR_TargetButton.FlagDebuff, "LEFT", 0, 0)
 		GVAR_TargetButton.OrbDebuff:SetJustifyH("CENTER")
@@ -2021,8 +2023,8 @@ function BattlegroundTargets:CreateFrames()
 
 		GVAR_TargetButton.AssistTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
 		GVAR_TargetButton.AssistTexture = GVAR_TargetButton.AssistTextureButton:CreateTexture(nil, "OVERLAY")
-		GVAR_TargetButton.AssistTexture:SetWidth(buttonHeight-2)
-		GVAR_TargetButton.AssistTexture:SetHeight(buttonHeight-2)
+		GVAR_TargetButton.AssistTexture:SetWidth(buttonHeight_2)
+		GVAR_TargetButton.AssistTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.AssistTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
 		GVAR_TargetButton.AssistTexture:SetTexCoord(0.07812501, 0.92187499, 0.07812501, 0.92187499)--(5/64, 59/64, 5/64, 59/64)
 		GVAR_TargetButton.AssistTexture:SetTexture("Interface\\Icons\\Ability_Hunter_SniperShot")
@@ -2038,11 +2040,11 @@ function BattlegroundTargets:CreateFrames()
 	end
 
 	GVAR.ScoreUpdateTexture = GVAR.TargetButton[1]:CreateTexture(nil, "OVERLAY")
-	GVAR.ScoreUpdateTexture:SetWidth(Textures.UpdateWarning.width)
-	GVAR.ScoreUpdateTexture:SetHeight(Textures.UpdateWarning.height)
+	GVAR.ScoreUpdateTexture:SetWidth(26.25)
+	GVAR.ScoreUpdateTexture:SetHeight(12)
 	GVAR.ScoreUpdateTexture:SetPoint("BOTTOMLEFT", GVAR.TargetButton[1], "TOPLEFT", 1, 1)
-	GVAR.ScoreUpdateTexture:SetTexture(Textures.BattlegroundTargetsIcons.path)
-	GVAR.ScoreUpdateTexture:SetTexCoord(unpack(Textures.UpdateWarning.coords))
+	GVAR.ScoreUpdateTexture:SetTexture(Textures.Path)
+	GVAR.ScoreUpdateTexture:SetTexCoord(unpack(Textures.UpdateWarning))
 
 	-- ----------------------------------------
 	GVAR.Summary = CreateFrame("Frame", nil, GVAR.TargetButton[1]) -- SUMMARY
@@ -2054,19 +2056,19 @@ function BattlegroundTargets:CreateFrames()
 	GVAR.Summary.Healer:SetWidth(20)
 	GVAR.Summary.Healer:SetHeight(20)
 	GVAR.Summary.Healer:SetPoint("TOPLEFT", GVAR.Summary, "TOPLEFT", 60, 0)
-	GVAR.Summary.Healer:SetTexture(Textures.BattlegroundTargetsIcons.path)
+	GVAR.Summary.Healer:SetTexture(Textures.Path)
 	GVAR.Summary.Healer:SetTexCoord(unpack(Textures.RoleIcon[1]))
 	GVAR.Summary.Tank = GVAR.Summary:CreateTexture(nil, "ARTWORK")
 	GVAR.Summary.Tank:SetWidth(20)
 	GVAR.Summary.Tank:SetHeight(20)
 	GVAR.Summary.Tank:SetPoint("TOP", GVAR.Summary.Healer, "BOTTOM", 0, 0)
-	GVAR.Summary.Tank:SetTexture(Textures.BattlegroundTargetsIcons.path)
+	GVAR.Summary.Tank:SetTexture(Textures.Path)
 	GVAR.Summary.Tank:SetTexCoord(unpack(Textures.RoleIcon[2]))
 	GVAR.Summary.Damage = GVAR.Summary:CreateTexture(nil, "ARTWORK")
 	GVAR.Summary.Damage:SetWidth(20)
 	GVAR.Summary.Damage:SetHeight(20)
 	GVAR.Summary.Damage:SetPoint("TOP", GVAR.Summary.Tank, "BOTTOM", 0, 0)
-	GVAR.Summary.Damage:SetTexture(Textures.BattlegroundTargetsIcons.path)
+	GVAR.Summary.Damage:SetTexture(Textures.Path)
 	GVAR.Summary.Damage:SetTexCoord(unpack(Textures.RoleIcon[3]))
 
 	local function FONT_TEMPLATE(button)
@@ -7680,12 +7682,14 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 			if leaderThrottle > leaderFrequency then
 				leaderThrottle = 0
 				if UnitIsGroupLeader(enemyID) then
-					isLeader = enemyName
-					local TargetButton = GVAR.TargetButton
-					for i = 1, currentSize do
-						TargetButton[i].LeaderTexture:SetAlpha(0)
+					if isLeader ~= enemyName then
+						isLeader = enemyName
+						local TargetButton = GVAR.TargetButton
+						for i = 1, currentSize do
+							TargetButton[i].LeaderTexture:SetAlpha(0)
+						end
+						GVAR_TargetButton.LeaderTexture:SetAlpha(0.75)
 					end
-					GVAR_TargetButton.LeaderTexture:SetAlpha(0.75)
 				else
 					GVAR_TargetButton.LeaderTexture:SetAlpha(0)
 				end
