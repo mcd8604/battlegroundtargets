@@ -8002,7 +8002,8 @@ function BattlegroundTargets:FlagDebuffCheck(message) --print("F.lagDebuffCheck"
 end
 
 function BattlegroundTargets:OrbReturnCheck(message) --print("O.rbReturnCheck", message) -- TEST
-	local orbColor = strmatch(message, FLG["TOK_PATTERN_RETURNED"]) -- Temple of Kotmogu: orb was returned
+	local orbColor = strmatch(message, FLG["TOK_PATTERN_RETURNED1"]) or -- Temple of Kotmogu: orb was returned
+	                 strmatch(message, FLG["TOK_PATTERN_RETURNED2"])    -- Temple of Kotmogu: orb was returned
 	if orbColor then
 		local color = orbData(orbColor)
 		wipe(hasOrb[color])
