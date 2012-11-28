@@ -8016,6 +8016,10 @@ function BattlegroundTargets:OrbReturnCheck(message) --print("O.rbReturnCheck", 
 				GVAR_TargetButton[i].orbColor = nil
 				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
 				GVAR_TargetButton[i].OrbDebuff:SetText("")
+				GVAR_TargetButton[i].OrbCornerTL:SetAlpha(0)
+				GVAR_TargetButton[i].OrbCornerTR:SetAlpha(0)
+				GVAR_TargetButton[i].OrbCornerBL:SetAlpha(0)
+				GVAR_TargetButton[i].OrbCornerBR:SetAlpha(0)
 				break
 			end
 		end
@@ -8214,6 +8218,10 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 						GVAR_TargetButton[i].orbColor = nil
 						GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
 						GVAR_TargetButton[i].OrbDebuff:SetText("")
+						GVAR_TargetButton[i].OrbCornerTL:SetAlpha(0)
+						GVAR_TargetButton[i].OrbCornerTR:SetAlpha(0)
+						GVAR_TargetButton[i].OrbCornerBL:SetAlpha(0)
+						GVAR_TargetButton[i].OrbCornerBR:SetAlpha(0)
 						break
 					end
 				end
