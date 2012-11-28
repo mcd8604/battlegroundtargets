@@ -6748,7 +6748,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
 	for i = 1, 40 do
-		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, val1 = UnitDebuff(enemyID, i)
+		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val1 = UnitDebuff(enemyID, i)
 		if not spellId then return end
 		if orbIDs[spellId] then
 			flags = flags + 1
@@ -6759,7 +6759,6 @@ function BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
 			GVAR_TargetButton.orbColor = oID.color
 			GVAR_TargetButton.FlagTexture:SetAlpha(1)
 			GVAR_TargetButton.FlagTexture:SetTexture(oID.texture)
-			GVAR_TargetButton.FlagTexture:SetTexCoord(0, 1, 0, 1)
 			BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, val1)
 
 			if flagCHK and flags >= 4 then
@@ -6823,7 +6822,7 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 		end
 		-- enemy debuff check
 		for i = 1, 40 do
-			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, val1 = UnitDebuff(unit, i)
+			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val1 = UnitDebuff(unit, i)
 			if not spellId then break end
 			if orbIDs[spellId] then
 				flags = flags + 1
@@ -6838,7 +6837,6 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 						GVAR_TargetButton.orbColor = oID.color
 						GVAR_TargetButton.FlagTexture:SetAlpha(1)
 						GVAR_TargetButton.FlagTexture:SetTexture(oID.texture)
-						GVAR_TargetButton.FlagTexture:SetTexCoord(0, 1, 0, 1)
 						BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, val1)
 					end
 				end
@@ -7983,7 +7981,7 @@ function BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 end
 
 function BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, value)
-	if value > 0 then
+	if value and value > 0 then
 		GVAR_TargetButton.OrbDebuff:SetText(value)
 	else
 		GVAR_TargetButton.OrbDebuff:SetText("")
@@ -8238,6 +8236,10 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 						GVAR_TargetButton[i].orbColor = nil
 						GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
 						GVAR_TargetButton[i].OrbDebuff:SetText("")
+						GVAR_TargetButton[i].OrbCornerTL:SetAlpha(0)
+						GVAR_TargetButton[i].OrbCornerTR:SetAlpha(0)
+						GVAR_TargetButton[i].OrbCornerBL:SetAlpha(0)
+						GVAR_TargetButton[i].OrbCornerBR:SetAlpha(0)
 						break
 					end
 				end
@@ -8249,6 +8251,27 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 							GVAR_TargetButton.FlagTexture:SetAlpha(1)
 							GVAR_TargetButton.FlagTexture:SetTexture(texture)
 							GVAR_TargetButton.OrbDebuff:SetText("")
+							if color == "Blue" then
+								GVAR_TargetButton.OrbCornerTL:SetAlpha(0.15)
+								GVAR_TargetButton.OrbCornerTR:SetAlpha(0.15)
+								GVAR_TargetButton.OrbCornerBL:SetAlpha(0.15)
+								GVAR_TargetButton.OrbCornerBR:SetAlpha(1)
+							elseif color == "Purple" then
+								GVAR_TargetButton.OrbCornerTL:SetAlpha(1)
+								GVAR_TargetButton.OrbCornerTR:SetAlpha(0.15)
+								GVAR_TargetButton.OrbCornerBL:SetAlpha(0.15)
+								GVAR_TargetButton.OrbCornerBR:SetAlpha(0.15)
+							elseif color == "Green" then
+								GVAR_TargetButton.OrbCornerTL:SetAlpha(0.15)
+								GVAR_TargetButton.OrbCornerTR:SetAlpha(0.15)
+								GVAR_TargetButton.OrbCornerBL:SetAlpha(1)
+								GVAR_TargetButton.OrbCornerBR:SetAlpha(0.15)
+							elseif color == "Orange" then
+								GVAR_TargetButton.OrbCornerTL:SetAlpha(0.15)
+								GVAR_TargetButton.OrbCornerTR:SetAlpha(1)
+								GVAR_TargetButton.OrbCornerBL:SetAlpha(0.15)
+								GVAR_TargetButton.OrbCornerBR:SetAlpha(0.15)
+							end
 							for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Names4Flag have same buttonID
 								if button == fullnameButton then
 									hasOrb[color].name = fullname
