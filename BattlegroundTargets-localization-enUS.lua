@@ -46,6 +46,7 @@ L["Scale"] = true
 L["Width"] = true
 L["Height"] = true
 
+L["Options"] = true
 L["General Settings"] = true
 L["Show Minimap-Button"] = true
 

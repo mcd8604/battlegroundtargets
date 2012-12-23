@@ -46,6 +46,7 @@ L["Scale"] = "Escala"
 L["Width"] = "Largura"
 L["Height"] = "Altura"
 
+L["Options"] = "Opções" -- need check
 L["General Settings"] = "Configurações gerais"
 L["Show Minimap-Button"] = "Mostrar botão no minimapa"
 

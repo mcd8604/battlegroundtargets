@@ -46,6 +46,7 @@ L["Scale"] = "缩放"
 L["Width"] = "宽度"
 L["Height"] = "高度"
 
+L["Options"] = "选项" -- need check
 L["General Settings"] = "总体设定"
 L["Show Minimap-Button"] = "显示小地图图标"
 

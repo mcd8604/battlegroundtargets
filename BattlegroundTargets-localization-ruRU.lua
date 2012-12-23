@@ -46,6 +46,7 @@ L["Scale"] = "Масштаб"
 L["Width"] = "Ширина"
 L["Height"] = "Высота"
 
+L["Options"] = "Настройки" -- need check
 L["General Settings"] = "Общие настройки"
 L["Show Minimap-Button"] = "Отображать кнопку на мини-карте"
 

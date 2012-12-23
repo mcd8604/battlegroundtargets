@@ -46,6 +46,7 @@ L["Scale"] = "크기"
 L["Width"] = "너비"
 L["Height"] = "높이"
 
+L["Options"] = "옵션" -- need check
 L["General Settings"] = "일반 설정"
 L["Show Minimap-Button"] = "미니맵 버튼 표시"
 

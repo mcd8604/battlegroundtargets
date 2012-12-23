@@ -982,7 +982,9 @@ end
 
 TEMPLATE.EnableTabButton = function(button, active)
 	if button.TabText then
-		if active then
+		if button.monotext then
+			button.TabText:SetTextColor(1, 1, 1, 1)
+		elseif active then
 			button.TabText:SetTextColor(0, 0.75, 0, 1)
 		else
 			button.TabText:SetTextColor(1, 0, 0, 1)
@@ -993,7 +995,8 @@ TEMPLATE.EnableTabButton = function(button, active)
 	button:Enable()
 end
 
-TEMPLATE.TabButton = function(button, text, active)
+TEMPLATE.TabButton = function(button, text, active, monotext)
+	button.monotext = monotext
 	button.Texture = button:CreateTexture(nil, "BORDER")
 	button.Texture:SetPoint("TOPLEFT", 1, -1)
 	button.Texture:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -1027,7 +1030,9 @@ TEMPLATE.TabButton = function(button, text, active)
 		button.TabText:SetPoint("CENTER", button, "CENTER", 0, 0)
 		button.TabText:SetJustifyH("CENTER")
 		button.TabText:SetTextColor(1, 1, 1, 1)
-		if active then
+		if monotext then
+			button.TabText:SetTextColor(1, 1, 1, 1)
+		elseif active then
 			button.TabText:SetTextColor(0, 0.75, 0, 1)
 		else
 			button.TabText:SetTextColor(1, 0, 0, 1)
@@ -2314,7 +2319,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	-- tabs
 	GVAR.OptionsFrame.TabGeneral = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
-	TEMPLATE.TabButton(GVAR.OptionsFrame.TabGeneral, nil, BattlegroundTargets_Options.EnableBracket[10])
+	TEMPLATE.TabButton(GVAR.OptionsFrame.TabGeneral, L["Options"], nil, "monotext")
 	-- BOOM GVAR.OptionsFrame.TabGeneral:SetWidth()
 	GVAR.OptionsFrame.TabGeneral:SetHeight(22)
 	-- BOOM GVAR.OptionsFrame.TabGeneral:SetPoint()
@@ -4033,7 +4038,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Base:SetWidth(frameWidth)
 	GVAR.OptionsFrame.Title:SetWidth(frameWidth)
 	local spacer = 10
-	local tabWidth1 = 36
+	local tabWidth1 = GVAR.OptionsFrame.TabGeneral.TabText:GetStringWidth() + 20
 	local tabWidth2 = floor( (frameWidth-tabWidth1-tabWidth1-(6*spacer)) / 3 )
 	GVAR.OptionsFrame.TabGeneral:SetWidth(tabWidth1)
 	GVAR.OptionsFrame.TabRaidSize10:SetWidth(tabWidth2)

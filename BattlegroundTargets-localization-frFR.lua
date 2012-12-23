@@ -46,6 +46,7 @@ L["Scale"] = "Échelle" -- need check
 L["Width"] = "Largeur" -- need check
 L["Height"] = "Hauteur" -- need check
 
+L["Options"] = "Options" -- need check
 L["General Settings"] = true
 L["Show Minimap-Button"] = true
 
