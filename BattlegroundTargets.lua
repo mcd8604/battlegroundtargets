@@ -928,32 +928,14 @@ TEMPLATE.CheckButton = function(button, size, space, text, icon)
 	button:SetCheckedTexture(button.Checked)
 
 	if icon then
-		if icon == "default" then
-			button.Icon = button:CreateTexture(nil, "BORDER")
-			button.Icon:SetWidth(20)
-			button.Icon:SetHeight(20)
-			button.Icon:SetPoint("LEFT", button.Normal, "RIGHT", space, 0)
-			button.Icon:SetTexture("Interface\\Minimap\\Tracking\\Target")
-			button:SetWidth(size + space + 20 + space)
-			button:SetHeight(size)
-		elseif icon == "bgt" then
-			button.Icon = button:CreateTexture(nil, "BORDER")
-			button.Icon:SetWidth(20)
-			button.Icon:SetHeight(20)
-			button.Icon:SetPoint("LEFT", button.Normal, "RIGHT", space, 0)
-			button.Icon:SetTexture(AddonIcon)
-			button:SetWidth(size + space + 20 + space)
-			button:SetHeight(size)
-		else
-			button.Icon = button:CreateTexture(nil, "BORDER")
-			button.Icon:SetWidth(Textures[icon].width)
-			button.Icon:SetHeight(Textures[icon].height)
-			button.Icon:SetPoint("LEFT", button.Normal, "RIGHT", space, 0)
-			button.Icon:SetTexture(Textures.Path)
-			button.Icon:SetTexCoord(unpack(Textures[icon].coords))
-			button:SetWidth(size + space + Textures[icon].width + space)
-			button:SetHeight(size)
-		end
+		button.Icon = button:CreateTexture(nil, "BORDER")
+		button.Icon:SetWidth(Textures[icon].width)
+		button.Icon:SetHeight(Textures[icon].height)
+		button.Icon:SetPoint("LEFT", button.Normal, "RIGHT", space, 0)
+		button.Icon:SetTexture(Textures.Path)
+		button.Icon:SetTexCoord(unpack(Textures[icon].coords))
+		button:SetWidth(size + space + Textures[icon].width + space)
+		button:SetHeight(size)
 	else
 		button.Text = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 		button.Text:SetHeight( size )
@@ -1364,13 +1346,13 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if type(BattlegroundTargets_Options.version) ~= "number" then
-		BattlegroundTargets_Options.version = 19
+		BattlegroundTargets_Options.version = 20
 	end
 
 	if BattlegroundTargets_Options.version < 8 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
-		BattlegroundTargets_Options.version = 19
+		BattlegroundTargets_Options.version = 20
 	end
 
 	if BattlegroundTargets_Options.version == 8 then
@@ -1518,11 +1500,14 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 19
 	end
 
+	if BattlegroundTargets_Options.version == 19 then
+		BattlegroundTargets_Options.TargetIcon = nil
+		BattlegroundTargets_Options.version = 20
+	end
+
 	if type(BattlegroundTargets_Options.pos)                          ~= "table"   then BattlegroundTargets_Options.pos                          = {}    end
 	if type(BattlegroundTargets_Options.MinimapButton)                ~= "boolean" then BattlegroundTargets_Options.MinimapButton                = false end
 	if type(BattlegroundTargets_Options.MinimapButtonPos)             ~= "number"  then BattlegroundTargets_Options.MinimapButtonPos             = -90   end
-
-	if type(BattlegroundTargets_Options.TargetIcon)                   ~= "string"  then BattlegroundTargets_Options.TargetIcon                   = "default" end
 
 	if type(BattlegroundTargets_Options.EnableBracket)                ~= "table"   then BattlegroundTargets_Options.EnableBracket                = {}    end
 	if type(BattlegroundTargets_Options.EnableBracket[10])            ~= "boolean" then BattlegroundTargets_Options.EnableBracket[10]            = false end
@@ -1991,7 +1976,7 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.TargetTexture:SetWidth(buttonHeight_2)
 		GVAR_TargetButton.TargetTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.TargetTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
-		GVAR_TargetButton.TargetTexture:SetTexture(AddonIcon)
+		GVAR_TargetButton.TargetTexture:SetTexture("Interface\\Minimap\\Tracking\\Target")
 		GVAR_TargetButton.TargetTexture:SetAlpha(0)
 
 		GVAR_TargetButton.FocusTextureButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
@@ -3972,45 +3957,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.MinimapButton = not BattlegroundTargets_Options.MinimapButton
 		BattlegroundTargets:CreateMinimapButton()
 	end)
-
-	GVAR.OptionsFrame.TargetIconText = GVAR.OptionsFrame.ConfigGeneral:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.TargetIconText:SetHeight(20)
-	GVAR.OptionsFrame.TargetIconText:SetPoint("LEFT", GVAR.OptionsFrame.ConfigGeneral, "LEFT", 10, 0)
-	GVAR.OptionsFrame.TargetIconText:SetPoint("TOP", GVAR.OptionsFrame.Minimap, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.TargetIconText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.TargetIconText:SetText(L["Target"]..":")
-	GVAR.OptionsFrame.TargetIconText:SetTextColor(1, 1, 1, 1)
-	GVAR.OptionsFrame.TargetIcon1 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigGeneral)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.TargetIcon1, 16, 4, nil, "default")
-	GVAR.OptionsFrame.TargetIcon1:SetPoint("LEFT", GVAR.OptionsFrame.TargetIconText, "RIGHT", 5, 0)
-	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.TargetIcon1)
-	GVAR.OptionsFrame.TargetIcon1:SetScript("OnClick", function()
-		BattlegroundTargets_Options.TargetIcon = "default"
-		GVAR.OptionsFrame.TargetIcon1:SetChecked(true)
-		GVAR.OptionsFrame.TargetIcon2:SetChecked(false)
-		if BattlegroundTargets_Options.EnableBracket[currentSize] then
-			BattlegroundTargets:EnableConfigMode()
-		end
-	end)
-	GVAR.OptionsFrame.TargetIcon2 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigGeneral)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.TargetIcon2, 16, 4, nil, "bgt")
-	GVAR.OptionsFrame.TargetIcon2:SetPoint("LEFT", GVAR.OptionsFrame.TargetIcon1, "RIGHT", 5, 0)
-	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.TargetIcon2)
-	GVAR.OptionsFrame.TargetIcon2:SetScript("OnClick", function()
-		BattlegroundTargets_Options.TargetIcon = "bgt"
-		GVAR.OptionsFrame.TargetIcon1:SetChecked(false)
-		GVAR.OptionsFrame.TargetIcon2:SetChecked(true)
-		if BattlegroundTargets_Options.EnableBracket[currentSize] then
-			BattlegroundTargets:EnableConfigMode()
-		end
-	end)
-	if BattlegroundTargets_Options.TargetIcon == "default" then
-		GVAR.OptionsFrame.TargetIcon1:SetChecked(true)
-		GVAR.OptionsFrame.TargetIcon2:SetChecked(false)
-	else
-		GVAR.OptionsFrame.TargetIcon1:SetChecked(false)
-		GVAR.OptionsFrame.TargetIcon2:SetChecked(true)
-	end
 	-- ###
 	-- ####################################################################################################
 
@@ -4452,9 +4398,6 @@ end
 function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.Minimap)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.Summary)
-	GVAR.OptionsFrame.TargetIconText:SetTextColor(0.5, 0.5, 0.5, 1)
-	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.TargetIcon1)
-	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.TargetIcon2)
 
 	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.TabGeneral)
 	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.TabRaidSize10)
@@ -4539,10 +4482,6 @@ function BattlegroundTargets:EnableInsecureConfigWidges()
 
 	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.EnableBracket)
 	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.Minimap)
-
-	GVAR.OptionsFrame.TargetIconText:SetTextColor(1, 1, 1, 1)
-	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.TargetIcon1)
-	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.TargetIcon2)
 
 	BattlegroundTargets:CheckForEnabledBracket(testSize)
 end
@@ -4778,8 +4717,6 @@ function BattlegroundTargets:SetupButtonLayout()
 
 	local LayoutTH      = BattlegroundTargets_Options.LayoutTH[currentSize]
 	local LayoutSpace   = BattlegroundTargets_Options.LayoutSpace[currentSize]
-
-	local TargetIcon    = BattlegroundTargets_Options.TargetIcon
 
 	local ButtonWidth_2  = ButtonWidth-2
 	local ButtonHeight_2 = ButtonHeight-2
@@ -5075,11 +5012,6 @@ function BattlegroundTargets:SetupButtonLayout()
 		end
 
 		if ButtonShowTarget then
-			if TargetIcon == "default" then
-				GVAR_TargetButton.TargetTexture:SetTexture("Interface\\Minimap\\Tracking\\Target")
-			else
-				GVAR_TargetButton.TargetTexture:SetTexture(AddonIcon)
-			end
 			local quad = ButtonHeight_2 * ButtonTargetScale
 			local leftPos = -quad
 			GVAR_TargetButton.TargetTexture:SetSize(quad, quad)
