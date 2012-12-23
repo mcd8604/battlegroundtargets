@@ -3482,13 +3482,14 @@ function BattlegroundTargets:CreateOptionsFrame()
 			BattlegroundTargets:EnableConfigMode()
 		end,
 		function(self, button)
+			GVAR.OptionsFrame.RangeDisplayPullDown.val = OPT.ButtonRangeDisplay[currentSize]
 			BattlegroundTargets_Options.ButtonRangeDisplay[currentSize] = self.value1
 			                        OPT.ButtonRangeDisplay[currentSize] = self.value1
 			BattlegroundTargets:EnableConfigMode() -- TODO - this is not the best way
 		end,
 		function(self, button)
-			BattlegroundTargets_Options.ButtonRangeDisplay[currentSize] = self.value1
-			                        OPT.ButtonRangeDisplay[currentSize] = self.value1
+			BattlegroundTargets_Options.ButtonRangeDisplay[currentSize] = GVAR.OptionsFrame.RangeDisplayPullDown.val or self.value1
+			                        OPT.ButtonRangeDisplay[currentSize] = GVAR.OptionsFrame.RangeDisplayPullDown.val or self.value1
 			BattlegroundTargets:EnableConfigMode() -- TODO - this is not the best way
 		end
 	)
