@@ -983,7 +983,7 @@ end
 TEMPLATE.EnableTabButton = function(button, active)
 	if button.TabText then
 		if button.monotext then
-			button.TabText:SetTextColor(1, 1, 1, 1)
+			button.TabText:SetTextColor(1, 0.82, 0, 1)
 		elseif active then
 			button.TabText:SetTextColor(0, 0.75, 0, 1)
 		else
@@ -1029,9 +1029,8 @@ TEMPLATE.TabButton = function(button, text, active, monotext)
 		button.TabText:SetHeight(12)
 		button.TabText:SetPoint("CENTER", button, "CENTER", 0, 0)
 		button.TabText:SetJustifyH("CENTER")
-		button.TabText:SetTextColor(1, 1, 1, 1)
 		if monotext then
-			button.TabText:SetTextColor(1, 1, 1, 1)
+			button.TabText:SetTextColor(1, 0.82, 0, 1)
 		elseif active then
 			button.TabText:SetTextColor(0, 0.75, 0, 1)
 		else
@@ -2564,7 +2563,21 @@ function BattlegroundTargets:CreateOptionsFrame()
 	                GVAR.OptionsFrame.LayoutTHx81:GetWidth() + 0 +
 	                GVAR.OptionsFrame.LayoutSpace:GetWidth() + 50
 
-
+	local function ConfigFontNumberOptionCheck(size)
+		if BattlegroundTargets_Options.Summary[size] or
+		   OPT.ButtonShowFlag[size] or
+		   OPT.ButtonShowHealthText[size] or
+		   OPT.ButtonShowTargetCount[size]
+		then
+			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNumberSlider)
+		else
+			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNumberSlider)
+		end
+	end
 
 	-- summary
 	GVAR.OptionsFrame.SummaryText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -2597,6 +2610,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleRole)
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
 		end
+		ConfigFontNumberOptionCheck(currentSize)
 		BattlegroundTargets:ShuffleSizeCheck(currentSize)
 		BattlegroundTargets:ConfigGuildGroupFriendUpdate(currentSize)
 		BattlegroundTargets:EnableConfigMode()
@@ -2846,6 +2860,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.ButtonShowTargetCount[currentSize] = not BattlegroundTargets_Options.ButtonShowTargetCount[currentSize]
 		                        OPT.ButtonShowTargetCount[currentSize] = not                         OPT.ButtonShowTargetCount[currentSize]
 		GVAR.OptionsFrame.ShowTargetCount:SetChecked(OPT.ButtonShowTargetCount[currentSize])
+		ConfigFontNumberOptionCheck(currentSize)
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
@@ -3056,6 +3071,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FlagPositionSlider)
 			GVAR.OptionsFrame.CarrierSwitchDisableFunc()
 		end
+		ConfigFontNumberOptionCheck(currentSize)
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
@@ -3339,6 +3355,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.ButtonShowHealthText[currentSize] = not BattlegroundTargets_Options.ButtonShowHealthText[currentSize]
 		                        OPT.ButtonShowHealthText[currentSize] = not                         OPT.ButtonShowHealthText[currentSize]
 		GVAR.OptionsFrame.ShowHealthText:SetChecked(OPT.ButtonShowHealthText[currentSize])
+		ConfigFontNumberOptionCheck(currentSize)
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
@@ -3481,16 +3498,16 @@ function BattlegroundTargets:CreateOptionsFrame()
 			                        OPT.ButtonRangeDisplay[currentSize] = value
 			BattlegroundTargets:EnableConfigMode()
 		end,
-		function(self, button)
-			GVAR.OptionsFrame.RangeDisplayPullDown.val = OPT.ButtonRangeDisplay[currentSize]
+		function(self, button) -- TODO check - potential bug port
+			GVAR.OptionsFrame.RangeDisplayPullDown.spookval = OPT.ButtonRangeDisplay[currentSize]
 			BattlegroundTargets_Options.ButtonRangeDisplay[currentSize] = self.value1
 			                        OPT.ButtonRangeDisplay[currentSize] = self.value1
-			BattlegroundTargets:EnableConfigMode() -- TODO - this is not the best way
+			BattlegroundTargets:EnableConfigMode()
 		end,
-		function(self, button)
-			BattlegroundTargets_Options.ButtonRangeDisplay[currentSize] = GVAR.OptionsFrame.RangeDisplayPullDown.val or self.value1
-			                        OPT.ButtonRangeDisplay[currentSize] = GVAR.OptionsFrame.RangeDisplayPullDown.val or self.value1
-			BattlegroundTargets:EnableConfigMode() -- TODO - this is not the best way
+		function(self, button) -- TODO check - potential bug port
+			BattlegroundTargets_Options.ButtonRangeDisplay[currentSize] = GVAR.OptionsFrame.RangeDisplayPullDown.spookval or self.value1
+			                        OPT.ButtonRangeDisplay[currentSize] = GVAR.OptionsFrame.RangeDisplayPullDown.spookval or self.value1
+			BattlegroundTargets:EnableConfigMode()
 		end
 	)
 	GVAR.OptionsFrame.RangeDisplayPullDown:SetPoint("LEFT", GVAR.OptionsFrame.RangeCheckTypePullDown, "RIGHT", 10, 0)
@@ -4306,9 +4323,19 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNamePullDown)
 		GVAR.OptionsFrame.FontNameTitle:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNameSlider)
-		TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
-		GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
-		TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNumberSlider)
+		if BattlegroundTargets_Options.Summary[bracketSize] or
+		   OPT.ButtonShowFlag[bracketSize] or
+		   OPT.ButtonShowHealthText[bracketSize] or
+		   OPT.ButtonShowTargetCount[bracketSize]
+		then
+			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNumberSlider)
+		else
+			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNumberSlider)
+		end
 
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.ScaleSlider)
 		GVAR.OptionsFrame.ScaleTitle:SetTextColor(1, 1, 1, 1)
@@ -5853,14 +5880,14 @@ function BattlegroundTargets:ShufflerFunc(what)
 		GVAR.OptionsFrame.TestShuffler.Texture:SetSize(30, 30)
 		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetSize(30, 30)
 	elseif what == "ShuffleCheck" then
-		if OPT.ButtonShowLeader[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowGuildGroup[currentSize] then GVAR.OptionsFrame.TestShuffler:Show() return end
 		if OPT.ButtonShowTarget[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowFocus[currentSize]      then GVAR.OptionsFrame.TestShuffler:Show() return end
 		if OPT.ButtonShowFlag[currentSize]       then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowAssist[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
 		if OPT.ButtonShowHealthBar[currentSize]  then GVAR.OptionsFrame.TestShuffler:Show() return end
 		if OPT.ButtonShowHealthText[currentSize] then GVAR.OptionsFrame.TestShuffler:Show() return end
+		if OPT.ButtonShowFocus[currentSize]      then GVAR.OptionsFrame.TestShuffler:Show() return end
+		if OPT.ButtonShowAssist[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
+		if OPT.ButtonShowLeader[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
+		if OPT.ButtonShowGuildGroup[currentSize] then GVAR.OptionsFrame.TestShuffler:Show() return end
 		if OPT.ButtonRangeCheck[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
 		GVAR.OptionsFrame.TestShuffler:Hide()
 	end
