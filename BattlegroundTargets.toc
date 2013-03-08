@@ -1,11 +1,11 @@
-## Interface: 50100
+## Interface: 50200
 ## Title: BattlegroundTargets
 ## Notes: Shows all battleground enemies. A simple 'Enemy Unit Frame' for battlegrounds.
 ## Notes-deDE: Zeigt alle Schlachtfeldgegner. Eine einfache 'Feindanzeige' für Schlachtfelder.
 ## Notes-zhCN: 显示全部战场敌人。战场简洁敌对单位框体。
 ## Notes-zhTW: 顯示全部戰場敵人。戰場簡潔敵對單位框體。
 ## Author: kunda
-## Version: 50100-2
+## Version: 50200-1
 ## SavedVariables: BattlegroundTargets_Options
 
 BattlegroundTargets-localized-carrier.lua
