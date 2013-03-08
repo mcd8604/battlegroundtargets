@@ -112,8 +112,6 @@
 --                                                                            --
 -- Thanks to all who helped with the localization.                            --
 --                                                                            --
--- Special thanks to Roma.                                                    --
---                                                                            --
 -- -------------------------------------------------------------------------- --
 
 local _G = _G
@@ -151,6 +149,7 @@ local GetSpecializationRoleByID = GetSpecializationRoleByID
 local GetSpellInfo = GetSpellInfo
 local GetTime = GetTime
 local InCombatLockdown = InCombatLockdown
+local IsActiveBattlefieldArena = IsActiveBattlefieldArena
 local IsInInstance = IsInInstance
 local IsRatedBattleground = IsRatedBattleground
 local IsSpellInRange = IsSpellInRange
@@ -248,7 +247,7 @@ local oppositeFactionREAL    -- real opposite faction
 
 --local eventTest = {} -- TEST event order
 
-local ENEMY_Data = {}           -- key = numerical | all data
+local ENEMY_Data = {}           -- key = numerical | all ENEMY data
 local ENEMY_Names = {}          -- key = enemyName | value = count
 local ENEMY_Names4Flag = {}     -- key = enemyName without realm | value = button number
 local ENEMY_Name2Button = {}    -- key = enemyName | value = button number
@@ -260,6 +259,7 @@ local ENEMY_GuildName = {}      -- key = enemyName | value = guild name
 local ENEMY_GuildTry = {}       -- key = enemyName | value = num of guild name checks
 local ENEMY_GuildCount = {}     -- key = guildName | value = number of guild members
 local ENEMY_GroupNum = {}       -- key = enemyName | value = number of guild group
+local FRIEND_Data = {}          -- key = numerical | all FRIEND data TEST TODO
 local FRIEND_Names = {}         -- key = friendName | value = 1
 local FRIEND_GuildCount = {}    -- key = guildName | value = number of guild members
 local FRIEND_GuildName = {}     -- key = friendName | value = 1
@@ -416,17 +416,17 @@ end
 -- coords : 2 62 66 126 130 190 194 254
 -- role   : 1 = HEALER | 2 = TANK | 3 = DAMAGER | 4 = UNKNOWN
 local classes = {
-	DEATHKNIGHT = {coords = {0.2578125, 0.4921875, 0.5078125, 0.7421875}}, -- ( 66/256, 126/256, 130/256, 190/256)
-	DRUID       = {coords = {0.7578125, 0.9921875, 0.0078125, 0.2421875}}, -- (194/256, 254/256,   2/256,  62/256)
-	HUNTER      = {coords = {0.0078125, 0.2421875, 0.2578125, 0.4921875}}, -- (  2/256,  62/256,  66/256, 126/256)
-	MAGE        = {coords = {0.2578125, 0.4921875, 0.0078125, 0.2421875}}, -- ( 66/256, 126/256,   2/256,  62/256)
-	MONK        = {coords = {0.5078125, 0.7421875, 0.5078125, 0.7421875}}, -- (130/256, 190/256, 130/256, 190/256)
-	PALADIN     = {coords = {0.0078125, 0.2421875, 0.5078125, 0.7421875}}, -- (  2/256,  62/256, 130/256, 190/256)
-	PRIEST      = {coords = {0.5078125, 0.7421875, 0.2578125, 0.4921875}}, -- (130/256, 190/256,  66/256, 126/256)
-	ROGUE       = {coords = {0.5078125, 0.7421875, 0.0078125, 0.2421875}}, -- (130/256, 190/256,   2/256,  62/256)
-	SHAMAN      = {coords = {0.2578125, 0.4921875, 0.2578125, 0.4921875}}, -- ( 66/256, 126/256,  66/256, 126/256)
-	WARLOCK     = {coords = {0.7578125, 0.9921875, 0.2578125, 0.4921875}}, -- (194/256, 254/256,  66/256, 126/256)
-	WARRIOR     = {coords = {0.0078125, 0.2421875, 0.0078125, 0.2421875}}, -- (  2/256,  62/256,   2/256,  62/256)
+	DEATHKNIGHT = {coords = {0.2578125,  0.4921875,  0.5078125,  0.7421875 }}, -- ( 66/256, 126/256, 130/256, 190/256)
+	DRUID       = {coords = {0.74609375, 0.98046875, 0.0078125,  0.2421875 }}, -- (191/256, 251/256,   2/256,  62/256)
+	HUNTER      = {coords = {0.0078125,  0.2421875,  0.26171875, 0.49609375}}, -- (  2/256,  62/256,  67/256, 127/256)
+	MAGE        = {coords = {0.25,       0.484375,   0.01171875, 0.24609375}}, -- ( 64/256, 124/256,   3/256,  63/256)
+	MONK        = {coords = {0.5,        0.734375,   0.51171875, 0.74609375}}, -- (128/256, 188/256, 131/256, 191/256)
+	PALADIN     = {coords = {0.0078125,  0.2421875,  0.51171875, 0.74609375}}, -- (  2/256,  62/256, 131/256, 191/256)
+	PRIEST      = {coords = {0.5,        0.734375,   0.265625,   0.5       }}, -- (128/256, 188/256,  68/256, 128/256)
+	ROGUE       = {coords = {0.50390625, 0.73828125, 0.01171875, 0.24609375}}, -- (129/256, 189/256,   3/256,  63/256)
+	SHAMAN      = {coords = {0.25390625, 0.48828125, 0.2578125,  0.4921875 }}, -- ( 65/256, 125/256,  66/256, 126/256)
+	WARLOCK     = {coords = {0.75,       0.984375,   0.2578125,  0.4921875 }}, -- (192/256, 252/256,  66/256, 126/256)
+	WARRIOR     = {coords = {0.0078125,  0.2421875,  0.0078125,  0.2421875 }}, -- (  2/256,  62/256,   2/256,  62/256)
 	ZZZFAILURE  = {coords = {0, 0, 0, 0},
 	               spec   = {{role = 4, icon = nil, specName = ""},   -- 1 unknown
 	                         {role = 4, icon = nil, specName = ""},   -- 2 unknown
@@ -4567,7 +4567,7 @@ function BattlegroundTargets:CreateMinimapButton()
 	MinimapButton:SetWidth(32)
 	MinimapButton:SetHeight(32)
 	MinimapButton:SetPoint("TOPLEFT")
-	MinimapButton:SetFrameStrata("LOW")
+	MinimapButton:SetFrameStrata("MEDIUM")
 	MinimapButton:RegisterForClicks("AnyUp")
 	MinimapButton:RegisterForDrag("LeftButton")
 
@@ -6587,6 +6587,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	GVAR.ScoreUpdateTexture:Hide()
 
 	wipe(ENEMY_Data)
+	wipe(FRIEND_Data)
 	wipe(FRIEND_Names)
 	ENEMY_Roles = {0,0,0,0} -- SUMMARY
 	FRIEND_Roles = {0,0,0,0}
@@ -6656,25 +6657,36 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 		else
 
 			local role = 4
-			--local spec = 5
-			if classToken and talentSpec then
+			local spec = 5
+			local class = "ZZZFAILURE"
+			if classToken then
 				local token = classes[classToken]
 				if token then
-					if token.spec[1] and talentSpec == token.spec[1].specName then
-						role = classes[classToken].spec[1].role
-						--spec = 1
-					elseif token.spec[2] and talentSpec == token.spec[2].specName then
-						role = classes[classToken].spec[2].role
-						--spec = 2
-					elseif token.spec[3] and talentSpec == token.spec[3].specName then
-						role = classes[classToken].spec[3].role
-						--spec = 3
-					elseif token.spec[4] and talentSpec == token.spec[4].specName then
-						role = classes[classToken].spec[4].role
-						--spec = 4
+					if talentSpec then
+						if token.spec[1] and talentSpec == token.spec[1].specName then
+							role = classes[classToken].spec[1].role
+							spec = 1
+						elseif token.spec[2] and talentSpec == token.spec[2].specName then
+							role = classes[classToken].spec[2].role
+							spec = 2
+						elseif token.spec[3] and talentSpec == token.spec[3].specName then
+							role = classes[classToken].spec[3].role
+							spec = 3
+						elseif token.spec[4] and talentSpec == token.spec[4].specName then
+							role = classes[classToken].spec[4].role
+							spec = 4
+						end
 					end
+					class = classToken
 				end
 			end
+
+			tinsert(FRIEND_Data, {
+				name = name,
+				classToken = class,
+				specNum = spec,
+				talentSpec = role,
+			})
 
 			FRIEND_Roles[role] = FRIEND_Roles[role] + 1 -- SUMMARY
 			FRIEND_Names[name] = 1
@@ -6971,6 +6983,9 @@ function BattlegroundTargets:IsBattleground()
 
 	if IsRatedBattleground() then
 		currentSize = 10
+	end
+
+	if not IsActiveBattlefieldArena() then
 		local faction = GetBattlefieldArenaFaction()
 		if faction == 0 then
 			playerFactionBG   = 0 -- Horde
@@ -7256,6 +7271,8 @@ function BattlegroundTargets:IsNotBattleground()
 	if not isConfig then
 		wipe(ENEMY_Data)
 	end
+	wipe(FRIEND_Data)
+
 	wipe(ENEMY_Names)
 	wipe(ENEMY_Names4Flag)
 	wipe(ENEMY_Name2Button)
