@@ -177,6 +177,7 @@ local L if not prg.L then prg.L = {} end for k, v in pairs(prg.L) do if type(v) 
       L   = prg.L   -- localization
 local FLG = prg.FLG -- carrier strings
 local RNA = prg.RNA -- bg race names
+local BGN = prg.BGN -- localized battleground names
 
 local GVAR = {}     -- UI Widgets
 local TEMPLATE = {} -- Templates
@@ -411,6 +412,7 @@ local classcolors = {}
 for class, color in pairs(RAID_CLASS_COLORS) do -- Constants.lua
 	classcolors[class] = {r = color.r, g = color.g, b = color.b}
 end
+classcolors["ZZZFAILURE"] = {r = 0.4, g = 0.4, b = 0.4}
 
 -- texture: Interface\\WorldStateFrame\\Icons-Classes
 -- coords : 2 62 66 126 130 190 194 254
@@ -6717,6 +6719,8 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 
 	if bgMaps[bgName] then
 		BattlegroundTargets:BattlefieldCheck()
+	elseif BGN[bgName] then
+		BattlegroundTargets:BattlefieldCheck()
 	else
 		local zone = GetRealZoneText()
 		if bgMaps[zone] then
@@ -6965,6 +6969,10 @@ function BattlegroundTargets:IsBattleground()
 		reSizeCheck = 10
 		currentSize = bgMaps[bgName].bgSize
 		isFlagBG    = bgMaps[bgName].flagBG
+	elseif BGN[bgName] then
+		reSizeCheck = 10
+		currentSize = BGN[bgName].bgSize
+		isFlagBG    = BGN[bgName].flagBG
 	else
 		local zone = GetRealZoneText()
 		if bgMaps[zone] then
