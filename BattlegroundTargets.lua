@@ -415,7 +415,6 @@ end
 classcolors["ZZZFAILURE"] = {r = 0.4, g = 0.4, b = 0.4}
 
 -- texture: Interface\\WorldStateFrame\\Icons-Classes
--- coords : 2 62 66 126 130 190 194 254
 -- role   : 1 = HEALER | 2 = TANK | 3 = DAMAGER | 4 = UNKNOWN
 local classes = {
 	DEATHKNIGHT = {coords = {0.2578125,  0.4921875,  0.5078125,  0.7421875 }}, -- ( 66/256, 126/256, 130/256, 190/256)
@@ -8171,36 +8170,9 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 			-- -----------------------------------------------------------------------------------------------------------------
 		else
 			-- -----------------------------------------------------------------------------------------------------------------
-			local efc = strmatch(message, FLG["EOTS_PATTERN_PICKED"]) -- Eye of the Storm: flag was picked
-			if efc then
-				local GVAR_TargetButton = GVAR.TargetButton
-				for i = 1, currentSize do
-					GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-					GVAR_TargetButton[i].FlagDebuff:SetText("")
-				end
-				if flagCHK then
-					BattlegroundTargets:CheckFlagCarrierEND()
-				end
-				for name, button in pairs(ENEMY_Names4Flag) do
-					if name == efc then
-						local GVAR_TargetButton = GVAR.TargetButton[button]
-						if GVAR_TargetButton then
-							GVAR_TargetButton.FlagTexture:SetAlpha(1)
-							BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
-							for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Names4Flag have same buttonID
-								if button == fullnameButton then
-									hasFlag = fullname
-									return
-								end
-							end
-						end
-						return
-					end
-				end
-			-- -----------------------------------------------------------------------------------------------------------------
-			elseif message == FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or -- Eye of the Storm: flag was captured
-			       message == FLG["EOTS_STRING_CAPTURED_BY_HORDE"] or    -- Eye of the Storm: flag was captured
-			       message == FLG["EOTS_STRING_DROPPED"]                 -- Eye of the Storm: flag was dropped
+			if message == FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or -- Eye of the Storm: flag was captured
+			   message == FLG["EOTS_STRING_CAPTURED_BY_HORDE"] or    -- Eye of the Storm: flag was captured
+			   message == FLG["EOTS_STRING_DROPPED"]                 -- Eye of the Storm: flag was dropped
 			then
 				local GVAR_TargetButton = GVAR.TargetButton
 				for i = 1, currentSize do
@@ -8211,8 +8183,37 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 				if flagCHK then
 					BattlegroundTargets:CheckFlagCarrierEND()
 				end
-			end
+			else
 			-- -----------------------------------------------------------------------------------------------------------------
+				local efc = strmatch(message, FLG["EOTS_PATTERN_PICKED"]) -- Eye of the Storm: flag was picked
+				if efc then
+					local GVAR_TargetButton = GVAR.TargetButton
+					for i = 1, currentSize do
+						GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+						GVAR_TargetButton[i].FlagDebuff:SetText("")
+					end
+					if flagCHK then
+						BattlegroundTargets:CheckFlagCarrierEND()
+					end
+					for name, button in pairs(ENEMY_Names4Flag) do
+						if name == efc then
+							local GVAR_TargetButton = GVAR.TargetButton[button]
+							if GVAR_TargetButton then
+								GVAR_TargetButton.FlagTexture:SetAlpha(1)
+								BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
+								for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Names4Flag have same buttonID
+									if button == fullnameButton then
+										hasFlag = fullname
+										return
+									end
+								end
+							end
+							return
+						end
+					end
+				end
+			-- -----------------------------------------------------------------------------------------------------------------
+			end
 		end
 
 	-- #####                                             Eye of the Storm                                            #####
