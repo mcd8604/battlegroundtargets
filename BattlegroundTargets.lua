@@ -3334,6 +3334,17 @@ function BattlegroundTargets:CreateOptionsFrame()
 			BattlegroundTargets_Options.ButtonSortBy[currentSize] = value
 			                        OPT.ButtonSortBy[currentSize] = value
 			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button) -- TODO check - potential bug port
+			GVAR.OptionsFrame.SortByPullDown.spookval = OPT.ButtonSortBy[currentSize]
+			BattlegroundTargets_Options.ButtonSortBy[currentSize] = self.value1
+			                        OPT.ButtonSortBy[currentSize] = self.value1
+			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button) -- TODO check - potential bug port
+			BattlegroundTargets_Options.ButtonSortBy[currentSize] = GVAR.OptionsFrame.SortByPullDown.spookval or self.value1
+			                        OPT.ButtonSortBy[currentSize] = GVAR.OptionsFrame.SortByPullDown.spookval or self.value1
+			BattlegroundTargets:EnableConfigMode()
 		end
 	)
 	GVAR.OptionsFrame.SortByPullDown:SetPoint("LEFT", GVAR.OptionsFrame.SortByTitle, "RIGHT", 10, 0)
@@ -3352,6 +3363,17 @@ function BattlegroundTargets:CreateOptionsFrame()
 		function(value) -- PDFUNC
 			BattlegroundTargets_Options.ButtonSortDetail[currentSize] = value
 			                        OPT.ButtonSortDetail[currentSize] = value
+			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button) -- TODO check - potential bug port
+			GVAR.OptionsFrame.SortDetailPullDown.spookval = OPT.ButtonSortDetail[currentSize]
+			BattlegroundTargets_Options.ButtonSortDetail[currentSize] = self.value1
+			                        OPT.ButtonSortDetail[currentSize] = self.value1
+			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button) -- TODO check - potential bug port
+			BattlegroundTargets_Options.ButtonSortDetail[currentSize] = GVAR.OptionsFrame.SortDetailPullDown.spookval or self.value1
+			                        OPT.ButtonSortDetail[currentSize] = GVAR.OptionsFrame.SortDetailPullDown.spookval or self.value1
 			BattlegroundTargets:EnableConfigMode()
 		end
 	)
