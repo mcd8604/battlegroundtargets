@@ -7,24 +7,19 @@ local L, _, prg = {}, ...
 if prg.L then L = prg.L else prg.L = L end
 
 L["Open Configuration"] = true
+L["Close Configuration"] = true
 
 L["Configuration"] = true
 L["10 vs 10"] = true
 L["15 vs 15"] = true
 L["40 vs 40"] = true
-L["Enable"] = ENABLE
 L["Independent Positioning"] = true
 L["Layout"] = true
 L["Summary"] = true
 L["Copy this settings to %s"] = true
-L["Role"] = ROLE
-L["Specialization"] = SPECIALIZATION
 L["Class Icon"] = true
 L["Realm"] = true
 L["Leader"] = true
-L["Guild Groups"] = true
-L["Target"] = TARGET
-L["Focus"] = FOCUS
 L["Flag + Orb"] = "Bandiera + Globo" -- need check
 L["Main Assist Target"] = true
 L["Target Count"] = true
@@ -38,8 +33,6 @@ L["Range"] = true
  L["(class dependent)"] = true
  L["Disable this option if you have CPU/FPS problems in combat."] = true
 L["Sort By"] = true
-L["Class"] = CLASS
-L["Name"] = NAME
 L["Text"] = "Testo" -- need check
 L["Number"] = "Numero" -- need check
 L["Scale"] = true
@@ -52,5 +45,3 @@ L["Show Minimap-Button"] = true
 
 L["click & move"] = true
 L["BattlegroundTargets does not update if this Tab is opened."] = true
-
-L["Close Configuration"] = true

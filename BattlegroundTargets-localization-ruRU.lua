@@ -7,24 +7,19 @@ local L, _, prg = {}, ...
 if prg.L then L = prg.L else prg.L = L end
 
 L["Open Configuration"] = "Открыть настройки"
+L["Close Configuration"] = "Закрыть настройки"
 
 L["Configuration"] = "Настройки"
 L["10 vs 10"] = "10 на 10"
 L["15 vs 15"] = "15 на 15"
 L["40 vs 40"] = "40 на 40"
-L["Enable"] = ENABLE
 L["Independent Positioning"] = "Независимое позиционирование"
 L["Layout"] = "Расположение"
 L["Summary"] = "Подсчет ролей"
 L["Copy this settings to %s"] = "Копировать эти настройки в %s"
-L["Role"] = "Роль"
-L["Specialization"] = "Cпециализация"
 L["Class Icon"] = "Иконка класса" 
 L["Realm"] = "Сервер" 
 L["Leader"] = "Лидер" 
-L["Guild Groups"] = "Гильдейские группы"
-L["Target"] = "Цель"
-L["Focus"] = "Фокус"
 L["Flag + Orb"] = "Флаг + Сфера" 
 L["Main Assist Target"] = "Главный наводчик"
 L["Target Count"] = "Подсчет нацеливаний" 
@@ -38,8 +33,6 @@ L["Range"] = "Расстояние"
  L["(class dependent)"] = "(зависит от класса)"
  L["Disable this option if you have CPU/FPS problems in combat."] = "Отключить эту опцию, если у вас есть проблемы с производительностью в бою."
 L["Sort By"] = "Сортировать по"
-L["Class"] = "Класс"
-L["Name"] = "Имя"
 L["Text"] = "Текст" 
 L["Number"] = "Номер" 
 L["Scale"] = "Масштаб"
@@ -52,5 +45,3 @@ L["Show Minimap-Button"] = "Отображать кнопку на мини-ка
 
 L["click & move"] = "Нажмите & перемещайте"
 L["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets не обновляет информацию если эта вкладка открыта."
-
-L["Close Configuration"] = "Закрыть настройки"

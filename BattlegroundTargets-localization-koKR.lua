@@ -7,24 +7,19 @@ local L, _, prg = {}, ...
 if prg.L then L = prg.L else prg.L = L end
 
 L["Open Configuration"] = "설정 창 열기"
+L["Close Configuration"] = "설정 창 닫기"
 
 L["Configuration"] = "설정"
 L["10 vs 10"] = "10 V 10"
 L["15 vs 15"] = "15 V 15"
 L["40 vs 40"] = "40 V 40"
-L["Enable"] = ENABLE
 L["Independent Positioning"] = "독립 위치"
 L["Layout"] = "배치"
 L["Summary"] = "요약"
 L["Copy this settings to %s"] = "%s 에 대한 설정을 복사합니다"
-L["Role"] = ROLE
-L["Specialization"] = SPECIALIZATION
 L["Class Icon"] = "직업 아이콘"
 L["Realm"] = "서버"
 L["Leader"] = "전장 지휘관"
-L["Guild Groups"] = "길드 그룹"
-L["Target"] = TARGET
-L["Focus"] = MINIMAP_TRACKING_FOCUS
 L["Flag + Orb"] = "깃발"
 L["Main Assist Target"] = "지원공격 전담 대상"
 L["Target Count"] = "대상 카운트"
@@ -38,8 +33,6 @@ L["Range"] = "범위"
  L["(class dependent)"] = "(종속 직업)"
  L["Disable this option if you have CPU/FPS problems in combat."] = "전투 상태시 CPU/FPS에 문제가 있다면 이 옵션을 해제하십시오."
 L["Sort By"] = "정렬 방법"
-L["Class"] = CLASS
-L["Name"] = NAME
 L["Text"] = "문자" -- need check
 L["Number"] = "번호" -- need check
 L["Scale"] = "크기"
@@ -52,5 +45,3 @@ L["Show Minimap-Button"] = "미니맵 버튼 표시"
 
 L["click & move"] = "클릭 & 이동"
 L["BattlegroundTargets does not update if this Tab is opened."] = "이 탭이 열려있다면 BattlegroundTargets은 업데이트 되지 않습니다."
-
-L["Close Configuration"] = "설정 창 닫기"

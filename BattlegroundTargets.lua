@@ -20,7 +20,6 @@
 -- # Target Count                                                             --
 -- # Health                                                                   --
 -- # Range Check                                                              --
--- # Guild Groups                                                             --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
@@ -66,10 +65,6 @@
 --                                                                            --
 -- # Target Count: ------------------------------------ HIGH MEDIUM CPU USAGE --
 --   - Event:              - UNIT_TARGET                                      --
---                                                                            --
--- # Guild Groups: ----------------------------------------- MEDIUM CPU USAGE --
---   - Events:             - GROUP_ROSTER_UPDATE                              --
---                         - UNIT_TARGET                                      --
 --                                                                            --
 -- # Main Assist Target: ------------------------------- LOW MEDIUM CPU USAGE --
 --   - Events:             - GROUP_ROSTER_UPDATE                              --
@@ -136,7 +131,6 @@ local GetBattlefieldScore = GetBattlefieldScore
 local GetBattlefieldStatus = GetBattlefieldStatus
 local GetBattlegroundInfo = GetBattlegroundInfo
 local GetClassInfoByID = GetClassInfoByID
-local GetGuildInfo = GetGuildInfo
 local GetNumBattlefieldScores = GetNumBattlefieldScores
 local GetNumBattlegroundTypes = GetNumBattlegroundTypes
 local GetNumGroupMembers = GetNumGroupMembers
@@ -256,14 +250,8 @@ local ENEMY_Name2Percent = {}   -- key = enemyName | value = health in percent
 local ENEMY_Name2Range = {}     -- key = enemyName | value = time of last contact
 local ENEMY_Name2Level = {}     -- key = enemyName | value = level
 local ENEMY_FirstFlagCheck = {} -- key = enemyName | value = 1
-local ENEMY_GuildName = {}      -- key = enemyName | value = guild name
-local ENEMY_GuildTry = {}       -- key = enemyName | value = num of guild name checks
-local ENEMY_GuildCount = {}     -- key = guildName | value = number of guild members
-local ENEMY_GroupNum = {}       -- key = enemyName | value = number of guild group
 local FRIEND_Data = {}          -- key = numerical | all FRIEND data TEST TODO
 local FRIEND_Names = {}         -- key = friendName | value = 1
-local FRIEND_GuildCount = {}    -- key = guildName | value = number of guild members
-local FRIEND_GuildName = {}     -- key = friendName | value = 1
 local TARGET_Names = {}         -- key = friendName | value = enemyName
 local SPELL_Range = {}          -- key = spellId | value = maxRange
 
@@ -290,7 +278,6 @@ local testData = {
 	Health         = {},  -- testData.Health
 	Range          = {},  -- testData.Range
 	Leader         = 4,   -- testData.Leader
-	GroupNum       = {},  -- testData.GroupNum
 }
 
 local bgMaps = {}
@@ -536,23 +523,6 @@ Textures.l40_42        = {coords = {0.21875,  0.421875, 0.578125, 0.6875},   wid
 Textures.l40_81        = {coords = {0,        0.21875,  0.578125, 0.65625},  width = 28, height = 10} -- { 0/64, 14/64, 37/64, 42/64}, width = 14*2, height =  5*2},
 Textures.UpdateWarning = {0,        0.546875, 0.734375, 0.984375} -- { 0/64, 35/64, 47/64, 63/64},
 
-local guildGrpTex = { -- GRP_TEX
-	{0.6875,  0.828125, 0.53125, 0.671875}, -- 1 {44/64, 53/64, 34/64, 43/64}
-	{0.84375, 0.984375, 0.53125, 0.671875}, -- 2 {54/64, 63/64, 34/64, 43/64}
-	{0.6875,  0.828125, 0.6875,  0.828125}, -- 3 {44/64, 53/64, 44/64, 53/64}
-	{0.84375, 0.984375, 0.6875,  0.828125}, -- 4 {54/64, 63/64, 44/64, 53/64}
-	{0.6875,  0.828125, 0.84375, 0.984375}, -- 5 {44/64, 53/64, 54/64, 63/64}
-	{0.84375, 0.984375, 0.84375, 0.984375}, -- 6 {54/64, 63/64, 54/64, 63/64}
-}
-
-local guildGrpCol = {
-	{1, 1, 1},      -- 1 white
-	{1, 0.75, 0},   -- 2 yellow
-	{0, 0.5, 0.75}, -- 3 blue
-	{1, 0, 0},      -- 4 red
-	{0, 0.75, 0},   -- 5 green
-}
-
 local raidUnitID = {}
 for i = 1, 40 do
 	raidUnitID["raid"..i] = 1
@@ -590,32 +560,6 @@ local function ClassHexColor(class)
 		hex = format("%.2x%.2x%.2x", classcolors[class].r*255, classcolors[class].g*255, classcolors[class].b*255)
 	end
 	return hex or "cccccc"
-end
-
-local function ggSortFunc(a, b)
-	return a[1] < b[1]
-end
-
-local function ggTexCol(num)
-	local tex = floor(num/6) -- #guildGrpTex
-	if tex < 1 then
-		tex = num
-	else
-		tex = num - (tex * 6)
-		if tex == 0 then
-			tex = 6
-		end
-	end
-	local col = floor(num/5) -- #guildGrpCol
-	if col < 1 then
-		col = num
-	else
-		col = num - (col * 5)
-		if col == 0 then
-			col = 5
-		end
-	end
-	return tex, col
 end
 
 local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
@@ -1351,71 +1295,13 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if type(BattlegroundTargets_Options.version) ~= "number" then
-		BattlegroundTargets_Options.version = 20
+		BattlegroundTargets_Options.version = 21
 	end
 
-	if BattlegroundTargets_Options.version < 8 then
+	if BattlegroundTargets_Options.version < 13 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
-		BattlegroundTargets_Options.version = 20
-	end
-
-	if BattlegroundTargets_Options.version == 8 then
-		if BattlegroundTargets_Options.EnableBracket and BattlegroundTargets_Options.EnableBracket[40] then -- new user: default | old user: old setting
-			BattlegroundTargets_Options.Layout40 = 18
-		end
-		BattlegroundTargets_Options.version = 9
-	end
-
-	if BattlegroundTargets_Options.version == 9 then
-		BattlegroundTargets_Options.ButtonRangeAlpha = nil
-		BattlegroundTargets_Options.version = 10
-	end
-
-	if BattlegroundTargets_Options.version == 10 then
-		BattlegroundTargets_Options.TargetIcon = "bgt"
-		BattlegroundTargets_Options.version = 11
-	end
-
-	if BattlegroundTargets_Options.version == 11 then
-		if BattlegroundTargets_Options.Layout40 then -- copy old 40s settings to the new variable
-			BattlegroundTargets_Options.LayoutTH = {}
-			BattlegroundTargets_Options.LayoutTH[40] = BattlegroundTargets_Options.Layout40
-			BattlegroundTargets_Options.Layout40 = nil
-		end
-		if BattlegroundTargets_Options.Layout40space then -- copy old 40s settings to the new variable
-			BattlegroundTargets_Options.LayoutSpace = {}
-			BattlegroundTargets_Options.LayoutSpace[40] = BattlegroundTargets_Options.Layout40space
-			BattlegroundTargets_Options.Layout40space = nil
-		end
-		if BattlegroundTargets_Options.Summary == true then -- new summary settings
-			BattlegroundTargets_Options.Summary = {}
-			BattlegroundTargets_Options.Summary[10] = true
-			BattlegroundTargets_Options.Summary[15] = true
-			BattlegroundTargets_Options.Summary[40] = true
-		else
-			BattlegroundTargets_Options.Summary = nil
-		end
-		if BattlegroundTargets_Options.SummaryScale then -- new summary settings
-			BattlegroundTargets_Options.SummaryScaleRole = {}
-			BattlegroundTargets_Options.SummaryScaleRole[10] = BattlegroundTargets_Options.SummaryScale
-			BattlegroundTargets_Options.SummaryScaleRole[15] = BattlegroundTargets_Options.SummaryScale
-			BattlegroundTargets_Options.SummaryScaleRole[40] = BattlegroundTargets_Options.SummaryScale
-			BattlegroundTargets_Options.SummaryScale = nil
-		end
-		BattlegroundTargets_Options.version = 12
-	end
-
-	if BattlegroundTargets_Options.version == 12 then -- fix mess with .version 12 summary settings (r107 has no false check)
-		if BattlegroundTargets_Options.Summary == true then
-			BattlegroundTargets_Options.Summary = {}
-			BattlegroundTargets_Options.Summary[10] = true
-			BattlegroundTargets_Options.Summary[15] = true
-			BattlegroundTargets_Options.Summary[40] = true
-		else
-			BattlegroundTargets_Options.Summary = nil
-		end
-		BattlegroundTargets_Options.version = 13
+		BattlegroundTargets_Options.version = 21
 	end
 
 	if BattlegroundTargets_Options.version == 13 then -- range check option change
@@ -1510,6 +1396,13 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 20
 	end
 
+	if BattlegroundTargets_Options.version == 20 then
+		BattlegroundTargets_Options.ButtonShowGuildGroup = nil
+		BattlegroundTargets_Options.ButtonGuildGroupPosition = nil
+		BattlegroundTargets_Options.SummaryScaleGuildGroup = nil
+		BattlegroundTargets_Options.version = 21
+	end
+
 	if type(BattlegroundTargets_Options.pos)                          ~= "table"   then BattlegroundTargets_Options.pos                          = {}    end
 	if type(BattlegroundTargets_Options.MinimapButton)                ~= "boolean" then BattlegroundTargets_Options.MinimapButton                = false end
 	if type(BattlegroundTargets_Options.MinimapButtonPos)             ~= "number"  then BattlegroundTargets_Options.MinimapButtonPos             = -90   end
@@ -1545,18 +1438,12 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.SummaryScaleRole[10])         ~= "number"  then BattlegroundTargets_Options.SummaryScaleRole[10]         = 0.6   end
 	if type(BattlegroundTargets_Options.SummaryScaleRole[15])         ~= "number"  then BattlegroundTargets_Options.SummaryScaleRole[15]         = 0.6   end
 	if type(BattlegroundTargets_Options.SummaryScaleRole[40])         ~= "number"  then BattlegroundTargets_Options.SummaryScaleRole[40]         = 0.5   end
-	if type(BattlegroundTargets_Options.SummaryScaleGuildGroup)       ~= "table"   then BattlegroundTargets_Options.SummaryScaleGuildGroup       = {}    end
-	if type(BattlegroundTargets_Options.SummaryScaleGuildGroup[10])   ~= "number"  then BattlegroundTargets_Options.SummaryScaleGuildGroup[10]   = 1.25  end
-	if type(BattlegroundTargets_Options.SummaryScaleGuildGroup[15])   ~= "number"  then BattlegroundTargets_Options.SummaryScaleGuildGroup[15]   = 1.25  end
-	if type(BattlegroundTargets_Options.SummaryScaleGuildGroup[40])   ~= "number"  then BattlegroundTargets_Options.SummaryScaleGuildGroup[40]   = 1.4   end
 
 	if type(BattlegroundTargets_Options.ButtonShowRole)               ~= "table"   then BattlegroundTargets_Options.ButtonShowRole               = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowSpec)               ~= "table"   then BattlegroundTargets_Options.ButtonShowSpec               = {}    end
 	if type(BattlegroundTargets_Options.ButtonClassIcon)              ~= "table"   then BattlegroundTargets_Options.ButtonClassIcon              = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowRealm)              ~= "table"   then BattlegroundTargets_Options.ButtonShowRealm              = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowLeader)             ~= "table"   then BattlegroundTargets_Options.ButtonShowLeader             = {}    end
-	if type(BattlegroundTargets_Options.ButtonShowGuildGroup)         ~= "table"   then BattlegroundTargets_Options.ButtonShowGuildGroup         = {}    end
-	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition)     ~= "table"   then BattlegroundTargets_Options.ButtonGuildGroupPosition     = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowTarget)             ~= "table"   then BattlegroundTargets_Options.ButtonShowTarget             = {}    end
 	if type(BattlegroundTargets_Options.ButtonTargetScale)            ~= "table"   then BattlegroundTargets_Options.ButtonTargetScale            = {}    end
 	if type(BattlegroundTargets_Options.ButtonTargetPosition)         ~= "table"   then BattlegroundTargets_Options.ButtonTargetPosition         = {}    end
@@ -1590,8 +1477,6 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonClassIcon[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[10]          = false end
 	if type(BattlegroundTargets_Options.ButtonShowRealm[10])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[10]          = true  end
 	if type(BattlegroundTargets_Options.ButtonShowLeader[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[10]         = false end
-	if type(BattlegroundTargets_Options.ButtonShowGuildGroup[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[10]     = false end
-	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[10]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[10] = 4     end
 	if type(BattlegroundTargets_Options.ButtonShowTarget[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[10]         = true  end
 	if type(BattlegroundTargets_Options.ButtonTargetScale[10])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[10]        = 1.5   end
 	if type(BattlegroundTargets_Options.ButtonTargetPosition[10])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[10]     = 100   end
@@ -1625,8 +1510,6 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonClassIcon[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[15]          = false end
 	if type(BattlegroundTargets_Options.ButtonShowRealm[15])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[15]          = true  end
 	if type(BattlegroundTargets_Options.ButtonShowLeader[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[15]         = false end
-	if type(BattlegroundTargets_Options.ButtonShowGuildGroup[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[15]     = false end
-	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[15]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[15] = 4     end
 	if type(BattlegroundTargets_Options.ButtonShowTarget[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[15]         = true  end
 	if type(BattlegroundTargets_Options.ButtonTargetScale[15])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[15]        = 1.5   end
 	if type(BattlegroundTargets_Options.ButtonTargetPosition[15])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[15]     = 100   end
@@ -1660,8 +1543,6 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonClassIcon[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonClassIcon[40]          = false end
 	if type(BattlegroundTargets_Options.ButtonShowRealm[40])          ~= "boolean" then BattlegroundTargets_Options.ButtonShowRealm[40]          = false end
 	if type(BattlegroundTargets_Options.ButtonShowLeader[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowLeader[40]         = false end
-	if type(BattlegroundTargets_Options.ButtonShowGuildGroup[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowGuildGroup[40]     = false end
-	if type(BattlegroundTargets_Options.ButtonGuildGroupPosition[40]) ~= "number"  then BattlegroundTargets_Options.ButtonGuildGroupPosition[40] = 4     end
 	if type(BattlegroundTargets_Options.ButtonShowTarget[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonShowTarget[40]         = true  end
 	if type(BattlegroundTargets_Options.ButtonTargetScale[40])        ~= "number"  then BattlegroundTargets_Options.ButtonTargetScale[40]        = 1     end
 	if type(BattlegroundTargets_Options.ButtonTargetPosition[40])     ~= "number"  then BattlegroundTargets_Options.ButtonTargetPosition[40]     = 85    end
@@ -1697,8 +1578,6 @@ function BattlegroundTargets:InitOptions()
 	OPT.ButtonClassIcon          = {[10] = BTO.ButtonClassIcon[10]         , [15] = BTO.ButtonClassIcon[15]         , [40] = BTO.ButtonClassIcon[40]         }
 	OPT.ButtonShowRealm          = {[10] = BTO.ButtonShowRealm[10]         , [15] = BTO.ButtonShowRealm[15]         , [40] = BTO.ButtonShowRealm[40]         }
 	OPT.ButtonShowLeader         = {[10] = BTO.ButtonShowLeader[10]        , [15] = BTO.ButtonShowLeader[15]        , [40] = BTO.ButtonShowLeader[40]        }
-	OPT.ButtonShowGuildGroup     = {[10] = BTO.ButtonShowGuildGroup[10]    , [15] = BTO.ButtonShowGuildGroup[15]    , [40] = BTO.ButtonShowGuildGroup[40]    }
-	OPT.ButtonGuildGroupPosition = {[10] = BTO.ButtonGuildGroupPosition[10], [15] = BTO.ButtonGuildGroupPosition[15], [40] = BTO.ButtonGuildGroupPosition[40]}
 	OPT.ButtonShowTarget         = {[10] = BTO.ButtonShowTarget[10]        , [15] = BTO.ButtonShowTarget[15]        , [40] = BTO.ButtonShowTarget[40]        }
 	OPT.ButtonTargetScale        = {[10] = BTO.ButtonTargetScale[10]       , [15] = BTO.ButtonTargetScale[15]       , [40] = BTO.ButtonTargetScale[40]       }
 	OPT.ButtonTargetPosition     = {[10] = BTO.ButtonTargetPosition[10]    , [15] = BTO.ButtonTargetPosition[15]    , [40] = BTO.ButtonTargetPosition[40]    }
@@ -1926,17 +1805,9 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.LeaderTexture = GVAR_TargetButton:CreateTexture(nil, "ARTWORK")
 		GVAR_TargetButton.LeaderTexture:SetWidth(buttonHeight_2/1.5)
 		GVAR_TargetButton.LeaderTexture:SetHeight(buttonHeight_2/1.5)
-		GVAR_TargetButton.LeaderTexture:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", 0, 0)
+		GVAR_TargetButton.LeaderTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 0, 0)
 		GVAR_TargetButton.LeaderTexture:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
 		GVAR_TargetButton.LeaderTexture:SetAlpha(0)
-
-		GVAR_TargetButton.GuildGroupButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
-		GVAR_TargetButton.GuildGroup = GVAR_TargetButton.GuildGroupButton:CreateTexture(nil, "OVERLAY") -- GLDGRP
-		GVAR_TargetButton.GuildGroup:SetWidth(buttonHeight_2*0.4)
-		GVAR_TargetButton.GuildGroup:SetHeight(buttonHeight_2*0.4)
-		GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
-		GVAR_TargetButton.GuildGroup:SetTexture(Textures.Path)
-		GVAR_TargetButton.GuildGroup:SetTexCoord(0, 0, 0, 0)
 
 		GVAR_TargetButton.ClassColorBackground = GVAR_TargetButton:CreateTexture(nil, "BORDER")
 		GVAR_TargetButton.ClassColorBackground:SetWidth(buttonWidth_2 - buttonHeight_2 - buttonHeight_2)
@@ -2135,51 +2006,6 @@ function BattlegroundTargets:CreateFrames()
 	end
 	-- ----------------------------------------
 
-	-- ----------------------------------------
-	GVAR.GuildGroupSummary = CreateFrame("Frame", nil, GVAR.Summary) -- SUMMARY
-	GVAR.GuildGroupSummary:SetToplevel(true)
-
-	local function FONT_TEMPLATE2(button, jus)
-		button:SetWidth(100)
-		button:SetHeight(10)
-		button:SetJustifyH(jus)
-		button:SetFont(fontPath, 12, "OUTLINE")
-		button:SetShadowOffset(0, 0)
-		button:SetShadowColor(0, 0, 0, 0)
-		button:SetTextColor(1, 1, 1, 1)
-	end
-
-	GVAR.GuildGroupSummaryFriend = {} -- GLDGRP
-	for i = 1, 7 do -- 7 is the max: | 2: 1x | 3: 1x | 4: 1x | 5: 1x | 6: 1x | 7: 1x | 8: 1x | = 35 another 9size group is not possible in 40s bg
-		GVAR.GuildGroupSummaryFriend[i] = CreateFrame("Button", nil, GVAR.GuildGroupSummary)
-		GVAR.GuildGroupSummaryFriend[i]:Show()
-
-		GVAR.GuildGroupSummaryFriend[i].Text = GVAR.GuildGroupSummaryFriend[i]:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-		FONT_TEMPLATE2(GVAR.GuildGroupSummaryFriend[i].Text, "RIGHT")
-		if i == 1 then
-			GVAR.GuildGroupSummaryFriend[i].Text:SetPoint("TOPRIGHT", GVAR.Summary.Logo1, "TOPLEFT", 5, 0)
-		else
-			GVAR.GuildGroupSummaryFriend[i].Text:SetPoint("TOP", GVAR.GuildGroupSummaryFriend[(i-1)].Text, "BOTTOM", 0, 0)
-		end
-		-- GVAR.GuildGroupSummaryFriend[i].Text:SetText("") -- GG_CONFTXT
-	end
-
-	GVAR.GuildGroupSummaryEnemy = {}
-	for i = 1, 7 do
-		GVAR.GuildGroupSummaryEnemy[i] = CreateFrame("Button", nil, GVAR.GuildGroupSummary)
-		GVAR.GuildGroupSummaryEnemy[i]:Show()
-
-		GVAR.GuildGroupSummaryEnemy[i].Text = GVAR.GuildGroupSummaryEnemy[i]:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-		FONT_TEMPLATE2(GVAR.GuildGroupSummaryEnemy[i].Text, "LEFT")
-		if i == 1 then
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetPoint("TOPLEFT", GVAR.Summary.Logo2, "TOPRIGHT", -5, 0)
-		else
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetPoint("TOP", GVAR.GuildGroupSummaryEnemy[(i-1)].Text, "BOTTOM", 0, 0)
-		end
-		-- GVAR.GuildGroupSummaryEnemy[i].Text:SetText("") -- GG_CONFTXT
-	end
-	-- ----------------------------------------
-
 	BattlegroundTargets:SummaryPosition()
 
 	-- ----------------------------------------
@@ -2253,12 +2079,6 @@ function BattlegroundTargets:SummaryPosition() -- SUMMARY
 		GVAR.Summary:SetScale(BattlegroundTargets_Options.SummaryScaleRole[currentSize])
 		GVAR.Summary:Show()
 
-		if OPT.ButtonShowGuildGroup[currentSize] then
-			GVAR.GuildGroupSummary:SetScale(BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize])
-			GVAR.GuildGroupSummary:Show()
-		else
-			GVAR.GuildGroupSummary:Hide()
-		end
 	else
 		GVAR.Summary:Hide()
 	end
@@ -2270,7 +2090,16 @@ function BattlegroundTargets:CreateOptionsFrame()
 	BattlegroundTargets:DefaultShuffle()
 
 	local heightBase = 58 -- 10+16+10+22
-	local heightBracket = 523 -- 10+16+10  +1+  10+16 + 10+16 + 10+24+10 + (15*16) + (15*10)
+	local heightBracket = 568
+	-- 10+16 +8+1+8+                              43 -- top enable
+	-- 16+10 + 16 +                               42 -- layout -> summary
+	-- 8+1+8 + 24 +                               41 -- copy button
+	-- 8+1+8 + 16+10 + 16+10 + 16 +               85 -- 1. row role -> targetcount
+	-- 8+1+8 + 16+10 + 16+10 + 16+10 + 16        111 -- 2. target -> targetassist
+	-- 8+1+8 + 16+10 + 16 +                       59 -- 3. health -> range
+	-- 8+1+8 + 16 +                               33 -- 4. sort
+	-- 8+1+8 + 16+10 + 16 +                       59 -- 5. fonts
+	-- 8+1+8 + 16+10 + 16+10 + 16 + 10            95 -- 6. scale -> height
 	local heightTotal = heightBase + heightBracket + 30 + 10
 
 	-- ####################################################################################################
@@ -2353,8 +2182,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		testSize = 10
 		BattlegroundTargets:CheckForEnabledBracket(testSize)
 		if BattlegroundTargets_Options.EnableBracket[testSize] then
-			BattlegroundTargets:ShuffleSizeCheck(testSize)
-			BattlegroundTargets:ConfigGuildGroupFriendUpdate(testSize)
 			BattlegroundTargets:EnableConfigMode()
 		else
 			BattlegroundTargets:DisableConfigMode()
@@ -2377,8 +2204,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		testSize = 15
 		BattlegroundTargets:CheckForEnabledBracket(testSize)
 		if BattlegroundTargets_Options.EnableBracket[testSize] then
-			BattlegroundTargets:ShuffleSizeCheck(testSize)
-			BattlegroundTargets:ConfigGuildGroupFriendUpdate(testSize)
 			BattlegroundTargets:EnableConfigMode()
 		else
 			BattlegroundTargets:DisableConfigMode()
@@ -2401,8 +2226,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		testSize = 40
 		BattlegroundTargets:CheckForEnabledBracket(testSize)
 		if BattlegroundTargets_Options.EnableBracket[testSize] then
-			BattlegroundTargets:ShuffleSizeCheck(testSize)
-			BattlegroundTargets:ConfigGuildGroupFriendUpdate(testSize)
 			BattlegroundTargets:EnableConfigMode()
 		else
 			BattlegroundTargets:DisableConfigMode()
@@ -2449,8 +2272,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.EnableBracket:SetChecked(BattlegroundTargets_Options.EnableBracket[currentSize])
 		BattlegroundTargets:CheckForEnabledBracket(currentSize)
 		if BattlegroundTargets_Options.EnableBracket[currentSize] then
-			BattlegroundTargets:ShuffleSizeCheck(currentSize)
-			BattlegroundTargets:ConfigGuildGroupFriendUpdate(currentSize)
 			BattlegroundTargets:EnableConfigMode()
 		else
 			BattlegroundTargets:DisableConfigMode()
@@ -2466,8 +2287,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.IndependentPositioning[currentSize] = not BattlegroundTargets_Options.IndependentPositioning[currentSize]
 		GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options.IndependentPositioning[currentSize])
 		if not BattlegroundTargets_Options.IndependentPositioning[currentSize] then
-			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize.."_posX"] = nil
-			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize.."_posY"] = nil
+			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize] = nil -- NEW 50200-3 or newer
+			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize] = nil -- NEW 50200-3 or newer
+			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize.."_posX"] = nil -- OLD pre50200-3
+			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize.."_posY"] = nil -- OLD pre50200-3
 			if inCombat or InCombatLockdown() then
 				reCheckBG = true
 				return
@@ -2476,19 +2299,23 @@ function BattlegroundTargets:CreateOptionsFrame()
 		end
 	end)
 
-	-- dummy 1
+
+
+	-- DUMMY
 	GVAR.OptionsFrame.Dummy1 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
 	-- BOOM GVAR.OptionsFrame.Dummy1:SetWidth()
 	GVAR.OptionsFrame.Dummy1:SetHeight(1)
-	GVAR.OptionsFrame.Dummy1:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 26, 0)
-	GVAR.OptionsFrame.Dummy1:SetPoint("TOP", GVAR.OptionsFrame.IndependentPos, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.Dummy1:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy1:SetPoint("TOP", GVAR.OptionsFrame.IndependentPos, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.Dummy1:SetTexture(0.8, 0.2, 0.2, 1)
+
+
 
 	-- layout
 	GVAR.OptionsFrame.LayoutTHText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.LayoutTHText:SetHeight(16)
-	-- BOOM GVAR.OptionsFrame.LayoutTHText:SetPoint()
-	GVAR.OptionsFrame.LayoutTHText:SetPoint("TOP", GVAR.OptionsFrame.Dummy1, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.LayoutTHText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 26, 0)
+	GVAR.OptionsFrame.LayoutTHText:SetPoint("TOP", GVAR.OptionsFrame.Dummy1, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.LayoutTHText:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.LayoutTHText:SetText(L["Layout"]..":")
 	GVAR.OptionsFrame.LayoutTHText:SetTextColor(1, 1, 1, 1)
@@ -2583,7 +2410,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- summary
 	GVAR.OptionsFrame.SummaryText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.SummaryText:SetHeight(16)
-	-- BOOM GVAR.OptionsFrame.SummaryText:SetPoint()
+	GVAR.OptionsFrame.SummaryText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 26, 0)
 	GVAR.OptionsFrame.SummaryText:SetPoint("TOP", GVAR.OptionsFrame.LayoutTHText, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.SummaryText:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.SummaryText:SetText(L["Summary"]..":")
@@ -2602,18 +2429,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.Summary[currentSize] = not BattlegroundTargets_Options.Summary[currentSize]
 		if BattlegroundTargets_Options.Summary[currentSize] then
 			TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScaleRole)
-			if BattlegroundTargets_Options.ButtonShowGuildGroup[currentSize] then
-				TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
-			else
-				TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
-			end
 		else
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleRole)
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
 		end
 		ConfigFontNumberOptionCheck(currentSize)
-		BattlegroundTargets:ShuffleSizeCheck(currentSize)
-		BattlegroundTargets:ConfigGuildGroupFriendUpdate(currentSize)
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
@@ -2635,42 +2454,26 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.SummaryScaleRoleText:SetText((BattlegroundTargets_Options.SummaryScaleRole[currentSize]*100).."%")
 	GVAR.OptionsFrame.SummaryScaleRoleText:SetTextColor(1, 1, 0.49, 1)
 
-	GVAR.OptionsFrame.SummaryScaleGuildGroup = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
-	GVAR.OptionsFrame.SummaryScaleGuildGroupText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.SummaryScaleGuildGroup, 85, 5, 80, 200, BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize],
-	function(self, value)
-		local nvalue = value/100
-		if nvalue == BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize] then return end
-		BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize] = nvalue
-		GVAR.OptionsFrame.SummaryScaleGuildGroupText:SetText(value.."%")
-		BattlegroundTargets:SummaryPosition()
-	end,
-	"blank")
-	GVAR.OptionsFrame.SummaryScaleGuildGroup:SetPoint("LEFT", GVAR.OptionsFrame.SummaryScaleRole, "RIGHT", 50, 0)
-	GVAR.OptionsFrame.SummaryScaleGuildGroupText:SetHeight(16)
-	GVAR.OptionsFrame.SummaryScaleGuildGroupText:SetPoint("LEFT", GVAR.OptionsFrame.SummaryScaleGuildGroup, "RIGHT", 5, 0)
-	GVAR.OptionsFrame.SummaryScaleGuildGroupText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.SummaryScaleGuildGroupText:SetText((BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize]*100).."%")
-	GVAR.OptionsFrame.SummaryScaleGuildGroupText:SetTextColor(1, 1, 0.49, 1)
-
 	GVAR.OptionsFrame.SummaryScaleRole:SetValue(BattlegroundTargets_Options.SummaryScaleRole[currentSize]*100)
-	GVAR.OptionsFrame.SummaryScaleGuildGroup:SetValue(BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize]*100)
 
 	if BattlegroundTargets_Options.Summary[currentSize] then
 		TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScaleRole)
-		if BattlegroundTargets_Options.ButtonShowGuildGroup[currentSize] then
-			TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
-		else
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
-		end
 	else
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleRole)
-		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
 	end
 	local summaryW = GVAR.OptionsFrame.SummaryText:GetStringWidth() + 10 +
 	                 GVAR.OptionsFrame.Summary:GetWidth() + 10 +
-	                 GVAR.OptionsFrame.SummaryScaleRole:GetWidth() + 50 +
-	                 GVAR.OptionsFrame.SummaryScaleGuildGroup:GetWidth() + 50
+	                 GVAR.OptionsFrame.SummaryScaleRole:GetWidth() + 50
+
+
+
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy2 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy2:SetWidth()
+	GVAR.OptionsFrame.Dummy2:SetHeight(1)
+	GVAR.OptionsFrame.Dummy2:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy2:SetPoint("TOP", GVAR.OptionsFrame.Summary, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy2:SetTexture(0.73, 0.26, 0.21, 0.5)
 
 
 
@@ -2678,7 +2481,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.CopySettings = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.TextButton(GVAR.OptionsFrame.CopySettings, format(L["Copy this settings to %s"], "|cffffffff"..L["15 vs 15"].."|r"), 4)
 	-- BOOM GVAR.OptionsFrame.CopySettings:SetPoint()
-	GVAR.OptionsFrame.CopySettings:SetPoint("TOP", GVAR.OptionsFrame.Dummy1, "BOTTOM", 0, -62) -- 10+16+10+16+10
+	GVAR.OptionsFrame.CopySettings:SetPoint("TOP", GVAR.OptionsFrame.Dummy2, "BOTTOM", 0, -8)
 	-- BOOM GVAR.OptionsFrame.CopySettings:SetWidth()
 	GVAR.OptionsFrame.CopySettings:SetHeight(24)
 	GVAR.OptionsFrame.CopySettings:SetScript("OnClick", function() BattlegroundTargets:CopySettings(currentSize) end)
@@ -2691,16 +2494,13 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.LayoutSpace.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.SummaryText.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.Summary.Highlight:Show()
-		GVAR.OptionsFrame.SummaryScaleRole.Background:SetTexture(1, 1, 1, 0.1)
-		GVAR.OptionsFrame.SummaryScaleGuildGroup.Background:SetTexture(1, 1, 1, 0.1)----------
+		GVAR.OptionsFrame.SummaryScaleRole.Background:SetTexture(1, 1, 1, 0.1)----------
 		GVAR.OptionsFrame.ShowRole.Highlight:Show()
 		GVAR.OptionsFrame.ShowSpec.Highlight:Show()
 		GVAR.OptionsFrame.ClassIcon.Highlight:Show()
 		GVAR.OptionsFrame.ShowLeader.Highlight:Show()
 		GVAR.OptionsFrame.ShowRealm.Highlight:Show()
-		GVAR.OptionsFrame.ShowTargetCount.Highlight:Show()
-		GVAR.OptionsFrame.ShowGuildGroup.Highlight:Show()
-		GVAR.OptionsFrame.GuildGroupPosition.Background:SetTexture(1, 1, 1, 0.1)----------
+		GVAR.OptionsFrame.ShowTargetCount.Highlight:Show()----------
 		GVAR.OptionsFrame.ShowTargetIndicator.Highlight:Show()
 		GVAR.OptionsFrame.TargetScaleSlider.Background:SetTexture(1, 1, 1, 0.1)
 		GVAR.OptionsFrame.TargetPositionSlider.Background:SetTexture(1, 1, 1, 0.1)
@@ -2743,16 +2543,13 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.LayoutSpace.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.SummaryText.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.Summary.Highlight:Hide()
-		GVAR.OptionsFrame.SummaryScaleRole.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.SummaryScaleGuildGroup.Background:SetTexture(0, 0, 0, 0)----------
+		GVAR.OptionsFrame.SummaryScaleRole.Background:SetTexture(0, 0, 0, 0)----------
 		GVAR.OptionsFrame.ShowRole.Highlight:Hide()
 		GVAR.OptionsFrame.ShowSpec.Highlight:Hide()
 		GVAR.OptionsFrame.ClassIcon.Highlight:Hide()
 		GVAR.OptionsFrame.ShowLeader.Highlight:Hide()
 		GVAR.OptionsFrame.ShowRealm.Highlight:Hide()
-		GVAR.OptionsFrame.ShowTargetCount.Highlight:Hide()
-		GVAR.OptionsFrame.ShowGuildGroup.Highlight:Hide()
-		GVAR.OptionsFrame.GuildGroupPosition.Background:SetTexture(0, 0, 0, 0)----------
+		GVAR.OptionsFrame.ShowTargetCount.Highlight:Hide()----------
 		GVAR.OptionsFrame.ShowTargetIndicator.Highlight:Hide()
 		GVAR.OptionsFrame.TargetScaleSlider.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.TargetPositionSlider.Background:SetTexture(0, 0, 0, 0)
@@ -2789,11 +2586,21 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy3 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy3:SetWidth()
+	GVAR.OptionsFrame.Dummy3:SetHeight(1)
+	GVAR.OptionsFrame.Dummy3:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy3:SetPoint("TOP", GVAR.OptionsFrame.CopySettings, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy3:SetTexture(0.73, 0.26, 0.21, 0.5)
+
+
+
 	-- show role
 	GVAR.OptionsFrame.ShowRole = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowRole, 16, 4, L["Role"])
 	GVAR.OptionsFrame.ShowRole:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowRole:SetPoint("TOP", GVAR.OptionsFrame.CopySettings, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowRole:SetPoint("TOP", GVAR.OptionsFrame.Dummy3, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.ShowRole:SetChecked(OPT.ButtonShowRole[currentSize])
 	GVAR.OptionsFrame.ShowRole:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonShowRole[currentSize] = not BattlegroundTargets_Options.ButtonShowRole[currentSize]
@@ -2865,63 +2672,25 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
-	-- show guildgroup
-	GVAR.OptionsFrame.ShowGuildGroup = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowGuildGroup, 16, 4, L["Guild Groups"])
-	--GVAR.OptionsFrame.ShowGuildGroup:SetPoint()
-	GVAR.OptionsFrame.ShowGuildGroup:SetChecked(OPT.ButtonShowGuildGroup[currentSize])
-	GVAR.OptionsFrame.ShowGuildGroup:SetScript("OnClick", function()
-		BattlegroundTargets_Options.ButtonShowGuildGroup[currentSize] = not BattlegroundTargets_Options.ButtonShowGuildGroup[currentSize]
-		                        OPT.ButtonShowGuildGroup[currentSize] = not                         OPT.ButtonShowGuildGroup[currentSize]
-		GVAR.OptionsFrame.ShowGuildGroup:SetChecked(OPT.ButtonShowGuildGroup[currentSize])
-		if OPT.ButtonShowGuildGroup[currentSize] and
-		   BattlegroundTargets_Options.Summary[currentSize]
-		then
-			TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
-		else
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
-		end
-		if OPT.ButtonShowGuildGroup[currentSize] then
-			BattlegroundTargets:ShuffleSizeCheck(currentSize)
-			BattlegroundTargets:ConfigGuildGroupFriendUpdate(currentSize)
-			TEMPLATE.EnableSlider(GVAR.OptionsFrame.GuildGroupPosition)
-		else
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.GuildGroupPosition)
-		end
-		BattlegroundTargets:EnableConfigMode()
-	end)
-
-	GVAR.OptionsFrame.GuildGroupPosition = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
-	GVAR.OptionsFrame.GuildGroupPositionText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.GuildGroupPosition, 50, 1, 1, 6, OPT.ButtonGuildGroupPosition[currentSize],
-	function(self, value)
-		if value == BattlegroundTargets_Options.ButtonGuildGroupPosition[currentSize] then return end
-		BattlegroundTargets_Options.ButtonGuildGroupPosition[currentSize] = value
-		                        OPT.ButtonGuildGroupPosition[currentSize] = value
-		GVAR.OptionsFrame.GuildGroupPositionText:SetText(value)
-		BattlegroundTargets:EnableConfigMode()
-	end,
-	"blank")
-	GVAR.OptionsFrame.GuildGroupPosition:SetPoint("LEFT", GVAR.OptionsFrame.ShowGuildGroup, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.GuildGroupPositionText:SetHeight(16)
-	GVAR.OptionsFrame.GuildGroupPositionText:SetPoint("LEFT", GVAR.OptionsFrame.GuildGroupPosition, "RIGHT", 5, 0)
-	GVAR.OptionsFrame.GuildGroupPositionText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.GuildGroupPositionText:SetText(BattlegroundTargets_Options.ButtonGuildGroupPosition[currentSize])
-	GVAR.OptionsFrame.GuildGroupPositionText:SetTextColor(1, 1, 0.49, 1)
-
 	local eq, sw = 0, 0
 	sw = GVAR.OptionsFrame.ShowRole:GetWidth() if sw > eq then eq = sw end
 	sw = GVAR.OptionsFrame.ShowRealm:GetWidth() if sw > eq then eq = sw end
 	sw = GVAR.OptionsFrame.ShowTargetCount:GetWidth() if sw > eq then eq = sw end
 	GVAR.OptionsFrame.ShowLeader:SetPoint("LEFT", GVAR.OptionsFrame.ShowRealm, "LEFT", eq+50, 0)
-	GVAR.OptionsFrame.ShowGuildGroup:SetPoint("LEFT", GVAR.OptionsFrame.ShowTargetCount, "LEFT", eq+50, 0)
 	GVAR.OptionsFrame.ShowSpec:SetPoint("LEFT", GVAR.OptionsFrame.ShowRole, "LEFT", eq+50, 0)
 	GVAR.OptionsFrame.ClassIcon:SetPoint("LEFT", GVAR.OptionsFrame.ShowSpec, "LEFT", GVAR.OptionsFrame.ShowSpec:GetWidth()+50, 0)
 
-	local generalIconW = math_max(
-		10 + eq + 50 + GVAR.OptionsFrame.ShowSpec:GetWidth() + 50 + GVAR.OptionsFrame.ClassIcon:GetWidth() + 10,
-		10 + eq + 50 + GVAR.OptionsFrame.ShowGuildGroup:GetWidth() + 10 + 50 + 50
-	)
+	local generalIconW = 10 + eq + 50 + GVAR.OptionsFrame.ShowSpec:GetWidth() + 50 + GVAR.OptionsFrame.ClassIcon:GetWidth() + 10
+
+
+
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy4 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy4:SetWidth()
+	GVAR.OptionsFrame.Dummy4:SetHeight(1)
+	GVAR.OptionsFrame.Dummy4:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy4:SetPoint("TOP", GVAR.OptionsFrame.ShowTargetCount, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy4:SetTexture(0.73, 0.26, 0.21, 0.5)
 
 
 
@@ -2931,7 +2700,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ShowTargetIndicator = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowTargetIndicator, 16, 4, L["Target"])
 	GVAR.OptionsFrame.ShowTargetIndicator:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowTargetIndicator:SetPoint("TOP", GVAR.OptionsFrame.ShowTargetCount, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowTargetIndicator:SetPoint("TOP", GVAR.OptionsFrame.Dummy4, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.ShowTargetIndicator:SetChecked(OPT.ButtonShowTarget[currentSize])
 	GVAR.OptionsFrame.ShowTargetIndicator:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonShowTarget[currentSize] = not BattlegroundTargets_Options.ButtonShowTarget[currentSize]
@@ -3334,11 +3103,21 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy5 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy5:SetWidth()
+	GVAR.OptionsFrame.Dummy5:SetHeight(1)
+	GVAR.OptionsFrame.Dummy5:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy5:SetPoint("TOP", GVAR.OptionsFrame.ShowAssist, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy5:SetTexture(0.73, 0.26, 0.21, 0.5)
+
+
+
 	-- health bar
 	GVAR.OptionsFrame.ShowHealthBar = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowHealthBar, 16, 4, L["Health Bar"])
 	GVAR.OptionsFrame.ShowHealthBar:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowHealthBar:SetPoint("TOP", GVAR.OptionsFrame.ShowAssist, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowHealthBar:SetPoint("TOP", GVAR.OptionsFrame.Dummy5, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.ShowHealthBar:SetChecked(OPT.ButtonShowHealthBar[currentSize])
 	GVAR.OptionsFrame.ShowHealthBar:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonShowHealthBar[currentSize] = not BattlegroundTargets_Options.ButtonShowHealthBar[currentSize]
@@ -3519,12 +3298,22 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy6 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy6:SetWidth()
+	GVAR.OptionsFrame.Dummy6:SetHeight(1)
+	GVAR.OptionsFrame.Dummy6:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy6:SetPoint("TOP", GVAR.OptionsFrame.RangeCheck, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy6:SetTexture(0.73, 0.26, 0.21, 0.5)
+
+
+
 	-- sort by
 	local sortW = 0
 	GVAR.OptionsFrame.SortByTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.SortByTitle:SetHeight(16)
 	GVAR.OptionsFrame.SortByTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.SortByTitle:SetPoint("TOP", GVAR.OptionsFrame.RangeCheck, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.SortByTitle:SetPoint("TOP", GVAR.OptionsFrame.Dummy6, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.SortByTitle:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.SortByTitle:SetText(L["Sort By"]..":")
 	GVAR.OptionsFrame.SortByTitle:SetTextColor(1, 1, 1, 1)
@@ -3647,11 +3436,21 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy7 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy7:SetWidth()
+	GVAR.OptionsFrame.Dummy7:SetHeight(1)
+	GVAR.OptionsFrame.Dummy7:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy7:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy7:SetTexture(0.73, 0.26, 0.21, 0.5)
+
+
+
 	-- font name
 	GVAR.OptionsFrame.FontNameTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.FontNameTitle:SetHeight(16)
 	GVAR.OptionsFrame.FontNameTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.FontNameTitle:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.FontNameTitle:SetPoint("TOP", GVAR.OptionsFrame.Dummy7, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.FontNameTitle:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.FontNameTitle:SetText(L["Text"]..": "..L["Name"])
 	GVAR.OptionsFrame.FontNameTitle:SetTextColor(1, 1, 1, 1)
@@ -3822,13 +3621,23 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy8 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy8:SetWidth()
+	GVAR.OptionsFrame.Dummy8:SetHeight(1)
+	GVAR.OptionsFrame.Dummy8:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy8:SetPoint("TOP", GVAR.OptionsFrame.FontNumberSlider, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy8:SetTexture(0.73, 0.26, 0.21, 0.5)
+
+
+
 	-- scale
 	GVAR.OptionsFrame.ScaleTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.ScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
 	GVAR.OptionsFrame.ScaleValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.ScaleTitle:SetHeight(16)
 	GVAR.OptionsFrame.ScaleTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ScaleTitle:SetPoint("TOP", GVAR.OptionsFrame.FontNumberSlider, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ScaleTitle:SetPoint("TOP", GVAR.OptionsFrame.Dummy8, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.ScaleTitle:SetJustifyH("LEFT")
 	GVAR.OptionsFrame.ScaleTitle:SetText(L["Scale"]..":")
 	GVAR.OptionsFrame.ScaleTitle:SetTextColor(1, 1, 1, 1)
@@ -4067,9 +3876,14 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TabRaidSize10:SetPoint("BOTTOMLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", spacer+tabWidth1+spacer, -1)
 	GVAR.OptionsFrame.TabRaidSize15:SetPoint("BOTTOMLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", spacer+tabWidth1+spacer+((tabWidth2+spacer)*1), -1)
 	GVAR.OptionsFrame.TabRaidSize40:SetPoint("BOTTOMLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", spacer+tabWidth1+spacer+((tabWidth2+spacer)*2), -1)
-	GVAR.OptionsFrame.Dummy1:SetWidth(frameWidth-26-26)
-	GVAR.OptionsFrame.LayoutTHText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", (frameWidth-layoutW)/2, 0)
-	GVAR.OptionsFrame.SummaryText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", (frameWidth-summaryW)/2, 0)
+	GVAR.OptionsFrame.Dummy1:SetWidth(frameWidth-20) -- DUMMY
+	GVAR.OptionsFrame.Dummy2:SetWidth(frameWidth-20)
+	GVAR.OptionsFrame.Dummy3:SetWidth(frameWidth-20)
+	GVAR.OptionsFrame.Dummy4:SetWidth(frameWidth-20)
+	GVAR.OptionsFrame.Dummy5:SetWidth(frameWidth-20)
+	GVAR.OptionsFrame.Dummy6:SetWidth(frameWidth-20)
+	GVAR.OptionsFrame.Dummy7:SetWidth(frameWidth-20)
+	GVAR.OptionsFrame.Dummy8:SetWidth(frameWidth-20)
 	local w1 = frameWidth/2
 	local w2 = GVAR.OptionsFrame.CopySettings.Text:GetStringWidth() + 60
 	if w2 > w1 then
@@ -4128,17 +3942,12 @@ function BattlegroundTargets:SetOptions()
 	GVAR.OptionsFrame.Summary:SetChecked(BattlegroundTargets_Options.Summary[currentSize])
 	GVAR.OptionsFrame.SummaryScaleRole:SetValue(BattlegroundTargets_Options.SummaryScaleRole[currentSize]*100)
 	GVAR.OptionsFrame.SummaryScaleRoleText:SetText((BattlegroundTargets_Options.SummaryScaleRole[currentSize]*100).."%")
-	GVAR.OptionsFrame.SummaryScaleGuildGroup:SetValue(BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize]*100)
-	GVAR.OptionsFrame.SummaryScaleGuildGroupText:SetText((BattlegroundTargets_Options.SummaryScaleGuildGroup[currentSize]*100).."%")
 
 	GVAR.OptionsFrame.ShowRole:SetChecked(OPT.ButtonShowRole[currentSize])
 	GVAR.OptionsFrame.ShowSpec:SetChecked(OPT.ButtonShowSpec[currentSize])
 	GVAR.OptionsFrame.ClassIcon:SetChecked(OPT.ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ShowLeader:SetChecked(OPT.ButtonShowLeader[currentSize])
 	GVAR.OptionsFrame.ShowRealm:SetChecked(OPT.ButtonShowRealm[currentSize])
-	GVAR.OptionsFrame.ShowGuildGroup:SetChecked(OPT.ButtonShowGuildGroup[currentSize])
-	GVAR.OptionsFrame.GuildGroupPosition:SetValue(OPT.ButtonGuildGroupPosition[currentSize])
-	GVAR.OptionsFrame.GuildGroupPositionText:SetText(OPT.ButtonGuildGroupPosition[currentSize])
 
 	GVAR.OptionsFrame.ShowTargetIndicator:SetChecked(OPT.ButtonShowTarget[currentSize])
 	GVAR.OptionsFrame.TargetScaleSlider:SetValue(OPT.ButtonTargetScale[currentSize]*100)
@@ -4229,14 +4038,8 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.Summary)
 		if BattlegroundTargets_Options.Summary[bracketSize] then
 			TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScaleRole)
-			if OPT.ButtonShowGuildGroup[bracketSize] then
-				TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
-			else
-				TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
-			end
 		else
 			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleRole)
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
 		end
 
 		if bracketSize == 40 then
@@ -4251,12 +4054,6 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowLeader)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowRealm)
-		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowGuildGroup)
-		if OPT.ButtonShowGuildGroup[bracketSize] then
-			TEMPLATE.EnableSlider(GVAR.OptionsFrame.GuildGroupPosition)
-		else
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.GuildGroupPosition)
-		end
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowTargetIndicator)
 		if OPT.ButtonShowTarget[bracketSize] then
@@ -4366,7 +4163,6 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		GVAR.OptionsFrame.SummaryText:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.Summary)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleRole)
-		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
 
 		if bracketSize == 40 then
  			GVAR.OptionsFrame.CopySettings:Hide()
@@ -4380,8 +4176,6 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowLeader)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRealm)
-		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowGuildGroup)
-		TEMPLATE.DisableSlider(GVAR.OptionsFrame.GuildGroupPosition)
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetIndicator)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.TargetScaleSlider)
@@ -4453,15 +4247,12 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	GVAR.OptionsFrame.SummaryText:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.Summary)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleRole)
-	TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScaleGuildGroup)
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRole)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowSpec)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowLeader)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRealm)
-	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowGuildGroup)
-	TEMPLATE.DisableSlider(GVAR.OptionsFrame.GuildGroupPosition)
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetIndicator)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.TargetScaleSlider)
@@ -4746,8 +4537,6 @@ function BattlegroundTargets:SetupButtonLayout()
 	local ButtonAssistPosition     = OPT.ButtonAssistPosition[currentSize]
 	local ButtonRangeCheck         = OPT.ButtonRangeCheck[currentSize]
 	local ButtonRangeDisplay       = OPT.ButtonRangeDisplay[currentSize]
-	local ButtonShowGuildGroup     = OPT.ButtonShowGuildGroup[currentSize]
-	local ButtonGuildGroupPosition = OPT.ButtonGuildGroupPosition[currentSize]
 
 	local LayoutTH      = BattlegroundTargets_Options.LayoutTH[currentSize]
 	local LayoutSpace   = BattlegroundTargets_Options.LayoutSpace[currentSize]
@@ -4774,21 +4563,17 @@ function BattlegroundTargets:SetupButtonLayout()
 	else
 		withIconWidth = (ButtonWidth - (ButtonHeight_2*iconNum)) - 2
 	end
-	if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-		withIconWidth = withIconWidth - (ButtonHeight_2*0.4)
-	end
 
 	for i = 1, currentSize do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
 
 		local lvl = GVAR_TargetButton:GetFrameLevel()
-		GVAR_TargetButton.GuildGroupButton:SetFrameLevel(lvl+1) -- xBUT
-		GVAR_TargetButton.HealthTextButton:SetFrameLevel(lvl+2)
-		GVAR_TargetButton.TargetTextureButton:SetFrameLevel(lvl+3)
-		GVAR_TargetButton.AssistTextureButton:SetFrameLevel(lvl+4)
-		GVAR_TargetButton.FocusTextureButton:SetFrameLevel(lvl+5)
-		GVAR_TargetButton.FlagTextureButton:SetFrameLevel(lvl+6)
-		GVAR_TargetButton.FlagDebuffButton:SetFrameLevel(lvl+7)
+		GVAR_TargetButton.HealthTextButton:SetFrameLevel(lvl+1) -- xBUT
+		GVAR_TargetButton.TargetTextureButton:SetFrameLevel(lvl+2)
+		GVAR_TargetButton.AssistTextureButton:SetFrameLevel(lvl+3)
+		GVAR_TargetButton.FocusTextureButton:SetFrameLevel(lvl+4)
+		GVAR_TargetButton.FlagTextureButton:SetFrameLevel(lvl+5)
+		GVAR_TargetButton.FlagDebuffButton:SetFrameLevel(lvl+6)
 
 		GVAR_TargetButton:SetScale(ButtonScale)
 
@@ -4810,15 +4595,7 @@ function BattlegroundTargets:SetupButtonLayout()
 		GVAR_TargetButton.ClassTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
 
 		GVAR_TargetButton.LeaderTexture:SetSize(ButtonHeight_2/1.5, ButtonHeight_2/1.5)
-		if ButtonShowGuildGroup and ButtonGuildGroupPosition == 1 then
-			GVAR_TargetButton.LeaderTexture:ClearAllPoints()
-			GVAR_TargetButton.LeaderTexture:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", 0, 0)
-		else
-			GVAR_TargetButton.LeaderTexture:ClearAllPoints()
-			GVAR_TargetButton.LeaderTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", -(ButtonHeight_2/1.5)/2, 0)
-		end
-
-		GVAR_TargetButton.GuildGroup:SetSize(ButtonHeight_2*0.4, ButtonHeight_2*0.4)
+		GVAR_TargetButton.LeaderTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", -(ButtonHeight_2/1.5)/2, 0)
 
 		GVAR_TargetButton.ClassColorBackground:SetHeight(ButtonHeight_2)
 		GVAR_TargetButton.HealthBar:SetHeight(ButtonHeight_2)
@@ -4835,14 +4612,7 @@ function BattlegroundTargets:SetupButtonLayout()
 			end
 			GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
 			GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
-
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
-			else
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
-			end
+			GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
 		elseif ButtonShowRole and ButtonShowSpec then
 			GVAR_TargetButton.RoleTexture:Show()
 			GVAR_TargetButton.SpecTexture:Show()
@@ -4854,14 +4624,7 @@ function BattlegroundTargets:SetupButtonLayout()
 				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
 			end
 			GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
-
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
-			else
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
-			end
+			GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
 		elseif ButtonShowRole and ButtonClassIcon then
 			GVAR_TargetButton.RoleTexture:Show()
 			GVAR_TargetButton.SpecTexture:Hide()
@@ -4873,14 +4636,7 @@ function BattlegroundTargets:SetupButtonLayout()
 				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
 			end
 			GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
-
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
-			else
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
-			end
+			GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
 		elseif ButtonShowSpec and ButtonClassIcon then
 			GVAR_TargetButton.RoleTexture:Hide()
 			GVAR_TargetButton.SpecTexture:Show()
@@ -4892,14 +4648,7 @@ function BattlegroundTargets:SetupButtonLayout()
 				GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
 			end
 			GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
-
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
-			else
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
-			end
+			GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
 		elseif ButtonShowRole then
 			GVAR_TargetButton.RoleTexture:Show()
 			GVAR_TargetButton.SpecTexture:Hide()
@@ -4911,13 +4660,7 @@ function BattlegroundTargets:SetupButtonLayout()
 				GVAR_TargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
 			end
 
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
-			else
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
-			end
+			GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.RoleTexture, "RIGHT", 0, 0)
 		elseif ButtonShowSpec then
 			GVAR_TargetButton.RoleTexture:Hide()
 			GVAR_TargetButton.SpecTexture:Show()
@@ -4929,13 +4672,7 @@ function BattlegroundTargets:SetupButtonLayout()
 				GVAR_TargetButton.SpecTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
 			end
 
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
-			else
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
-			end
+			GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.SpecTexture, "RIGHT", 0, 0)
 		elseif ButtonClassIcon then
 			GVAR_TargetButton.RoleTexture:Hide()
 			GVAR_TargetButton.SpecTexture:Hide()
@@ -4947,49 +4684,16 @@ function BattlegroundTargets:SetupButtonLayout()
 				GVAR_TargetButton.ClassTexture:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
 			end
 
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
-			else
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
-			end
+			GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.ClassTexture, "RIGHT", 0, 0)
 		else
 			GVAR_TargetButton.RoleTexture:Hide()
 			GVAR_TargetButton.SpecTexture:Hide()
 			GVAR_TargetButton.ClassTexture:Hide()
 
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 3 then
-				if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
-					GVAR_TargetButton.GuildGroup:ClearAllPoints()
-					GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
-				else
-					GVAR_TargetButton.GuildGroup:ClearAllPoints()
-					GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
-				end
-				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.GuildGroup, "RIGHT", 0, 0)
+			if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
 			else
-				if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
-					GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton.RangeTexture, "RIGHT", 0, 0)
-				else
-					GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
-				end
-			end
-		end
-
-		if ButtonShowGuildGroup then
-			if ButtonGuildGroupPosition == 1 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", (ButtonHeight_2*0.4)/2, 0)
-			elseif ButtonGuildGroupPosition == 2 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", -(ButtonHeight_2*0.4)/2, 0)
-			elseif ButtonGuildGroupPosition == 5 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("RIGHT", GVAR_TargetButton.TargetCount, "LEFT", (ButtonHeight_2*0.4)/2, 0)
-			elseif ButtonGuildGroupPosition == 6 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("RIGHT", GVAR_TargetButton, "RIGHT", (ButtonHeight_2*0.4)/2, 0)
+				GVAR_TargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetButton, "LEFT", 1, 0)
 			end
 		end
 
@@ -5010,15 +4714,8 @@ function BattlegroundTargets:SetupButtonLayout()
 			healthBarWidth = withIconWidth-20
 			GVAR_TargetButton.ClassColorBackground:SetWidth(withIconWidth-20)
 			GVAR_TargetButton.HealthBar:SetWidth(withIconWidth-20)
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 4 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 1, 0)
-				GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", (ButtonHeight_2*0.4) + 2, 0)
-				GVAR_TargetButton.Name:SetWidth(withIconWidth-20-2 - (ButtonHeight_2*0.4))
-			else
-				GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 2, 0)
-				GVAR_TargetButton.Name:SetWidth(withIconWidth-20-2)
-			end
+			GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 2, 0)
+			GVAR_TargetButton.Name:SetWidth(withIconWidth-20-2)
 			GVAR_TargetButton.TargetCountBackground:SetHeight(ButtonHeight_2)
 			GVAR_TargetButton.TargetCountBackground:Show()
 			GVAR_TargetButton.TargetCount:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize, "")
@@ -5032,15 +4729,8 @@ function BattlegroundTargets:SetupButtonLayout()
 			healthBarWidth = withIconWidth
 			GVAR_TargetButton.ClassColorBackground:SetWidth(withIconWidth)
 			GVAR_TargetButton.HealthBar:SetWidth(withIconWidth)
-			if ButtonShowGuildGroup and ButtonGuildGroupPosition == 4 then
-				GVAR_TargetButton.GuildGroup:ClearAllPoints()
-				GVAR_TargetButton.GuildGroup:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 1, 0)
-				GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", (ButtonHeight_2*0.4) + 2, 0)
-				GVAR_TargetButton.Name:SetWidth(withIconWidth-2 - (ButtonHeight_2*0.4))
-			else
-				GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 2, 0)
-				GVAR_TargetButton.Name:SetWidth(withIconWidth-2)
-			end
+			GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 2, 0)
+			GVAR_TargetButton.Name:SetWidth(withIconWidth-2)
 			GVAR_TargetButton.TargetCountBackground:Hide()
 			GVAR_TargetButton.TargetCount:Hide()
 		end
@@ -5141,10 +4831,6 @@ function BattlegroundTargets:SetupButtonLayout()
 		GVAR.Summary.TankEnemy:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*2, "OUTLINE")
 		GVAR.Summary.DamageFriend:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*2, "OUTLINE")
 		GVAR.Summary.DamageEnemy:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*2, "OUTLINE")
-		for i = 1, 7 do
-			GVAR.GuildGroupSummaryFriend[i].Text:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*1.2, "OUTLINE")
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize*1.2, "OUTLINE")
-		end
 	end
 
 	reSetLayout = false
@@ -5262,8 +4948,6 @@ function BattlegroundTargets:OptionsFrameShow()
 	end
 
 	if BattlegroundTargets_Options.EnableBracket[testSize] then
-		BattlegroundTargets:ShuffleSizeCheck(testSize)
-		BattlegroundTargets:ConfigGuildGroupFriendUpdate(testSize)
 		BattlegroundTargets:EnableConfigMode()
 	else
 		BattlegroundTargets:DisableConfigMode()
@@ -5334,10 +5018,6 @@ function BattlegroundTargets:LocalizedFontNumberTest(show, font)
 		GVAR.Summary.TankEnemy:SetFont(f, s*2, "OUTLINE")
 		GVAR.Summary.DamageFriend:SetFont(f, s*2, "OUTLINE")
 		GVAR.Summary.DamageEnemy:SetFont(f, s*2, "OUTLINE")
-		for i = 1, 7 do
-			GVAR.GuildGroupSummaryFriend[i].Text:SetFont(f, s*1.2, "OUTLINE")
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetFont(f, s*1.2, "OUTLINE")
-		end
 	else
 		local f = fontStyles[ OPT.ButtonFontNumberStyle[currentSize] ].font
 		local s = OPT.ButtonFontNumberSize[currentSize]
@@ -5354,10 +5034,6 @@ function BattlegroundTargets:LocalizedFontNumberTest(show, font)
 		GVAR.Summary.TankEnemy:SetFont(f, s*2, "OUTLINE")
 		GVAR.Summary.DamageFriend:SetFont(f, s*2, "OUTLINE")
 		GVAR.Summary.DamageEnemy:SetFont(f, s*2, "OUTLINE")
-		for i = 1, 7 do
-			GVAR.GuildGroupSummaryFriend[i].Text:SetFont(f, s*1.2, "OUTLINE")
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetFont(f, s*1.2, "OUTLINE")
-		end
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -5505,11 +5181,6 @@ function BattlegroundTargets:DisableConfigMode()
 		BattlegroundTargets:UpdateRange(GetTime())
 	end
 
-	if OPT.ButtonShowGuildGroup[currentSize] then
-		BattlegroundTargets:GuildGroupFriendUpdate()
-		BattlegroundTargets:GuildGroupEnemyUpdate()
-	end
-
 	if OPT.ButtonShowFlag[currentSize] then
 		if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
 			if hasFlag then
@@ -5582,7 +5253,6 @@ function BattlegroundTargets:SetConfigButtonValues()
 	local ButtonShowHealthText  = OPT.ButtonShowHealthText[currentSize]
 	local ButtonRangeCheck      = OPT.ButtonRangeCheck[currentSize]
 	local ButtonRangeDisplay    = OPT.ButtonRangeDisplay[currentSize]
-	local ButtonShowGuildGroup  = OPT.ButtonShowGuildGroup[currentSize]
 
 	for i = 1, currentSize do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
@@ -5629,21 +5299,6 @@ function BattlegroundTargets:SetConfigButtonValues()
 			end
 		else
 			Range_Display(true, GVAR_TargetButton, ButtonRangeDisplay)
-		end
-
-		-- guild group
-		if ButtonShowGuildGroup then
-			if testData.GroupNum[i] then
-				local texNum, colNum = ggTexCol(testData.GroupNum[i])
-				local tex = guildGrpTex[texNum]
-				local col = guildGrpCol[colNum]
-				GVAR_TargetButton.GuildGroup:SetTexCoord(tex[1], tex[2], tex[3], tex[4]) -- GRP_TEX
-				GVAR_TargetButton.GuildGroup:SetVertexColor(col[1], col[2], col[3])
-			else
-				GVAR_TargetButton.GuildGroup:SetTexCoord(0, 0, 0, 0)
-			end
-		else
-			GVAR_TargetButton.GuildGroup:SetTexCoord(0, 0, 0, 0)
 		end
 	end
 
@@ -5729,9 +5384,6 @@ function BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, clearRan
 	-- range
 	GVAR_TargetButton.RangeTexture:SetTexture(0, 0, 0, 0)
 
-	-- guild group
-	GVAR_TargetButton.GuildGroup:SetTexCoord(0, 0, 0, 0)
-
 	-- basics
 	GVAR_TargetButton.Name:SetText("")
 	GVAR_TargetButton.RoleTexture:SetTexCoord(0, 0, 0, 0)
@@ -5787,66 +5439,6 @@ function BattlegroundTargets:DefaultShuffle()
 			end
 		end
 	end
-	-- guild groups
-	wipe(testData.GroupNum)
-	local rndGG -- guild group count
-	local r = random(0,100)
-	if r > 96 then -- 4%
-		rndGG = random(1,floor(currentSize/2))
-	elseif r > 82 then -- 14%
-		if     currentSize == 10 then rndGG = random(1,4)
-		elseif currentSize == 15 then rndGG = random(1,5)
-		elseif currentSize == 40 then rndGG = random(1,10)
-		end
-	elseif r > 60 then -- 22%
-		if     currentSize == 10 then rndGG = random(1,3)
-		elseif currentSize == 15 then rndGG = random(1,4)
-		elseif currentSize == 40 then rndGG = random(1,5)
-		end
-	else -- 60%
-		if     currentSize == 10 then rndGG = random(1,2)
-		elseif currentSize == 15 then rndGG = random(1,2)
-		elseif currentSize == 40 then rndGG = random(1,4)
-		end
-	end
-	local memGG = {} -- value = member count
-	local rem = currentSize - (rndGG * 2)
-	for i = 1, rndGG do
-		memGG[i] = 2 -- min. 2 members
-		if rem > 0 then
-			local n = 0 -- 45%
-			local r = random(0,100)
-			if r > 94 then -- 6%
-				n = random(0,rem)
-			elseif r > 75 then -- 19%
-				n = random(0,1)
-			elseif r > 45 then -- 30%
-				n = 1
-			end
-			memGG[i] = memGG[i] + n
-			rem = rem - n
-		end
-	end
-	for i = 1, rndGG do
-		for j = 1, memGG[i] do
-			local r = random(1,currentSize)
-			if not testData.GroupNum[r] then
-				testData.GroupNum[r] = i
-			else
-				local n = r + 1
-				if n <= currentSize and not testData.GroupNum[n] then
-					testData.GroupNum[n] = i
-				else
-					for k = 1, currentSize do
-						if not testData.GroupNum[k] then
-							testData.GroupNum[k] = i
-							break
-						end
-					end
-				end
-			end
-		end
-	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -5888,7 +5480,6 @@ function BattlegroundTargets:ShufflerFunc(what)
 		if OPT.ButtonShowFocus[currentSize]      then GVAR.OptionsFrame.TestShuffler:Show() return end
 		if OPT.ButtonShowAssist[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
 		if OPT.ButtonShowLeader[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowGuildGroup[currentSize] then GVAR.OptionsFrame.TestShuffler:Show() return end
 		if OPT.ButtonRangeCheck[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
 		GVAR.OptionsFrame.TestShuffler:Hide()
 	end
@@ -5941,114 +5532,7 @@ function BattlegroundTargets:Shuffle(shuffleStyle)
 		testData.Range[BattlegroundTargets.progNum] = 30
 	end
 
-	BattlegroundTargets:ConfigGuildGroupEnemyUpdate(currentSize)
 	BattlegroundTargets:SetConfigButtonValues()
-end
-
-function BattlegroundTargets:ShuffleSizeCheck(bracketSize) -- guild groups
-	if not OPT.ButtonShowGuildGroup[bracketSize] then return end
-
-	-- build table from current bracketSize
-	local coun0t = {}
-	for i = 1, bracketSize do
-		local grpNum = testData.GroupNum[i]
-		if grpNum then
-			if not coun0t[grpNum] then
-				coun0t[grpNum] = 1
-			else
-				coun0t[grpNum] = coun0t[grpNum] + 1
-			end
-		end
-	end
-
-	-- delete keys where groupmembers is < 2 in current bracktSize (in case of bracket switch)
-	for guildNum, guildCount in pairs(coun0t) do
-		if guildCount < 2 then
-			for k, v in pairs(testData.GroupNum) do
-				if v == guildNum then
-					testData.GroupNum[k] = nil
-				end
-			end
-		end
-	end
-	BattlegroundTargets:ConfigGuildGroupEnemyUpdate(bracketSize)
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:ConfigGuildGroupFriendUpdate(bracketSize)
-	if not OPT.ButtonShowGuildGroup[bracketSize] then return end
-	if not BattlegroundTargets_Options.Summary[bracketSize] then return end
-
-	if bracketSize == 10 then
-		for i = 1, 7 do
-			if i < 4 then
-				GVAR.GuildGroupSummaryFriend[i].Text:SetText((i+1)..": 1x") -- GG_CONFTXT
-			else
-				GVAR.GuildGroupSummaryFriend[i].Text:SetText("")
-			end
-		end
-	elseif bracketSize == 15 then
-		for i = 1, 7 do
-			if i < 5 then
-				GVAR.GuildGroupSummaryFriend[i].Text:SetText((i+1)..": 1x") -- GG_CONFTXT
-			else
-				GVAR.GuildGroupSummaryFriend[i].Text:SetText("")
-			end
-		end
-	elseif bracketSize == 40 then
-		for i = 1, 7 do
-			GVAR.GuildGroupSummaryFriend[i].Text:SetText((i+1)..": 1x") -- GG_CONFTXT
-		end
-	end
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:ConfigGuildGroupEnemyUpdate(bracketSize)
-	if not OPT.ButtonShowGuildGroup[bracketSize] then return end
-	if not BattlegroundTargets_Options.Summary[bracketSize] then return end
-
-	-- build table from current bracketSize
-	local coun0t = {}
-	for i = 1, bracketSize do
-		local grpNum = testData.GroupNum[i]
-		if grpNum then
-			if not coun0t[grpNum] then
-				coun0t[grpNum] = 1
-			else
-				coun0t[grpNum] = coun0t[grpNum] + 1
-			end
-		end
-	end
-
-	-- build table with guildCount as key and number of groups with same membersize as value
-	local count = {}
-	for _, guildCount in pairs(coun0t) do
-		if not count[guildCount] then
-			count[guildCount] = 1
-		else
-			count[guildCount] = count[guildCount] + 1
-		end
-	end
-
-	-- prepare table for sorting
-	local count2 = {}
-	for guildCount, guildNum in pairs(count) do
-		tinsert(count2, {guildCount, guildNum})
-	end
-
-	-- sort
-	table_sort(count2, ggSortFunc)
-
-	-- display
-	for i = 1, 7 do
-		if count2[i] then
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetText(count2[i][1]..": "..count2[i][2].."x")
-		else
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetText("")
-		end
-	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -6063,7 +5547,6 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	BattlegroundTargets_Options.LayoutSpace[destinationSize]              = BattlegroundTargets_Options.LayoutSpace[sourceSize]
 	BattlegroundTargets_Options.Summary[destinationSize]                  = BattlegroundTargets_Options.Summary[sourceSize]
 	BattlegroundTargets_Options.SummaryScaleRole[destinationSize]         = BattlegroundTargets_Options.SummaryScaleRole[sourceSize]
-	BattlegroundTargets_Options.SummaryScaleGuildGroup[destinationSize]   = BattlegroundTargets_Options.SummaryScaleGuildGroup[sourceSize]
 
 	BattlegroundTargets_Options.ButtonShowRole[destinationSize]           = BattlegroundTargets_Options.ButtonShowRole[sourceSize]
 	                        OPT.ButtonShowRole[destinationSize]           =                         OPT.ButtonShowRole[sourceSize]
@@ -6075,10 +5558,6 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	                        OPT.ButtonShowLeader[destinationSize]         =                         OPT.ButtonShowLeader[sourceSize]
 	BattlegroundTargets_Options.ButtonShowRealm[destinationSize]          = BattlegroundTargets_Options.ButtonShowRealm[sourceSize]
 	                        OPT.ButtonShowRealm[destinationSize]          =                         OPT.ButtonShowRealm[sourceSize]
-	BattlegroundTargets_Options.ButtonShowGuildGroup[destinationSize]     = BattlegroundTargets_Options.ButtonShowGuildGroup[sourceSize]
-	                        OPT.ButtonShowGuildGroup[destinationSize]     =                         OPT.ButtonShowGuildGroup[sourceSize]
-	BattlegroundTargets_Options.ButtonGuildGroupPosition[destinationSize] = BattlegroundTargets_Options.ButtonGuildGroupPosition[sourceSize]
-	                        OPT.ButtonGuildGroupPosition[destinationSize] =                         OPT.ButtonGuildGroupPosition[sourceSize]
 	BattlegroundTargets_Options.ButtonShowTarget[destinationSize]         = BattlegroundTargets_Options.ButtonShowTarget[sourceSize]
 	                        OPT.ButtonShowTarget[destinationSize]         =                         OPT.ButtonShowTarget[sourceSize]
 	BattlegroundTargets_Options.ButtonTargetScale[destinationSize]        = BattlegroundTargets_Options.ButtonTargetScale[sourceSize]
@@ -6141,8 +5620,6 @@ function BattlegroundTargets:CopySettings(sourceSize)
 		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
 		BattlegroundTargets:CheckForEnabledBracket(testSize)
 		if BattlegroundTargets_Options.EnableBracket[testSize] then
-			BattlegroundTargets:ShuffleSizeCheck(testSize)
-			BattlegroundTargets:ConfigGuildGroupFriendUpdate(testSize)
 			BattlegroundTargets:EnableConfigMode()
 		else
 			BattlegroundTargets:DisableConfigMode()
@@ -6154,8 +5631,6 @@ function BattlegroundTargets:CopySettings(sourceSize)
 		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
 		BattlegroundTargets:CheckForEnabledBracket(testSize)
 		if BattlegroundTargets_Options.EnableBracket[testSize] then
-			BattlegroundTargets:ShuffleSizeCheck(testSize)
-			BattlegroundTargets:ConfigGuildGroupFriendUpdate(testSize)
 			BattlegroundTargets:EnableConfigMode()
 		else
 			BattlegroundTargets:DisableConfigMode()
@@ -6268,7 +5743,6 @@ function BattlegroundTargets:MainDataUpdate()
 	local ButtonClassIcon       = OPT.ButtonClassIcon[currentSize]
 	local ButtonShowLeader      = OPT.ButtonShowLeader[currentSize]
 	local ButtonShowRealm       = OPT.ButtonShowRealm[currentSize]
-	local ButtonShowGuildGroup  = OPT.ButtonShowGuildGroup[currentSize]
 	local ButtonShowTargetCount = OPT.ButtonShowTargetCount[currentSize]
 	local ButtonShowHealthBar   = OPT.ButtonShowHealthBar[currentSize]
 	local ButtonShowHealthText  = OPT.ButtonShowHealthText[currentSize]
@@ -6454,19 +5928,6 @@ function BattlegroundTargets:MainDataUpdate()
 				end
 			end
 
-			if ButtonShowGuildGroup then -- GLDGRP
-				local num = ENEMY_GroupNum[qname] or 0
-				if num > 0 then
-					local texNum, colNum = ggTexCol(num)
-					local tex = guildGrpTex[texNum]
-					local col = guildGrpCol[colNum]
-					GVAR_TargetButton.GuildGroup:SetTexCoord(tex[1], tex[2], tex[3], tex[4]) -- GRP_TEX
-					GVAR_TargetButton.GuildGroup:SetVertexColor(col[1], col[2], col[3]) 
-				else
-					GVAR_TargetButton.GuildGroup:SetTexCoord(0, 0, 0, 0)
-				end
-			end
-
 		else
 			local GVAR_TargetButton = GVAR.TargetButton[i]
 			BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton)
@@ -6508,42 +5969,6 @@ function BattlegroundTargets:MainDataUpdate()
 		if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
 		range_CL_DisplayThrottle = curTime
 		BattlegroundTargets:UpdateRange(curTime)
-	end
-
-	-- GLDGRP
-	if ButtonShowGuildGroup then
-		-- check if a guild group member left battleground
-		local doUpdate
-		for enemyName, guildName in pairs(ENEMY_GuildName) do
-			if not ENEMY_Name2Button[enemyName] and ENEMY_GroupNum[enemyName] > 0 then
-				ENEMY_GuildCount[guildName] = ENEMY_GuildCount[guildName] - 1
-				doUpdate = true
-
-				if ENEMY_GuildCount[guildName] < 2 then
-					for enemyName2, guildName2 in pairs(ENEMY_GuildName) do
-						if guildName == guildName2 then
-							ENEMY_GroupNum[enemyName2] = 0
-
-							local ENEMY_Name2Button = ENEMY_Name2Button[enemyName2]
-							if ENEMY_Name2Button then
-								local GVAR_TargetButton = GVAR.TargetButton[ENEMY_Name2Button]
-								if GVAR_TargetButton then
-									GVAR_TargetButton.GuildGroup:SetTexCoord(0, 0, 0, 0)
-								end
-							end
-
-						end
-					end
-				end
-
-			end
-		end
-		if doUpdate then
-			BattlegroundTargets:GuildGroupEnemyUpdate()
-		end
-		if groupMembers == 0 or groupMemChk < groupMembers then
-			BattlegroundTargets:GuildGroupFriendUpdate()
-		end
 	end
 
 	-- SUMMARY
@@ -6919,7 +6344,6 @@ function BattlegroundTargets:CheckFlagCarrierEND() -- FLAGSPY
 	   not OPT.ButtonShowTargetCount[currentSize] and
 	   not OPT.ButtonShowAssist[currentSize] and
 	   not OPT.ButtonShowLeader[currentSize] and
-	   not OPT.ButtonShowGuildGroup[currentSize] and
 	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2) and
 	   not isLowLevel -- LVLCHK
 	then
@@ -7043,12 +6467,6 @@ function BattlegroundTargets:IsBattleground()
 				GVAR.Summary.HealerEnemy:SetText("0")
 				GVAR.Summary.TankEnemy:SetText("0")
 				GVAR.Summary.DamageEnemy:SetText("0")
-				if OPT.ButtonShowGuildGroup[currentSize] then
-					for i = 1, 7 do
-						GVAR.GuildGroupSummaryEnemy[i].Text:SetText("")
-						GVAR.GuildGroupSummaryFriend[i].Text:SetText("")
-					end
-				end
 			end
 
 			-- The flag texture is defined (SetTexture) here (at STARTofBG) for one battleground game because the texture depends on bg and faction.
@@ -7160,11 +6578,6 @@ function BattlegroundTargets:IsBattleground()
 		end
 
 		if OPT.ButtonShowLeader[currentSize] then
-			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-		end
-
-		if OPT.ButtonShowGuildGroup[currentSize] then
-			BattlegroundTargets:RegisterEvent("GROUP_ROSTER_UPDATE")
 			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
 		end
 
@@ -7286,12 +6699,6 @@ function BattlegroundTargets:IsNotBattleground()
 	wipe(ENEMY_Name2Percent)
 	wipe(ENEMY_Name2Range)
 	wipe(ENEMY_Name2Level)
-	wipe(ENEMY_GuildName)
-	wipe(ENEMY_GuildTry)
-	wipe(ENEMY_GuildCount)
-	wipe(ENEMY_GroupNum)
-	wipe(FRIEND_GuildCount)
-	wipe(FRIEND_GuildName)
 	wipe(TARGET_Names)
 
 	GVAR.MainFrame:SetScript("OnUpdate", nil)
@@ -7544,92 +6951,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		BattlegroundTargets:CheckUnitHealth(enemyID, enemyName, 1)
 	end
 
-	-- GLDGRP
-	if OPT.ButtonShowGuildGroup[currentSize] then
-		if not ENEMY_GuildTry[enemyName] or ENEMY_GuildTry[enemyName] < 5 then
-			if UnitIsVisible(enemyID) then -- vis
-
-				local guildName = GetGuildInfo(enemyID)
-				if guildName and guildName ~= "" then
-					ENEMY_GuildTry[enemyName] = 5
-					ENEMY_GuildName[enemyName] = guildName
-					ENEMY_GroupNum[enemyName] = 0
-
-					if not ENEMY_GuildCount[guildName] then
-						ENEMY_GuildCount[guildName] = 1
-					else
-						ENEMY_GuildCount[guildName] = ENEMY_GuildCount[guildName] + 1
-					end
-
-					local TargetButton = GVAR.TargetButton
-					for i = 1, currentSize do
-						TargetButton[i].GuildGroup:SetTexCoord(0, 0, 0, 0)
-					end
-
-					local highestNum = 0
-					for _, gNum in pairs(ENEMY_GroupNum) do
-						if gNum > highestNum then
-							highestNum = gNum
-						end
-					end
-
-					-- ---------------
-					local num = 1
-					for gName, gCount in pairs(ENEMY_GuildCount) do
-						if gCount > 1 then
-						
-							local num2 = 0
-							for eName2, gName2 in pairs(ENEMY_GuildName) do
-								if gName == gName2 then
-									local gldNum = ENEMY_GroupNum[eName2]
-									if gldNum and gldNum > 0 then
-										num2 = gldNum
-										break
-									end
-								end
-							end
-
-							if num2 == 0 and highestNum > 0 then
-								num = highestNum + 1
-							elseif num2 > 0 then
-								num = num2
-							end
-
-							for eName2, gName2 in pairs(ENEMY_GuildName) do
-								if gName == gName2 then
-									ENEMY_GroupNum[eName2] = num
-
-									local button1 = ENEMY_Name2Button[eName2]
-									if button1 then
-										local button2 = GVAR.TargetButton[button1]
-										if button2 then
-											local texNum, colNum = ggTexCol(num)
-											local tex = guildGrpTex[texNum]
-											local col = guildGrpCol[colNum]
-											button2.GuildGroup:SetTexCoord(tex[1], tex[2], tex[3], tex[4]) -- GRP_TEX
-											button2.GuildGroup:SetVertexColor(col[1], col[2], col[3]) 
-										end
-									end
-
-								end
-							end
-
-						end
-					end
-					-- ---------------
-
-					BattlegroundTargets:GuildGroupEnemyUpdate()
-
-				elseif ENEMY_GuildTry[enemyName] then
-					ENEMY_GuildTry[enemyName] = ENEMY_GuildTry[enemyName] + 1
-				else
-					ENEMY_GuildTry[enemyName] = 1
-				end
-
-			end -- vis
-		end
-	end
-
 	local GVAR_TargetButton
 	if enemyName then
 		local enemyButton = ENEMY_Name2Button[enemyName]
@@ -7824,145 +7145,6 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 		else
 			ENEMY_Name2Range[targetName] = nil
 			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-		end
-	end
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:GuildGroupFriendUpdate() -- GLDGRP
-	if isConfig then return end
-	if not BattlegroundTargets_Options.Summary[currentSize] then return end
-
-	-- scan each groupmember
-	groupMembers = GetNumGroupMembers()
-	if groupMemChk > groupMembers then
-		groupMemChk = groupMembers
-	end
-
-	--print("0---START -----", caller, GetTime()) -- TEST
-	for num = 1, groupMembers do
-		local unitID = "raid"..num
-		if UnitIsVisible(unitID) then -- vis
-			local name, realm = UnitName(unitID)
-			if realm and realm ~= "" then
-				name = name.."-"..realm
-			end
-			if name then
-				-- do the guild name check 3 times. reason: sometimes GetGuildInfo() returns nil, even if a player is in a guild.
-				if not FRIEND_GuildName[name] then
-
-					FRIEND_GuildName[name] = 1
-					local guildName = GetGuildInfo(unitID)
-					if guildName and guildName ~= "" then
-						FRIEND_GuildName[name] = 4
-						groupMemChk = groupMemChk + 1
-						if not FRIEND_GuildCount[guildName] then
-							FRIEND_GuildCount[guildName] = 1
-						else
-							FRIEND_GuildCount[guildName] = FRIEND_GuildCount[guildName] + 1
-						end
-					end
-					--print(num, groupMembers, unitID, "#", name, "->", guildName, "*1*", FRIEND_GuildName[name]) -- TEST
-
-				elseif FRIEND_GuildName[name] < 3 then
-
-					FRIEND_GuildName[name] = FRIEND_GuildName[name] + 1
-					local guildName = GetGuildInfo(unitID)
-					if guildName and guildName ~= "" then
-						FRIEND_GuildName[name] = 4
-						groupMemChk = groupMemChk + 1
-						if not FRIEND_GuildCount[guildName] then
-							FRIEND_GuildCount[guildName] = 1
-						else
-							FRIEND_GuildCount[guildName] = FRIEND_GuildCount[guildName] + 1
-						end
-					end
-					--print(num, groupMembers, unitID, "#", name, "->", guildName, "*2*", FRIEND_GuildName[name]) -- TEST
-
-				elseif FRIEND_GuildName[name] == 3 then
-
-					FRIEND_GuildName[name] = 4
-					groupMemChk = groupMemChk + 1
-					local guildName = GetGuildInfo(unitID)
-					if guildName and guildName ~= "" then
-						if not FRIEND_GuildCount[guildName] then
-							FRIEND_GuildCount[guildName] = 1
-						else
-							FRIEND_GuildCount[guildName] = FRIEND_GuildCount[guildName] + 1
-						end
-					end
-					--print(num, groupMembers, unitID, "#", name, "->", guildName, "*3*", FRIEND_GuildName[name]) -- TEST
-
-				end
-			end
-		end -- vis
-	end
-
-	-- build table with guildCount as key and number of groups with same membersize as value
-	local count = {}
-	for _, guildCount in pairs(FRIEND_GuildCount) do
-		if guildCount > 1 then
-			if not count[guildCount] then
-				count[guildCount] = 1
-			else
-				count[guildCount] = count[guildCount] + 1
-			end
-		end
-	end
-
-	-- prepare table for sorting
-	local count2 = {}
-	for guildCount, guildNum in pairs(count) do
-		tinsert(count2, {guildCount, guildNum})
-	end
-
-	-- sort
-	table_sort(count2, ggSortFunc)
-
-	-- display
-	for i = 1, 7 do
-		if count2[i] then
-			GVAR.GuildGroupSummaryFriend[i].Text:SetText(count2[i][1]..": "..count2[i][2].."x")
-		else
-			GVAR.GuildGroupSummaryFriend[i].Text:SetText("")
-		end
-	end
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:GuildGroupEnemyUpdate() -- GLDGRP
-	if isConfig then return end
-	if not BattlegroundTargets_Options.Summary[currentSize] then return end
-
-	-- build table with guildCount as key and number of groups with same membersize as value
-	local count = {}
-	for _, guildCount in pairs(ENEMY_GuildCount) do
-		if guildCount > 1 then
-			if not count[guildCount] then
-				count[guildCount] = 1
-			else
-				count[guildCount] = count[guildCount] + 1
-			end
-		end
-	end
-
-	-- prepare table for sorting
-	local count2 = {}
-	for guildCount, guildNum in pairs(count) do
-		tinsert(count2, {guildCount, guildNum})
-	end
-
-	-- sort
-	table_sort(count2, ggSortFunc)
-
-	-- display
-	for i = 1, 7 do
-		if count2[i] then
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetText(count2[i][1]..": "..count2[i][2].."x")
-		else
-			GVAR.GuildGroupSummaryEnemy[i].Text:SetText("")
 		end
 	end
 end
@@ -8587,8 +7769,6 @@ local function OnEvent(self, event, ...)
 			if not inWorld then return end
 			BattlegroundTargets:EnableInsecureConfigWidges()
 			if BattlegroundTargets_Options.EnableBracket[currentSize] then
-				BattlegroundTargets:ShuffleSizeCheck(currentSize)
-				BattlegroundTargets:ConfigGuildGroupFriendUpdate(currentSize)
 				BattlegroundTargets:EnableConfigMode()
 			else
 				BattlegroundTargets:DisableConfigMode()
@@ -8637,9 +7817,6 @@ local function OnEvent(self, event, ...)
 	elseif event == "GROUP_ROSTER_UPDATE" then
 		if OPT.ButtonShowAssist[currentSize] then
 			BattlegroundTargets:CheckAssist()
-		end
-		if OPT.ButtonShowGuildGroup[currentSize] then
-			BattlegroundTargets:GuildGroupFriendUpdate()
 		end
 
 	elseif event == "CHAT_MSG_BG_SYSTEM_HORDE" then

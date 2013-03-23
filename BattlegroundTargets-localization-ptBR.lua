@@ -7,24 +7,19 @@ local L, _, prg = {}, ...
 if prg.L then L = prg.L else prg.L = L end
 
 L["Open Configuration"] = "Abrir configuração"
+L["Close Configuration"] = "Fechar configuração"
 
 L["Configuration"] = "Configuração"
 L["10 vs 10"] = "10 vs 10"
 L["15 vs 15"] = "15 vs 15"
 L["40 vs 40"] = "40 vs 40"
-L["Enable"] = ENABLE
 L["Independent Positioning"] = "Posicionamento independente"
 L["Layout"] = true
 L["Summary"] = true
 L["Copy this settings to %s"] = "Copiar configurações para %s"
-L["Role"] = ROLE
-L["Specialization"] = SPECIALIZATION
 L["Class Icon"] = "Ícone da classe" -- need check - old: ["Show Class Icon"] = "Mostrar ícone da classe"
 L["Realm"] = "Reino" -- need check - old: ["Hide Realm"] = "Esconder reino"
 L["Leader"] = "Líder" -- need check - old: ["Show Leader"] = "Mostrar líder"
-L["Guild Groups"] = true
-L["Target"] = TARGET
-L["Focus"] = FOCUS
 L["Flag + Orb"] = "Bandeira + Orbe" -- need check
 L["Main Assist Target"] = "Alvo do assistente principal" -- need check - old: ["Show Main Assist Target"] = "Mostrar o alvo do assistente principal"
 L["Target Count"] = "Contagem de mirados" -- need check - old: ["Show Target Count"] = "Mostrar contagem de mirados"
@@ -38,8 +33,6 @@ L["Range"] = "Distância" -- need check - old: ["Show Range"] = "Mostrar distân
  L["(class dependent)"] = true
  L["Disable this option if you have CPU/FPS problems in combat."] = "Desabilite esta opção se voce tiver problemas de CPU/QPS durante o combate."
 L["Sort By"] = "Organizar por"
-L["Class"] = CLASS
-L["Name"] = NAME
 L["Text"] = "Texto" -- need check
 L["Number"] = "Número" -- need check
 L["Scale"] = "Escala"
@@ -52,5 +45,3 @@ L["Show Minimap-Button"] = "Mostrar botão no minimapa"
 
 L["click & move"] = "clicar e mover"
 L["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets não se atualiza caso essa aba esteja aberta."
-
-L["Close Configuration"] = "Fechar configuração"
