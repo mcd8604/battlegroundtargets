@@ -4851,25 +4851,80 @@ function BattlegroundTargets:Frame_Toggle(frame, show)
 end
 
 function BattlegroundTargets:Frame_SetupPosition(frameName)
+	-- possible OLD variables: pre50200-3
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame10_posX"] = number
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame10_posY"] = number
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame15_posX"] = number
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame15_posY"] = number
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame40_posX"] = number
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame40_posY"] = number
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame_posX"] = number
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame_posY"] = number
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_OptionsFrame_posX"] = number
+	-- BattlegroundTargets_Options.pos["BattlegroundTargets_OptionsFrame_posY"] = number
 	if frameName == "BattlegroundTargets_MainFrame" then
-		if BattlegroundTargets_Options.IndependentPositioning[currentSize] and BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"] then
+		-- NEW 50200-3 or newer
+		if BattlegroundTargets_Options.IndependentPositioning[currentSize] and BattlegroundTargets_Options.pos[frameName..currentSize] then
+			local x = BattlegroundTargets_Options.pos[frameName..currentSize].x or 0
+			local y = BattlegroundTargets_Options.pos[frameName..currentSize].y or 0
+			local point = BattlegroundTargets_Options.pos[frameName..currentSize].point or "CENTER"
+			local s = BattlegroundTargets_Options.pos[frameName..currentSize].s or 1
+			x = x/s
+			y = y/s
+			_G[frameName]:ClearAllPoints()
+			_G[frameName]:SetPoint(point, UIParent, point, x, y)
+		-- NEW 50200-3 or newer
+		elseif BattlegroundTargets_Options.pos[frameName] then
+			local x = BattlegroundTargets_Options.pos[frameName].x or 0
+			local y = BattlegroundTargets_Options.pos[frameName].y or 0
+			local point = BattlegroundTargets_Options.pos[frameName].point or "CENTER"
+			local s = BattlegroundTargets_Options.pos[frameName].s or 1
+			x = x/s
+			y = y/s
+			_G[frameName]:ClearAllPoints()
+			_G[frameName]:SetPoint(point, UIParent, point, x, y)
+		-- OLD pre50200-3
+		elseif BattlegroundTargets_Options.IndependentPositioning[currentSize] and BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"] then
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"], BattlegroundTargets_Options.pos[frameName..currentSize.."_posY"])
+			BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"] = nil
+			BattlegroundTargets_Options.pos[frameName..currentSize.."_posY"] = nil
+			BattlegroundTargets:Frame_SavePosition(frameName) --> save NEW pos
+		-- OLD pre50200-3
 		elseif BattlegroundTargets_Options.pos[frameName.."_posX"] then
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
+			BattlegroundTargets_Options.pos[frameName.."_posX"] = nil
+			BattlegroundTargets_Options.pos[frameName.."_posY"] = nil
+			BattlegroundTargets:Frame_SavePosition(frameName) --> save NEW pos
+		-- default pos
 		else
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("TOPRIGHT", GVAR.OptionsFrame, "TOPLEFT", -80, 19)
-			BattlegroundTargets_Options.pos[frameName.."_posX"] = _G[frameName]:GetLeft()
-			BattlegroundTargets_Options.pos[frameName.."_posY"] = _G[frameName]:GetTop()
+			local X = _G[frameName]:GetLeft()
+			local Y = _G[frameName]:GetTop()
 			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
+			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", X, Y)
 		end
 	elseif frameName == "BattlegroundTargets_OptionsFrame" then
-		if BattlegroundTargets_Options.pos[frameName.."_posX"] then
+		-- NEW 50200-3 or newer
+		if BattlegroundTargets_Options.pos[frameName] then
+			local x = BattlegroundTargets_Options.pos[frameName].x or 0
+			local y = BattlegroundTargets_Options.pos[frameName].y or 0
+			local point = BattlegroundTargets_Options.pos[frameName].point or "CENTER"
+			local s = BattlegroundTargets_Options.pos[frameName].s or 1
+			x = x/s
+			y = y/s
+			_G[frameName]:ClearAllPoints()
+			_G[frameName]:SetPoint(point, UIParent, point, x, y)
+		-- OLD pre50200-3
+		elseif BattlegroundTargets_Options.pos[frameName.."_posX"] then
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
+			BattlegroundTargets_Options.pos[frameName.."_posX"] = nil
+			BattlegroundTargets_Options.pos[frameName.."_posY"] = nil
+			BattlegroundTargets:Frame_SavePosition(frameName) --> save NEW pos
+		-- default pos
 		else
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("CENTER", UIParent, "CENTER", 0, 50)
@@ -4878,18 +4933,53 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 end
 
 function BattlegroundTargets:Frame_SavePosition(frameName)
-	local x,y
-	if frameName == "BattlegroundTargets_MainFrame" and BattlegroundTargets_Options.IndependentPositioning[currentSize] then
-		x = frameName..currentSize.."_posX"
-		y = frameName..currentSize.."_posY"
+	-- contains code from LibWindow-1.1 from Mikk
+	local frame = _G[frameName]
+	local parent = UIParent
+	local s = frame:GetScale()
+	local left,top = frame:GetLeft()*s, frame:GetTop()*s
+	local right,bottom = frame:GetRight()*s, frame:GetBottom()*s
+	local pwidth, pheight = parent:GetWidth(), parent:GetHeight()
+
+	local x,y,point
+	if left < (pwidth-right) and left < abs((left+right)/2 - pwidth/2) then
+		x = left
+		point = "LEFT"
+	elseif (pwidth-right) < abs((left+right)/2 - pwidth/2) then
+		x = right-pwidth
+		point = "RIGHT"
 	else
-		x = frameName.."_posX"
-		y = frameName.."_posY"
+		x = (left+right)/2 - pwidth/2
+		point = ""
 	end
-	BattlegroundTargets_Options.pos[x] = _G[frameName]:GetLeft()
-	BattlegroundTargets_Options.pos[y] = _G[frameName]:GetTop()
+
+	if bottom < (pheight-top) and bottom < abs((bottom+top)/2 - pheight/2) then
+		y = bottom
+		point = "BOTTOM"..point
+	elseif (pheight-top) < abs((bottom+top)/2 - pheight/2) then
+		y = top-pheight
+		point = "TOP"..point
+	else
+		y = (bottom+top)/2 - pheight/2
+	end
+
+	if point == "" then
+		point = "CENTER"
+	end
+
+	local varName = frameName
+	if frameName == "BattlegroundTargets_MainFrame" and BattlegroundTargets_Options.IndependentPositioning[currentSize] then
+		varName = frameName..currentSize
+	end
+	--print("varName:", varName, "x:", x, "y:", y, "point:", point, "scale:", s)
+	BattlegroundTargets_Options.pos[varName] = {}
+	BattlegroundTargets_Options.pos[varName].x = x
+	BattlegroundTargets_Options.pos[varName].y = y
+	BattlegroundTargets_Options.pos[varName].point = point
+	BattlegroundTargets_Options.pos[varName].s = s
+
 	_G[frameName]:ClearAllPoints()
-	_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[x], BattlegroundTargets_Options.pos[y])
+	_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
