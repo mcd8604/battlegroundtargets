@@ -230,9 +230,10 @@ local maxLevel = 90
 
 local playerName = UnitName("player")
 local _, playerClassEN = UnitClass("player")
-local targetName, targetRealm
-local focusName, focusRealm
-local assistTargetName, assistTargetRealm
+
+local playerTargetName, playerTargetRealm
+local playerFocusName, playerFocusRealm
+local playerAssistTargetName, playerAssistTargetRealm
 
 local playerFactionDEF   = 0 -- player faction (DEFAULT)
 local oppositeFactionDEF = 0 -- opposite faction (DEFAULT)
@@ -244,7 +245,7 @@ local oppositeFactionREAL    -- real opposite faction
 
 local ENEMY_Data = {}           -- key = numerical | all ENEMY data
 local ENEMY_Names = {}          -- key = enemyName | value = count
-local ENEMY_Names4Flag = {}     -- key = enemyName without realm | value = button number
+local ENEMY_Name4Flag = {}      -- key = enemyName without realm | value = button number
 local ENEMY_Name2Button = {}    -- key = enemyName | value = button number
 local ENEMY_Name2Percent = {}   -- key = enemyName | value = health in percent
 local ENEMY_Name2Range = {}     -- key = enemyName | value = time of last contact
@@ -259,9 +260,6 @@ local ENEMY_Roles = {0,0,0,0}
 local FRIEND_Roles = {0,0,0,0}
 
 local healthBarWidth = 0.01
-local sizeOffset    = 5
-local sizeBarHeight = 14
-
 local currentSize = 10
 local testSize = 10
 local testData = {
@@ -1122,6 +1120,9 @@ TEMPLATE.EnablePullDownMenu = function(button)
 end
 
 TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth, contentNum, func, buttonOnEnterFunc, buttonOnLeaveFunc)
+	local sizeOffset = 5
+	local sizeBarHeight = 14
+
 	button.PullDownButtonBG = button:CreateTexture(nil, "BORDER")
 	button.PullDownButtonBG:SetPoint("TOPLEFT", 1, -1)
 	button.PullDownButtonBG:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -4873,17 +4874,6 @@ function BattlegroundTargets:Frame_Toggle(frame, show)
 end
 
 function BattlegroundTargets:Frame_SetupPosition(frameName)
-	-- possible OLD variables: pre50200-3
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame10_posX"] = number
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame10_posY"] = number
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame15_posX"] = number
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame15_posY"] = number
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame40_posX"] = number
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame40_posY"] = number
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame_posX"] = number
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame_posY"] = number
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_OptionsFrame_posX"] = number
-	-- BattlegroundTargets_Options.pos["BattlegroundTargets_OptionsFrame_posY"] = number
 	if frameName == "BattlegroundTargets_MainFrame" then
 		-- NEW 50200-3 or newer
 		if BattlegroundTargets_Options.IndependentPositioning[currentSize] and BattlegroundTargets_Options.pos[frameName..currentSize] then
@@ -4891,20 +4881,16 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 			local y = BattlegroundTargets_Options.pos[frameName..currentSize].y or 0
 			local point = BattlegroundTargets_Options.pos[frameName..currentSize].point or "CENTER"
 			local s = BattlegroundTargets_Options.pos[frameName..currentSize].s or 1
-			x = x/s
-			y = y/s
 			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint(point, UIParent, point, x, y)
+			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
 		-- NEW 50200-3 or newer
 		elseif BattlegroundTargets_Options.pos[frameName] then
 			local x = BattlegroundTargets_Options.pos[frameName].x or 0
 			local y = BattlegroundTargets_Options.pos[frameName].y or 0
 			local point = BattlegroundTargets_Options.pos[frameName].point or "CENTER"
 			local s = BattlegroundTargets_Options.pos[frameName].s or 1
-			x = x/s
-			y = y/s
 			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint(point, UIParent, point, x, y)
+			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
 		-- OLD pre50200-3
 		elseif BattlegroundTargets_Options.IndependentPositioning[currentSize] and BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"] then
 			_G[frameName]:ClearAllPoints()
@@ -4935,10 +4921,8 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 			local y = BattlegroundTargets_Options.pos[frameName].y or 0
 			local point = BattlegroundTargets_Options.pos[frameName].point or "CENTER"
 			local s = BattlegroundTargets_Options.pos[frameName].s or 1
-			x = x/s
-			y = y/s
 			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint(point, UIParent, point, x, y)
+			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
 		-- OLD pre50200-3
 		elseif BattlegroundTargets_Options.pos[frameName.."_posX"] then
 			_G[frameName]:ClearAllPoints()
@@ -4955,14 +4939,12 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 end
 
 function BattlegroundTargets:Frame_SavePosition(frameName)
-	-- contains code from LibWindow-1.1 from Mikk
+	-- from LibWindow-1.1 from Mikk
 	local frame = _G[frameName]
-	local parent = UIParent
 	local s = frame:GetScale()
 	local left,top = frame:GetLeft()*s, frame:GetTop()*s
 	local right,bottom = frame:GetRight()*s, frame:GetBottom()*s
-	local pwidth, pheight = parent:GetWidth(), parent:GetHeight()
-
+	local pwidth, pheight = UIParent:GetWidth(), UIParent:GetHeight()
 	local x,y,point
 	if left < (pwidth-right) and left < abs((left+right)/2 - pwidth/2) then
 		x = left
@@ -4974,7 +4956,6 @@ function BattlegroundTargets:Frame_SavePosition(frameName)
 		x = (left+right)/2 - pwidth/2
 		point = ""
 	end
-
 	if bottom < (pheight-top) and bottom < abs((bottom+top)/2 - pheight/2) then
 		y = bottom
 		point = "BOTTOM"..point
@@ -4984,7 +4965,6 @@ function BattlegroundTargets:Frame_SavePosition(frameName)
 	else
 		y = (bottom+top)/2 - pheight/2
 	end
-
 	if point == "" then
 		point = "CENTER"
 	end
@@ -5865,7 +5845,7 @@ function BattlegroundTargets:MainDataUpdate()
 	local ButtonRangeCheck      = OPT.ButtonRangeCheck[currentSize]
 
 	wipe(ENEMY_Name2Button)
-	wipe(ENEMY_Names4Flag)
+	wipe(ENEMY_Name4Flag)
 	for i = 1, currentSize do
 		if ENEMY_Data[i] then
 			local GVAR_TargetButton = GVAR.TargetButton[i]
@@ -5897,7 +5877,7 @@ function BattlegroundTargets:MainDataUpdate()
 				if strfind(qname, "-", 1, true) then
 					onlyname = strmatch(qname, "(.-)%-(.*)$")
 				end
-				ENEMY_Names4Flag[onlyname] = i
+				ENEMY_Name4Flag[onlyname] = i
 			end
 
 			if not ButtonShowRealm then
@@ -5958,8 +5938,8 @@ function BattlegroundTargets:MainDataUpdate()
 				end
 			end
 
-			if ButtonShowTarget and targetName then
-				if qname == targetName then
+			if ButtonShowTarget and playerTargetName then
+				if qname == playerTargetName then
 					GVAR_TargetButton.HighlightT:SetTexture(0.5, 0.5, 0.5, 1)
 					GVAR_TargetButton.HighlightR:SetTexture(0.5, 0.5, 0.5, 1)
 					GVAR_TargetButton.HighlightB:SetTexture(0.5, 0.5, 0.5, 1)
@@ -5974,8 +5954,8 @@ function BattlegroundTargets:MainDataUpdate()
 				end
 			end
 
-			if ButtonShowFocus and focusName then
-				if qname == focusName then
+			if ButtonShowFocus and playerFocusName then
+				if qname == playerFocusName then
 					GVAR_TargetButton.FocusTexture:SetAlpha(1)
 				else
 					GVAR_TargetButton.FocusTexture:SetAlpha(0)
@@ -6024,8 +6004,8 @@ function BattlegroundTargets:MainDataUpdate()
 				end
 			end
 
-			if ButtonShowAssist and assistTargetName then
-				if qname == assistTargetName then
+			if ButtonShowAssist and playerAssistTargetName then
+				if qname == playerAssistTargetName then
 					GVAR_TargetButton.AssistTexture:SetAlpha(1)
 				else
 					GVAR_TargetButton.AssistTexture:SetAlpha(0)
@@ -6806,7 +6786,7 @@ function BattlegroundTargets:IsNotBattleground()
 	wipe(FRIEND_Data)
 
 	wipe(ENEMY_Names)
-	wipe(ENEMY_Names4Flag)
+	wipe(ENEMY_Name4Flag)
 	wipe(ENEMY_Name2Button)
 	wipe(ENEMY_Name2Percent)
 	wipe(ENEMY_Name2Range)
@@ -6839,9 +6819,9 @@ end
 function BattlegroundTargets:CheckPlayerTarget()
 	if isConfig then return end
 
-	targetName, targetRealm = UnitName("target")
-	if targetRealm and targetRealm ~= "" then
-		targetName = targetName.."-"..targetRealm
+	playerTargetName, playerTargetRealm = UnitName("target")
+	if playerTargetRealm and playerTargetRealm ~= "" then
+		playerTargetName = playerTargetName.."-"..playerTargetRealm
 	end
 
 	for i = 1, currentSize do
@@ -6854,8 +6834,8 @@ function BattlegroundTargets:CheckPlayerTarget()
 	end
 	isTarget = 0
 
-	if not targetName then return end
-	local targetButton = ENEMY_Name2Button[targetName]
+	if not playerTargetName then return end
+	local targetButton = ENEMY_Name2Button[playerTargetName]
 	if not targetButton then return end
 	local GVAR_TargetButton = GVAR.TargetButton[targetButton]
 	if not GVAR_TargetButton then return end
@@ -6871,7 +6851,7 @@ function BattlegroundTargets:CheckPlayerTarget()
 	end
 
 	if isDeadUpdateStop then return end
-	BattlegroundTargets:CheckUnitTarget("player", targetName)
+	BattlegroundTargets:CheckUnitTarget("player", playerTargetName)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -6897,13 +6877,13 @@ function BattlegroundTargets:CheckAssist()
 
 	if not isAssistName then return end
 
-	assistTargetName, assistTargetRealm = UnitName(isAssistUnitId)
-	if assistTargetRealm and assistTargetRealm ~= "" then
-		assistTargetName = assistTargetName.."-"..assistTargetRealm
+	playerAssistTargetName, playerAssistTargetRealm = UnitName(isAssistUnitId)
+	if playerAssistTargetRealm and playerAssistTargetRealm ~= "" then
+		playerAssistTargetName = playerAssistTargetName.."-"..playerAssistTargetRealm
 	end
 
-	if not assistTargetName then return end
-	local assistButton = ENEMY_Name2Button[assistTargetName]
+	if not playerAssistTargetName then return end
+	local assistButton = ENEMY_Name2Button[playerAssistTargetName]
 	if not assistButton then return end
 	if not GVAR_TargetButton[assistButton] then return end
 
@@ -6918,9 +6898,9 @@ end
 function BattlegroundTargets:CheckPlayerFocus()
 	if isConfig then return end
 
-	focusName, focusRealm = UnitName("focus")
-	if focusRealm and focusRealm ~= "" then
-		focusName = focusName.."-"..focusRealm
+	playerFocusName, playerFocusRealm = UnitName("focus")
+	if playerFocusRealm and playerFocusRealm ~= "" then
+		playerFocusName = playerFocusName.."-"..playerFocusRealm
 	end
 
 	local GVAR_TargetButton = GVAR.TargetButton
@@ -6928,8 +6908,8 @@ function BattlegroundTargets:CheckPlayerFocus()
 		GVAR_TargetButton[i].FocusTexture:SetAlpha(0)
 	end
 
-	if not focusName then return end
-	local focusButton = ENEMY_Name2Button[focusName]
+	if not playerFocusName then return end
+	local focusButton = ENEMY_Name2Button[playerFocusName]
 	if not focusButton then return end
 	local GVAR_TargetButton = GVAR_TargetButton[focusButton]
 	if not GVAR_TargetButton then return end
@@ -6942,15 +6922,15 @@ function BattlegroundTargets:CheckPlayerFocus()
 	-- class_range (Check Player Focus)
 	if rangeSpellName and OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
 		local curTime = GetTime()
-		local Name2Range = ENEMY_Name2Range[focusName]
+		local Name2Range = ENEMY_Name2Range[playerFocusName]
 		if Name2Range then
 			if Name2Range + range_SPELL_Frequency > curTime then return end -- ATTENTION
 		end
 		if IsSpellInRange(rangeSpellName, "focus") == 1 then
-			ENEMY_Name2Range[focusName] = curTime
+			ENEMY_Name2Range[playerFocusName] = curTime
 			Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
 		else
-			ENEMY_Name2Range[focusName] = nil
+			ENEMY_Name2Range[playerFocusName] = nil
 			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
 		end
 	end
@@ -7076,16 +7056,16 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	if isAssistName and OPT.ButtonShowAssist[currentSize] then
 		if curTime > assistUpdate + assistFrequency then
 			assistUpdate = curTime
-			assistTargetName, assistTargetRealm = UnitName(isAssistUnitId)
-			if assistTargetRealm and assistTargetRealm ~= "" then
-				assistTargetName = assistTargetName.."-"..assistTargetRealm
+			playerAssistTargetName, playerAssistTargetRealm = UnitName(isAssistUnitId)
+			if playerAssistTargetRealm and playerAssistTargetRealm ~= "" then
+				playerAssistTargetName = playerAssistTargetName.."-"..playerAssistTargetRealm
 			end
 			local TargetButton = GVAR.TargetButton
 			for i = 1, currentSize do
 				TargetButton[i].AssistTexture:SetAlpha(0)
 			end
-			if assistTargetName then
-				local assistButton = ENEMY_Name2Button[assistTargetName]
+			if playerAssistTargetName then
+				local assistButton = ENEMY_Name2Button[playerAssistTargetName]
 				if assistButton then
 					local button = GVAR.TargetButton[assistButton]
 					if button then
@@ -7098,7 +7078,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 			for i = 1, currentSize do
 				TargetButton[i].AssistTexture:SetAlpha(0)
 			end
-			assistTargetName = enemyName 
+			playerAssistTargetName = enemyName 
 			GVAR_TargetButton.AssistTexture:SetAlpha(1)
 		end
 	end
@@ -7397,13 +7377,13 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 				if flagCHK then
 					BattlegroundTargets:CheckFlagCarrierEND()
 				end
-				for name, button in pairs(ENEMY_Names4Flag) do
+				for name, button in pairs(ENEMY_Name4Flag) do
 					if name == efc then
 						local GVAR_TargetButton = GVAR.TargetButton[button]
 						if GVAR_TargetButton then
 							GVAR_TargetButton.FlagTexture:SetAlpha(1)
 							BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
-							for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Names4Flag have same buttonID
+							for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
 								if button == fullnameButton then
 									hasFlag = fullname
 									return
@@ -7489,13 +7469,13 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 					if flagCHK then
 						BattlegroundTargets:CheckFlagCarrierEND()
 					end
-					for name, button in pairs(ENEMY_Names4Flag) do
+					for name, button in pairs(ENEMY_Name4Flag) do
 						if name == efc then
 							local GVAR_TargetButton = GVAR.TargetButton[button]
 							if GVAR_TargetButton then
 								GVAR_TargetButton.FlagTexture:SetAlpha(1)
 								BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
-								for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Names4Flag have same buttonID
+								for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
 									if button == fullnameButton then
 										hasFlag = fullname
 										return
@@ -7568,7 +7548,7 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 						break
 					end
 				end
-				for name, button in pairs(ENEMY_Names4Flag) do
+				for name, button in pairs(ENEMY_Name4Flag) do
 					if name == orbCarrier then
 						local GVAR_TargetButton = GVAR.TargetButton[button]
 						if GVAR_TargetButton then
@@ -7577,7 +7557,7 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 							GVAR_TargetButton.FlagTexture:SetTexture(texture)
 							BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton)
 							BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, color)
-							for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Names4Flag have same buttonID
+							for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
 								if button == fullnameButton then
 									hasOrb[color].name = fullname
 									return
