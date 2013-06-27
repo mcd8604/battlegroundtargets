@@ -50,7 +50,7 @@ elseif locale == "esES" then
 	FLG["TOK_PATTERN_RETURNED"] = "¡El orbe (.+) ha sido devuelto!"
 	-- Deepwind Gorge: --> esES: tested with Patch 5.4.0.17093 (PTR)
 	FLG["DG_PATTERN_TAKEN"] = "¡(.+) ha tomado el carro de oro de la (.+)!"
-	FLG["DG_PATTERN_PICKED"] = "(.+) ha recogido el carro de oro de la (.+)!"
+	FLG["DG_PATTERN_PICKED"] = "¡(.+) ha recogido el carro de oro de la (.+)!"
 	FLG["DG_PATTERN_DROPPED"] = "¡La (.+) ha volcado el carro de oro de la (.+)!"
 	FLG["DG_PATTERN_STOLEN"] = "¡La (.+) ha robado el oro de la (.+)!"
 
