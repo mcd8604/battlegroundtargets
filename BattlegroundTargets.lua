@@ -87,8 +87,8 @@
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
 --                         - CHAT_MSG_BG_SYSTEM_NEUTRAL                       --
 --                         - CHAT_MSG_RAID_BOSS_EMOTE                         --
---   Carrier detection in case of disconnect, UI reload or mid-battle-joins:  --
---   (temporarily registered until each enemy is scanned)                     --
+--   Carrier detection in case of ReloadUI or mid-battle-joins: (temporarily  --
+--   registered until each enemy is scanned)                                  --
 --                         - UNIT_TARGET                                      --
 --                         - UPDATE_MOUSEOVER_UNIT                            --
 --                         - PLAYER_TARGET_CHANGED                            --
@@ -6078,6 +6078,11 @@ function BattlegroundTargets:MainDataUpdate()
 				else
 					GVAR_TargetButton.FlagTexture:SetAlpha(0)
 					GVAR_TargetButton.FlagDebuff:SetText("")
+					GVAR_TargetButton.OrbDebuff:SetText("")
+					GVAR_TargetButton.OrbCornerTL:SetAlpha(0)
+					GVAR_TargetButton.OrbCornerTR:SetAlpha(0)
+					GVAR_TargetButton.OrbCornerBL:SetAlpha(0)
+					GVAR_TargetButton.OrbCornerBR:SetAlpha(0)
 				end
 			end
 
@@ -6331,8 +6336,17 @@ function BattlegroundTargets:CheckOrb(enemyID, enemyName, buttonNum)
 		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(enemyID, i)
 		if not spellId then return end
 		if orbIDs[spellId] then
-			flags = flags + 1
-			
+			local hasflg
+			for k, v in pairs(hasOrb) do
+				if v.name == enemyName then
+					hasflg = true
+					break
+				end
+			end
+			if not hasflg then
+				flags = flags + 1 --print("CheckOrb", flags) -- FLAG_TOK_CHK
+			end
+
 			local oID = orbIDs[spellId]
 			hasOrb[ oID.color ].name = enemyName
 			hasOrb[ oID.color ].orbval = val2
@@ -6434,7 +6448,7 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(unit, i)
 			if not spellId then break end
 			if orbIDs[spellId] then
-				flags = flags + 1
+				flags = flags + 1 --print("CheckFlagCarrierCHECK", flags) -- FLAG_TOK_CHK
 
 				local button = ENEMY_Name2Button[targetName]
 				if button then
@@ -6518,10 +6532,14 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 				local _, _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("raid"..num, i)
 				if not spellId then break end
 				if orbIDs[spellId] then
-					flags = flags + 1
+					flags = flags + 1 --print("CheckFlagCarrierSTART", flags) -- FLAG_TOK_CHK
 					break
 				end
 			end
+		end
+		if flags >= 4 then
+			BattlegroundTargets:CheckFlagCarrierEND()
+			return
 		end
 
 	end
@@ -7434,7 +7452,10 @@ function BattlegroundTargets:OrbReturnCheck(message)
 	if orbColor then
 		local color = orbData(orbColor)
 		wipe(hasOrb[color])
-		flags = flags - 1
+		flags = flags - 1 --print("OrbReturnCheck", flags) -- FLAG_TOK_CHK
+		if flags < 0 then
+			flags = 0
+		end
 		local GVAR_TargetButton = GVAR.TargetButton
 		for i = 1, currentSize do
 			if GVAR_TargetButton[i].orbColor == color then
@@ -7458,19 +7479,19 @@ end
 function BattlegroundTargets:CarrierCheck(message, messageFaction)
 	--print("C.arrierCheck", isFlagBG, "#", message, "#", messageFaction) -- TEST
 	if isFlagBG == 1 or isFlagBG == 3 then
-		BattlegroundTargets:WSG_TP_Carrier(message, messageFaction)
+		BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
 	elseif isFlagBG == 2 then
-		BattlegroundTargets:EOTS_Carrier(message, messageFaction)
+		BattlegroundTargets:Carrier_EOTS(message, messageFaction)
 	elseif isFlagBG == 4 then
-		BattlegroundTargets:DG_Carrier(message, messageFaction)
+		BattlegroundTargets:Carrier_DG(message, messageFaction)
 	elseif isFlagBG == 5 then
-		BattlegroundTargets:TOK_Carrier(message, messageFaction)
+		BattlegroundTargets:Carrier_TOK(message, messageFaction)
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- Warsong Gulch & Twin Peaks ------------------------------------------------------------------------------------------
-function BattlegroundTargets:WSG_TP_Carrier(message, messageFaction)
+function BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
 	if messageFaction == playerFactionBG then
 		-- -------------------------------------------------------------------------
 		local fc = strmatch(message, FLG["WSG_TP_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
@@ -7576,7 +7597,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- Eye of the Storm ----------------------------------------------------------------------------------------------------
-function BattlegroundTargets:EOTS_Carrier(message, messageFaction)
+function BattlegroundTargets:Carrier_EOTS(message, messageFaction)
 	-- ---------------------------------------------------------------------------
 	if message == FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or -- Eye of the Storm: flag was captured
 	   message == FLG["EOTS_STRING_CAPTURED_BY_HORDE"] or    -- Eye of the Storm: flag was captured
@@ -7643,7 +7664,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- Deepwind Gorge ------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:DG_Carrier(message, messageFaction)
+function BattlegroundTargets:Carrier_DG(message, messageFaction)
 	if messageFaction ~= playerFactionBG then
 		-- -------------------------------------------------------------------------
 		if strmatch(message, FLG["DG_PATTERN_DROPPED"]) or -- Deepwind Gorge: cart dropped
@@ -7709,7 +7730,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- Temple of Kotmogu ---------------------------------------------------------------------------------------------------
-function BattlegroundTargets:TOK_Carrier(message, messageFaction)
+function BattlegroundTargets:Carrier_TOK(message, messageFaction)
 	if messageFaction == playerFactionBG then
 		-- -------------------------------------------------------------------------
 		local orbCarrier, orbColor = strmatch(message, FLG["TOK_PATTERN_TAKEN"]) -- Temple of Kotmogu: orb was taken
@@ -7717,7 +7738,7 @@ function BattlegroundTargets:TOK_Carrier(message, messageFaction)
 			local color = orbData(orbColor)
 			--print("taken friend", orbCarrier, orbColor, color)
 			wipe(hasOrb[color])
-			flags = flags + 1
+			flags = flags + 1 --print("Carrier_TOK", flags) -- FLAG_TOK_CHK
 			if flagCHK and flags >= 4 then
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
@@ -7743,7 +7764,7 @@ function BattlegroundTargets:TOK_Carrier(message, messageFaction)
 			local color, texture = orbData(orbColor)
 			--print("taken enemy", orbCarrier, orbColor, color)
 			wipe(hasOrb[color])
-			flags = flags + 1
+			flags = flags + 1 --print("Carrier_TOK", flags) -- FLAG_TOK_CHK
 			if flagCHK and flags >= 4 then
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
