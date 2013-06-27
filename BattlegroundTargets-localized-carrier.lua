@@ -24,8 +24,12 @@ if locale == "deDE" then
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "Die Horde hat die Flagge erobert!"
 	-- Temple of Kotmogu: --> deDE: tested with Patch 5.1.0.16208 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) hat die (.+) Kugel genommen!"
-	FLG["TOK_PATTERN_RETURNED1"] = "Die (.+) Kugel wurde zurückgebracht!"
-	FLG["TOK_PATTERN_RETURNED2"] = "Die (.+) Kugel wurde zurückgebracht!" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "Die (.+) Kugel wurde zurückgebracht!"
+	-- Deepwind Gorge: --> deDE: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "(.+) hat den Minenwagen der (.+) erobert!"
+	FLG["DG_PATTERN_PICKED"] = "(.+) hat den Minenwagen der (.+) übernommen!"
+	FLG["DG_PATTERN_DROPPED"] = "Die (.+) hat den Minenwagen der (.+) verloren!"
+	FLG["DG_PATTERN_STOLEN"] = "Die (.+) hat Gold von der (.+) gestohlen!"
 
 elseif locale == "esES" then
 
@@ -41,10 +45,14 @@ elseif locale == "esES" then
 	FLG["EOTS_STRING_DROPPED"] = "¡Ha caído la bandera!"
 	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "¡La Alianza ha capturado la bandera!"
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "¡La Horda ha capturado la bandera!"
-	-- Temple of Kotmogu: --> esES: tested with Patch 5.1.0.16208 (PTR)
+	-- Temple of Kotmogu: --> esES: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "¡(.+) se ha hecho con el orbe (.+)!"
-	FLG["TOK_PATTERN_RETURNED1"] = "¡El orbe (.+) ha sido devuelto!"
-	FLG["TOK_PATTERN_RETURNED2"] = "¡El orbe (.+) ha sido devuelto!" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "¡El orbe (.+) ha sido devuelto!"
+	-- Deepwind Gorge: --> esES: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "¡(.+) ha tomado el carro de oro de la (.+)!"
+	FLG["DG_PATTERN_PICKED"] = "(.+) ha recogido el carro de oro de la (.+)!"
+	FLG["DG_PATTERN_DROPPED"] = "¡La (.+) ha volcado el carro de oro de la (.+)!"
+	FLG["DG_PATTERN_STOLEN"] = "¡La (.+) ha robado el oro de la (.+)!"
 
 elseif locale == "esMX" then
 
@@ -55,15 +63,19 @@ elseif locale == "esMX" then
 	FLG["WSG_TP_PATTERN_PICKED2"] = "¡(.+) ha tomado la bandera" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "dejado caer la bandera"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "capturado la bandera"
-	-- Eye of the Storm: --> esMX: tested with Patch 4.2.2.14534 (PTR)
+	-- Eye of the Storm: --> esMX: tested with Patch 5.4.0.17093 (PTR)
 	FLG["EOTS_PATTERN_PICKED"] = "¡(.+) ha tomado la bandera!"
 	FLG["EOTS_STRING_DROPPED"] = "¡Ha caído la bandera!"
 	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "¡La Alianza ha capturado la bandera!"
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "¡La Horda ha capturado la bandera!"
-	-- Temple of Kotmogu: --> esMX: tested with Patch 5.1.0.16208 (PTR)
+	-- Temple of Kotmogu: --> esMX: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "¡(.+) ha tomado el orbe (.+)!"
-	FLG["TOK_PATTERN_RETURNED1"] = "¡El orbe (.+) ha sido devuelto!"
-	FLG["TOK_PATTERN_RETURNED2"] = "¡El orbe (.+) ha sido devuelto!" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "¡El orbe (.+) ha sido devuelto!"
+	-- Deepwind Gorge: --> esMX: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "¡(.+) ha tomado el carro de oro de la (.+)!"
+	FLG["DG_PATTERN_PICKED"] = "¡(.+) ha recogido el carro de oro de la (.+)!"
+	FLG["DG_PATTERN_DROPPED"] = "¡La (.+) ha volcado el carro de oro de la (.+)!"
+	FLG["DG_PATTERN_STOLEN"] = "¡La (.+) ha robado el oro de la (.+)!"
 
 elseif locale == "frFR" then
 
@@ -81,8 +93,12 @@ elseif locale == "frFR" then
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "La Horde s'est emparée du drapeau !"
 	-- Temple of Kotmogu: --> frFR: tested with Patch 5.1.0.16208 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) a pris l’orbe (.+) !"
-	FLG["TOK_PATTERN_RETURNED1"] = "L’orbe (.+) a été rendu !"
-	FLG["TOK_PATTERN_RETURNED2"] = "L’orbe (.+) a été rendu !" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "L’orbe (.+) a été rendu !"
+	-- Deepwind Gorge: --> frFR: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "a été récupéré par (.+) !"  -- "Le chariot d’or de la Horde a été récupéré par (.+) !"   -- TAKEN/PICKED: same string
+	FLG["DG_PATTERN_PICKED"] = "a été récupéré par (.+) !" -- "Le chariot d’or de l’Alliance a été récupéré par (.+) !" -- TAKEN/PICKED: same string
+	FLG["DG_PATTERN_DROPPED"] = "(.+) a lâché le chariot d’or de (.+) !"
+	FLG["DG_PATTERN_STOLEN"] = "(.+) a volé de l’or à (.+) !"
 
 elseif locale == "itIT" then
 
@@ -100,8 +116,12 @@ elseif locale == "itIT" then
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "L'Orda ha conquistato la bandiera!"
 	-- Temple of Kotmogu: --> itIT: tested with Patch 5.1.0.16208 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) ha preso il globo (.+)!"
-	FLG["TOK_PATTERN_RETURNED1"] = "Il globo (.+) è stato restituito!"
-	FLG["TOK_PATTERN_RETURNED2"] = "Il globo (.+) è stato restituito!" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "Il globo (.+) è stato restituito!"
+	-- Deepwind Gorge: --> itIT: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "(.+) ha preso il carrello d'oro (.+)!"  -- TAKEN/PICKED: same string
+	FLG["DG_PATTERN_PICKED"] = "(.+) ha preso il carrello d'oro (.+)!" -- TAKEN/PICKED: same string
+	FLG["DG_PATTERN_DROPPED"] = "(.+) ha perso il carrello d'oro (.+)!"
+	FLG["DG_PATTERN_STOLEN"] = "(.+) ha rubato l'oro (.+)!"
 
 elseif locale == "koKR" then
 
@@ -117,10 +137,14 @@ elseif locale == "koKR" then
 	FLG["EOTS_STRING_DROPPED"] = "깃발이 떨어졌습니다!"
 	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "얼라이언스가 깃발을 차지했습니다!"
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "호드가 깃발을 차지했습니다!"
-	-- Temple of Kotmogu: --> koKR: tested with Patch 5.1.0.16208 (PTR)
+	-- Temple of Kotmogu: --> koKR: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+)|1이;가; (.+) 공을 차지했습니다!"
-	FLG["TOK_PATTERN_RETURNED1"] = "(.+) 공이 돌아왔습니다!"
-	FLG["TOK_PATTERN_RETURNED2"] = "(.+) 공이 돌아왔습니다!" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "(.+) 공이 돌아왔습니다!"
+	-- Deepwind Gorge: --> koKR: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "(.+)|1이;가; (.+) 금광 수레를 빼앗았습니다!"
+	FLG["DG_PATTERN_PICKED"] = "(.+)|1이;가; (.+) 금광 수레를 기지로 돌려보냈습니다!"
+	FLG["DG_PATTERN_DROPPED"] = "(.+) (.+) 금광 수레를 놓쳤습니다!"
+	FLG["DG_PATTERN_STOLEN"] = "(.+) (.+) 황금을 가로챘습니다!"
 
 elseif locale == "ptBR" then
 
@@ -136,10 +160,14 @@ elseif locale == "ptBR" then
 	FLG["EOTS_STRING_DROPPED"] = "A bandeira foi largada!"
 	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "A Aliança capturou a bandeira!"
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "A Horda capturou a bandeira!"
-	-- Temple of Kotmogu: --> ptBR: tested with Patch 5.1.0.16208 (PTR)
+	-- Temple of Kotmogu: --> ptBR: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) pegou o orbe (.+)!"
-	FLG["TOK_PATTERN_RETURNED1"] = "O orbe (.+) foi devolvido!"
-	FLG["TOK_PATTERN_RETURNED2"] = "O orbe (.+) foi devolvido!" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "O orbe (.+) foi devolvido!"
+	-- Deepwind Gorge: --> ptBR: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "(.+) tomou o vagonete de ouro (.+)!"
+	FLG["DG_PATTERN_PICKED"] = "(.+) pegou o vagonete de ouro (.+)!"
+	FLG["DG_PATTERN_DROPPED"] = "(.+) derrubou o vagonete de ouro (.+)!"
+	FLG["DG_PATTERN_STOLEN"] = "(.+) roubou ouro (.+)!"
 
 elseif locale == "ruRU" then
 
@@ -155,10 +183,14 @@ elseif locale == "ruRU" then
 	FLG["EOTS_STRING_DROPPED"] = "Флаг уронили!"
 	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "Альянс захватил флаг!"
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "Орда захватила флаг!"
-	-- Temple of Kotmogu: --> ruRU: tested with Patch 5.1.0.16208 (PTR)
+	-- Temple of Kotmogu: --> ruRU: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) захватывает (.+) сферу!"
-	FLG["TOK_PATTERN_RETURNED1"] = "(.+) сфера возвращена!"
-	FLG["TOK_PATTERN_RETURNED2"] = "(.+) сфера возвращена!" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "(.+) сфера возвращена!"
+	-- Deepwind Gorge: --> ruRU: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "(.+) захватывает вагонетку с золотом (.+)!"
+	FLG["DG_PATTERN_PICKED"] = "(.+) захватила вагонетку с золотом (.+)!"
+	FLG["DG_PATTERN_DROPPED"] = "Солдаты (.+) бросили вагонетку с золотом (.+)!"
+	FLG["DG_PATTERN_STOLEN"] = "(.+) получает золото (.+)!"
 
 elseif locale == "zhCN" then
 
@@ -176,8 +208,12 @@ elseif locale == "zhCN" then
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "部落夺得了旗帜！"
 	-- Temple of Kotmogu: --> zhCN: tested with Patch 5.1.0.16135
 	FLG["TOK_PATTERN_TAKEN"] = "(.+)取走了(.+)的球！"
-	FLG["TOK_PATTERN_RETURNED1"] = "(.+)宝珠被放回了！"
-	FLG["TOK_PATTERN_RETURNED2"] = "(.+)宝珠被放回了！" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "(.+)宝珠被放回了！"
+	-- Deepwind Gorge: --> TODO (no PTR)
+	FLG["DG_PATTERN_TAKEN"] = "(.+) has taken the (.+) gold cart!" -- TODO
+	FLG["DG_PATTERN_PICKED"] = "(.+) picked up the (.+) gold cart !" -- TODO
+	FLG["DG_PATTERN_DROPPED"] = "The (.+) have dropped the (.+) gold cart!" -- TODO
+	FLG["DG_PATTERN_STOLEN"] = "The (.+) have stolen gold from the (.+)!" -- TODO
 
 elseif locale == "zhTW" then
 
@@ -193,10 +229,14 @@ elseif locale == "zhTW" then
 	FLG["EOTS_STRING_DROPPED"] = "旗幟已經掉落!"
 	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "聯盟已奪得旗幟!"
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "部落已奪得旗幟!"
-	-- Temple of Kotmogu: --> zhTW: tested with Patch 5.1.0.16208 (PTR)
-	FLG["TOK_PATTERN_TAKEN"] = "(.+)奪走了(.+)寶珠!"
-	FLG["TOK_PATTERN_RETURNED1"] = "The (.+)異能球已回到初始位置!" -- works on PTR, but needs check ('The ' seems to be wrong)
-	FLG["TOK_PATTERN_RETURNED2"] = "(.+)異能球已回到初始位置!" -- guessing...to avoid bug if above pattern is fixed -- zhTW special
+	-- Temple of Kotmogu: --> zhTW: tested with Patch 5.4.0.17093 (PTR)
+	FLG["TOK_PATTERN_TAKEN"] = "(.+)奪走了(.+)異能球!"
+	FLG["TOK_PATTERN_RETURNED"] = "(.+)異能球已回到初始位置!"
+	-- Deepwind Gorge: --> zhTW: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "(.+)奪走了(.+)的黃金礦車!"
+	FLG["DG_PATTERN_PICKED"] = "(.+)控制住(.+)的黃金礦車了!"
+	FLG["DG_PATTERN_DROPPED"] = "(.+)棄置(.+)的黃金礦車了!"
+	FLG["DG_PATTERN_STOLEN"] = "(.+)偷走了(.+)的黃金!"
 
 else--if locale == "enUS" then
 
@@ -214,7 +254,11 @@ else--if locale == "enUS" then
 	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "The Horde have captured the flag!"
 	-- Temple of Kotmogu: --> enUS: tested with Patch 5.1.0.16208 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) has taken the (.+) orb!"
-	FLG["TOK_PATTERN_RETURNED1"] = "The (.+) orb has been returned!"
-	FLG["TOK_PATTERN_RETURNED2"] = "The (.+) orb has been returned!" -- zhTW special
+	FLG["TOK_PATTERN_RETURNED"] = "The (.+) orb has been returned!"
+	-- Deepwind Gorge: --> enUS: tested with Patch 5.4.0.17093 (PTR)
+	FLG["DG_PATTERN_TAKEN"] = "(.+) has taken the (.+) gold cart!"
+	FLG["DG_PATTERN_PICKED"] = "(.+) picked up the (.+) gold cart !"
+	FLG["DG_PATTERN_DROPPED"] = "The (.+) have dropped the (.+) gold cart!"
+	FLG["DG_PATTERN_STOLEN"] = "The (.+) have stolen gold from the (.+)!"
 
 end

@@ -16,7 +16,7 @@
 -- # Target                                                                   --
 -- # Main Assist Target                                                       --
 -- # Focus                                                                    --
--- # Enemy Flag/Orb Carrier                                                   --
+-- # Enemy (Flag/Orb/Cart) Carrier                                            --
 -- # Target Count                                                             --
 -- # Health                                                                   --
 -- # Range Check                                                              --
@@ -82,12 +82,12 @@
 -- # Focus: --------------------------------------------------- LOW CPU USAGE --
 --   - Event:              - PLAYER_FOCUS_CHANGED                             --
 --                                                                            --
--- # Enemy Flag/Orb Carrier: ----------------------------- VERY LOW CPU USAGE --
+-- # Enemy Carrier: -------------------------------------- VERY LOW CPU USAGE --
 --   - Events:             - CHAT_MSG_BG_SYSTEM_HORDE                         --
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
 --                         - CHAT_MSG_BG_SYSTEM_NEUTRAL                       --
 --                         - CHAT_MSG_RAID_BOSS_EMOTE                         --
---   Flag/Orb detection in case of disconnect, UI reload or mid-battle-joins: --
+--   Carrier detection in case of disconnect, UI reload or mid-battle-joins:  --
 --   (temporarily registered until each enemy is scanned)                     --
 --                         - UNIT_TARGET                                      --
 --                         - UPDATE_MOUSEOVER_UNIT                            --
@@ -199,7 +199,6 @@ local isLeader
 local isAssistName
 local isAssistUnitId
 local rangeSpellName, rangeMin, rangeMax -- for class-spell based range check
-local flagTexture
 local flagDebuff = 0
 local flags = 0
 local isFlagBG = 0
@@ -292,18 +291,20 @@ local function BuildBattlegroundMapTable()
     elseif bgID == 108 then bgMaps[localizedName] = {bgSize = 10, flagBG = 3} -- Twin Peaks
     elseif bgID == 120 then bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- The Battle for Gilneas
     elseif bgID == 699 then bgMaps[localizedName] = {bgSize = 10, flagBG = 5} -- Temple of Kotmogu
-  --elseif bgID == 706 then bgMaps[localizedName] = {bgSize = 15, flagBG = 4} -- CTF3
     elseif bgID == 708 then bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- Silvershard Mines
+    elseif bgID == 754 then bgMaps[localizedName] = {bgSize = 15, flagBG = 4} -- Deepwind Gorge
     end
   end
   --for k, v in pairs(bgMaps) do print(k, v.bgSize, v.flagBG) end -- TEST
 end
 
 local flagIDs = {
-	 [23333] = 1, -- Horde Flag
-	 [23335] = 1, -- Alliance Flag
-	 [34976] = 1, -- Netherstorm Flag
-	[100196] = 1, -- Netherstorm Flag?
+	 [23333] = 1, -- Horde Flag         Warsong Gulch & Twin Peaks
+	 [23335] = 1, -- Alliance Flag      Warsong Gulch & Twin Peaks
+	 [34976] = 1, -- Netherstorm Flag   Eye of the Storm
+	[100196] = 1, -- Netherstorm Flag?  Eye of the Storm
+	[140876] = 1, -- Alliance Mine Cart Deepwind Gorge
+	[141210] = 1, -- Horde Mine Cart    Deepwind Gorge
 }
 
 local debuffIDs = {
@@ -1869,7 +1870,7 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.FlagTexture:SetWidth(buttonHeight_2)
 		GVAR_TargetButton.FlagTexture:SetHeight(buttonHeight_2)
 		GVAR_TargetButton.FlagTexture:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
-		GVAR_TargetButton.FlagTexture:SetTexture(flagTexture)
+		GVAR_TargetButton.FlagTexture:SetTexture(Textures.flagTexture)
 		GVAR_TargetButton.FlagTexture:SetAlpha(0)
 
 		GVAR_TargetButton.FlagDebuffButton = CreateFrame("Button", nil, GVAR_TargetButton) -- xBUT
@@ -2825,7 +2826,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	-- flag/orb
 	GVAR.OptionsFrame.ShowFlag = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowFlag, 16, 4, L["Flag + Orb"])
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowFlag, 16, 4, L["Flag"])
 	GVAR.OptionsFrame.ShowFlag:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.ShowFlag:SetPoint("TOP", GVAR.OptionsFrame.ShowFocusIndicator, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.ShowFlag:SetChecked(OPT.ButtonShowFlag[currentSize])
@@ -2846,6 +2847,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
+	-- flag
 	GVAR.OptionsFrame.CarrierSwitchFlag = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	GVAR.OptionsFrame.CarrierSwitchFlag:SetWidth(32)
 	GVAR.OptionsFrame.CarrierSwitchFlag:SetHeight(32)
@@ -2859,7 +2861,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.CarrierSwitchFlag.Texture:SetWidth(30)
 	GVAR.OptionsFrame.CarrierSwitchFlag.Texture:SetHeight(30)
 	GVAR.OptionsFrame.CarrierSwitchFlag.Texture:SetPoint("CENTER", 0, 0)
-	GVAR.OptionsFrame.CarrierSwitchFlag.Texture:SetTexture(flagTexture)
+	GVAR.OptionsFrame.CarrierSwitchFlag.Texture:SetTexture(Textures.flagTexture)
 	GVAR.OptionsFrame.CarrierSwitchFlag:SetScript("OnEnter", function(self)
 		if testData.CarrierDisplay == "flag" then return end
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = testData.CarrierDisplay
@@ -2891,21 +2893,16 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "flag"
 		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0.12, 0.12, 0.12, 1)
 		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
 		BattlegroundTargets:EnableConfigMode()
 	end)
+	-- flag
 
-	GVAR.OptionsFrame.CarrierSwitchFlag.Plus = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
-	GVAR.OptionsFrame.CarrierSwitchFlag.Plus:SetWidth(7)
-	GVAR.OptionsFrame.CarrierSwitchFlag.Plus:SetHeight(7)
-	GVAR.OptionsFrame.CarrierSwitchFlag.Plus:SetPoint("LEFT", GVAR.OptionsFrame.CarrierSwitchFlag, "RIGHT", 2, 0)
-	GVAR.OptionsFrame.CarrierSwitchFlag.Plus:SetTexture("Interface\\Buttons\\UI-PlusMinus-Buttons")
-	GVAR.OptionsFrame.CarrierSwitchFlag.Plus:SetTexCoord(0/16, 7/16, 0/16, 7/16)
-	GVAR.OptionsFrame.CarrierSwitchFlag.Plus:SetAlpha(0.5)
-
+	-- orb
 	GVAR.OptionsFrame.CarrierSwitchOrb = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	GVAR.OptionsFrame.CarrierSwitchOrb:SetWidth(32)
 	GVAR.OptionsFrame.CarrierSwitchOrb:SetHeight(32)
-	GVAR.OptionsFrame.CarrierSwitchOrb:SetPoint("LEFT", GVAR.OptionsFrame.CarrierSwitchFlag.Plus, "RIGHT", 2, 0)
+	GVAR.OptionsFrame.CarrierSwitchOrb:SetPoint("LEFT", GVAR.OptionsFrame.CarrierSwitchFlag, "RIGHT", 0, 0)
 	GVAR.OptionsFrame.CarrierSwitchOrb.BG = GVAR.OptionsFrame.CarrierSwitchOrb:CreateTexture(nil, "BORDER")
 	GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetWidth(27)
 	GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetHeight(27)
@@ -2947,47 +2944,120 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "orb"
 		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
 		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
 		BattlegroundTargets:EnableConfigMode()
 	end)
+	-- orb
+
+	-- cart
+	GVAR.OptionsFrame.CarrierSwitchCart = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+	GVAR.OptionsFrame.CarrierSwitchCart:SetWidth(32)
+	GVAR.OptionsFrame.CarrierSwitchCart:SetHeight(32)
+	GVAR.OptionsFrame.CarrierSwitchCart:SetPoint("LEFT", GVAR.OptionsFrame.CarrierSwitchOrb, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.CarrierSwitchCart.BG = GVAR.OptionsFrame.CarrierSwitchCart:CreateTexture(nil, "BORDER")
+	GVAR.OptionsFrame.CarrierSwitchCart.BG:SetWidth(27)
+	GVAR.OptionsFrame.CarrierSwitchCart.BG:SetHeight(27)
+	GVAR.OptionsFrame.CarrierSwitchCart.BG:SetPoint("CENTER", 0, 0)
+	GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+	GVAR.OptionsFrame.CarrierSwitchCart.Texture = GVAR.OptionsFrame.CarrierSwitchCart:CreateTexture(nil, "OVERLAY")
+	GVAR.OptionsFrame.CarrierSwitchCart.Texture:SetWidth(30)
+	GVAR.OptionsFrame.CarrierSwitchCart.Texture:SetHeight(30)
+	GVAR.OptionsFrame.CarrierSwitchCart.Texture:SetPoint("CENTER", 0, 0)
+	GVAR.OptionsFrame.CarrierSwitchCart.Texture:SetTexture(Textures.cartTexture)
+	GVAR.OptionsFrame.CarrierSwitchCart:SetScript("OnEnter", function(self)
+		if testData.CarrierDisplay == "cart" then return end
+		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = testData.CarrierDisplay
+		testData.CarrierDisplay = "cart"
+		BattlegroundTargets:EnableConfigMode()
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0.12, 0.12, 0.12, 1)
+	end)
+	GVAR.OptionsFrame.CarrierSwitchCart:SetScript("OnLeave", function(self)
+		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay ~= testData.CarrierDisplay then
+			testData.CarrierDisplay = GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay
+			BattlegroundTargets:EnableConfigMode()
+		end
+		if testData.CarrierDisplay == "cart" then return end
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+	end)
+	GVAR.OptionsFrame.CarrierSwitchCart:SetScript("OnMouseDown", function()
+		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay == "cart" then return end
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetSize(25,25)
+		GVAR.OptionsFrame.CarrierSwitchCart.Texture:SetSize(28,28)
+	end)
+	GVAR.OptionsFrame.CarrierSwitchCart:SetScript("OnMouseUp", function()
+		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay == "cart" then return end
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetSize(27,27)
+		GVAR.OptionsFrame.CarrierSwitchCart.Texture:SetSize(30,30)
+	end)
+	GVAR.OptionsFrame.CarrierSwitchCart:SetScript("OnClick", function()
+		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay == "cart" then return end
+		testData.CarrierDisplay = "cart"
+		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "cart"
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0.12, 0.12, 0.12, 1)
+		BattlegroundTargets:EnableConfigMode()
+	end)
+	-- cart
 
 	if testData.CarrierDisplay == "flag" then
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "flag"
 		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0.12, 0.12, 0.12, 1)
 		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
 	elseif testData.CarrierDisplay == "orb" then
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "orb"
 		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
 		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+	elseif testData.CarrierDisplay == "cart" then
+		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "cart"
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0.12, 0.12, 0.12, 1)
 	end
 
 	GVAR.OptionsFrame.CarrierSwitchEnableFunc = function()
 		GVAR.OptionsFrame.CarrierSwitchFlag:EnableMouse(true)
 		GVAR.OptionsFrame.CarrierSwitchOrb:EnableMouse(true)
+		GVAR.OptionsFrame.CarrierSwitchCart:EnableMouse(true)
 		GVAR.OptionsFrame.CarrierSwitchFlag:Enable()
 		GVAR.OptionsFrame.CarrierSwitchOrb:Enable()
+		GVAR.OptionsFrame.CarrierSwitchCart:Enable()
 		Desaturation(GVAR.OptionsFrame.CarrierSwitchFlag.Texture, false)
 		Desaturation(GVAR.OptionsFrame.CarrierSwitchOrb.Texture, false)
+		Desaturation(GVAR.OptionsFrame.CarrierSwitchCart.Texture, false)
 		if testData.CarrierDisplay == "flag" then
 			GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0.12, 0.12, 0.12, 1)
 			GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
 		elseif testData.CarrierDisplay == "orb" then
 			GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
 			GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0.12, 0.12, 0.12, 1)
+			GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+		elseif testData.CarrierDisplay == "cart" then
+			GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0.12, 0.12, 0.12, 1)
 		end
 	end
 
 	GVAR.OptionsFrame.CarrierSwitchDisableFunc = function()
 		GVAR.OptionsFrame.CarrierSwitchFlag:EnableMouse(false)
 		GVAR.OptionsFrame.CarrierSwitchOrb:EnableMouse(false)
+		GVAR.OptionsFrame.CarrierSwitchCart:EnableMouse(false)
 		GVAR.OptionsFrame.CarrierSwitchFlag:Disable()
 		GVAR.OptionsFrame.CarrierSwitchOrb:Disable()
+		GVAR.OptionsFrame.CarrierSwitchCart:Disable()
 		Desaturation(GVAR.OptionsFrame.CarrierSwitchFlag.Texture, true)
 		Desaturation(GVAR.OptionsFrame.CarrierSwitchOrb.Texture, true)
+		Desaturation(GVAR.OptionsFrame.CarrierSwitchCart.Texture, true)
 		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
 		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
 	end
 
-	local iw = GVAR.OptionsFrame.ShowFlag:GetWidth() + 32 + 2 + 7 + 2 + 32
+	local iw = GVAR.OptionsFrame.ShowFlag:GetWidth() + 32 + 32 + 32
 	if iw > equalTextWidthIcons then
 		equalTextWidthIcons = iw
 	end
@@ -5274,7 +5344,7 @@ function BattlegroundTargets:DisableConfigMode()
 	end
 
 	if OPT.ButtonShowFlag[currentSize] then
-		if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
+		if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 or isFlagBG == 4 then
 			if hasFlag then
 				local Name2Button = ENEMY_Name2Button[hasFlag]
 				if Name2Button then
@@ -5292,7 +5362,7 @@ function BattlegroundTargets:DisableConfigMode()
 					if Name2Button then
 						local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
 						if GVAR_TargetButton then
-							GVAR_TargetButton.orbColor = k
+							GVAR.TargetButton[Name2Button].orbColor = k
 							GVAR_TargetButton.FlagTexture:SetAlpha(1)
 							GVAR_TargetButton.FlagTexture:SetTexture(orbIDs[ orbColIDs[k] ].texture)
 							BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, v.orbval)
@@ -5411,14 +5481,14 @@ function BattlegroundTargets:SetConfigButtonValues()
 	if OPT.ButtonShowFlag[currentSize] then
 		if currentSize == 10 or currentSize == 15 then
 			if testData.CarrierDisplay == "flag" then
-				local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] 
+				local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize]
 				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetSize(quad, quad)
-				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetTexture(flagTexture)
+				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetTexture(Textures.flagTexture)
 				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetTexCoord(0.15625001, 0.84374999, 0.15625001, 0.84374999)--(5/32, 27/32, 5/32, 27/32)
 				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetAlpha(1)
 				GVAR.TargetButton[testData.IconFlag.button].FlagDebuff:SetText(testData.IconFlag.txt)
 			elseif testData.CarrierDisplay == "orb" then
-				local quad = ( (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] ) * 1.3
+				local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] * 1.3
 				for k, v in pairs(testData.IconOrb) do
 					if v.button then
 						GVAR.TargetButton[v.button].FlagTexture:SetSize(quad, quad)
@@ -5429,6 +5499,13 @@ function BattlegroundTargets:SetConfigButtonValues()
 						BattlegroundTargets:SetOrbCorner(GVAR.TargetButton[v.button], orbIDs[k].color)
 					end
 				end
+			elseif testData.CarrierDisplay == "cart" then
+				local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] * 1.1
+				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetSize(quad, quad)
+				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetTexture(Textures.cartTexture)
+				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetTexCoord(0.09375, 0.90625, 0.09375, 0.90625)--(3/32, 29/32, 3/32, 29/32)
+				GVAR.TargetButton[testData.IconFlag.button].FlagTexture:SetAlpha(1)
+				GVAR.TargetButton[testData.IconFlag.button].FlagDebuff:SetText("")
 			end
 		end
 	end
@@ -6249,7 +6326,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
+function BattlegroundTargets:CheckOrb(enemyID, enemyName, buttonNum)
 	for i = 1, 40 do
 		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(enemyID, i)
 		if not spellId then return end
@@ -6259,11 +6336,11 @@ function BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
 			local oID = orbIDs[spellId]
 			hasOrb[ oID.color ].name = enemyName
 			hasOrb[ oID.color ].orbval = val2
-			GVAR_TargetButton.orbColor = oID.color
-			GVAR_TargetButton.FlagTexture:SetAlpha(1)
-			GVAR_TargetButton.FlagTexture:SetTexture(oID.texture)
-			BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, val2)
-			BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, oID.color)
+			GVAR.TargetButton[buttonNum].orbColor = oID.color
+			GVAR.TargetButton[buttonNum].FlagTexture:SetAlpha(1)
+			GVAR.TargetButton[buttonNum].FlagTexture:SetTexture(oID.texture)
+			BattlegroundTargets:SetOrbDebuff(GVAR.TargetButton[buttonNum], val2)
+			BattlegroundTargets:SetOrbCorner(GVAR.TargetButton[buttonNum], oID.color)
 
 			if flagCHK and flags >= 4 then
 				BattlegroundTargets:CheckFlagCarrierEND()
@@ -6317,6 +6394,34 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 			end
 		end
 
+	elseif isFlagBG == 4 then
+
+		-- enemy buff check
+		for i = 1, 40 do
+			local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unit, i)
+			if not spellId then break end
+			if flagIDs[spellId] then
+				hasFlag = targetName
+
+				local GVAR_TargetButton = GVAR.TargetButton
+				for j = 1, currentSize do
+					GVAR_TargetButton[j].FlagTexture:SetAlpha(0)
+					GVAR_TargetButton[j].FlagDebuff:SetText("")
+				end
+				local button = ENEMY_Name2Button[targetName]
+				if button then
+					local GVAR_TargetButton = GVAR.TargetButton[button]
+					if GVAR_TargetButton then
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						GVAR_TargetButton.FlagDebuff:SetText("")
+					end
+				end
+
+				BattlegroundTargets:CheckFlagCarrierEND()
+				return
+			end
+		end
+
 	elseif isFlagBG == 5 then
 
 		-- enemy debuff check
@@ -6338,7 +6443,7 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 						local oID = orbIDs[spellId]
 						hasOrb[ oID.color ].name = targetName
 						hasOrb[ oID.color ].orbval = val2
-						GVAR_TargetButton.orbColor = oID.color
+						GVAR.TargetButton[button].orbColor = oID.color
 						GVAR_TargetButton.FlagTexture:SetAlpha(1)
 						GVAR_TargetButton.FlagTexture:SetTexture(oID.texture)
 						BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, val2)
@@ -6380,7 +6485,8 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 
 	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
 
-		local function chk() -- friend buff & debuff check
+		-- friend buff & debuff check
+		local function chk()
 			for num = 1, GetNumGroupMembers() do
 				local unitID = "raid"..num
 				for i = 1, 40 do
@@ -6561,10 +6667,11 @@ function BattlegroundTargets:IsBattleground()
 				GVAR.Summary.DamageEnemy:SetText("0")
 			end
 
-			-- The flag texture is defined (SetTexture) here (at STARTofBG) for one battleground game because the texture depends on bg and faction.
+			-- The flag/cart texture is defined (SetTexture) here (at STARTofBG) for one battleground game because the texture depends on bg and faction.
 			-- The orb texture is defined at the MainDataUpdate() function.
 			if OPT.ButtonShowFlag[currentSize] then
 
+				-- flag
 				if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
 					local flagIcon -- setup_flag_texture
 					if playerFactionBG ~= playerFactionDEF then
@@ -6582,13 +6689,33 @@ function BattlegroundTargets:IsBattleground()
 							flagIcon = "Interface\\WorldStateFrame\\AllianceFlag"
 						end
 					end
-					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] 
+					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize]
 					for i = 1, currentSize do
 						GVAR.TargetButton[i].FlagTexture:SetSize(quad, quad)
 						GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
 						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.15625001, 0.84374999, 0.15625001, 0.84374999)--(5/32, 27/32, 5/32, 27/32)
 						GVAR.TargetButton[i].orbDebuffUpdate = nil
 					end
+
+				-- cart
+				elseif isFlagBG == 4 then
+					local flagIcon -- setup_flag_texture
+					if playerFactionBG ~= playerFactionDEF then
+						flagIcon = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCart" -- neutral_flag
+					elseif playerFactionDEF == 0 then
+						flagIcon = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCartRed"
+					else
+						flagIcon = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCartBlue"
+					end
+					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] * 1.1
+					for i = 1, currentSize do
+						GVAR.TargetButton[i].FlagTexture:SetSize(quad, quad)
+						GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
+						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.09375, 0.90625, 0.09375, 0.90625)--(3/32, 29/32, 3/32, 29/32)
+						GVAR.TargetButton[i].orbDebuffUpdate = nil
+					end
+
+				-- orb
 				elseif isFlagBG == 5 then
 					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] * 1.3
 					local curTime = GetTime() - 2.1
@@ -6660,7 +6787,9 @@ function BattlegroundTargets:IsBattleground()
 				BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
 				BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
 				BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-				BattlegroundTargets:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
+				if isFlagBG == 5 then
+					BattlegroundTargets:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
+				end
 			end
 		end
 
@@ -7043,9 +7172,9 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		BattlegroundTargets:CheckUnitHealth(enemyID, enemyName, 1)
 	end
 
-	local GVAR_TargetButton
+	local GVAR_TargetButton, enemyButton
 	if enemyName then
-		local enemyButton = ENEMY_Name2Button[enemyName]
+		enemyButton = ENEMY_Name2Button[enemyName]
 		if enemyButton then
 			GVAR_TargetButton = GVAR.TargetButton[enemyButton]
 		end
@@ -7119,8 +7248,8 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	-- carrier_orb
 	if isFlagBG == 5 and GVAR_TargetButton.orbColor and OPT.ButtonShowFlag[currentSize] then
 		if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
-			GVAR_TargetButton.orbDebuffUpdate = curTime
-			BattlegroundTargets:CheckOrb(enemyID, enemyName, GVAR_TargetButton)
+			GVAR.TargetButton[enemyButton].orbDebuffUpdate = curTime
+			BattlegroundTargets:CheckOrb(enemyID, enemyName, enemyButton)
 		end
 	end
 
@@ -7218,8 +7347,8 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 		if isFlagBG == 5 and GVAR_TargetButton.orbColor then
 			local curTime = GetTime()
 			if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
-				GVAR_TargetButton.orbDebuffUpdate = curTime
-				BattlegroundTargets:CheckOrb(targetID, targetName, GVAR_TargetButton)
+				GVAR.TargetButton[targetButton].orbDebuffUpdate = curTime
+				BattlegroundTargets:CheckOrb(targetID, targetName, targetButton)
 			end
 		end
 	end
@@ -7283,7 +7412,8 @@ function BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, color)
 	end
 end
 
-function BattlegroundTargets:FlagDebuffCheck(message) --print("F.lagDebuffCheck", message) -- TEST
+function BattlegroundTargets:FlagDebuffCheck(message)
+	--print("F.lagDebuffCheck", message) -- TEST
 	if message == FLG["WSG_TP_STRING_FLAG_DEBUFF1"] or message == FLG["WSG_TP_STRING_FLAG_DEBUFF2"] then -- Warsong Gulch & Twin Peaks
 		flagDebuff = flagDebuff + 1
 		if hasFlag then
@@ -7298,9 +7428,9 @@ function BattlegroundTargets:FlagDebuffCheck(message) --print("F.lagDebuffCheck"
 	end
 end
 
-function BattlegroundTargets:OrbReturnCheck(message) --print("O.rbReturnCheck", message) -- TEST
-	local orbColor = strmatch(message, FLG["TOK_PATTERN_RETURNED1"]) or -- Temple of Kotmogu: orb was returned
-	                 strmatch(message, FLG["TOK_PATTERN_RETURNED2"])    -- Temple of Kotmogu: orb was returned
+function BattlegroundTargets:OrbReturnCheck(message)
+	--print("O.rbReturnCheck", message) -- TEST
+	local orbColor = strmatch(message, FLG["TOK_PATTERN_RETURNED"]) -- Temple of Kotmogu: orb was returned
 	if orbColor then
 		local color = orbData(orbColor)
 		wipe(hasOrb[color])
@@ -7308,7 +7438,7 @@ function BattlegroundTargets:OrbReturnCheck(message) --print("O.rbReturnCheck", 
 		local GVAR_TargetButton = GVAR.TargetButton
 		for i = 1, currentSize do
 			if GVAR_TargetButton[i].orbColor == color then
-				GVAR_TargetButton[i].orbColor = nil
+				GVAR.TargetButton[i].orbColor = nil
 				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
 				GVAR_TargetButton[i].OrbDebuff:SetText("")
 				GVAR_TargetButton[i].OrbCornerTL:SetAlpha(0)
@@ -7322,53 +7452,217 @@ function BattlegroundTargets:OrbReturnCheck(message) --print("O.rbReturnCheck", 
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.arrierCheck", isFlagBG, "#", message, "#", messageFaction) -- TEST
-	if isFlagBG == 1 or isFlagBG == 3 then
-	-- ###################################################################################################################
-	-- #####                                                  START                                                  #####
-	-- #####                                        Warsong Gulch & Twin Peaks                                       #####
 
-		if messageFaction == playerFactionBG then
-			-- -----------------------------------------------------------------------------------------------------------------
-			local fc = strmatch(message, FLG["WSG_TP_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
-			           strmatch(message, FLG["WSG_TP_PATTERN_PICKED2"])    -- Warsong Gulch & Twin Peaks: flag was picked
-			if fc then
-				flags = flags + 1
-			-- -----------------------------------------------------------------------------------------------------------------
-			elseif strmatch(message, FLG["WSG_TP_MATCH_CAPTURED"]) then -- Warsong Gulch & Twin Peaks: flag was captured
-				local GVAR_TargetButton = GVAR.TargetButton
-				for i = 1, currentSize do
-					GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-					GVAR_TargetButton[i].FlagDebuff:SetText("")
-				end
-				hasFlag = nil
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CarrierCheck(message, messageFaction)
+	--print("C.arrierCheck", isFlagBG, "#", message, "#", messageFaction) -- TEST
+	if isFlagBG == 1 or isFlagBG == 3 then
+		BattlegroundTargets:WSG_TP_Carrier(message, messageFaction)
+	elseif isFlagBG == 2 then
+		BattlegroundTargets:EOTS_Carrier(message, messageFaction)
+	elseif isFlagBG == 4 then
+		BattlegroundTargets:DG_Carrier(message, messageFaction)
+	elseif isFlagBG == 5 then
+		BattlegroundTargets:TOK_Carrier(message, messageFaction)
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- Warsong Gulch & Twin Peaks ------------------------------------------------------------------------------------------
+function BattlegroundTargets:WSG_TP_Carrier(message, messageFaction)
+	if messageFaction == playerFactionBG then
+		-- -------------------------------------------------------------------------
+		local fc = strmatch(message, FLG["WSG_TP_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
+		           strmatch(message, FLG["WSG_TP_PATTERN_PICKED2"])    -- Warsong Gulch & Twin Peaks: flag was picked
+		if fc then
+			flags = flags + 1
+		-- -------------------------------------------------------------------------
+		elseif strmatch(message, FLG["WSG_TP_MATCH_CAPTURED"]) then -- Warsong Gulch & Twin Peaks: flag was captured
+			local GVAR_TargetButton = GVAR.TargetButton
+			for i = 1, currentSize do
+				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR_TargetButton[i].FlagDebuff:SetText("")
+			end
+			hasFlag = nil
+			flagDebuff = 0
+			flags = 0
+			if flagCHK then
+				BattlegroundTargets:CheckFlagCarrierEND()
+			end
+		-- -------------------------------------------------------------------------
+		elseif strmatch(message, FLG["WSG_TP_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
+			local GVAR_TargetButton = GVAR.TargetButton
+			for i = 1, currentSize do
+				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR_TargetButton[i].FlagDebuff:SetText("")
+			end
+			hasFlag = nil
+			flags = flags - 1
+			if flags <= 0 then
 				flagDebuff = 0
 				flags = 0
-				if flagCHK then
-					BattlegroundTargets:CheckFlagCarrierEND()
-				end
-			-- -----------------------------------------------------------------------------------------------------------------
-			elseif strmatch(message, FLG["WSG_TP_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
-				local GVAR_TargetButton = GVAR.TargetButton
-				for i = 1, currentSize do
-					GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-					GVAR_TargetButton[i].FlagDebuff:SetText("")
-				end
-				hasFlag = nil
-				flags = flags - 1
-				if flags <= 0 then
-					flagDebuff = 0
-					flags = 0
+			end
+		end
+		-- -------------------------------------------------------------------------
+	else
+		-- -------------------------------------------------------------------------
+		local efc = strmatch(message, FLG["WSG_TP_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
+		            strmatch(message, FLG["WSG_TP_PATTERN_PICKED2"])    -- Warsong Gulch & Twin Peaks: flag was picked
+		if efc then
+			flags = flags + 1
+			local GVAR_TargetButton = GVAR.TargetButton
+			for i = 1, currentSize do
+				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR_TargetButton[i].FlagDebuff:SetText("")
+			end
+			if flagCHK then
+				BattlegroundTargets:CheckFlagCarrierEND()
+			end
+			-- 1.) check for name-server
+			for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
+				if fullname == efc then
+					local GVAR_TargetButton = GVAR.TargetButton[fullnameButton]
+					if GVAR_TargetButton then
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
+						hasFlag = fullname
+						return
+					end
 				end
 			end
-			-- -----------------------------------------------------------------------------------------------------------------
+			-- 2.) check for name only
+			for name, button in pairs(ENEMY_Name4Flag) do
+				if name == efc then
+					local GVAR_TargetButton = GVAR.TargetButton[button]
+					if GVAR_TargetButton then
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
+						for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
+							if button == fullnameButton then
+								hasFlag = fullname
+								return
+							end
+						end
+					end
+					return
+				end
+			end
+			-- ---
+		-- -------------------------------------------------------------------------
+		elseif strmatch(message, FLG["WSG_TP_MATCH_CAPTURED"]) then -- Warsong Gulch & Twin Peaks: flag was captured
+			local GVAR_TargetButton = GVAR.TargetButton
+			for i = 1, currentSize do
+				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR_TargetButton[i].FlagDebuff:SetText("")
+			end
+			hasFlag = nil
+			flagDebuff = 0
+			flags = 0
+			if flagCHK then
+				BattlegroundTargets:CheckFlagCarrierEND()
+			end
+		-- -------------------------------------------------------------------------
+		elseif strmatch(message, FLG["WSG_TP_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
+			flags = flags - 1
+			if flags <= 0 then
+				flagDebuff = 0
+				flags = 0
+			end
+		end
+		-- -----------------------------------------------------------------------------------------------------------------
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- Eye of the Storm ----------------------------------------------------------------------------------------------------
+function BattlegroundTargets:EOTS_Carrier(message, messageFaction)
+	-- ---------------------------------------------------------------------------
+	if message == FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or -- Eye of the Storm: flag was captured
+	   message == FLG["EOTS_STRING_CAPTURED_BY_HORDE"] or    -- Eye of the Storm: flag was captured
+	   message == FLG["EOTS_STRING_DROPPED"]                 -- Eye of the Storm: flag was dropped
+	then
+		local GVAR_TargetButton = GVAR.TargetButton
+		for i = 1, currentSize do
+			GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+			GVAR_TargetButton[i].FlagDebuff:SetText("")
+		end
+		hasFlag = nil
+		if flagCHK then
+			BattlegroundTargets:CheckFlagCarrierEND()
+		end
+		return
+	end
+	-- ---------------------------------------------------------------------------
+	if messageFaction ~= playerFactionBG then
+		-- -------------------------------------------------------------------------
+		local efc = strmatch(message, FLG["EOTS_PATTERN_PICKED"]) -- Eye of the Storm: flag was picked
+		if efc then
+			local GVAR_TargetButton = GVAR.TargetButton
+			for i = 1, currentSize do
+				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR_TargetButton[i].FlagDebuff:SetText("")
+			end
+			if flagCHK then
+				BattlegroundTargets:CheckFlagCarrierEND()
+			end
+			-- 1.) check for name-server
+			for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
+				if fullname == efc then
+					local GVAR_TargetButton = GVAR.TargetButton[fullnameButton]
+					if GVAR_TargetButton then
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
+						hasFlag = fullname
+						return
+					end
+				end
+			end
+			-- 2.) check for name only
+			for name, button in pairs(ENEMY_Name4Flag) do
+				if name == efc then
+					local GVAR_TargetButton = GVAR.TargetButton[button]
+					if GVAR_TargetButton then
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
+						for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
+							if button == fullnameButton then
+								hasFlag = fullname
+								return
+							end
+						end
+					end
+					return
+				end
+			end
+			-- ---
+		end
+		-- -------------------------------------------------------------------------
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- Deepwind Gorge ------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:DG_Carrier(message, messageFaction)
+	if messageFaction ~= playerFactionBG then
+		-- -------------------------------------------------------------------------
+		if strmatch(message, FLG["DG_PATTERN_DROPPED"]) or -- Deepwind Gorge: cart dropped
+		   strmatch(message, FLG["DG_PATTERN_STOLEN"])     -- Deepwind Gorge: gold stolen
+		then
+			local GVAR_TargetButton = GVAR.TargetButton
+			for i = 1, currentSize do
+				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR_TargetButton[i].FlagDebuff:SetText("")
+			end
+			hasFlag = nil
+			if flagCHK then
+				BattlegroundTargets:CheckFlagCarrierEND()
+			end
 		else
-			-- -----------------------------------------------------------------------------------------------------------------
-			local efc = strmatch(message, FLG["WSG_TP_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
-			            strmatch(message, FLG["WSG_TP_PATTERN_PICKED2"])    -- Warsong Gulch & Twin Peaks: flag was picked
+		-- -------------------------------------------------------------------------
+			local efc = strmatch(message, FLG["DG_PATTERN_TAKEN"]) or -- Deepwind Gorge: cart taken
+			            strmatch(message, FLG["DG_PATTERN_PICKED"])   -- Deepwind Gorge: cart picked
 			if efc then
-				flags = flags + 1
 				local GVAR_TargetButton = GVAR.TargetButton
 				for i = 1, currentSize do
 					GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
@@ -7377,12 +7671,25 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 				if flagCHK then
 					BattlegroundTargets:CheckFlagCarrierEND()
 				end
+				-- 1.) check for name-server
+				for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
+					if fullname == efc then
+						local GVAR_TargetButton = GVAR.TargetButton[fullnameButton]
+						if GVAR_TargetButton then
+							GVAR_TargetButton.FlagTexture:SetAlpha(1)
+							GVAR_TargetButton.FlagDebuff:SetText("")
+							hasFlag = fullname
+							return
+						end
+					end
+				end
+				-- 2.) check for name only
 				for name, button in pairs(ENEMY_Name4Flag) do
 					if name == efc then
 						local GVAR_TargetButton = GVAR.TargetButton[button]
 						if GVAR_TargetButton then
 							GVAR_TargetButton.FlagTexture:SetAlpha(1)
-							BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
+							GVAR_TargetButton.FlagDebuff:SetText("")
 							for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
 								if button == fullnameButton then
 									hasFlag = fullname
@@ -7393,190 +7700,109 @@ function BattlegroundTargets:CarrierCheck(message, messageFaction) --print("C.ar
 						return
 					end
 				end
-			-- -----------------------------------------------------------------------------------------------------------------
-			elseif strmatch(message, FLG["WSG_TP_MATCH_CAPTURED"]) then -- Warsong Gulch & Twin Peaks: flag was captured
-				local GVAR_TargetButton = GVAR.TargetButton
-				for i = 1, currentSize do
-					GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-					GVAR_TargetButton[i].FlagDebuff:SetText("")
-				end
-				hasFlag = nil
-				flagDebuff = 0
-				flags = 0
-				if flagCHK then
-					BattlegroundTargets:CheckFlagCarrierEND()
-				end
-			-- -----------------------------------------------------------------------------------------------------------------
-			elseif strmatch(message, FLG["WSG_TP_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
-				flags = flags - 1
-				if flags <= 0 then
-					flagDebuff = 0
-					flags = 0
-				end
+				-- ---
 			end
-			-- -----------------------------------------------------------------------------------------------------------------
+		-- -------------------------------------------------------------------------
 		end
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
 
-	-- #####                                        Warsong Gulch & Twin Peaks                                       #####
-	-- #####                                                   END                                                   #####
-	-- ###################################################################################################################
-	elseif isFlagBG == 2 then
-	-- ###################################################################################################################
-	-- #####                                             Eye of the Storm                                            #####
-	-- #####                                                  START                                                  #####
-
-		if messageFaction == playerFactionBG then
-			-- -----------------------------------------------------------------------------------------------------------------
-			if message == FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or -- Eye of the Storm: flag was captured
-			   message == FLG["EOTS_STRING_CAPTURED_BY_HORDE"] or    -- Eye of the Storm: flag was captured
-			   message == FLG["EOTS_STRING_DROPPED"]                 -- Eye of the Storm: flag was dropped
-			then
-				local GVAR_TargetButton = GVAR.TargetButton
-				for i = 1, currentSize do
-					GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-					GVAR_TargetButton[i].FlagDebuff:SetText("")
-				end
-				hasFlag = nil
-				if flagCHK then
-					BattlegroundTargets:CheckFlagCarrierEND()
-				end
+-- Temple of Kotmogu ---------------------------------------------------------------------------------------------------
+function BattlegroundTargets:TOK_Carrier(message, messageFaction)
+	if messageFaction == playerFactionBG then
+		-- -------------------------------------------------------------------------
+		local orbCarrier, orbColor = strmatch(message, FLG["TOK_PATTERN_TAKEN"]) -- Temple of Kotmogu: orb was taken
+		if orbCarrier and orbColor then
+			local color = orbData(orbColor)
+			--print("taken friend", orbCarrier, orbColor, color)
+			wipe(hasOrb[color])
+			flags = flags + 1
+			if flagCHK and flags >= 4 then
+				BattlegroundTargets:CheckFlagCarrierEND()
 			end
-			-- -----------------------------------------------------------------------------------------------------------------
-		else
-			-- -----------------------------------------------------------------------------------------------------------------
-			if message == FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or -- Eye of the Storm: flag was captured
-			   message == FLG["EOTS_STRING_CAPTURED_BY_HORDE"] or    -- Eye of the Storm: flag was captured
-			   message == FLG["EOTS_STRING_DROPPED"]                 -- Eye of the Storm: flag was dropped
-			then
-				local GVAR_TargetButton = GVAR.TargetButton
-				for i = 1, currentSize do
+			local GVAR_TargetButton = GVAR.TargetButton
+			for i = 1, currentSize do
+				if GVAR_TargetButton[i].orbColor == color then
+					GVAR.TargetButton[i].orbColor = nil
 					GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-					GVAR_TargetButton[i].FlagDebuff:SetText("")
+					GVAR_TargetButton[i].OrbDebuff:SetText("")
+					GVAR_TargetButton[i].OrbCornerTL:SetAlpha(0)
+					GVAR_TargetButton[i].OrbCornerTR:SetAlpha(0)
+					GVAR_TargetButton[i].OrbCornerBL:SetAlpha(0)
+					GVAR_TargetButton[i].OrbCornerBR:SetAlpha(0)
+					break
 				end
-				hasFlag = nil
-				if flagCHK then
-					BattlegroundTargets:CheckFlagCarrierEND()
-				end
-			else
-			-- -----------------------------------------------------------------------------------------------------------------
-				local efc = strmatch(message, FLG["EOTS_PATTERN_PICKED"]) -- Eye of the Storm: flag was picked
-				if efc then
-					local GVAR_TargetButton = GVAR.TargetButton
-					for i = 1, currentSize do
-						GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-						GVAR_TargetButton[i].FlagDebuff:SetText("")
-					end
-					if flagCHK then
-						BattlegroundTargets:CheckFlagCarrierEND()
-					end
-					for name, button in pairs(ENEMY_Name4Flag) do
-						if name == efc then
-							local GVAR_TargetButton = GVAR.TargetButton[button]
-							if GVAR_TargetButton then
-								GVAR_TargetButton.FlagTexture:SetAlpha(1)
-								BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
-								for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
-									if button == fullnameButton then
-										hasFlag = fullname
-										return
-									end
-								end
-							end
-							return
-						end
-					end
-				end
-			-- -----------------------------------------------------------------------------------------------------------------
 			end
 		end
-
-	-- #####                                             Eye of the Storm                                            #####
-	-- #####                                                   END                                                   #####
-	-- ###################################################################################################################
-	elseif isFlagBG == 5 then
-	-- ###################################################################################################################
-	-- #####                                                  START                                                  #####
-	-- #####                                            Temple of Kotmogu                                            #####
-
-		if messageFaction == playerFactionBG then
-			-- -----------------------------------------------------------------------------------------------------------------
-			local orbCarrier, orbColor = strmatch(message, FLG["TOK_PATTERN_TAKEN"]) -- Temple of Kotmogu: orb was taken
-			if orbCarrier and orbColor then
-				local color = orbData(orbColor)
-				--print("taken friend", orbCarrier, orbColor, color)
-				wipe(hasOrb[color])
-				flags = flags + 1
-				if flagCHK and flags >= 4 then
-					BattlegroundTargets:CheckFlagCarrierEND()
-				end
-				local GVAR_TargetButton = GVAR.TargetButton
-				for i = 1, currentSize do
-					if GVAR_TargetButton[i].orbColor == color then
-						GVAR_TargetButton[i].orbColor = nil
-						GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-						GVAR_TargetButton[i].OrbDebuff:SetText("")
-						GVAR_TargetButton[i].OrbCornerTL:SetAlpha(0)
-						GVAR_TargetButton[i].OrbCornerTR:SetAlpha(0)
-						GVAR_TargetButton[i].OrbCornerBL:SetAlpha(0)
-						GVAR_TargetButton[i].OrbCornerBR:SetAlpha(0)
-						break
-					end
+		-- -------------------------------------------------------------------------
+	else
+		-- -------------------------------------------------------------------------
+		local orbCarrier, orbColor = strmatch(message, FLG["TOK_PATTERN_TAKEN"]) -- Temple of Kotmogu: orb was taken
+		if orbCarrier and orbColor then
+			local color, texture = orbData(orbColor)
+			--print("taken enemy", orbCarrier, orbColor, color)
+			wipe(hasOrb[color])
+			flags = flags + 1
+			if flagCHK and flags >= 4 then
+				BattlegroundTargets:CheckFlagCarrierEND()
+			end
+			local GVAR_TargetButton = GVAR.TargetButton
+			for i = 1, currentSize do
+				if GVAR_TargetButton[i].orbColor == color then
+					GVAR.TargetButton[i].orbColor = nil
+					GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+					GVAR_TargetButton[i].OrbDebuff:SetText("")
+					GVAR_TargetButton[i].OrbCornerTL:SetAlpha(0)
+					GVAR_TargetButton[i].OrbCornerTR:SetAlpha(0)
+					GVAR_TargetButton[i].OrbCornerBL:SetAlpha(0)
+					GVAR_TargetButton[i].OrbCornerBR:SetAlpha(0)
+					break
 				end
 			end
-			-- -----------------------------------------------------------------------------------------------------------------
-		else
-			-- -----------------------------------------------------------------------------------------------------------------
-			local orbCarrier, orbColor = strmatch(message, FLG["TOK_PATTERN_TAKEN"]) -- Temple of Kotmogu: orb was taken
-			if orbCarrier and orbColor then
-				local color, texture = orbData(orbColor)
-				--print("taken enemy", orbCarrier, orbColor, color)
-				wipe(hasOrb[color])
-				flags = flags + 1
-				if flagCHK and flags >= 4 then
-					BattlegroundTargets:CheckFlagCarrierEND()
-				end
-				local GVAR_TargetButton = GVAR.TargetButton
-				for i = 1, currentSize do
-					if GVAR_TargetButton[i].orbColor == color then
-						GVAR_TargetButton[i].orbColor = nil
-						GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-						GVAR_TargetButton[i].OrbDebuff:SetText("")
-						GVAR_TargetButton[i].OrbCornerTL:SetAlpha(0)
-						GVAR_TargetButton[i].OrbCornerTR:SetAlpha(0)
-						GVAR_TargetButton[i].OrbCornerBL:SetAlpha(0)
-						GVAR_TargetButton[i].OrbCornerBR:SetAlpha(0)
-						break
-					end
-				end
-				for name, button in pairs(ENEMY_Name4Flag) do
-					if name == orbCarrier then
-						local GVAR_TargetButton = GVAR.TargetButton[button]
-						if GVAR_TargetButton then
-							GVAR_TargetButton.orbColor = color
-							GVAR_TargetButton.FlagTexture:SetAlpha(1)
-							GVAR_TargetButton.FlagTexture:SetTexture(texture)
-							BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton)
-							BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, color)
-							for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
-								if button == fullnameButton then
-									hasOrb[color].name = fullname
-									return
-								end
-							end
-						end
+			-- 1.) check for name-server
+			for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
+				if fullname == orbCarrier then
+					local GVAR_TargetButton = GVAR.TargetButton[fullnameButton]
+					if GVAR_TargetButton then
+						GVAR.TargetButton[fullnameButton].orbColor = color
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						GVAR_TargetButton.FlagTexture:SetTexture(texture)
+						BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton)
+						BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, color)
+						hasOrb[color].name = fullname
 						return
 					end
 				end
 			end
-			-- -----------------------------------------------------------------------------------------------------------------
+			-- 2.) check for name only
+			for name, button in pairs(ENEMY_Name4Flag) do
+				if name == orbCarrier then
+					local GVAR_TargetButton = GVAR.TargetButton[button]
+					if GVAR_TargetButton then
+						GVAR.TargetButton[button].orbColor = color
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						GVAR_TargetButton.FlagTexture:SetTexture(texture)
+						BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton)
+						BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, color)
+						for fullname, fullnameButton in pairs(ENEMY_Name2Button) do -- ENEMY_Name2Button and ENEMY_Name4Flag have same buttonID
+							if button == fullnameButton then
+								hasOrb[color].name = fullname
+								return
+							end
+						end
+					end
+					return
+				end
+			end
+			-- ---
 		end
-
-	-- #####                                            Temple of Kotmogu                                            #####
-	-- #####                                                   END                                                   #####
-	-- ###################################################################################################################
+		-- -------------------------------------------------------------------------
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
+
+
 
 -- ---------------------------------------------------------------------------------------------------------------------
 local function CombatLogRangeCheck(sourceName, destName, spellId)
@@ -7789,11 +8015,14 @@ function BattlegroundTargets:CheckFaction()
 	oppositeFactionBG = oppositeFactionDEF
 
 	if playerFactionDEF == 0 then -- setup_flag_texture
-		flagTexture = "Interface\\WorldStateFrame\\HordeFlag"
+		Textures.flagTexture = "Interface\\WorldStateFrame\\HordeFlag"
+		Textures.cartTexture = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCartRed"
 	elseif playerFactionDEF == 1 then
-		flagTexture = "Interface\\WorldStateFrame\\AllianceFlag"
+		Textures.flagTexture = "Interface\\WorldStateFrame\\AllianceFlag"
+		Textures.cartTexture = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCartBlue"
 	else
-		flagTexture = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral_flag
+		Textures.flagTexture = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral_flag
+		Textures.cartTexture = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCart" -- neutral_flag
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------

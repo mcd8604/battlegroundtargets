@@ -20,7 +20,7 @@ L["Copy this settings to %s"] = "複製此設定到 %s"
 L["Class Icon"] = "職業圖標" -- need check - old: ["Show Class Icon"] = "顯示職業圖標",
 L["Realm"] = "伺服器" -- need check - old: ["Hide Realm"] = "隱藏伺服器",
 L["Leader"] = "領袖" -- need check - old: ["Show Leader"] = "顯示領袖",
-L["Flag + Orb"] = true
+L["Flag"] = true
 L["Main Assist Target"] = "主助理目標" -- need check - old: ["Show Main Assist Target"] = "顯示主助理目標",
 L["Target Count"] = "目標計數" -- need check - old: ["Show Target Count"] = "顯示目標計數",
 L["Health Bar"] = "生命條" -- need check - old: ["Show Health Bar"] = "顯示生命條",

@@ -20,7 +20,7 @@ L["Copy this settings to %s"] = "Copiar configurações para %s"
 L["Class Icon"] = "Ícone da classe" -- need check - old: ["Show Class Icon"] = "Mostrar ícone da classe"
 L["Realm"] = "Reino" -- need check - old: ["Hide Realm"] = "Esconder reino"
 L["Leader"] = "Líder" -- need check - old: ["Show Leader"] = "Mostrar líder"
-L["Flag + Orb"] = "Bandeira + Orbe" -- need check
+L["Flag"] = "Bandeira"
 L["Main Assist Target"] = "Alvo do assistente principal" -- need check - old: ["Show Main Assist Target"] = "Mostrar o alvo do assistente principal"
 L["Target Count"] = "Contagem de mirados" -- need check - old: ["Show Target Count"] = "Mostrar contagem de mirados"
 L["Health Bar"] = "Barra de vida" -- need check - old: ["Show Health Bar"] = "Mostrar barra de vida"
