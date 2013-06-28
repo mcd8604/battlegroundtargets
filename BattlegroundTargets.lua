@@ -6295,6 +6295,20 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	end
 
 	if ENEMY_Data[1] then
+		if BattlegroundTargets.TrackFaction then -- BG_FACTION_CHK
+			for i = 1, #ENEMY_Data do
+				if ENEMY_Data[i].name == playerName then
+					BattlegroundTargets.ForceDefaultFaction = true
+					break
+				end
+			end
+			BattlegroundTargets.TrackFaction = nil
+			if BattlegroundTargets.ForceDefaultFaction then
+				BattlegroundTargets:BattlefieldCheck()
+				return
+			end
+		end
+
 		BattlegroundTargets:MainDataUpdate()
 
 		if not flagflag and isFlagBG > 0 then
@@ -6632,7 +6646,22 @@ function BattlegroundTargets:IsBattleground()
 		currentSize = 10
 	end
 
-	if not IsActiveBattlefieldArena() then
+	-- ---------- BG_FACTION_CHK
+	-- GetBattlefieldArenaFaction() can return a wrong value which results
+	-- in a bgt frame that shows your group instead of the enemy group.
+	-- Workaround: If the factions differs we track until GetBattlefieldScore()
+	-- has collected the enemy data. If playerName is in that enemy data we have
+	-- found the bug.
+	if BattlegroundTargets.ForceDefaultFaction then
+		if playerFactionDEF == 0 then
+			playerFactionBG   = 0 -- Horde
+			oppositeFactionBG = 1 -- Alliance
+		else--if playerFactionDEF == 1 then
+			playerFactionBG   = 1 -- Alliance
+			oppositeFactionBG = 0 -- Horde
+		end
+		oppositeFactionREAL = nil -- reset real faction
+	elseif not IsActiveBattlefieldArena() then
 		local faction = GetBattlefieldArenaFaction()
 		if faction == 0 then
 			playerFactionBG   = 0 -- Horde
@@ -6643,7 +6672,11 @@ function BattlegroundTargets:IsBattleground()
 		else
 			Print("ERROR", "unknown battleground faction", locale, faction)
 		end
+		if playerFactionDEF ~= playerFactionBG then
+			BattlegroundTargets.TrackFaction = true
+		end
 	end
+	-- ----------
 
 	if playerLevel >= maxLevel then -- LVLCHK
 		isLowLevel = nil
@@ -6908,6 +6941,9 @@ function BattlegroundTargets:IsNotBattleground()
 	reCheckScore = nil
 	groupMembers = 0
 	groupMemChk = 0
+
+	BattlegroundTargets.ForceDefaultFaction = nil
+	BattlegroundTargets.TrackFaction = nil
 
 	BattlegroundTargets:CheckPlayerLevel() -- LVLCHK
 
@@ -8038,9 +8074,17 @@ function BattlegroundTargets:CheckFaction()
 	if playerFactionDEF == 0 then -- setup_flag_texture
 		Textures.flagTexture = "Interface\\WorldStateFrame\\HordeFlag"
 		Textures.cartTexture = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCartRed"
+		if GVAR.Summary and GVAR.Summary.Logo1 then -- summary_flag_texture
+			GVAR.Summary.Logo1:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+		end
 	elseif playerFactionDEF == 1 then
 		Textures.flagTexture = "Interface\\WorldStateFrame\\AllianceFlag"
 		Textures.cartTexture = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCartBlue"
+		if GVAR.Summary and GVAR.Summary.Logo1 then -- summary_flag_texture
+			GVAR.Summary.Logo1:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
+			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
+		end
 	else
 		Textures.flagTexture = "Interface\\WorldStateFrame\\ColumnIcon-FlagCapture2" -- neutral_flag
 		Textures.cartTexture = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCart" -- neutral_flag
