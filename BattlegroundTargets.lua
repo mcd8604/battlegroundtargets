@@ -27,7 +27,7 @@
 -- - PLAYER_REGEN_DISABLED                                                    --
 -- - PLAYER_REGEN_ENABLED                                                     --
 -- - ZONE_CHANGED_NEW_AREA (to determine if current zone is a battleground)   --
--- - PLAYER_LEVEL_UP (only registered if player level < level cap)            --
+-- - PLAYER_LEVEL_UP (only registered if playerLevel < maxLevel)              --
 --                                                                            --
 -- In Battleground:                                                           --
 -- # If enabled: ------------------------------------------------------------ --
@@ -219,6 +219,8 @@ local targetCountUpdate    = GetTime()      -- F targetcount: C.heckUnitTarget()
 local targetCountFrequency = 30             -- F targetcount: a complete raid/raidtarget check every 30 seconds (brute force)
 local latestScoreUpdate  = GetTime()        -- W scoreupdate: B.attlefieldScoreUpdate()
 local latestScoreWarning = 60               -- W scoreupdate: inCombat-warning icon
+local scoreFrequency = 1                    -- T scoreupdate
+local scoreCount     = 0                    -- T scoreupdate
 
 local playerLevel = UnitLevel("player") -- LVLCHK
 local isLowLevel
@@ -242,7 +244,7 @@ local oppositeFactionREAL    -- real opposite faction
 local ENEMY_Data = {}           -- key = numerical | all ENEMY data
 local ENEMY_Names = {}          -- key = enemyName | value = count
 local ENEMY_Name4Flag = {}      -- key = enemyName without realm | value = button number
-local ENEMY_Name2Button = {}    -- key = enemyName | value = button number
+local ENEMY_Name2Button = {}    -- key = enemyName               | value = button number
 local ENEMY_Name2Percent = {}   -- key = enemyName | value = health in percent
 local ENEMY_Name2Range = {}     -- key = enemyName | value = time of last contact
 local ENEMY_Name2Level = {}     -- key = enemyName | value = level
@@ -1900,7 +1902,6 @@ function BattlegroundTargets:CreateFrames()
 	GVAR.ScoreUpdateTexture:SetTexture(Textures.Path)
 	GVAR.ScoreUpdateTexture:SetTexCoord(unpack(Textures.UpdateWarning))
 
-	-- ----------------------------------------
 	GVAR.Summary = CreateFrame("Frame", nil, GVAR.TargetButton[1]) -- SUMMARY
 	GVAR.Summary:SetToplevel(true)
 	GVAR.Summary:SetWidth(140)
@@ -1977,46 +1978,8 @@ function BattlegroundTargets:CreateFrames()
 		GVAR.Summary.Logo1:SetTexture("Interface\\Timer\\Panda-Logo")
 		GVAR.Summary.Logo2:SetTexture("Interface\\Timer\\Panda-Logo")
 	end
-	-- ----------------------------------------
 
 	BattlegroundTargets:SummaryPosition()
-
-	-- ----------------------------------------
-	GVAR.WorldStateScoreWarning = CreateFrame("Frame", nil, WorldStateScoreFrame)
-	TEMPLATE.BorderTRBL(GVAR.WorldStateScoreWarning)
-	GVAR.WorldStateScoreWarning:SetToplevel(true)
-	-- GVAR.WorldStateScoreWarning:SetWidth()
-	GVAR.WorldStateScoreWarning:SetHeight(30)
-	GVAR.WorldStateScoreWarning:SetPoint("BOTTOM", WorldStateScoreFrame, "TOP", 0, 10)
-	GVAR.WorldStateScoreWarning:SetAlpha(0.75)
-	GVAR.WorldStateScoreWarning:Hide()
-
-	GVAR.WorldStateScoreWarning.Texture = GVAR.WorldStateScoreWarning:CreateTexture(nil, "ARTWORK")
-	GVAR.WorldStateScoreWarning.Texture:SetWidth(20) -- 62
-	GVAR.WorldStateScoreWarning.Texture:SetHeight(17.419) -- 54
-	GVAR.WorldStateScoreWarning.Texture:SetPoint("LEFT", GVAR.WorldStateScoreWarning, "LEFT", 5, 0)
-	GVAR.WorldStateScoreWarning.Texture:SetTexture("Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
-	GVAR.WorldStateScoreWarning.Texture:SetTexCoord(1/64, 63/64, 1/64, 55/64)
-
-	GVAR.WorldStateScoreWarning.Text = GVAR.WorldStateScoreWarning:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-	-- GVAR.WorldStateScoreWarning.Text:SetWidth()
-	GVAR.WorldStateScoreWarning.Text:SetHeight(30)
-	GVAR.WorldStateScoreWarning.Text:SetPoint("LEFT", GVAR.WorldStateScoreWarning.Texture, "RIGHT", 5, 0)
-	GVAR.WorldStateScoreWarning.Text:SetJustifyH("CENTER")
-	GVAR.WorldStateScoreWarning.Text:SetFont(fontPath, 10)
-	GVAR.WorldStateScoreWarning.Text:SetText(L["BattlegroundTargets does not update if this Tab is opened."])
-
-	GVAR.WorldStateScoreWarning.Close = CreateFrame("Button", nil, GVAR.WorldStateScoreWarning)
-	TEMPLATE.IconButton(GVAR.WorldStateScoreWarning.Close, 1)
-	GVAR.WorldStateScoreWarning.Close:SetWidth(20)
-	GVAR.WorldStateScoreWarning.Close:SetHeight(20)
-	GVAR.WorldStateScoreWarning.Close:SetPoint("TOPRIGHT", GVAR.WorldStateScoreWarning, "TOPRIGHT", 0, 0)
-	GVAR.WorldStateScoreWarning.Close:SetScript("OnClick", function() GVAR.WorldStateScoreWarning:Hide() end)
-
-	local w = GVAR.WorldStateScoreWarning.Text:GetStringWidth() + 20
-	GVAR.WorldStateScoreWarning.Text:SetWidth(w)
-	GVAR.WorldStateScoreWarning:SetWidth(30+w+30)
-	-- ----------------------------------------
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -3827,7 +3790,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	-- bg information
 	local numButtons = 0
-	local x = 0 for i = 1, #bgInfo[10] do x = x + 1 end if x > numButtons then numButtons = x end
+	local x = 0 for i = 1, #bgInfo[10] do x = x + 1 end numButtons = x
 	      x = 0 for i = 1, #bgInfo[15] do x = x + 1 end if x > numButtons then numButtons = x end
 	      x = 0 for i = 1, #bgInfo[40] do x = x + 1 end if x > numButtons then numButtons = x end
 
@@ -5194,16 +5157,16 @@ function BattlegroundTargets:LocalizedFontNameTest(show, font)
 			end
 		end
 		if IsModifierKeyDown() then return end
-		GVAR.TargetButton[1].Name:SetText(L["TEST_abc_"])
-		GVAR.TargetButton[2].Name:SetText(L["TEST_koKR_"])
-		GVAR.TargetButton[3].Name:SetText(L["TEST_ruRU_"])
-		GVAR.TargetButton[4].Name:SetText(L["TEST_zhCN_"])
-		GVAR.TargetButton[5].Name:SetText(L["TEST_zhTW_"])
-		GVAR.TargetButton[6].Name:SetText(L["TEST_Latin1_"])
-		GVAR.TargetButton[7].Name:SetText(L["TEST_Latin2_"])
-		GVAR.TargetButton[8].Name:SetText(L["TEST_Latin3_"])
-		GVAR.TargetButton[9].Name:SetText(L["TEST_Latin4_"])
-		GVAR.TargetButton[10].Name:SetText(L["TEST_Latin5_"])
+		GVAR.TargetButton[1].Name:SetText(L["Test_abc_"])
+		GVAR.TargetButton[2].Name:SetText(L["Test_koKR_"])
+		GVAR.TargetButton[3].Name:SetText(L["Test_ruRU_"])
+		GVAR.TargetButton[4].Name:SetText(L["Test_zhCN_"])
+		GVAR.TargetButton[5].Name:SetText(L["Test_zhTW_"])
+		GVAR.TargetButton[6].Name:SetText(L["Test_Latin1_"])
+		GVAR.TargetButton[7].Name:SetText(L["Test_Latin2_"])
+		GVAR.TargetButton[8].Name:SetText(L["Test_Latin3_"])
+		GVAR.TargetButton[9].Name:SetText(L["Test_Latin4_"])
+		GVAR.TargetButton[10].Name:SetText(L["Test_Latin5_"])
 	else
 		if font then
 			local f = fontStyles[ OPT.ButtonFontNameStyle[currentSize] ].font
@@ -5371,8 +5334,6 @@ function BattlegroundTargets:EnableConfigMode()
 			GVAR.TargetButton[i]:Hide()
 		end
 	end
-
-	BattlegroundTargets:ScoreWarningCheck()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -5466,25 +5427,6 @@ function BattlegroundTargets:DisableConfigMode()
 					GVAR_TargetButton.LeaderTexture:SetAlpha(0.75)
 				end
 			end
-		end
-	end
-	BattlegroundTargets:ScoreWarningCheck()
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:ScoreWarningCheck()
-	if not inBattleground then return end
-	local wssf = WorldStateScoreFrame
-	if wssf and wssf:IsShown() then
-		if BattlegroundTargets_Options.EnableBracket[currentSize] then
-			if wssf.selectedTab and wssf.selectedTab > 1 then
-				GVAR.WorldStateScoreWarning:Show()
-			else
-				GVAR.WorldStateScoreWarning:Hide()
-			end
-		else
-			GVAR.WorldStateScoreWarning:Hide()
 		end
 	end
 end
@@ -6248,9 +6190,16 @@ end
 function BattlegroundTargets:BattlefieldScoreUpdate()
 	local curTime = GetTime()
 	local diff = curTime - latestScoreUpdate
-	if diff < 0.5 then
-		return
+	if diff < scoreFrequency then return end
+	if scoreCount > 50 then -- 0-10 updates: 1 second | 11-50 updates: 2 seconds | 51+ updates: 5 seconds
+		scoreFrequency = 5
+	elseif scoreCount > 10 then
+		scoreFrequency = 2
+		scoreCount = scoreCount + 1
+	else
+		scoreCount = scoreCount + 1
 	end
+
 	if inCombat or InCombatLockdown() then
 		if diff >= latestScoreWarning then
 			GVAR.ScoreUpdateTexture:Show()
@@ -6261,9 +6210,6 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 		return
 	end
 
-	-- Button WorldStateScoreFrameTab1/2/3 (WorldStateFrame.xml) - 1 = all | 2 = Alliance | 3 = Horde
-	-- WorldStateScoreFrameTab_OnClick (WorldStateFrame.lua)
-	-- PanelTemplates_SetTab (UIPanelTemplates.lua)
 	local wssf = WorldStateScoreFrame
 	if wssf and wssf:IsShown() and wssf.selectedTab and wssf.selectedTab > 1 then
 		return
@@ -6365,7 +6311,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 				ENEMY_Names[name] = 0
 			end
 
-		else
+		elseif faction == playerFactionBG then
 
 			local role = 4
 			local spec = 5
@@ -6447,6 +6393,8 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	else
 		local zone = GetRealZoneText()
 		if bgMaps[zone] then
+			BattlegroundTargets:BattlefieldCheck()
+		elseif BGN[zone] then
 			BattlegroundTargets:BattlefieldCheck()
 		else
 			reSizeCheck = reSizeCheck + 1
@@ -6748,6 +6696,15 @@ function BattlegroundTargets:IsBattleground()
 			reSizeCheck = 10
 			currentSize = bgMaps[zone].bgSize
 			isFlagBG    = bgMaps[zone].flagBG
+		elseif BGN[zone] then
+			reSizeCheck = 10
+			for k in pairs(bgMaps) do
+				if k == BGN[zone] then
+					currentSize = bgMaps[k].bgSize
+					isFlagBG    = bgMaps[k].flagBG
+					break
+				end
+			end
 		else
 			if reSizeCheck == 10 then
 				Print("ERROR", "unknown battleground name", locale, bgName, zone)
@@ -6977,7 +6934,7 @@ function BattlegroundTargets:IsBattleground()
 						rangeMin = Min
 						rangeMax = Max
 						if not rangeSpellName then
-							Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
+							Print("ERROR", "unknown spell name (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN])
 						elseif (not rangeMin or not rangeMax) or (rangeMin <= 0 and rangeMax <= 0) then
 							Print("ERROR", "spell min/max fail (rangecheck)", locale, rangeSpellName, rangeMin, rangeMax)
 						else
@@ -7006,22 +6963,11 @@ function BattlegroundTargets:IsBattleground()
 		BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
 		BattlegroundTargets:BattlefieldScoreRequest()
 
-		local frequency = 1 --    0-20 updates = 1 second
-		local elapsed = 0   --   21-60 updates = 2 seconds
-		local count = 0     --   61+   updates = 5 seconds
+		local elapsed = 0
 		GVAR.MainFrame:SetScript("OnUpdate", function(self, elap)
 			elapsed = elapsed + elap
-			if elapsed < frequency then return end
+			if elapsed < scoreFrequency then return end
 			elapsed = 0
-			if count > 60 then
-				frequency = 5
-			elseif count > 20 then
-				frequency = 2
-				count = count + 1
-			else
-				count = count + 1
-			end
-			--print("OnUpdate", count, frequency) -- TEST
 			BattlegroundTargets:BattlefieldScoreRequest()
 		end)
 
@@ -7048,6 +6994,8 @@ function BattlegroundTargets:IsNotBattleground()
 	hasOrb = {Green={name=nil,orbval=nil},Blue={name=nil,orbval=nil},Purple={name=nil,orbval=nil},Orange={name=nil,orbval=nil}}
 	reCheckBG = nil
 	reCheckScore = nil
+	scoreFrequency = 1
+	scoreCount = 0
 
 	BattlegroundTargets.ForceDefaultFaction = nil
 	BattlegroundTargets.TrackFaction = nil
@@ -8314,10 +8262,10 @@ local function OnEvent(self, event, ...)
 
 	elseif event == "CHAT_MSG_BG_SYSTEM_HORDE" then
 		local arg1 = ...
-		BattlegroundTargets:CarrierCheck(arg1, 0) -- 'Horde'
+		BattlegroundTargets:CarrierCheck(arg1, 0)
 	elseif event == "CHAT_MSG_BG_SYSTEM_ALLIANCE" then
 		local arg1 = ...
-		BattlegroundTargets:CarrierCheck(arg1, 1) -- 'Alliance'
+		BattlegroundTargets:CarrierCheck(arg1, 1)
 	elseif event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
 		local arg1 = ...
 		BattlegroundTargets:FlagDebuffCheck(arg1)
@@ -8356,13 +8304,6 @@ local function OnEvent(self, event, ...)
 		BattlegroundTargets:LDBcheck()
 		BattlegroundTargets:CreateFrames()
 		BattlegroundTargets:CreateOptionsFrame()
-
-		hooksecurefunc("PanelTemplates_SetTab", function(frame)
-			if frame and frame == WorldStateScoreFrame then
-				BattlegroundTargets:ScoreWarningCheck()
-			end
-		end)
-
 		tinsert(UISpecialFrames, "BattlegroundTargets_OptionsFrame")
 		BattlegroundTargets:UnregisterEvent("PLAYER_LOGIN")
 	elseif event == "PLAYER_ENTERING_WORLD" then
@@ -8371,12 +8312,10 @@ local function OnEvent(self, event, ...)
 		BattlegroundTargets:BattlefieldCheck()
 		BattlegroundTargets:CheckIfPlayerIsGhost()
 		BattlegroundTargets:CreateMinimapButton()
-
 		if not BattlegroundTargets_Options.FirstRun then
 			BattlegroundTargets:Frame_Toggle(GVAR.OptionsFrame)
 			BattlegroundTargets_Options.FirstRun = true
 		end
-
 		BattlegroundTargets:UnregisterEvent("PLAYER_ENTERING_WORLD")
 	end
 end

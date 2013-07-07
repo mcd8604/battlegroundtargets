@@ -41,7 +41,6 @@ L["General Settings"] = true
 L["Show Minimap-Button"] = true
 
 L["click & move"] = true
-L["BattlegroundTargets does not update if this Tab is opened."] = true
 
 -- from GlobalStrings.lua
 L["Enable"] = ENABLE
@@ -55,14 +54,14 @@ L["10v10"] = format(PVP_TEAMTYPE, 10, 10)
 L["15v15"] = format(PVP_TEAMTYPE, 15, 15)
 L["40v40"] = format(PVP_TEAMTYPE, 40, 40)
 
--- font test for all languages, do not translate
-L["TEST_abc_"] = "abc_ABCXYZabcxyz_"
-L["TEST_koKR_"] = "koKR_발수요있눈봉우렬드_"
-L["TEST_ruRU_"] = "ruRU_бПдчжмШЭйФ_"
-L["TEST_zhCN_"] = "zhCN_夺兰古手变命使用_"
-L["TEST_zhTW_"] = "zhTW_對大顯以記已_"
-L["TEST_Latin1_"] = "Latin1_¡ÆâÜíßñØéùåçÏ_ŒŸ_"
-L["TEST_Latin2_"] = "Latin2_ĄŁĽŤžŕęďňýţ_"
-L["TEST_Latin3_"] = "Latin3_ĥĦ˘ËĵŜĊŭŝ_"
-L["TEST_Latin4_"] = "Latin4_įĸæĨĻĀōÂųũūŊĪ_"
-L["TEST_Latin5_"] = "Latin5_ĞİŞğışÿö_"
+-- font test for all languages
+L["Test_abc_"] = "abc_ABCXYZabcxyz_"
+L["Test_koKR_"] = "koKR_발수요있눈봉우렬드_"
+L["Test_ruRU_"] = "ruRU_бПдчжмШЭйФ_"
+L["Test_zhCN_"] = "zhCN_夺兰古手变命使用_"
+L["Test_zhTW_"] = "zhTW_對大顯以記已_"
+L["Test_Latin1_"] = "Latin1_¡ÆâÜíßñØéùåçÏ_ŒŸ_"
+L["Test_Latin2_"] = "Latin2_ĄŁĽŤžŕęďňýţ_"
+L["Test_Latin3_"] = "Latin3_ĥĦ˘ËĵŜĊŭŝ_"
+L["Test_Latin4_"] = "Latin4_įĸæĨĻĀōÂųũūŊĪ_"
+L["Test_Latin5_"] = "Latin5_ĞİŞğışÿö_"

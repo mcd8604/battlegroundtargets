@@ -41,4 +41,3 @@ L["General Settings"] = true
 L["Show Minimap-Button"] = true
 
 L["click & move"] = true
-L["BattlegroundTargets does not update if this Tab is opened."] = true

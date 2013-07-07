@@ -41,4 +41,3 @@ L["General Settings"] = "总体设定"
 L["Show Minimap-Button"] = "显示小地图图标"
 
 L["click & move"] = "点击移动"
-L["BattlegroundTargets does not update if this Tab is opened."] = "如果此标签打开 BattlegroundTargets 将不会更新。"

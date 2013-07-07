@@ -41,4 +41,3 @@ L["General Settings"] = "Configurações gerais"
 L["Show Minimap-Button"] = "Mostrar botão no minimapa"
 
 L["click & move"] = "clicar e mover"
-L["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets não se atualiza caso essa aba esteja aberta."

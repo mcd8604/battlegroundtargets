@@ -41,4 +41,3 @@ L["General Settings"] = "Общие настройки"
 L["Show Minimap-Button"] = "Отображать кнопку на мини-карте"
 
 L["click & move"] = "Нажмите & перемещайте"
-L["BattlegroundTargets does not update if this Tab is opened."] = "BattlegroundTargets не обновляет информацию если эта вкладка открыта."

@@ -41,4 +41,3 @@ L["General Settings"] = "總體設定"
 L["Show Minimap-Button"] = "顯示小地圖圖示"
 
 L["click & move"] = "點擊移動"
-L["BattlegroundTargets does not update if this Tab is opened."] = "如果此框體打開戰場目標將不會更新。"
