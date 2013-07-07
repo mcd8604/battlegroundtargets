@@ -10,9 +10,6 @@ L["Open Configuration"] = true
 L["Close Configuration"] = true
 
 L["Configuration"] = true
-L["10 vs 10"] = true
-L["15 vs 15"] = true
-L["40 vs 40"] = true
 L["Independent Positioning"] = true
 L["Layout"] = true
 L["Summary"] = true
@@ -54,6 +51,9 @@ L["Target"] = TARGET
 L["Focus"] = MINIMAP_TRACKING_FOCUS
 L["Class"] = CLASS
 L["Name"] = NAME
+L["10v10"] = format(PVP_TEAMTYPE, 10, 10)
+L["15v15"] = format(PVP_TEAMTYPE, 15, 15)
+L["40v40"] = format(PVP_TEAMTYPE, 40, 40)
 
 -- font test for all languages, do not translate
 L["TEST_abc_"] = "abc_ABCXYZabcxyz_"

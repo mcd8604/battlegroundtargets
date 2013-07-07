@@ -10,9 +10,6 @@ L["Open Configuration"] = "설정 창 열기"
 L["Close Configuration"] = "설정 창 닫기"
 
 L["Configuration"] = "설정"
-L["10 vs 10"] = "10 V 10"
-L["15 vs 15"] = "15 V 15"
-L["40 vs 40"] = "40 V 40"
 L["Independent Positioning"] = "독립 위치"
 L["Layout"] = "배치"
 L["Summary"] = "요약"
@@ -33,13 +30,13 @@ L["Range"] = "범위"
  L["(class dependent)"] = "(종속 직업)"
  L["Disable this option if you have CPU/FPS problems in combat."] = "전투 상태시 CPU/FPS에 문제가 있다면 이 옵션을 해제하십시오."
 L["Sort By"] = "정렬 방법"
-L["Text"] = "문자" -- need check
-L["Number"] = "번호" -- need check
+L["Text"] = "문자"
+L["Number"] = "번호"
 L["Scale"] = "크기"
 L["Width"] = "너비"
 L["Height"] = "높이"
 
-L["Options"] = "옵션" -- need check
+L["Options"] = "옵션"
 L["General Settings"] = "일반 설정"
 L["Show Minimap-Button"] = "미니맵 버튼 표시"
 

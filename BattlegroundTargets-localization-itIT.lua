@@ -10,9 +10,6 @@ L["Open Configuration"] = true
 L["Close Configuration"] = true
 
 L["Configuration"] = true
-L["10 vs 10"] = true
-L["15 vs 15"] = true
-L["40 vs 40"] = true
 L["Independent Positioning"] = true
 L["Layout"] = true
 L["Summary"] = true
@@ -23,7 +20,7 @@ L["Leader"] = true
 L["Flag"] = "Bandiera"
 L["Main Assist Target"] = true
 L["Target Count"] = true
-L["Health Bar"] = "Barra della salute" -- need check
+L["Health Bar"] = "Barra della salute"
 L["Percent"] = true
 L["Range"] = true
  L["This option uses the CombatLog to check range."] = true
@@ -33,13 +30,13 @@ L["Range"] = true
  L["(class dependent)"] = true
  L["Disable this option if you have CPU/FPS problems in combat."] = true
 L["Sort By"] = true
-L["Text"] = "Testo" -- need check
-L["Number"] = "Numero" -- need check
+L["Text"] = "Testo"
+L["Number"] = "Numero"
 L["Scale"] = true
 L["Width"] = true
 L["Height"] = true
 
-L["Options"] = "Opzioni" -- need check
+L["Options"] = "Opzioni"
 L["General Settings"] = true
 L["Show Minimap-Button"] = true
 

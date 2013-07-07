@@ -13,8 +13,8 @@ if locale == "deDE" then
 	-- Warsong Gulch & Twin Peaks: --> deDE: tested with Patch 4.3.0.15050 (LIVE)
 	FLG["WSG_TP_STRING_FLAG_DEBUFF1"] = "Eure Angriffe verursachen nun schwerere Verletzungen bei Flaggenträgern!"
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "Eure Angriffe verursachen nun sehr schwere Verletzungen bei Flaggenträgern!"
-	FLG["WSG_TP_PATTERN_PICKED1"] = "(.+) hat die Flagge der (%a+) aufgenommen!"
-	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+) hat die Flagge der (%a+) aufgenommen!" -- ruRU special
+	FLG["WSG_TP_PATTERN_PICKED1"] = "(.+) hat die Flagge der (.+) aufgenommen!"
+	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+) hat die Flagge der (.+) aufgenommen!" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "fallen lassen!"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "errungen!"
 	-- Eye of the Storm: --> deDE: tested with Patch 4.3.0.15050 (LIVE)
@@ -86,7 +86,7 @@ elseif locale == "frFR" then
 	FLG["WSG_TP_PATTERN_PICKED2"] = "a été ramassé par (.+) !" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "a été lâché"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "a pris le drapeau"
-	-- Eye of the Storm: --> frFR: tested with Patch 4.3.0.15050 (LIVE)
+	-- Eye of the Storm: --> frFR: tested with Patch 5.3.0.17128 (LIVE)
 	FLG["EOTS_PATTERN_PICKED"] = "(.+) a pris le drapeau !"
 	FLG["EOTS_STRING_DROPPED"] = "Le drapeau a été lâché !"
 	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "L'Alliance a pris le drapeau !"
@@ -105,8 +105,8 @@ elseif locale == "itIT" then
 	-- Warsong Gulch & Twin Peaks: --> itIT: tested with Patch 5.0.4.16016 (LIVE)
 	FLG["WSG_TP_STRING_FLAG_DEBUFF1"] = "I portatori di bandiera sono diventati vulnerabili agli attacchi!"
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "I portatori di bandiera sono diventati più vulnerabili agli attacchi!"
-	FLG["WSG_TP_PATTERN_PICKED1"] = "(.+) ha raccolto la bandiera dell'(%a+)!"
-	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+) ha raccolto la bandiera dell'(%a+)!" -- ruRU special
+	FLG["WSG_TP_PATTERN_PICKED1"] = "(.+) ha raccolto la bandiera dell'(.+)!"
+	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+) ha raccolto la bandiera dell'(.+)!" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "lasciato cadere la bandiera"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "conquistato la bandiera"
 	-- Eye of the Storm: --> itIT: tested with Patch 5.0.4.16016 (LIVE)
@@ -128,8 +128,8 @@ elseif locale == "koKR" then
 	-- Warsong Gulch & Twin Peaks: --> koKR: tested with Patch 4.3.2.15211 (PTR)
 	FLG["WSG_TP_STRING_FLAG_DEBUFF1"] = "깃발 운반자가 약해져서 쉽게 공격할 수 있습니다!"
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "깃발 운반자가 점점 약해져서 더욱 쉽게 공격할 수 있습니다!"
-	FLG["WSG_TP_PATTERN_PICKED1"] = "([^ ]*)|1이;가; ([^!]*) 깃발을 손에 넣었습니다!"
-	FLG["WSG_TP_PATTERN_PICKED2"] = "([^ ]*)|1이;가; ([^!]*) 깃발을 손에 넣었습니다!" -- ruRU special
+	FLG["WSG_TP_PATTERN_PICKED1"] = "(.+)|1이;가; (.+) 깃발을 손에 넣었습니다!"
+	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+)|1이;가; (.+) 깃발을 손에 넣었습니다!" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "깃발을 떨어뜨렸습니다!"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "깃발 쟁탈에 성공했습니다!"
 	-- Eye of the Storm: --> koKR: tested with Patch 4.3.2.15211 (PTR)
@@ -257,7 +257,7 @@ else--if locale == "enUS" then
 	FLG["TOK_PATTERN_RETURNED"] = "The (.+) orb has been returned!"
 	-- Deepwind Gorge: --> enUS: tested with Patch 5.4.0.17093 (PTR)
 	FLG["DG_PATTERN_TAKEN"] = "(.+) has taken the (.+) gold cart!"
-	FLG["DG_PATTERN_PICKED"] = "(.+) picked up the (.+) gold cart !"
+	FLG["DG_PATTERN_PICKED"] = "(.+) picked up the (.+) gold cart(%s*)!" -- "...gold cart !"
 	FLG["DG_PATTERN_DROPPED"] = "The (.+) have dropped the (.+) gold cart!"
 	FLG["DG_PATTERN_STOLEN"] = "The (.+) have stolen gold from the (.+)!"
 

@@ -11,7 +11,7 @@
 -- # Shows all battleground enemies with role, class and name.                --
 --   - Left-click : set target                                                --
 --   - Right-click: set focus                                                 --
--- # Independent settings for '10 vs 10', '15 vs 15' and '40 vs 40'.          --
+-- # Independent settings for '10v10', '15v15' and '40v40'.                   --
 -- # Specialization                                                           --
 -- # Target                                                                   --
 -- # Main Assist Target                                                       --
@@ -157,7 +157,6 @@ local UnitFactionGroup = UnitFactionGroup
 local UnitHealth = UnitHealth
 local UnitHealthMax = UnitHealthMax
 local UnitIsGroupLeader = UnitIsGroupLeader
-local UnitIsVisible = UnitIsVisible
 local UnitLevel = UnitLevel
 local UnitName = UnitName
 
@@ -167,8 +166,8 @@ BattlegroundTargets_Options = {} -- SavedVariable options table
 local BattlegroundTargets = CreateFrame("Frame") -- container
 
 local _, prg = ...
-local L if not prg.L then prg.L = {} end for k, v in pairs(prg.L) do if type(v) ~= "string" then prg.L[k] = tostring(k) end end
-      L   = prg.L   -- localization
+local L if not prg.L then return end for k, v in pairs(prg.L) do if type(v) ~= "string" then prg.L[k] = tostring(k) end end
+      L   = prg.L   -- localization L[
 local FLG = prg.FLG -- carrier strings
 local RNA = prg.RNA -- bg race names
 local BGN = prg.BGN -- localized battleground names
@@ -204,8 +203,6 @@ local flags = 0
 local isFlagBG = 0
 local flagCHK
 local flagflag
-local groupMembers = 0
-local groupMemChk = 0
 
 -- THROTTLE (reduce CPU usage) | FORCE UPDATE (precise results) | WARNING | MISC
 local range_SPELL_Frequency     = 0.2       -- T rangecheck: [class-spell]: in second per enemy (variable: ENEMY_Name2Range[enemyname]) 
@@ -278,24 +275,23 @@ local testData = {
 }
 
 local bgMaps = {}
+local bgInfo = {[10]={},[15]={},[40]={}}
 local function BuildBattlegroundMapTable()
-  for i = 1, GetNumBattlegroundTypes() do
-    local localizedName, _, _, _, bgID = GetBattlegroundInfo(i)
-    --print(i, localizedName, bgID) -- TEST
-        if bgID ==   1 then bgMaps[localizedName] = {bgSize = 40, flagBG = 0} -- Alterac Valley
-    elseif bgID ==   2 then bgMaps[localizedName] = {bgSize = 10, flagBG = 1} -- Warsong Gulch
-    elseif bgID ==   3 then bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Arathi Basin
-    elseif bgID ==   7 then bgMaps[localizedName] = {bgSize = 15, flagBG = 2} -- Eye of the Storm
-    elseif bgID ==   9 then bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Strand of the Ancients
-    elseif bgID ==  30 then bgMaps[localizedName] = {bgSize = 40, flagBG = 0} -- Isle of Conquest
-    elseif bgID == 108 then bgMaps[localizedName] = {bgSize = 10, flagBG = 3} -- Twin Peaks
-    elseif bgID == 120 then bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- The Battle for Gilneas
-    elseif bgID == 699 then bgMaps[localizedName] = {bgSize = 10, flagBG = 5} -- Temple of Kotmogu
-    elseif bgID == 708 then bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- Silvershard Mines
-    elseif bgID == 754 then bgMaps[localizedName] = {bgSize = 15, flagBG = 4} -- Deepwind Gorge
-    end
-  end
-  --for k, v in pairs(bgMaps) do print(k, v.bgSize, v.flagBG) end -- TEST
+	for i = 1, GetNumBattlegroundTypes() do
+		local localizedName, _, _, _, bgID, _, _, _, gameType, icon = GetBattlegroundInfo(i) --print(i, GetBattlegroundInfo(i))
+		    if bgID ==   1 then bgInfo[40][1] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = gameType, icon = icon} -- Alterac Valley
+		elseif bgID ==   2 then bgInfo[10][1] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 1, gameType = gameType, icon = icon} -- Warsong Gulch
+		elseif bgID ==   3 then bgInfo[15][1] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0, gameType = gameType, icon = icon} -- Arathi Basin
+		elseif bgID ==   7 then bgInfo[15][2] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 2, gameType = gameType, icon = icon} -- Eye of the Storm
+		elseif bgID ==   9 then bgInfo[15][3] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0, gameType = gameType, icon = icon} -- Strand of the Ancients
+		elseif bgID ==  30 then bgInfo[40][2] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = gameType, icon = icon} -- Isle of Conquest
+		elseif bgID == 108 then bgInfo[10][2] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 3, gameType = gameType, icon = icon} -- Twin Peaks
+		elseif bgID == 120 then bgInfo[10][3] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0, gameType = gameType, icon = icon} -- The Battle for Gilneas
+		elseif bgID == 699 then bgInfo[10][4] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 5, gameType = gameType, icon = icon} -- Temple of Kotmogu
+		elseif bgID == 708 then bgInfo[10][5] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0, gameType = gameType, icon = icon} -- Silvershard Mines
+		elseif bgID == 754 then bgInfo[15][4] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 4, gameType = gameType, icon = icon} -- Deepwind Gorge
+		end
+	end
 end
 
 local flagIDs = {
@@ -1300,34 +1296,10 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 21
 	end
 
-	if BattlegroundTargets_Options.version < 13 then
+	if BattlegroundTargets_Options.version < 15 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
 		BattlegroundTargets_Options.version = 21
-	end
-
-	if BattlegroundTargets_Options.version == 13 then -- range check option change
-		BattlegroundTargets_Options.ButtonTypeRangeCheck = {}
-		if BattlegroundTargets_Options.ButtonAvgRangeCheck then
-			if BattlegroundTargets_Options.ButtonAvgRangeCheck[10] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[10] = 1 else BattlegroundTargets_Options.ButtonTypeRangeCheck[10] = 2 end
-			if BattlegroundTargets_Options.ButtonAvgRangeCheck[15] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[15] = 1 else BattlegroundTargets_Options.ButtonTypeRangeCheck[15] = 2 end
-			if BattlegroundTargets_Options.ButtonAvgRangeCheck[40] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[40] = 1 else BattlegroundTargets_Options.ButtonTypeRangeCheck[40] = 2 end
-		elseif BattlegroundTargets_Options.ButtonClassRangeCheck then
-			if BattlegroundTargets_Options.ButtonClassRangeCheck[10] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[10] = 2 else BattlegroundTargets_Options.ButtonTypeRangeCheck[10] = 1 end
-			if BattlegroundTargets_Options.ButtonClassRangeCheck[15] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[15] = 2 else BattlegroundTargets_Options.ButtonTypeRangeCheck[15] = 1 end
-			if BattlegroundTargets_Options.ButtonClassRangeCheck[40] == true then BattlegroundTargets_Options.ButtonTypeRangeCheck[40] = 2 else BattlegroundTargets_Options.ButtonTypeRangeCheck[40] = 1 end
-		end
-		BattlegroundTargets_Options.ButtonAvgRangeCheck = nil
-		BattlegroundTargets_Options.ButtonClassRangeCheck = nil
-		BattlegroundTargets_Options.version = 14
-	end
-
-	if BattlegroundTargets_Options.version == 14 then -- font reset
-		if BattlegroundTargets_Options.ButtonFontStyle then
-			BattlegroundTargets_Options.ButtonFontStyle = nil
-			Print("Font reset.")
-		end
-		BattlegroundTargets_Options.version = 15
 	end
 
 	if BattlegroundTargets_Options.version == 15 then -- realm logic switch
@@ -1669,7 +1641,6 @@ function BattlegroundTargets:CreateFrames()
 	GVAR.MainFrame:SetClampedToScreen(true)
 	GVAR.MainFrame:SetWidth(150)
 	GVAR.MainFrame:SetHeight(20)
-	GVAR.MainFrame:SetScript("OnShow", function() BattlegroundTargets:MainFrameShow() end)
 	GVAR.MainFrame:SetScript("OnEnter", function()
 		if inCombat or InCombatLockdown() then return end
 		GVAR.MainFrame.Movetext:SetTextColor(1, 1, 1, 1)
@@ -2169,7 +2140,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	end)
 
 	GVAR.OptionsFrame.TabRaidSize10 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
-	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize10, L["10 vs 10"], BattlegroundTargets_Options.EnableBracket[10])
+	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize10, L["10v10"], BattlegroundTargets_Options.EnableBracket[10])
 	-- BOOM GVAR.OptionsFrame.TabRaidSize10:SetWidth()
 	GVAR.OptionsFrame.TabRaidSize10:SetHeight(22)
 	-- BOOM GVAR.OptionsFrame.TabRaidSize10:SetPoint()
@@ -2191,7 +2162,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	end)
 
 	GVAR.OptionsFrame.TabRaidSize15 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
-	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize15, L["15 vs 15"], BattlegroundTargets_Options.EnableBracket[15])
+	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize15, L["15v15"], BattlegroundTargets_Options.EnableBracket[15])
 	-- BOOM GVAR.OptionsFrame.TabRaidSize15:SetWidth()
 	GVAR.OptionsFrame.TabRaidSize15:SetHeight(22)
 	-- BOOM GVAR.OptionsFrame.TabRaidSize15:SetPoint()
@@ -2213,7 +2184,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	end)
 
 	GVAR.OptionsFrame.TabRaidSize40 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
-	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize40, L["40 vs 40"], BattlegroundTargets_Options.EnableBracket[40])
+	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize40, L["40v40"], BattlegroundTargets_Options.EnableBracket[40])
 	-- BOOM GVAR.OptionsFrame.TabRaidSize40:SetWidth()
 	GVAR.OptionsFrame.TabRaidSize40:SetHeight(22)
 	-- BOOM GVAR.OptionsFrame.TabRaidSize40:SetPoint()
@@ -2335,6 +2306,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.LayoutTHx24:SetChecked(false)
 		GVAR.OptionsFrame.LayoutTHx42:SetChecked(false)
 		GVAR.OptionsFrame.LayoutTHx81:SetChecked(false)
+		TEMPLATE.DisableSlider(GVAR.OptionsFrame.LayoutSpace)
 		BattlegroundTargets:SetupLayout()
 	end)
 	GVAR.OptionsFrame.LayoutTHx24 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -2346,6 +2318,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.LayoutTHx24:SetChecked(true)
 		GVAR.OptionsFrame.LayoutTHx42:SetChecked(false)
 		GVAR.OptionsFrame.LayoutTHx81:SetChecked(false)
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
 		BattlegroundTargets:SetupLayout()
 	end)
 	GVAR.OptionsFrame.LayoutTHx42 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -2357,6 +2330,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.LayoutTHx24:SetChecked(false)
 		GVAR.OptionsFrame.LayoutTHx42:SetChecked(true)
 		GVAR.OptionsFrame.LayoutTHx81:SetChecked(false)
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
 		BattlegroundTargets:SetupLayout()
 	end)
 	GVAR.OptionsFrame.LayoutTHx81 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -2368,6 +2342,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.LayoutTHx24:SetChecked(false)
 		GVAR.OptionsFrame.LayoutTHx42:SetChecked(false)
 		GVAR.OptionsFrame.LayoutTHx81:SetChecked(true)
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
 		BattlegroundTargets:SetupLayout()
 	end)
 	GVAR.OptionsFrame.LayoutSpace = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -2377,7 +2352,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		if value == BattlegroundTargets_Options.LayoutSpace[currentSize] then return end
 		BattlegroundTargets_Options.LayoutSpace[currentSize] = value
 		GVAR.OptionsFrame.LayoutSpaceText:SetText(value)
-		BattlegroundTargets:SetupLayout()
+		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
 	GVAR.OptionsFrame.LayoutSpace:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHx81, "RIGHT", 0, 0)
@@ -2446,7 +2421,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		if nvalue == BattlegroundTargets_Options.SummaryScaleRole[currentSize] then return end
 		BattlegroundTargets_Options.SummaryScaleRole[currentSize] = nvalue
 		GVAR.OptionsFrame.SummaryScaleRoleText:SetText(value.."%")
-		BattlegroundTargets:SummaryPosition()
+		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
 	GVAR.OptionsFrame.SummaryScaleRole:SetPoint("LEFT", GVAR.OptionsFrame.Summary, "RIGHT", 10, 0)
@@ -2481,7 +2456,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	-- copy settings
 	GVAR.OptionsFrame.CopySettings = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.TextButton(GVAR.OptionsFrame.CopySettings, format(L["Copy this settings to %s"], "|cffffffff"..L["15 vs 15"].."|r"), 4)
+	TEMPLATE.TextButton(GVAR.OptionsFrame.CopySettings, format(L["Copy this settings to %s"], "|cffffffff"..L["15v15"].."|r"), 4)
 	-- BOOM GVAR.OptionsFrame.CopySettings:SetPoint()
 	GVAR.OptionsFrame.CopySettings:SetPoint("TOP", GVAR.OptionsFrame.Dummy2, "BOTTOM", 0, -8)
 	-- BOOM GVAR.OptionsFrame.CopySettings:SetWidth()
@@ -3745,10 +3720,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.ButtonScale[currentSize] = nvalue
 		                        OPT.ButtonScale[currentSize] = nvalue
 		GVAR.OptionsFrame.ScaleValue:SetText(value.."%")
-		if inCombat or InCombatLockdown() then return end
-		for i = 1, currentSize do
-			GVAR.TargetButton[i]:SetScale(nvalue)
-		end
+		BattlegroundTargets:EnableConfigMode()
 	end,
 	"blank")
 	GVAR.OptionsFrame.ScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ScaleTitle, "RIGHT", 20, 0)
@@ -3852,6 +3824,81 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetPoint("CENTER", 0, 0)
 	GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
 	GVAR.OptionsFrame.TestShuffler:SetHighlightTexture(GVAR.OptionsFrame.TestShuffler.TextureHighlight)
+
+	-- bg information
+	local numButtons = 0
+	local x = 0 for i = 1, #bgInfo[10] do x = x + 1 end if x > numButtons then numButtons = x end
+	      x = 0 for i = 1, #bgInfo[15] do x = x + 1 end if x > numButtons then numButtons = x end
+	      x = 0 for i = 1, #bgInfo[40] do x = x + 1 end if x > numButtons then numButtons = x end
+
+	GVAR.OptionsFrame.ConfigBrackets.BGinformation = {}
+	for i = 1, numButtons do
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i] = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+		if i == 1 then
+			GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetPoint("TOPRIGHT", GVAR.OptionsFrame.ConfigBrackets, "TOPRIGHT", -10, -10)
+		else
+			GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetPoint("TOP", GVAR.OptionsFrame.ConfigBrackets.BGinformation[i-1], "BOTTOM", 0, 0)
+		end
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetWidth(42)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetHeight(42)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Background = GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:CreateTexture(nil, "BACKGROUND")
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Background:SetWidth(42)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Background:SetHeight(42)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Background:SetPoint("TOPRIGHT", 0, 0)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Background:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureBorder = GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:CreateTexture(nil, "ARTWORK")
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureBorder:SetWidth(48)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureBorder:SetHeight(48)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureBorder:SetPoint("BOTTOMRIGHT", 8, 2)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureBorder:SetTexture("Interface\\PVPFrame\\SilverIconBorder")
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Texture = GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:CreateTexture(nil, "BORDER")
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Texture:SetWidth(32)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Texture:SetHeight(32)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Texture:SetPoint("TOPRIGHT", 0, 0)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureHighlight = GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:CreateTexture(nil, "OVERLAY")
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureHighlight:SetWidth(32)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureHighlight:SetHeight(32)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureHighlight:SetPoint("TOPRIGHT", 0, 0)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureHighlight:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetHighlightTexture(GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureHighlight)
+
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetScript("OnEnter", function(self)
+			local bgName = self.bginfo
+			GVAR.OptionsFrame.ConfigBrackets.BGdata.Texture:SetTexture(bgMaps[bgName].icon)
+			GVAR.OptionsFrame.ConfigBrackets.BGdata.Title:SetText(bgName)
+			GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType:SetText(bgMaps[bgName].gameType)
+			GVAR.OptionsFrame.ConfigBrackets.BGdata:Show()
+		end)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetScript("OnLeave", function()
+			GVAR.OptionsFrame.ConfigBrackets.BGdata:Hide()
+		end)
+	end
+
+	GVAR.OptionsFrame.ConfigBrackets.BGdata = CreateFrame("Frame", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.ConfigBrackets.BGdata)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata:SetWidth(250)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata:SetHeight(150)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata:SetPoint("TOPRIGHT", GVAR.OptionsFrame.ConfigBrackets.BGinformation[1], "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata:SetToplevel(true)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata:Hide()
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.Title = GVAR.OptionsFrame.ConfigBrackets.BGdata:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.Title:SetWidth(300)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.Title:SetPoint("TOP", GVAR.OptionsFrame.ConfigBrackets.BGdata, "TOP", 0, -5)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.Title:SetJustifyH("CENTER")
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.Title:SetTextColor(1, 1, 0, 1)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType = GVAR.OptionsFrame.ConfigBrackets.BGdata:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType:SetWidth(300)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType:SetPoint("TOP", GVAR.OptionsFrame.ConfigBrackets.BGdata.Title, "BOTTOM", 0, -5)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType:SetJustifyH("CENTER")
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.Texture = GVAR.OptionsFrame.ConfigBrackets.BGdata:CreateTexture(nil, "ARTWORK")
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.Texture:SetWidth(100)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.Texture:SetHeight(100)
+	GVAR.OptionsFrame.ConfigBrackets.BGdata.Texture:SetPoint("TOP", GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType, "BOTTOM", 0, -5)
+
+	    if currentSize == 10 then BattlegroundTargets:BGInfo(10)
+	elseif currentSize == 15 then BattlegroundTargets:BGInfo(15)
+	elseif currentSize == 40 then BattlegroundTargets:BGInfo(40) end
 	-- ###
 	-- ####################################################################################################
 
@@ -3996,15 +4043,31 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:BGInfo(bracketSize)
+	local i = 1
+	while GVAR.OptionsFrame.ConfigBrackets.BGinformation[i] do
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:Hide()
+		i = i + 1
+	end
+	for i = 1, #bgInfo[bracketSize] do
+		local bgName = bgInfo[bracketSize][i]
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Texture:SetTexture(bgMaps[bgName].icon)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].bginfo = bgName
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:Show()
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:SetOptions()
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 	GVAR.OptionsFrame.EnableBracket:SetChecked(BattlegroundTargets_Options.EnableBracket[currentSize])
 	GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options.IndependentPositioning[currentSize])
 
 	if currentSize == 10 then
-		GVAR.OptionsFrame.CopySettings.Text:SetText(format(L["Copy this settings to %s"], "|cffffffff"..L["15 vs 15"].."|r"))
+		GVAR.OptionsFrame.CopySettings.Text:SetText(format(L["Copy this settings to %s"], "|cffffffff"..L["15v15"].."|r"))
 	elseif currentSize == 15 then
-		GVAR.OptionsFrame.CopySettings.Text:SetText(format(L["Copy this settings to %s"], "|cffffffff"..L["10 vs 10"].."|r"))
+		GVAR.OptionsFrame.CopySettings.Text:SetText(format(L["Copy this settings to %s"], "|cffffffff"..L["10v10"].."|r"))
 	end
 
 	local LayoutTH = BattlegroundTargets_Options.LayoutTH[currentSize]
@@ -4125,7 +4188,11 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 			TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.LayoutTHx42)
 		end
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.LayoutTHx81)
-		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
+		if BattlegroundTargets_Options.LayoutTH[bracketSize] == 18 then
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.LayoutSpace)
+		else
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
+		end
 
 		GVAR.OptionsFrame.SummaryText:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.Summary)
@@ -4314,6 +4381,9 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		GVAR.OptionsFrame.HeightTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 		GVAR.OptionsFrame.TestShuffler:Hide()
 	end
+	    if bracketSize == 10 then BattlegroundTargets:BGInfo(10)
+	elseif bracketSize == 15 then BattlegroundTargets:BGInfo(15)
+	elseif bracketSize == 40 then BattlegroundTargets:BGInfo(40) end
 end
 
 function BattlegroundTargets:DisableInsecureConfigWidges()
@@ -4603,7 +4673,7 @@ function BattlegroundTargets:SetupButtonLayout()
 		return
 	end
 
-	BattlegroundTargets:SetupLayout() -- TODO check if layout update is needed
+	BattlegroundTargets:SetupLayout()
 
 	local ButtonScale              = OPT.ButtonScale[currentSize]
 	local ButtonWidth              = OPT.ButtonWidth[currentSize]
@@ -5009,13 +5079,13 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 end
 
 function BattlegroundTargets:Frame_SavePosition(frameName)
-	-- from LibWindow-1.1 from Mikk
+	-- from LibWindow-1.1
 	local frame = _G[frameName]
 	local s = frame:GetScale()
-	local left,top = frame:GetLeft()*s, frame:GetTop()*s
-	local right,bottom = frame:GetRight()*s, frame:GetBottom()*s
+	local left, top = frame:GetLeft()*s, frame:GetTop()*s
+	local right, bottom = frame:GetRight()*s, frame:GetBottom()*s
 	local pwidth, pheight = UIParent:GetWidth(), UIParent:GetHeight()
-	local x,y,point
+	local x, y, point
 	if left < (pwidth-right) and left < abs((left+right)/2 - pwidth/2) then
 		x = left
 		point = "LEFT"
@@ -5038,6 +5108,7 @@ function BattlegroundTargets:Frame_SavePosition(frameName)
 	if point == "" then
 		point = "CENTER"
 	end
+	-- ------------------
 
 	local varName = frameName
 	if frameName == "BattlegroundTargets_MainFrame" and BattlegroundTargets_Options.IndependentPositioning[currentSize] then
@@ -5052,13 +5123,6 @@ function BattlegroundTargets:Frame_SavePosition(frameName)
 
 	_G[frameName]:ClearAllPoints()
 	_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:MainFrameShow()
-	if inCombat or InCombatLockdown() then return end
-	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -5287,14 +5351,12 @@ function BattlegroundTargets:EnableConfigMode()
 	-- Test Data END
 
 	currentSize = testSize
-	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
 	BattlegroundTargets:SetOptions()
 
-	GVAR.MainFrame:Show() -- HiDE
+	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
 	GVAR.MainFrame:EnableMouse(true)
-	GVAR.MainFrame:SetHeight(20)
-	GVAR.MainFrame.Movetext:Show()
-	GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, 0)
+	GVAR.MainFrame:SetAlpha(1)
+	GVAR.MainFrame:Show() -- POSiCHK
 	GVAR.ScoreUpdateTexture:Hide()
 
 	BattlegroundTargets:ShufflerFunc("ShuffleCheck")
@@ -5330,6 +5392,25 @@ function BattlegroundTargets:DisableConfigMode()
 		GVAR.TargetButton[i]:Hide()
 	end
 	isTarget = 0
+
+	--[[ TEST
+	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
+	GVAR.MainFrame:EnableMouse(false)
+	GVAR.MainFrame:SetAlpha(0)
+	GVAR.MainFrame:Show() -- POSiCHK
+	GVAR.ScoreUpdateTexture:Hide()
+	for i = 1, 40 do
+		local GVAR_TargetButton = GVAR.TargetButton[i]
+		if i < currentSize+1 then
+			BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, 1)
+			GVAR_TargetButton:Show()
+		else
+			GVAR_TargetButton:Hide()
+		end
+	end
+	BattlegroundTargets:SetupButtonLayout()
+	if not weuiwibcxcskgd then return end
+	--]]
 
 	BattlegroundTargets:BattlefieldCheck()
 
@@ -5455,12 +5536,12 @@ function BattlegroundTargets:SetConfigButtonValues()
 		-- range
 		if ButtonRangeCheck then
 			if testData.Range[i] < 40 then
-				Range_Display(true, GVAR_TargetButton, ButtonRangeDisplay)
+				Range_Display(true, GVAR_TargetButton)
 			else
 				Range_Display(false, GVAR_TargetButton, ButtonRangeDisplay)
 			end
 		else
-			Range_Display(true, GVAR_TargetButton, ButtonRangeDisplay)
+			Range_Display(true, GVAR_TargetButton)
 		end
 	end
 
@@ -5561,7 +5642,11 @@ function BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, clearRan
 	GVAR_TargetButton.ClassColorBackground:SetTexture(0, 0, 0, 0)
 	
 	if clearRange then
-		Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+		if OPT.ButtonRangeCheck[currentSize] then
+			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+		else
+			Range_Display(true, GVAR_TargetButton)
+		end
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -5642,15 +5727,19 @@ function BattlegroundTargets:ShufflerFunc(what)
 		GVAR.OptionsFrame.TestShuffler.Texture:SetSize(30, 30)
 		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetSize(30, 30)
 	elseif what == "ShuffleCheck" then
-		if OPT.ButtonShowTarget[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowFlag[currentSize]       then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowHealthBar[currentSize]  then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowHealthText[currentSize] then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowFocus[currentSize]      then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowAssist[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonShowLeader[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
-		if OPT.ButtonRangeCheck[currentSize]     then GVAR.OptionsFrame.TestShuffler:Show() return end
-		GVAR.OptionsFrame.TestShuffler:Hide()
+		if OPT.ButtonShowTarget[currentSize] or
+		   OPT.ButtonShowFlag[currentSize] or
+		   OPT.ButtonShowHealthBar[currentSize] or
+		   OPT.ButtonShowHealthText[currentSize] or
+		   OPT.ButtonShowFocus[currentSize] or
+		   OPT.ButtonShowAssist[currentSize] or
+		   OPT.ButtonShowLeader[currentSize] or
+		   OPT.ButtonRangeCheck[currentSize]
+		then
+			GVAR.OptionsFrame.TestShuffler:Show()
+		else
+			GVAR.OptionsFrame.TestShuffler:Hide()
+		end
 	end
 end
 
@@ -6001,17 +6090,15 @@ function BattlegroundTargets:MainDataUpdate()
 				end
 			end
 
-			if ButtonShowHealthBar or ButtonShowHealthText then
-				if nameE and percentE then
-					if ButtonShowHealthBar then
-						local width = healthBarWidth * (percentE / 100)
-						width = math_max(0.01, width)
-						width = math_min(healthBarWidth, width)
-						GVAR_TargetButton.HealthBar:SetWidth(width)
-					end
-					if ButtonShowHealthText then
-						GVAR_TargetButton.HealthText:SetText(percentE)
-					end
+			if nameE and percentE then
+				if ButtonShowHealthBar then
+					local width = healthBarWidth * (percentE / 100)
+					width = math_max(0.01, width)
+					width = math_min(healthBarWidth, width)
+					GVAR_TargetButton.HealthBar:SetWidth(width)
+				end
+				if ButtonShowHealthText then
+					GVAR_TargetButton.HealthText:SetText(percentE)
 				end
 			end
 
@@ -6212,6 +6299,30 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 		end
 	end
 
+	--[[ RNA bg racename TEST
+	if not BattlegroundTargets.TrackFaction and playerFactionDEF == playerFactionBG then
+		if not BattlegroundTargets_Options.rnatest         then BattlegroundTargets_Options.rnatest         = {} end
+		if not BattlegroundTargets_Options.rnatest[locale] then BattlegroundTargets_Options.rnatest[locale] = {} end
+		local fFaction = "HORDE"
+		local eFaction = "ALLIANCE"
+		if playerFactionDEF == 1 then
+			fFaction = "ALLIANCE"
+			eFaction = "HORDE"
+		end
+		for index = 1, numScore do
+			local name, _, _, _, _, faction, race = GetBattlefieldScore(index)
+			if not name then break end
+			if race then
+				if faction == oppositeFactionBG then
+					BattlegroundTargets_Options.rnatest[locale][race] = eFaction
+				elseif faction == playerFactionBG then
+					BattlegroundTargets_Options.rnatest[locale][race] = fFaction
+				end
+			end
+		end
+	end
+	--]]
+
 	for index = 1, numScore do
 		local name, _, _, _, _, faction, _, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
 		if not name then break end
@@ -6358,7 +6469,7 @@ function BattlegroundTargets:CheckOrb(enemyID, enemyName, buttonNum)
 				end
 			end
 			if not hasflg then
-				flags = flags + 1 --print("CheckOrb", flags) -- FLAG_TOK_CHK
+				flags = flags + 1 -- FLAG_TOK_CHK
 			end
 
 			local oID = orbIDs[spellId]
@@ -6457,12 +6568,11 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 			BattlegroundTargets:CheckFlagCarrierEND()
 			return
 		end
-		-- enemy debuff check
 		for i = 1, 40 do
 			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(unit, i)
 			if not spellId then break end
 			if orbIDs[spellId] then
-				flags = flags + 1 --print("CheckFlagCarrierCHECK", flags) -- FLAG_TOK_CHK
+				flags = flags + 1 -- FLAG_TOK_CHK
 
 				local button = ENEMY_Name2Button[targetName]
 				if button then
@@ -6491,11 +6601,12 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 
 	ENEMY_FirstFlagCheck[targetName] = nil
 
-	local x = 0
+	local x
 	for k in pairs(ENEMY_FirstFlagCheck) do
-		x = x + 1
+		x = true
+		break
 	end
-	if x == 0 then
+	if not x then
 		BattlegroundTargets:CheckFlagCarrierEND()
 	end
 end
@@ -6546,7 +6657,7 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 				local _, _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("raid"..num, i)
 				if not spellId then break end
 				if orbIDs[spellId] then
-					flags = flags + 1 --print("CheckFlagCarrierSTART", flags) -- FLAG_TOK_CHK
+					flags = flags + 1 -- FLAG_TOK_CHK
 					break
 				end
 			end
@@ -6611,7 +6722,7 @@ function BattlegroundTargets:IsBattleground()
 
 	local queueStatus, queueMapName, bgName
 	for i=1, GetMaxBattlefieldID() do
-		queueStatus, queueMapName = GetBattlefieldStatus(i)
+		queueStatus, queueMapName = GetBattlefieldStatus(i) --print(i, GetBattlefieldStatus(i))
 		if queueStatus == "active" then
 			bgName = queueMapName
 			break
@@ -6624,8 +6735,13 @@ function BattlegroundTargets:IsBattleground()
 		isFlagBG    = bgMaps[bgName].flagBG
 	elseif BGN[bgName] then
 		reSizeCheck = 10
-		currentSize = BGN[bgName].bgSize
-		isFlagBG    = BGN[bgName].flagBG
+		for k in pairs(bgMaps) do
+			if k == BGN[bgName] then
+				currentSize = bgMaps[k].bgSize
+				isFlagBG    = bgMaps[k].flagBG
+				break
+			end
+		end
 	else
 		local zone = GetRealZoneText()
 		if bgMaps[zone] then
@@ -6691,11 +6807,10 @@ function BattlegroundTargets:IsBattleground()
 
 		if BattlegroundTargets_Options.EnableBracket[currentSize] then
 
-			GVAR.MainFrame:Show() -- HiDE
+			BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
 			GVAR.MainFrame:EnableMouse(false)
-			GVAR.MainFrame:SetHeight(0.001)
-			GVAR.MainFrame.Movetext:Hide()
-			GVAR.TargetButton[1]:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, -(20 / OPT.ButtonScale[currentSize]))
+			GVAR.MainFrame:SetAlpha(0)
+			GVAR.MainFrame:Show() -- POSiCHK
 			GVAR.ScoreUpdateTexture:Hide()
 
 			for i = 1, 40 do
@@ -6718,10 +6833,7 @@ function BattlegroundTargets:IsBattleground()
 				GVAR.Summary.DamageEnemy:SetText("0")
 			end
 
-			-- The flag/cart texture is defined (SetTexture) here (at STARTofBG) for one battleground game because the texture depends on bg and faction.
-			-- The orb texture is defined at the MainDataUpdate() function.
 			if OPT.ButtonShowFlag[currentSize] then
-
 				-- flag
 				if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
 					local flagIcon -- setup_flag_texture
@@ -6747,7 +6859,6 @@ function BattlegroundTargets:IsBattleground()
 						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.15625001, 0.84374999, 0.15625001, 0.84374999)--(5/32, 27/32, 5/32, 27/32)
 						GVAR.TargetButton[i].orbDebuffUpdate = nil
 					end
-
 				-- cart
 				elseif isFlagBG == 4 then
 					local flagIcon -- setup_flag_texture
@@ -6765,7 +6876,6 @@ function BattlegroundTargets:IsBattleground()
 						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.09375, 0.90625, 0.09375, 0.90625)--(3/32, 29/32, 3/32, 29/32)
 						GVAR.TargetButton[i].orbDebuffUpdate = nil
 					end
-
 				-- orb
 				elseif isFlagBG == 5 then
 					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] * 1.3
@@ -6776,7 +6886,6 @@ function BattlegroundTargets:IsBattleground()
 						GVAR.TargetButton[i].orbDebuffUpdate = curTime
 					end
 				end
-
 			end
 
 		else
@@ -6939,8 +7048,6 @@ function BattlegroundTargets:IsNotBattleground()
 	hasOrb = {Green={name=nil,orbval=nil},Blue={name=nil,orbval=nil},Purple={name=nil,orbval=nil},Orange={name=nil,orbval=nil}}
 	reCheckBG = nil
 	reCheckScore = nil
-	groupMembers = 0
-	groupMemChk = 0
 
 	BattlegroundTargets.ForceDefaultFaction = nil
 	BattlegroundTargets.TrackFaction = nil
@@ -7111,7 +7218,7 @@ function BattlegroundTargets:CheckPlayerFocus()
 		end
 		if IsSpellInRange(rangeSpellName, "focus") == 1 then
 			ENEMY_Name2Range[playerFocusName] = curTime
-			Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+			Range_Display(true, GVAR_TargetButton)
 		else
 			ENEMY_Name2Range[playerFocusName] = nil
 			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
@@ -7324,7 +7431,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		end
 		if IsSpellInRange(rangeSpellName, enemyID) == 1 then
 			ENEMY_Name2Range[enemyName] = curTime
-			Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+			Range_Display(true, GVAR_TargetButton)
 		else
 			ENEMY_Name2Range[enemyName] = nil
 			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
@@ -7416,7 +7523,7 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 		end
 		if IsSpellInRange(rangeSpellName, targetID) == 1 then
 			ENEMY_Name2Range[targetName] = curTime
-			Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+			Range_Display(true, GVAR_TargetButton)
 		else
 			ENEMY_Name2Range[targetName] = nil
 			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
@@ -7488,7 +7595,7 @@ function BattlegroundTargets:OrbReturnCheck(message)
 	if orbColor then
 		local color = orbData(orbColor)
 		wipe(hasOrb[color])
-		flags = flags - 1 --print("OrbReturnCheck", flags) -- FLAG_TOK_CHK
+		flags = flags - 1 -- FLAG_TOK_CHK
 		if flags < 0 then
 			flags = 0
 		end
@@ -7774,7 +7881,7 @@ function BattlegroundTargets:Carrier_TOK(message, messageFaction)
 			local color = orbData(orbColor)
 			--print("taken friend", orbCarrier, orbColor, color)
 			wipe(hasOrb[color])
-			flags = flags + 1 --print("Carrier_TOK", flags) -- FLAG_TOK_CHK
+			flags = flags + 1 -- FLAG_TOK_CHK
 			if flagCHK and flags >= 4 then
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
@@ -7800,7 +7907,7 @@ function BattlegroundTargets:Carrier_TOK(message, messageFaction)
 			local color, texture = orbData(orbColor)
 			--print("taken enemy", orbCarrier, orbColor, color)
 			wipe(hasOrb[color])
-			flags = flags + 1 --print("Carrier_TOK", flags) -- FLAG_TOK_CHK
+			flags = flags + 1 -- FLAG_TOK_CHK
 			if flagCHK and flags >= 4 then
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
@@ -7896,7 +8003,7 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 				if sourceButton then
 					local GVAR_TargetButton = GVAR.TargetButton[sourceButton]
 					if GVAR_TargetButton then
-						Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+						Range_Display(true, GVAR_TargetButton)
 					end
 				end
 				if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
@@ -7931,7 +8038,7 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 				if sourceButton then
 					local GVAR_TargetButton = GVAR.TargetButton[sourceButton]
 					if GVAR_TargetButton then
-						Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+						Range_Display(true, GVAR_TargetButton)
 					end
 				end
 				if range_CL_DisplayThrottle + range_CL_DisplayFrequency > curTime then return end
@@ -7952,7 +8059,7 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 				if sourceButton then
 					local GVAR_TargetButton = GVAR.TargetButton[sourceButton]
 					if GVAR_TargetButton then
-						Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+						Range_Display(true, GVAR_TargetButton)
 					end
 				end
 			elseif FRIEND_Names[destName] then
@@ -7972,7 +8079,7 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 				if destButton then
 					local GVAR_TargetButton = GVAR.TargetButton[destButton]
 					if GVAR_TargetButton then
-						Range_Display(true, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+						Range_Display(true, GVAR_TargetButton)
 					end
 				end
 			elseif FRIEND_Names[sourceName] then
@@ -8013,7 +8120,7 @@ function BattlegroundTargets:UpdateRange(curTime)
 		else
 			local GVAR_TargetButton = GVAR.TargetButton[button]
 			if GVAR_TargetButton then
-				Range_Display(true, GVAR_TargetButton, ButtonRangeDisplay)
+				Range_Display(true, GVAR_TargetButton)
 			end
 		end
 	end
