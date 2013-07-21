@@ -4604,7 +4604,6 @@ end
 function BattlegroundTargets:SetupLayout()
 	if inCombat or InCombatLockdown() then
 		reCheckBG = true
-		reSetLayout = true
 		return
 	end
 
@@ -4749,7 +4748,6 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:SetupButtonLayout()
 	if inCombat or InCombatLockdown() then
-		reCheckBG = true
 		reSetLayout = true
 		return
 	end
@@ -5349,7 +5347,6 @@ end
 function BattlegroundTargets:EnableConfigMode()
 	if inCombat or InCombatLockdown() then
 		reCheckBG = true
-		reSetLayout = true
 		return
 	end
 
@@ -5438,6 +5435,7 @@ function BattlegroundTargets:EnableConfigMode()
 	GVAR.MainFrame:EnableMouse(true)
 	GVAR.MainFrame:SetAlpha(1)
 	GVAR.MainFrame:Show() -- POSiCHK
+	GVAR.MainFrameMoverFrame:Show()
 	GVAR.ScoreUpdateTexture:Show()
 
 	BattlegroundTargets:ShufflerFunc("ShuffleCheck")
@@ -5459,10 +5457,10 @@ end
 function BattlegroundTargets:DisableConfigMode()
 	if inCombat or InCombatLockdown() then
 		reCheckBG = true
-		reSetLayout = true
 		return
 	end
 
+	scoreFrequency = 0 -- immediate score update
 	currentSize = testSize
 	BattlegroundTargets:SetOptions()
 
@@ -5477,6 +5475,7 @@ function BattlegroundTargets:DisableConfigMode()
 	GVAR.MainFrame:EnableMouse(false)
 	GVAR.MainFrame:SetAlpha(0)
 	GVAR.MainFrame:Show() -- POSiCHK
+	GVAR.MainFrameMoverFrame:Hide()
 	GVAR.ScoreUpdateTexture:Hide()
 	for i = 1, 40 do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
@@ -6623,6 +6622,7 @@ function BattlegroundTargets:IsBattleground()
 			GVAR.MainFrame:EnableMouse(false)
 			GVAR.MainFrame:SetAlpha(0)
 			GVAR.MainFrame:Show() -- POSiCHK
+			GVAR.MainFrameMoverFrame:Hide()
 			GVAR.ScoreUpdateTexture:Hide()
 
 			for i = 1, 40 do
@@ -8287,7 +8287,11 @@ local function OnEvent(self, event, ...)
 		end
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		inCombat = false
-		if reCheckScore or reCheckBG then
+		if reCheckBG then
+			if not inWorld then return end
+			BattlegroundTargets:BattlefieldCheck()
+		end
+		if reCheckScore then
 			if not inWorld then return end
 			BattlegroundTargets:BattlefieldScoreRequest()
 		end
@@ -8300,17 +8304,6 @@ local function OnEvent(self, event, ...)
 		if reSetLayout then
 			if not inWorld then return end
 			BattlegroundTargets:SetupButtonLayout()
-			if inBattleground then
-				if not BattlegroundTargets_Options.EnableBracket[currentSize] then
-					if GVAR.MainFrame:IsShown() and not GVAR.OptionsFrame:IsShown() then
-						BattlegroundTargets:DisableConfigMode()
-					end
-				end
-			else
-				if GVAR.MainFrame:IsShown() and not GVAR.OptionsFrame:IsShown() then
-					BattlegroundTargets:DisableConfigMode()
-				end
-			end
 		end
 		if isConfig then
 			if not inWorld then return end
