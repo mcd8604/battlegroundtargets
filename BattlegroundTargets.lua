@@ -217,10 +217,10 @@ local assistUpdate    = GetTime()           -- F assist: C.heckUnitTarget()
 local assistFrequency = 0.5                 -- F assist: immediate assist target check (brute force)
 local targetCountUpdate    = GetTime()      -- F targetcount: C.heckUnitTarget()
 local targetCountFrequency = 30             -- F targetcount: a complete raid/raidtarget check every 30 seconds (brute force)
-local latestScoreUpdate  = GetTime()        -- W scoreupdate: B.attlefieldScoreUpdate()
-local latestScoreWarning = 60               -- W scoreupdate: inCombat-warning icon
-local scoreFrequency = 1                    -- T scoreupdate
-local scoreCount     = 0                    -- T scoreupdate
+local scoreLastUpdate = GetTime()           -- W scoreupdate: B.attlefieldScoreUpdate()
+local scoreWarning    = 60                  -- W scoreupdate: inCombat-warning icon
+local scoreFrequency  = 1                   -- T scoreupdate
+local scoreCount      = 0                   -- T scoreupdate
 
 local playerLevel = UnitLevel("player") -- LVLCHK
 local isLowLevel
@@ -5550,7 +5550,7 @@ function BattlegroundTargets:DisableConfigMode()
 		end
 	end
 	
-	if curTime - latestScoreUpdate >= latestScoreWarning then
+	if curTime - scoreLastUpdate >= scoreWarning then
 		GVAR.ScoreUpdateTexture:Show()
 	else
 		GVAR.ScoreUpdateTexture:Hide()
@@ -6317,7 +6317,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:BattlefieldScoreUpdate()
 	local curTime = GetTime()
-	local diff = curTime - latestScoreUpdate
+	local diff = curTime - scoreLastUpdate
 	if diff < scoreFrequency then return end
 	if scoreCount > 50 then -- 0-10 updates: 1 second | 11-50 updates: 2 seconds | 51+ updates: 5 seconds
 		scoreFrequency = 5
@@ -6329,7 +6329,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	end
 
 	if inCombat or InCombatLockdown() then
-		if diff >= latestScoreWarning then
+		if diff >= scoreWarning then
 			GVAR.ScoreUpdateTexture:Show()
 		else
 			GVAR.ScoreUpdateTexture:Hide()
@@ -6344,7 +6344,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	end
 
 	reCheckScore = nil
-	latestScoreUpdate = curTime
+	scoreLastUpdate = curTime
 	GVAR.ScoreUpdateTexture:Hide()
 
 	wipe(ENEMY_Data)
@@ -6503,255 +6503,6 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 		else
 			reSizeCheck = reSizeCheck + 1
 		end
-	end
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckOrb(enemyID, enemyName, buttonNum)
-	for i = 1, 40 do
-		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(enemyID, i)
-		if not spellId then return end
-		if orbIDs[spellId] then
-			local hasflg
-			for k, v in pairs(hasOrb) do
-				if v.name == enemyName then
-					hasflg = true
-					break
-				end
-			end
-			if not hasflg then
-				flags = flags + 1 -- FLAG_TOK_CHK
-			end
-
-			local oID = orbIDs[spellId]
-			hasOrb[ oID.color ].name = enemyName
-			hasOrb[ oID.color ].orbval = val2
-			GVAR.TargetButton[buttonNum].orbColor = oID.color
-			GVAR.TargetButton[buttonNum].FlagTexture:SetAlpha(1)
-			GVAR.TargetButton[buttonNum].FlagTexture:SetTexture(oID.texture)
-			BattlegroundTargets:SetOrbDebuff(GVAR.TargetButton[buttonNum], val2)
-			BattlegroundTargets:SetOrbCorner(GVAR.TargetButton[buttonNum], oID.color)
-
-			if flagCHK and flags >= 4 then
-				BattlegroundTargets:CheckFlagCarrierEND()
-			end
-			return
-		end
-	end
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
-	if not ENEMY_FirstFlagCheck[targetName] then return end
-
-	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
-
-		-- enemy buff & debuff check
-		for i = 1, 40 do
-			local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unit, i)
-			if not spellId then break end
-			if flagIDs[spellId] then
-				hasFlag = targetName
-				flagDebuff = 0
-				flags = flags + 1
-
-				for j = 1, 40 do
-					local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(unit, j)
-					if not spellId then break end
-					if debuffIDs[spellId] then
-						flagDebuff = count
-						break
-					end
-				end
-
-				local GVAR_TargetButton = GVAR.TargetButton
-				for j = 1, currentSize do
-					GVAR_TargetButton[j].FlagTexture:SetAlpha(0)
-					GVAR_TargetButton[j].FlagDebuff:SetText("")
-				end
-				local button = ENEMY_Name2Button[targetName]
-				if button then
-					local GVAR_TargetButton = GVAR.TargetButton[button]
-					if GVAR_TargetButton then
-						GVAR_TargetButton.FlagTexture:SetAlpha(1)
-						BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
-					end
-				end
-
-				BattlegroundTargets:CheckFlagCarrierEND()
-				return
-			end
-		end
-
-	elseif isFlagBG == 4 then
-
-		-- enemy buff check
-		for i = 1, 40 do
-			local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unit, i)
-			if not spellId then break end
-			if flagIDs[spellId] then
-				hasFlag = targetName
-
-				local GVAR_TargetButton = GVAR.TargetButton
-				for j = 1, currentSize do
-					GVAR_TargetButton[j].FlagTexture:SetAlpha(0)
-					GVAR_TargetButton[j].FlagDebuff:SetText("")
-				end
-				local button = ENEMY_Name2Button[targetName]
-				if button then
-					local GVAR_TargetButton = GVAR.TargetButton[button]
-					if GVAR_TargetButton then
-						GVAR_TargetButton.FlagTexture:SetAlpha(1)
-						GVAR_TargetButton.FlagDebuff:SetText("")
-					end
-				end
-
-				BattlegroundTargets:CheckFlagCarrierEND()
-				return
-			end
-		end
-
-	elseif isFlagBG == 5 then
-
-		-- enemy debuff check
-		if flags >= 4 then
-			BattlegroundTargets:CheckFlagCarrierEND()
-			return
-		end
-		for i = 1, 40 do
-			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(unit, i)
-			if not spellId then break end
-			if orbIDs[spellId] then
-				flags = flags + 1 -- FLAG_TOK_CHK
-
-				local button = ENEMY_Name2Button[targetName]
-				if button then
-					local GVAR_TargetButton = GVAR.TargetButton[button]
-					if GVAR_TargetButton then
-						local oID = orbIDs[spellId]
-						hasOrb[ oID.color ].name = targetName
-						hasOrb[ oID.color ].orbval = val2
-						GVAR.TargetButton[button].orbColor = oID.color
-						GVAR_TargetButton.FlagTexture:SetAlpha(1)
-						GVAR_TargetButton.FlagTexture:SetTexture(oID.texture)
-						BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, val2)
-						BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, oID.color)
-					end
-				end
-
-				if flags >= 4 then
-					BattlegroundTargets:CheckFlagCarrierEND()
-					return
-				end
-				break
-			end
-		end
-
-	end
-
-	ENEMY_FirstFlagCheck[targetName] = nil
-
-	local x
-	for k in pairs(ENEMY_FirstFlagCheck) do
-		x = true
-		break
-	end
-	if not x then
-		BattlegroundTargets:CheckFlagCarrierEND()
-	end
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
-	flagCHK = true
-	flagflag = true
-
-	wipe(ENEMY_FirstFlagCheck)
-	for i = 1, #ENEMY_Data do
-		ENEMY_FirstFlagCheck[ENEMY_Data[i].name] = 1
-	end
-
-	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
-
-		-- friend buff & debuff check
-		local function chk()
-			for num = 1, GetNumGroupMembers() do
-				local unitID = "raid"..num
-				for i = 1, 40 do
-					local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unitID, i)
-					if not spellId then break end
-					if flagIDs[spellId] then
-						flagDebuff = 0
-						flags = 1
-						for j = 1, 40 do
-							local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(unitID, j)
-							if not spellId then break end
-							if debuffIDs[spellId] then
-								flagDebuff = count
-								return
-							end
-						end
-						return
-					end
-				end
-			end
-		end
-		chk()
-
-	elseif isFlagBG == 5 then
-
-		-- friend debuff check
-		for num = 1, GetNumGroupMembers() do
-			for i = 1, 40 do
-				local _, _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("raid"..num, i)
-				if not spellId then break end
-				if orbIDs[spellId] then
-					flags = flags + 1 -- FLAG_TOK_CHK
-					break
-				end
-			end
-		end
-		if flags >= 4 then
-			BattlegroundTargets:CheckFlagCarrierEND()
-			return
-		end
-
-	end
-
-	BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-	BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-	BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckFlagCarrierEND() -- FLAGSPY
-	flagCHK = nil
-	flagflag = true
-	wipe(ENEMY_FirstFlagCheck)
-	if not OPT.ButtonShowHealthBar[currentSize] and
-	   not OPT.ButtonShowHealthText[currentSize] and
-	   not OPT.ButtonShowTargetCount[currentSize] and
-	   not OPT.ButtonShowAssist[currentSize] and
-	   not OPT.ButtonShowLeader[currentSize] and
-	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2) and
-	   not isLowLevel -- LVLCHK
-	then
-		BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
-	end
-	if not OPT.ButtonShowHealthBar[currentSize] and
-	   not OPT.ButtonShowHealthText[currentSize] and
-	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2)
-	then
-		BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
-	end
-	if not OPT.ButtonShowTarget[currentSize] and
-	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2)
-	then
-		BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -7462,7 +7213,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	if isFlagBG == 5 and GVAR_TargetButton.orbColor and OPT.ButtonShowFlag[currentSize] then
 		if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
 			GVAR.TargetButton[enemyButton].orbDebuffUpdate = curTime
-			BattlegroundTargets:CheckOrb(enemyID, enemyName, enemyButton)
+			BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, enemyButton)
 		end
 	end
 
@@ -7561,7 +7312,7 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 			local curTime = GetTime()
 			if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
 				GVAR.TargetButton[targetButton].orbDebuffUpdate = curTime
-				BattlegroundTargets:CheckOrb(targetID, targetName, targetButton)
+				BattlegroundTargets:OrbDebuffCheck(targetID, targetName, targetButton)
 			end
 		end
 	end
@@ -7583,6 +7334,224 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
+
+
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
+	if not ENEMY_FirstFlagCheck[targetName] then return end
+
+	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
+
+		-- enemy buff & debuff check
+		for i = 1, 40 do
+			local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unit, i)
+			if not spellId then break end
+			if flagIDs[spellId] then
+				hasFlag = targetName
+				flagDebuff = 0
+				flags = flags + 1
+
+				for j = 1, 40 do
+					local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(unit, j)
+					if not spellId then break end
+					if debuffIDs[spellId] then
+						flagDebuff = count
+						break
+					end
+				end
+
+				local GVAR_TargetButton = GVAR.TargetButton
+				for j = 1, currentSize do
+					GVAR_TargetButton[j].FlagTexture:SetAlpha(0)
+					GVAR_TargetButton[j].FlagDebuff:SetText("")
+				end
+				local button = ENEMY_Name2Button[targetName]
+				if button then
+					local GVAR_TargetButton = GVAR.TargetButton[button]
+					if GVAR_TargetButton then
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
+					end
+				end
+
+				BattlegroundTargets:CheckFlagCarrierEND()
+				return
+			end
+		end
+
+	elseif isFlagBG == 4 then
+
+		-- enemy buff check
+		for i = 1, 40 do
+			local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unit, i)
+			if not spellId then break end
+			if flagIDs[spellId] then
+				hasFlag = targetName
+
+				local GVAR_TargetButton = GVAR.TargetButton
+				for j = 1, currentSize do
+					GVAR_TargetButton[j].FlagTexture:SetAlpha(0)
+					GVAR_TargetButton[j].FlagDebuff:SetText("")
+				end
+				local button = ENEMY_Name2Button[targetName]
+				if button then
+					local GVAR_TargetButton = GVAR.TargetButton[button]
+					if GVAR_TargetButton then
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						GVAR_TargetButton.FlagDebuff:SetText("")
+					end
+				end
+
+				BattlegroundTargets:CheckFlagCarrierEND()
+				return
+			end
+		end
+
+	elseif isFlagBG == 5 then
+
+		-- enemy debuff check
+		if flags >= 4 then
+			BattlegroundTargets:CheckFlagCarrierEND()
+			return
+		end
+		for i = 1, 40 do
+			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(unit, i)
+			if not spellId then break end
+			if orbIDs[spellId] then
+				flags = flags + 1 -- FLAG_TOK_CHK
+
+				local button = ENEMY_Name2Button[targetName]
+				if button then
+					local GVAR_TargetButton = GVAR.TargetButton[button]
+					if GVAR_TargetButton then
+						local oID = orbIDs[spellId]
+						hasOrb[ oID.color ].name = targetName
+						hasOrb[ oID.color ].orbval = val2
+						GVAR.TargetButton[button].orbColor = oID.color
+						GVAR_TargetButton.FlagTexture:SetAlpha(1)
+						GVAR_TargetButton.FlagTexture:SetTexture(oID.texture)
+						BattlegroundTargets:SetOrbDebuff(GVAR_TargetButton, val2)
+						BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, oID.color)
+					end
+				end
+
+				if flags >= 4 then
+					BattlegroundTargets:CheckFlagCarrierEND()
+					return
+				end
+				break
+			end
+		end
+
+	end
+
+	ENEMY_FirstFlagCheck[targetName] = nil
+
+	local x
+	for k in pairs(ENEMY_FirstFlagCheck) do
+		x = true
+		break
+	end
+	if not x then
+		BattlegroundTargets:CheckFlagCarrierEND()
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
+	flagCHK = true
+	flagflag = true
+
+	wipe(ENEMY_FirstFlagCheck)
+	for i = 1, #ENEMY_Data do
+		ENEMY_FirstFlagCheck[ENEMY_Data[i].name] = 1
+	end
+
+	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
+
+		-- friend buff & debuff check
+		local function chk()
+			for num = 1, GetNumGroupMembers() do
+				local unitID = "raid"..num
+				for i = 1, 40 do
+					local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unitID, i)
+					if not spellId then break end
+					if flagIDs[spellId] then
+						flagDebuff = 0
+						flags = 1
+						for j = 1, 40 do
+							local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(unitID, j)
+							if not spellId then break end
+							if debuffIDs[spellId] then
+								flagDebuff = count
+								return
+							end
+						end
+						return
+					end
+				end
+			end
+		end
+		chk()
+
+	elseif isFlagBG == 5 then
+
+		-- friend debuff check
+		for num = 1, GetNumGroupMembers() do
+			for i = 1, 40 do
+				local _, _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("raid"..num, i)
+				if not spellId then break end
+				if orbIDs[spellId] then
+					flags = flags + 1 -- FLAG_TOK_CHK
+					break
+				end
+			end
+		end
+		if flags >= 4 then
+			BattlegroundTargets:CheckFlagCarrierEND()
+			return
+		end
+
+	end
+
+	BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+	BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+	BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CheckFlagCarrierEND() -- FLAGSPY
+	flagCHK = nil
+	flagflag = true
+	wipe(ENEMY_FirstFlagCheck)
+	if not OPT.ButtonShowHealthBar[currentSize] and
+	   not OPT.ButtonShowHealthText[currentSize] and
+	   not OPT.ButtonShowTargetCount[currentSize] and
+	   not OPT.ButtonShowAssist[currentSize] and
+	   not OPT.ButtonShowLeader[currentSize] and
+	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2) and
+	   not isLowLevel -- LVLCHK
+	then
+		BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
+	end
+	if not OPT.ButtonShowHealthBar[currentSize] and
+	   not OPT.ButtonShowHealthText[currentSize] and
+	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2)
+	then
+		BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
+	end
+	if not OPT.ButtonShowTarget[currentSize] and
+	   (not OPT.ButtonRangeCheck[currentSize] or OPT.ButtonTypeRangeCheck[currentSize] < 2)
+	then
+		BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
@@ -7637,6 +7606,39 @@ function BattlegroundTargets:FlagDebuffCheck(message)
 					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
 				end
 			end
+		end
+	end
+end
+
+function BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, buttonNum)
+	for i = 1, 40 do
+		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(enemyID, i) -- print(enemyID, enemyName, i, UnitDebuff(enemyID, i))
+		if not spellId then return end
+		if orbIDs[spellId] then
+			local hasflg
+			for k, v in pairs(hasOrb) do
+				if v.name == enemyName then
+					hasflg = true
+					break
+				end
+			end
+			if not hasflg then
+				flags = flags + 1 -- FLAG_TOK_CHK
+			end
+
+			local oID = orbIDs[spellId]
+			hasOrb[ oID.color ].name = enemyName
+			hasOrb[ oID.color ].orbval = val2
+			GVAR.TargetButton[buttonNum].orbColor = oID.color
+			GVAR.TargetButton[buttonNum].FlagTexture:SetAlpha(1)
+			GVAR.TargetButton[buttonNum].FlagTexture:SetTexture(oID.texture)
+			BattlegroundTargets:SetOrbDebuff(GVAR.TargetButton[buttonNum], val2)
+			BattlegroundTargets:SetOrbCorner(GVAR.TargetButton[buttonNum], oID.color)
+
+			if flagCHK and flags >= 4 then
+				BattlegroundTargets:CheckFlagCarrierEND()
+			end
+			return
 		end
 	end
 end
