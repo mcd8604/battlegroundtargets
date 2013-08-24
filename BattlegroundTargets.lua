@@ -1865,8 +1865,7 @@ function BattlegroundTargets:CreateFrames()
 
 
 	GVAR.ScoreUpdateTexture = GVAR.TargetButton[1]:CreateTexture(nil, "OVERLAY")
-	GVAR.ScoreUpdateTexture:SetWidth(30.45) -- (26.25*1.16)
-	GVAR.ScoreUpdateTexture:SetHeight(13.92) -- (12*1.16)
+	GVAR.ScoreUpdateTexture:SetSize(30.45, 13.92) -- (26.25*1.16, 12*1.16)
 	GVAR.ScoreUpdateTexture:SetPoint("BOTTOMLEFT", GVAR.TargetButton[1], "TOPLEFT", 1, 1)
 	GVAR.ScoreUpdateTexture:SetTexture(Textures.Path)
 	GVAR.ScoreUpdateTexture:SetTexCoord(unpack(Textures.UpdateWarning))
@@ -5169,8 +5168,14 @@ end
 function BattlegroundTargets:OptionsFrameShow()
 	PlaySound("igQuestListOpen")
 	isConfig = true
-	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
+	BattlegroundTargets:UnregisterEvent("GROUP_ROSTER_UPDATE")
+	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	BattlegroundTargets:UnregisterEvent("UNIT_HEALTH_FREQUENT")
+	BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
+	BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
+	BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
+	BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
 	TEMPLATE.DisableTextButton(GVAR.InterfaceOptions.CONFIG)
 	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_OptionsFrame")
 	GVAR.OptionsFrame:StartMoving()
@@ -5415,7 +5420,10 @@ function BattlegroundTargets:DisableConfigMode()
 		return
 	end
 
+	local curTime = GetTime()
+
 	scoreFrequency = 0 -- immediate score update
+	targetCountUpdate = curTime - targetCountFrequency
 	currentSize = testSize
 	BattlegroundTargets:SetOptions()
 
@@ -5423,7 +5431,6 @@ function BattlegroundTargets:DisableConfigMode()
 	for i = 1, 40 do
 		GVAR.TargetButton[i]:Hide()
 	end
-	isTarget = 0
 
 	--[[ TEST
 	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
@@ -5432,6 +5439,7 @@ function BattlegroundTargets:DisableConfigMode()
 	GVAR.MainFrame:Show() -- POSiCHK
 	GVAR.MainFrameMoverFrame:Hide()
 	GVAR.ScoreUpdateTexture:Hide()
+	GVAR.IsGhostTexture:Hide()
 	for i = 1, 40 do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
 		if i < currentSize+1 then
@@ -5447,16 +5455,22 @@ function BattlegroundTargets:DisableConfigMode()
 	if not weuiwibcxcskgd then return end
 	--]]
 
+	if isConfig then return end
 	BattlegroundTargets:BattlefieldCheck()
-
+	if not BattlegroundTargets_Options.EnableBracket[currentSize] then return end
 	if not inBattleground then return end
 
 	BattlegroundTargets:CheckIfPlayerIsGhost()
-	BattlegroundTargets:CheckPlayerTarget()
-	BattlegroundTargets:CheckAssist()
-	BattlegroundTargets:CheckPlayerFocus()
 
-	local curTime = GetTime()
+	if OPT.ButtonShowTarget[currentSize] then
+		BattlegroundTargets:CheckPlayerTarget()
+	end
+	if OPT.ButtonShowAssist[currentSize] then
+		BattlegroundTargets:CheckAssist()
+	end
+	if OPT.ButtonShowFocus[currentSize] then
+		BattlegroundTargets:CheckPlayerFocus()
+	end
 
 	if OPT.ButtonRangeCheck[currentSize] then
 		BattlegroundTargets:UpdateRange(curTime)
@@ -5678,7 +5692,6 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:DefaultShuffle()
-	local random = math.random
 	-- health range
 	for i = 1, 40 do
 		testData.Health[i] = random(0,100)
@@ -6286,7 +6299,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	end
 
 	if inCombat or InCombatLockdown() then
-		if diff >= scoreWarning then
+		if reCheckBG or diff >= scoreWarning then
 			GVAR.ScoreUpdateTexture:Show()
 		else
 			GVAR.ScoreUpdateTexture:Hide()
@@ -6878,8 +6891,6 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckPlayerTarget()
-	if isConfig then return end
-
 	playerTargetName, playerTargetRealm = UnitName("target")
 	if playerTargetRealm and playerTargetRealm ~= "" then
 		playerTargetName = playerTargetName.."-"..playerTargetRealm
@@ -6918,8 +6929,6 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckAssist()
-	if isConfig then return end
-
 	isAssistUnitId = nil
 	isAssistName = nil
 	for i = 1, GetNumGroupMembers() do
@@ -6957,8 +6966,6 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckPlayerFocus()
-	if isConfig then return end
-
 	playerFocusName, playerFocusRealm = UnitName("focus")
 	if playerFocusRealm and playerFocusRealm ~= "" then
 		playerFocusName = playerFocusName.."-"..playerFocusRealm
@@ -7000,8 +7007,6 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
-	if isConfig then return end
-
 	local friendName, friendRealm, enemyID, enemyName, enemyRealm
 	if not unitName then
 		enemyID = unitID.."target"
@@ -7211,8 +7216,6 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
-	if isConfig then return end
-
 	local targetID, targetName, targetRealm
 	if not unitName then
 		if raidUnitID[unitID] then
@@ -8234,8 +8237,10 @@ function BattlegroundTargets:CheckIfPlayerIsGhost(state)
 		GVAR.IsGhostTexture:Show()
 	else
 		isDeadUpdateStop = false
-		GVAR.IsGhostTexture:Hide()
-		BattlegroundTargets:EventRegister()
+		if not isConfig then
+			GVAR.IsGhostTexture:Hide()
+			BattlegroundTargets:EventRegister()
+		end
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -8254,6 +8259,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 local function OnEvent(self, event, ...)
 	--if not eventTest[event] then eventTest[event] = 1 else eventTest[event] = eventTest[event] + 1 end -- TEST
+	--if isConfig then print("###", isConfig, event) elseif event ~= "COMBAT_LOG_EVENT_UNFILTERED" then print("***", isConfig, event) end
 	if event == "PLAYER_REGEN_DISABLED" then
 		inCombat = true
 		if isConfig then
@@ -8298,7 +8304,6 @@ local function OnEvent(self, event, ...)
 		if not spellId then return end
 		if sourceFlags and band(sourceFlags, 0x00000400) == 0 then return end
 		if destFlags and band(destFlags, 0x00000400) == 0 then return end
-
 		range_CL_Throttle = range_CL_Throttle + 1
 		if range_CL_Throttle > range_CL_Frequency then
 			range_CL_Throttle = 0
