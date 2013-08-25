@@ -487,16 +487,16 @@ local rangeTypeName = {
 }
 
 local rangeDisplay = { -- RANGE_DISP_LAY
-	"STD 100",      --  1 old:  1 STD = Standard
-	"STD 50 |TInterface\\Glues\\CharacterSelect\\Glues-AddOn-Icons:0:0:0:0:64:16:48:64:0:16|t", --  2 old:  3
-	"STD 10",       --  3 old:  5
-	"STD 100 mono", --  4 old:  2
-	"STD 50 mono",  --  5 old:  4
-	"STD 10 mono",  --  6 old:  6
-	"X 10",         --  7 old:  9
-	"X 100 mono",   --  8 old:  7 X = without block
-	"X 50 mono",    --  9 old:  8
-	"X 10 mono",    -- 10 old: 10
+	"STD 100",      --  1 STD Standard (with 'block')
+	"STD 50 |TInterface\\Glues\\CharacterSelect\\Glues-AddOn-Icons:0:0:0:0:64:16:48:64:0:16|t", --  2
+	"STD 10",       --  3
+	"STD 100 mono", --  4
+	"STD 50 mono",  --  5
+	"STD 10 mono",  --  6
+	"X 10",         --  7 X (without 'block')
+	"X 100 mono",   --  8
+	"X 50 mono",    --  9
+	"X 10 mono",    -- 10
 }
 
 local Textures = {}
@@ -4747,9 +4747,6 @@ function BattlegroundTargets:SetupButtonLayout()
 	local ButtonRangeCheck         = OPT.ButtonRangeCheck[currentSize]
 	local ButtonRangeDisplay       = OPT.ButtonRangeDisplay[currentSize]
 
-	local LayoutTH      = BattlegroundTargets_Options.LayoutTH[currentSize]
-	local LayoutSpace   = BattlegroundTargets_Options.LayoutSpace[currentSize]
-
 	local ButtonWidth_2  = ButtonWidth-2
 	local ButtonHeight_2 = ButtonHeight-2
 
@@ -5309,7 +5306,6 @@ function BattlegroundTargets:EnableConfigMode()
 		return
 	end
 
-	-- Test Data START
 	if not testData.Loaded then
 		wipe(ENEMY_Data)
 
@@ -5385,7 +5381,6 @@ function BattlegroundTargets:EnableConfigMode()
 
 		testData.Loaded = true
 	end
-	-- Test Data END
 
 	currentSize = testSize
 	BattlegroundTargets:SetOptions()
@@ -5420,10 +5415,6 @@ function BattlegroundTargets:DisableConfigMode()
 		return
 	end
 
-	local curTime = GetTime()
-
-	scoreFrequency = 0 -- immediate score update
-	targetCountUpdate = curTime - targetCountFrequency
 	currentSize = testSize
 	BattlegroundTargets:SetOptions()
 
@@ -5432,33 +5423,15 @@ function BattlegroundTargets:DisableConfigMode()
 		GVAR.TargetButton[i]:Hide()
 	end
 
-	--[[ TEST
-	BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_MainFrame")
-	GVAR.MainFrame:EnableMouse(false)
-	GVAR.MainFrame:SetAlpha(0)
-	GVAR.MainFrame:Show() -- POSiCHK
-	GVAR.MainFrameMoverFrame:Hide()
-	GVAR.ScoreUpdateTexture:Hide()
-	GVAR.IsGhostTexture:Hide()
-	for i = 1, 40 do
-		local GVAR_TargetButton = GVAR.TargetButton[i]
-		if i < currentSize+1 then
-			--BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, 1)
-			GVAR_TargetButton:Show()
-		else
-			GVAR_TargetButton:Hide()
-		end
-	end
-	BattlegroundTargets:SetupButtonLayout()
-	BattlegroundTargets:CheckIfPlayerIsGhost()
-	BattlegroundTargets:ClearRangeData()
-	if not weuiwibcxcskgd then return end
-	--]]
-
 	if isConfig then return end
+
+	local curTime = GetTime()
+	scoreFrequency = 0 -- immediate score update
+	targetCountUpdate = curTime - targetCountFrequency
+
 	BattlegroundTargets:BattlefieldCheck()
-	if not BattlegroundTargets_Options.EnableBracket[currentSize] then return end
 	if not inBattleground then return end
+	if not BattlegroundTargets_Options.EnableBracket[currentSize] then return end
 
 	BattlegroundTargets:CheckIfPlayerIsGhost()
 
@@ -5471,7 +5444,6 @@ function BattlegroundTargets:DisableConfigMode()
 	if OPT.ButtonShowFocus[currentSize] then
 		BattlegroundTargets:CheckPlayerFocus()
 	end
-
 	if OPT.ButtonRangeCheck[currentSize] then
 		BattlegroundTargets:UpdateRange(curTime)
 	end
@@ -6683,22 +6655,7 @@ function BattlegroundTargets:IsBattleground()
 
 	end
 
-	BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
-	BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
-	BattlegroundTargets:UnregisterEvent("PLAYER_ALIVE")
-	BattlegroundTargets:UnregisterEvent("UNIT_HEALTH_FREQUENT")
-	BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
-	BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
-	BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
-	BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
-	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
-	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-	BattlegroundTargets:UnregisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
-	BattlegroundTargets:UnregisterEvent("GROUP_ROSTER_UPDATE")
-	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-	BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
-
+	BattlegroundTargets:EventUnregister()
 	BattlegroundTargets:EventRegister("showerror")
 
 	if BattlegroundTargets_Options.EnableBracket[currentSize] then
@@ -6710,103 +6667,6 @@ function BattlegroundTargets:IsBattleground()
 			elapsed = 0
 			BattlegroundTargets:BattlefieldScoreRequest()
 		end)
-	end
-end
--- ---------------------------------------------------------------------------------------------------------------------
-
--- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:EventRegister(showerror)
-	if not inBattleground then return end
-	if BattlegroundTargets_Options.EnableBracket[currentSize] then
-		BattlegroundTargets:RegisterEvent("PLAYER_DEAD")
-		BattlegroundTargets:RegisterEvent("PLAYER_UNGHOST")
-		BattlegroundTargets:RegisterEvent("PLAYER_ALIVE")
-
-		if isLowLevel then -- LVLCHK
-			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-		end
-
-		if OPT.ButtonShowHealthBar[currentSize] or OPT.ButtonShowHealthText[currentSize] then
-			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-			BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
-			BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-		end
-
-		if OPT.ButtonShowTargetCount[currentSize] then
-			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-		end
-
-		if OPT.ButtonShowTarget[currentSize] then
-			BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
-		end
-
-		if OPT.ButtonShowFocus[currentSize] then
-			BattlegroundTargets:RegisterEvent("PLAYER_FOCUS_CHANGED")
-		end
-
-		if OPT.ButtonShowFlag[currentSize] then
-			if isFlagBG > 0 then
-				BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
-				BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-				BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-				if isFlagBG == 5 then
-					BattlegroundTargets:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
-				end
-			end
-		end
-
-		if OPT.ButtonShowAssist[currentSize] then
-			BattlegroundTargets:RegisterEvent("GROUP_ROSTER_UPDATE")
-			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-		end
-
-		if OPT.ButtonShowLeader[currentSize] then
-			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-		end
-
-		rangeSpellName = nil
-		rangeMin = nil
-		rangeMax = nil
-		if OPT.ButtonRangeCheck[currentSize] then
-			if OPT.ButtonTypeRangeCheck[currentSize] == 1 then
-				BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-			elseif OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
-
-				if ranges[playerClassEN] then
-					if IsSpellKnown(ranges[playerClassEN]) then
-						local SpellName, _, _, _, _, _, _, Min, Max = GetSpellInfo(ranges[playerClassEN])
-						rangeSpellName = SpellName
-						rangeMin = Min
-						rangeMax = Max
-						if not rangeSpellName then
-							if showerror then Print("ERROR", "unknown spell name (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN]) end
-						elseif (not rangeMin or not rangeMax) or (rangeMin <= 0 and rangeMax <= 0) then
-							if showerror then Print("ERROR", "spell min/max fail (rangecheck)", locale, rangeSpellName, rangeMin, rangeMax) end
-						else
-							BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
-							BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-							BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
-							BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-							if OPT.ButtonTypeRangeCheck[currentSize] >= 3 then
-								BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-							end
-						end
-					elseif playerClassEN == "MONK" and playerLevel < 14 then -- MON14
-						if showerror then Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.") end
-					elseif playerClassEN == "ROGUE" and playerLevel < 12 then -- ROG12
-						if showerror then Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 12.") end
-					else
-						if showerror then Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN]) end
-					end
-				else
-					if showerror then Print("ERROR", "unknown class (rangecheck)", locale, playerClassEN) end
-				end
-
-			end
-		end
-
-		BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
-
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -6836,23 +6696,10 @@ function BattlegroundTargets:IsNotBattleground()
 	BattlegroundTargets.ForceDefaultFaction = nil
 	BattlegroundTargets.TrackFaction = nil
 
-	BattlegroundTargets:CheckPlayerLevel() -- LVLCHK
-
-	BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
-	BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
-	BattlegroundTargets:UnregisterEvent("PLAYER_ALIVE")
-	BattlegroundTargets:UnregisterEvent("UNIT_HEALTH_FREQUENT")
-	BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
-	BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
-	BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
-	BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
-	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
-	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-	BattlegroundTargets:UnregisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
-	BattlegroundTargets:UnregisterEvent("GROUP_ROSTER_UPDATE")
-	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-	BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
+	if isLowLevel then -- LVLCHK
+		BattlegroundTargets:CheckPlayerLevel()
+	end
+	BattlegroundTargets:EventUnregister()
 
 	if not isConfig then
 		wipe(ENEMY_Data)
@@ -6874,7 +6721,6 @@ function BattlegroundTargets:IsNotBattleground()
 	else
 		reCheckBG = false
 
-		GVAR.MainFrame:Hide()
 		if playerFactionDEF == 0 then -- summary_flag_texture
 			GVAR.Summary.Logo2:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
 		elseif playerFactionDEF == 1 then
@@ -6882,12 +6728,15 @@ function BattlegroundTargets:IsNotBattleground()
 		else
 			GVAR.Summary.Logo2:SetTexture("Interface\\Timer\\Panda-Logo")
 		end
+		GVAR.MainFrame:Hide()
 		for i = 1, 40 do
 			GVAR.TargetButton[i]:Hide()
 		end
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
+
+
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckPlayerTarget()
@@ -6958,9 +6807,7 @@ function BattlegroundTargets:CheckAssist()
 	if not GVAR_TargetButton[assistButton] then return end
 
 	-- assist_
-	if OPT.ButtonShowAssist[currentSize] then
-		GVAR_TargetButton[assistButton].AssistTexture:SetAlpha(1)
-	end
+	GVAR_TargetButton[assistButton].AssistTexture:SetAlpha(1)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -6983,9 +6830,7 @@ function BattlegroundTargets:CheckPlayerFocus()
 	if not GVAR_TargetButton then return end
 
 	-- focus
-	if OPT.ButtonShowFocus[currentSize] then
-		GVAR_TargetButton.FocusTexture:SetAlpha(1)
-	end
+	GVAR_TargetButton.FocusTexture:SetAlpha(1)
 
 	-- class_range (Check Player Focus)
 	if rangeSpellName and OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
@@ -8256,6 +8101,124 @@ function BattlegroundTargets:BattlefieldScoreRequest()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
+
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:EventRegister(showerror)
+	if not inBattleground then return end
+	if not BattlegroundTargets_Options.EnableBracket[currentSize] then return end
+
+	BattlegroundTargets:RegisterEvent("PLAYER_DEAD")
+	BattlegroundTargets:RegisterEvent("PLAYER_UNGHOST")
+	BattlegroundTargets:RegisterEvent("PLAYER_ALIVE")
+
+	if isLowLevel then -- LVLCHK
+		BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+	end
+
+	if OPT.ButtonShowHealthBar[currentSize] or OPT.ButtonShowHealthText[currentSize] then
+		BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+		BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
+		BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+	end
+
+	if OPT.ButtonShowTargetCount[currentSize] then
+		BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+	end
+
+	if OPT.ButtonShowTarget[currentSize] then
+		BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
+	end
+
+	if OPT.ButtonShowFocus[currentSize] then
+		BattlegroundTargets:RegisterEvent("PLAYER_FOCUS_CHANGED")
+	end
+
+	if OPT.ButtonShowFlag[currentSize] then
+		if isFlagBG > 0 then
+			BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
+			BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+			BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+			if isFlagBG == 5 then
+				BattlegroundTargets:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
+			end
+		end
+	end
+
+	if OPT.ButtonShowAssist[currentSize] then
+		BattlegroundTargets:RegisterEvent("GROUP_ROSTER_UPDATE")
+		BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+	end
+
+	if OPT.ButtonShowLeader[currentSize] then
+		BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+	end
+
+	rangeSpellName = nil
+	rangeMin = nil
+	rangeMax = nil
+	if OPT.ButtonRangeCheck[currentSize] then
+		if OPT.ButtonTypeRangeCheck[currentSize] == 1 then
+			BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+		elseif OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
+
+			if ranges[playerClassEN] then
+				if IsSpellKnown(ranges[playerClassEN]) then
+					local SpellName, _, _, _, _, _, _, Min, Max = GetSpellInfo(ranges[playerClassEN])
+					rangeSpellName = SpellName
+					rangeMin = Min
+					rangeMax = Max
+					if not rangeSpellName then
+						if showerror then Print("ERROR", "unknown spell name (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN]) end
+					elseif (not rangeMin or not rangeMax) or (rangeMin <= 0 and rangeMax <= 0) then
+						if showerror then Print("ERROR", "spell min/max fail (rangecheck)", locale, rangeSpellName, rangeMin, rangeMax) end
+					else
+						BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
+						BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+						BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
+						BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+						if OPT.ButtonTypeRangeCheck[currentSize] >= 3 then
+							BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+						end
+					end
+				elseif playerClassEN == "MONK" and playerLevel < 14 then -- MON14
+					if showerror then Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 14.") end
+				elseif playerClassEN == "ROGUE" and playerLevel < 12 then -- ROG12
+					if showerror then Print("WARNING", playerClassEN, "Required level for class-spell based rangecheck is 12.") end
+				else
+					if showerror then Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "id:", ranges[playerClassEN]) end
+				end
+			else
+				if showerror then Print("ERROR", "unknown class (rangecheck)", locale, playerClassEN) end
+			end
+
+		end
+	end
+
+	BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
+end
+
+function BattlegroundTargets:EventUnregister()
+	BattlegroundTargets:UnregisterEvent("PLAYER_DEAD")
+	BattlegroundTargets:UnregisterEvent("PLAYER_UNGHOST")
+	BattlegroundTargets:UnregisterEvent("PLAYER_ALIVE")
+	BattlegroundTargets:UnregisterEvent("UNIT_HEALTH_FREQUENT")
+	BattlegroundTargets:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
+	BattlegroundTargets:UnregisterEvent("UNIT_TARGET")
+	BattlegroundTargets:UnregisterEvent("PLAYER_TARGET_CHANGED")
+	BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+	BattlegroundTargets:UnregisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
+	BattlegroundTargets:UnregisterEvent("GROUP_ROSTER_UPDATE")
+	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	BattlegroundTargets:UnregisterEvent("UPDATE_BATTLEFIELD_SCORE")
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+
+
 -- ---------------------------------------------------------------------------------------------------------------------
 local function OnEvent(self, event, ...)
 	--if not eventTest[event] then eventTest[event] = 1 else eventTest[event] = eventTest[event] + 1 end -- TEST
@@ -8330,9 +8293,7 @@ local function OnEvent(self, event, ...)
 		BattlegroundTargets:BattlefieldScoreUpdate()
 
 	elseif event == "GROUP_ROSTER_UPDATE" then
-		if OPT.ButtonShowAssist[currentSize] then
-			BattlegroundTargets:CheckAssist()
-		end
+		BattlegroundTargets:CheckAssist()
 
 	elseif event == "CHAT_MSG_BG_SYSTEM_HORDE" then
 		local arg1 = ...
