@@ -10,12 +10,12 @@ local locale = GetLocale()
 
 if locale == "deDE" then
 
-	-- Warsong Gulch & Twin Peaks: --> deDE: tested with Patch 4.3.0.15050 (LIVE)
+	-- Warsong Gulch & Twin Peaks: --> deDE: tested with Patch 5.3.0.17128 (LIVE)
 	FLG["WSG_TP_STRING_FLAG_DEBUFF1"] = "Eure Angriffe verursachen nun schwerere Verletzungen bei Flaggenträgern!"
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "Eure Angriffe verursachen nun sehr schwere Verletzungen bei Flaggenträgern!"
 	FLG["WSG_TP_PATTERN_PICKED1"] = "(.+) hat die Flagge der (.+) aufgenommen!"
 	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+) hat die Flagge der (.+) aufgenommen!" -- ruRU special
-	FLG["WSG_TP_MATCH_DROPPED"] = "fallen lassen!"
+	FLG["WSG_TP_MATCH_DROPPED"] = "fallenlassen!"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "errungen!"
 	-- Eye of the Storm: --> deDE: tested with Patch 4.3.0.15050 (LIVE)
 	FLG["EOTS_PATTERN_PICKED"] = "(.+) hat die Flagge aufgenommen."
