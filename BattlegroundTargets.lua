@@ -8261,12 +8261,10 @@ local function OnEvent(self, event, ...)
 
 	elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
 		local _, _, _, _, sourceName, sourceFlags, _, _, destName, destFlags, _, spellId = ...
-		if not sourceName then return end
-		if not destName then return end
 		if sourceName == destName then return end
 		if not spellId then return end
-		if sourceFlags and band(sourceFlags, 0x00000400) == 0 then return end
-		if destFlags and band(destFlags, 0x00000400) == 0 then return end
+		if not sourceFlags or band(sourceFlags, 0x00000400) == 0 then return end
+		if not destFlags or band(destFlags, 0x00000400) == 0 then return end
 		range_CL_Throttle = range_CL_Throttle + 1
 		if range_CL_Throttle > range_CL_Frequency then
 			range_CL_Throttle = 0
