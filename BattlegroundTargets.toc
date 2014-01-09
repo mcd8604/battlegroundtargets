@@ -5,12 +5,13 @@
 ## Notes-zhCN: 显示全部战场敌人。战场简洁敌对单位框体。
 ## Notes-zhTW: 顯示全部戰場敵人。戰場簡潔敵對單位框體。
 ## Author: kunda
-## Version: 50400-1
+## Version: 50400-2
 ## SavedVariables: BattlegroundTargets_Options
 
 BattlegroundTargets-localized-carrier.lua
 BattlegroundTargets-localized-racenames.lua
 BattlegroundTargets-localized-bgnames.lua
+BattlegroundTargets-localized-transliteration.lua
 
 BattlegroundTargets-localization-enUS.lua
 BattlegroundTargets-localization-deDE.lua
@@ -23,5 +24,7 @@ BattlegroundTargets-localization-ptBR.lua
 BattlegroundTargets-localization-ruRU.lua
 BattlegroundTargets-localization-zhCN.lua
 BattlegroundTargets-localization-zhTW.lua
+
+utf8.lua
 
 BattlegroundTargets.lua

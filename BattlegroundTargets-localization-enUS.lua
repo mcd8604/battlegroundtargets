@@ -65,3 +65,10 @@ L["Test_Latin2_"] = "Latin2_ĄŁĽŤžŕęďňýţ_"
 L["Test_Latin3_"] = "Latin3_ĥĦ˘ËĵŜĊŭŝ_"
 L["Test_Latin4_"] = "Latin4_įĸæĨĻĀōÂųũūŊĪ_"
 L["Test_Latin5_"] = "Latin5_ĞİŞğışÿö_"
+
+-- transliteration test
+L["ruRU_transliteration_test1"] = "Михаил"
+L["ruRU_transliteration_test2"] = "Борис"
+L["ruRU_transliteration_test3"] = "Дмитрий"
+L["ruRU_transliteration_test4"] = "Владимир"
+L["ruRU_transliteration_test5"] = "Надежда"

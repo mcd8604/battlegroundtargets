@@ -172,6 +172,9 @@ local L if not prg.L then return end for k, v in pairs(prg.L) do if type(v) ~= "
 local FLG = prg.FLG -- carrier strings
 local RNA = prg.RNA -- bg race names
 local BGN = prg.BGN -- localized battleground names
+local TSL = prg.TSL -- transliteration table
+
+local utf8replace = prg.utf8replace -- utf8.lua
 
 local GVAR = {}     -- UI Widgets
 local TEMPLATE = {} -- Templates
@@ -1300,52 +1303,10 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 22
 	end
 
-	if BattlegroundTargets_Options.version < 15 then
+	if BattlegroundTargets_Options.version < 18 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
 		BattlegroundTargets_Options.version = 22
-	end
-
-	if BattlegroundTargets_Options.version == 15 then -- realm logic switch
-		if BattlegroundTargets_Options.ButtonHideRealm then
-			BattlegroundTargets_Options.ButtonShowRealm = {}
-			if BattlegroundTargets_Options.ButtonHideRealm[10] == true then BattlegroundTargets_Options.ButtonShowRealm[10] = false else BattlegroundTargets_Options.ButtonShowRealm[10] = true end
-			if BattlegroundTargets_Options.ButtonHideRealm[15] == true then BattlegroundTargets_Options.ButtonShowRealm[15] = false else BattlegroundTargets_Options.ButtonShowRealm[15] = true end
-			if BattlegroundTargets_Options.ButtonHideRealm[40] == true then BattlegroundTargets_Options.ButtonShowRealm[40] = false else BattlegroundTargets_Options.ButtonShowRealm[40] = true end
-			BattlegroundTargets_Options.ButtonHideRealm = nil
-		end
-		BattlegroundTargets_Options.version = 16
-	end
-
-	if BattlegroundTargets_Options.version == 16 then -- font update
-		BattlegroundTargets_Options.ButtonFontNameSize = {}
-		BattlegroundTargets_Options.ButtonFontNameStyle = {}
-		if type(BattlegroundTargets_Options.ButtonFontSize) == "table" then
-			if type(BattlegroundTargets_Options.ButtonFontSize[10]) == "number" then BattlegroundTargets_Options.ButtonFontNameSize[10] = BattlegroundTargets_Options.ButtonFontSize[10] end
-			if type(BattlegroundTargets_Options.ButtonFontSize[15]) == "number" then BattlegroundTargets_Options.ButtonFontNameSize[15] = BattlegroundTargets_Options.ButtonFontSize[15] end
-			if type(BattlegroundTargets_Options.ButtonFontSize[40]) == "number" then BattlegroundTargets_Options.ButtonFontNameSize[40] = BattlegroundTargets_Options.ButtonFontSize[40] end
-		end
-		if type(BattlegroundTargets_Options.ButtonFontStyle) == "table" then
-			if type(BattlegroundTargets_Options.ButtonFontStyle[10]) == "number" then BattlegroundTargets_Options.ButtonFontNameStyle[10] = BattlegroundTargets_Options.ButtonFontStyle[10] end
-			if type(BattlegroundTargets_Options.ButtonFontStyle[15]) == "number" then BattlegroundTargets_Options.ButtonFontNameStyle[15] = BattlegroundTargets_Options.ButtonFontStyle[15] end
-			if type(BattlegroundTargets_Options.ButtonFontStyle[40]) == "number" then BattlegroundTargets_Options.ButtonFontNameStyle[40] = BattlegroundTargets_Options.ButtonFontStyle[40] end
-		end
-		BattlegroundTargets_Options.ButtonFontSize = nil
-		BattlegroundTargets_Options.ButtonFontStyle = nil
-		BattlegroundTargets_Options.version = 17
-	end
-
-	if BattlegroundTargets_Options.version == 17 then -- reset font number size
-		if type(BattlegroundTargets_Options.ButtonFontNumberSize) == "table" then
-			Print("'Text: Number' size reset.")
-		end
-		BattlegroundTargets_Options.ButtonFontNumberSize = {}
-		if type(BattlegroundTargets_Options.ButtonFontNameSize) == "table" then
-			if type(BattlegroundTargets_Options.ButtonFontNameSize[10]) == "number" then BattlegroundTargets_Options.ButtonFontNumberSize[10] = BattlegroundTargets_Options.ButtonFontNameSize[10] end
-			if type(BattlegroundTargets_Options.ButtonFontNameSize[15]) == "number" then BattlegroundTargets_Options.ButtonFontNumberSize[15] = BattlegroundTargets_Options.ButtonFontNameSize[15] end
-			if type(BattlegroundTargets_Options.ButtonFontNameSize[40]) == "number" then BattlegroundTargets_Options.ButtonFontNumberSize[40] = BattlegroundTargets_Options.ButtonFontNameSize[40] end
-		end
-		BattlegroundTargets_Options.version = 18
 	end
 
 	if BattlegroundTargets_Options.version == 18 then -- range display remap
@@ -1412,6 +1373,8 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.pos)                          ~= "table"   then BattlegroundTargets_Options.pos                          = {}    end
 	if type(BattlegroundTargets_Options.MinimapButton)                ~= "boolean" then BattlegroundTargets_Options.MinimapButton                = false end
 	if type(BattlegroundTargets_Options.MinimapButtonPos)             ~= "number"  then BattlegroundTargets_Options.MinimapButtonPos             = -90   end
+
+	if type(BattlegroundTargets_Options.TransliterationToggle)        ~= "boolean" then BattlegroundTargets_Options.TransliterationToggle        = false end
 
 	if type(BattlegroundTargets_Options.EnableBracket)                ~= "table"   then BattlegroundTargets_Options.EnableBracket                = {}    end
 	if type(BattlegroundTargets_Options.EnableBracket[10])            ~= "boolean" then BattlegroundTargets_Options.EnableBracket[10]            = false end
@@ -3914,6 +3877,30 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.MinimapButton = not BattlegroundTargets_Options.MinimapButton
 		BattlegroundTargets:CreateMinimapButton()
 	end)
+
+	-- transliteration
+	GVAR.OptionsFrame.TransLitOption = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigGeneral)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.TransLitOption, 16, 4, "Cyrillic -> Latin Transliteration")
+	GVAR.OptionsFrame.TransLitOption:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.TransLitOption:SetPoint("TOP", GVAR.OptionsFrame.Minimap, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.TransLitOption:SetChecked(BattlegroundTargets_Options.TransliterationToggle)
+	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.TransLitOption)
+	GVAR.OptionsFrame.TransLitOption:SetScript("OnClick", function()
+		BattlegroundTargets_Options.TransliterationToggle = not BattlegroundTargets_Options.TransliterationToggle
+	end)
+	GVAR.OptionsFrame.TransLitOptionInfoText = GVAR.OptionsFrame.ConfigGeneral:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	GVAR.OptionsFrame.TransLitOptionInfoText:SetPoint("TOPLEFT", GVAR.OptionsFrame.TransLitOption, "BOTTOMLEFT", 30, -10)
+	GVAR.OptionsFrame.TransLitOptionInfoText:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.TransLitOptionInfoText:SetFont(fontStyles[12].font, 14, "")
+	GVAR.OptionsFrame.TransLitOptionInfoText:SetShadowOffset(0, 0)
+	GVAR.OptionsFrame.TransLitOptionInfoText:SetShadowColor(0, 0, 0, 0)
+	GVAR.OptionsFrame.TransLitOptionInfoText:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.TransLitOptionInfoText:SetText(
+		L["ruRU_transliteration_test1"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test1"], TSL) .. "\n" ..
+		L["ruRU_transliteration_test2"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test2"], TSL) .. "\n" ..
+		L["ruRU_transliteration_test3"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test3"], TSL) .. "\n" ..
+		L["ruRU_transliteration_test4"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test4"], TSL) .. "\n" ..
+		L["ruRU_transliteration_test5"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test5"], TSL))
 	-- ###
 	-- ####################################################################################################
 
@@ -6021,6 +6008,7 @@ function BattlegroundTargets:MainDataUpdate()
 	local ButtonShowFlag        = OPT.ButtonShowFlag[currentSize]
 	local ButtonShowAssist      = OPT.ButtonShowAssist[currentSize]
 	local ButtonRangeCheck      = OPT.ButtonRangeCheck[currentSize]
+	local TransliterationToggle = BattlegroundTargets_Options.TransliterationToggle
 
 	wipe(ENEMY_Name2Button)
 	wipe(ENEMY_Name4Flag)
@@ -6059,18 +6047,26 @@ function BattlegroundTargets:MainDataUpdate()
 			end
 
 			if not ButtonShowRealm then
-				GVAR_TargetButton.name4button = onlyname
-				if isLowLevel and ENEMY_Name2Level[qname] then
-					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..onlyname)
+				if TransliterationToggle then
+					GVAR_TargetButton.name4button = utf8replace(onlyname, TSL)
 				else
-					GVAR_TargetButton.Name:SetText(onlyname)
+					GVAR_TargetButton.name4button = onlyname
+				end
+				if isLowLevel and ENEMY_Name2Level[qname] then
+					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..GVAR_TargetButton.name4button)
+				else
+					GVAR_TargetButton.Name:SetText(GVAR_TargetButton.name4button)
 				end
 			else
-				GVAR_TargetButton.name4button = qname
-				if isLowLevel and ENEMY_Name2Level[qname] then
-					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..qname)
+				if TransliterationToggle then
+					GVAR_TargetButton.name4button = utf8replace(qname, TSL)
 				else
-					GVAR_TargetButton.Name:SetText(qname)
+					GVAR_TargetButton.name4button = qname
+				end				
+				if isLowLevel and ENEMY_Name2Level[qname] then
+					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..GVAR_TargetButton.name4button)
+				else
+					GVAR_TargetButton.Name:SetText(GVAR_TargetButton.name4button)
 				end
 			end
 
