@@ -9,10 +9,10 @@ local strbyte, strlen, strsub, strupper, type = string.byte, string.len, string.
 -- determine bytes needed for character, based on RFC 3629
 local function utf8charbytes(s, i)
 	if type(s) ~= "string" then
-		error("bad argument #1 to 'utf8charbytes' (string expected, got ".. type(s).. ")")
+		error("bad argument #1 to 'utf8charbytes' (string expected, got " .. type(s) .. ")")
 	end
 	if type(i) ~= "number" then
-		error("bad argument #2 to 'utf8charbytes' (number expected, got ".. type(i).. ")")
+		error("bad argument #2 to 'utf8charbytes' (number expected, got " .. type(i) .. ")")
 	end
 
 	local c = strbyte(s, i)
@@ -71,14 +71,14 @@ local function utf8charbytes(s, i)
 	end
 end
 
--- replace UTF-8 characters based on a mapping table (makes first character uppercase if it is mapped and UTF8-1)
+-- replace UTF-8 characters based on a mapping table
 local _, prg = ...
 prg.utf8replace = function(s, mapping)
 	if type(s) ~= "string" then
-		error("bad argument #1 to 'utf8replace' (string expected, got ".. type(s).. ")")
+		error("bad argument #1 to 'utf8replace' (string expected, got " .. type(s) .. ")")
 	end
 	if type(mapping) ~= "table" then
-		error("bad argument #2 to 'utf8replace' (table expected, got ".. type(mapping).. ")")
+		error("bad argument #2 to 'utf8replace' (table expected, got " .. type(mapping) .. ")")
 	end
 
 	local pos = 1
@@ -90,16 +90,12 @@ prg.utf8replace = function(s, mapping)
 	while pos <= bytes do
 		charbytes = utf8charbytes(s, pos)
 		local c = strsub(s, pos, pos + charbytes - 1)
-		if mapping[c] then
-			newstr = newstr .. mapping[c]
-			if not upval and strlen(newstr) > 0 and utf8charbytes(newstr, 1) == 1 then
-				newstr = strupper(strsub(newstr, 1, 1)) .. strsub(newstr, 2)
-				upval = true
-			end
-		else
-			newstr = newstr .. c
-		end
+		newstr = newstr .. (mapping[c] or c)
 		pos = pos + charbytes
+		if not upval and strlen(newstr) > 0 and utf8charbytes(newstr, 1) == 1 then -- uppercase first character
+			newstr = strupper(strsub(newstr, 1, 1)) .. strsub(newstr, 2)
+			upval = true
+		end
 	end
 
 	if newstr == "" then newstr = UNKNOWN end

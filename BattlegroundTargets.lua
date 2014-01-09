@@ -3879,28 +3879,38 @@ function BattlegroundTargets:CreateOptionsFrame()
 	end)
 
 	-- transliteration
+	local tsarrow = "  |TInterface\\Tooltips\\ReforgeGreenArrow:8:0|t  "
 	GVAR.OptionsFrame.TransLitOption = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigGeneral)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.TransLitOption, 16, 4, "Cyrillic -> Latin Transliteration")
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.TransLitOption, 16, 4, "Cyrillic" .. tsarrow .. "Latin - Transliteration")
 	GVAR.OptionsFrame.TransLitOption:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.TransLitOption:SetPoint("TOP", GVAR.OptionsFrame.Minimap, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.TransLitOption:SetChecked(BattlegroundTargets_Options.TransliterationToggle)
 	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.TransLitOption)
 	GVAR.OptionsFrame.TransLitOption:SetScript("OnClick", function()
 		BattlegroundTargets_Options.TransliterationToggle = not BattlegroundTargets_Options.TransliterationToggle
+		if BattlegroundTargets_Options.TransliterationToggle then
+			GVAR.OptionsFrame.TransLitOptionInfoText:SetTextColor(1, 1, 1, 1)
+		else
+			GVAR.OptionsFrame.TransLitOptionInfoText:SetTextColor(0.5, 0.5, 0.5, 1)
+		end
 	end)
 	GVAR.OptionsFrame.TransLitOptionInfoText = GVAR.OptionsFrame.ConfigGeneral:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	GVAR.OptionsFrame.TransLitOptionInfoText:SetPoint("TOPLEFT", GVAR.OptionsFrame.TransLitOption, "BOTTOMLEFT", 30, -10)
 	GVAR.OptionsFrame.TransLitOptionInfoText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.TransLitOptionInfoText:SetFont(fontStyles[12].font, 14, "")
+	GVAR.OptionsFrame.TransLitOptionInfoText:SetFont(fontStyles[12].font, 12, "")
 	GVAR.OptionsFrame.TransLitOptionInfoText:SetShadowOffset(0, 0)
 	GVAR.OptionsFrame.TransLitOptionInfoText:SetShadowColor(0, 0, 0, 0)
-	GVAR.OptionsFrame.TransLitOptionInfoText:SetTextColor(1, 1, 1, 1)
+	if BattlegroundTargets_Options.TransliterationToggle then
+		GVAR.OptionsFrame.TransLitOptionInfoText:SetTextColor(1, 1, 1, 1)
+	else
+		GVAR.OptionsFrame.TransLitOptionInfoText:SetTextColor(0.5, 0.5, 0.5, 1)
+	end
 	GVAR.OptionsFrame.TransLitOptionInfoText:SetText(
-		L["ruRU_transliteration_test1"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test1"], TSL) .. "\n" ..
-		L["ruRU_transliteration_test2"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test2"], TSL) .. "\n" ..
-		L["ruRU_transliteration_test3"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test3"], TSL) .. "\n" ..
-		L["ruRU_transliteration_test4"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test4"], TSL) .. "\n" ..
-		L["ruRU_transliteration_test5"] .. "  ->  " .. utf8replace(L["ruRU_transliteration_test5"], TSL))
+		L["ruRU_transliteration_test1"] .. tsarrow .. utf8replace(L["ruRU_transliteration_test1"], TSL) .. "\n" ..
+		L["ruRU_transliteration_test2"] .. tsarrow .. utf8replace(L["ruRU_transliteration_test2"], TSL) .. "\n" ..
+		L["ruRU_transliteration_test3"] .. tsarrow .. utf8replace(L["ruRU_transliteration_test3"], TSL) .. "\n" ..
+		L["ruRU_transliteration_test4"] .. tsarrow .. utf8replace(L["ruRU_transliteration_test4"], TSL) .. "\n" ..
+		L["ruRU_transliteration_test5"] .. tsarrow .. utf8replace(L["ruRU_transliteration_test5"], TSL))
 	-- ###
 	-- ####################################################################################################
 
@@ -6038,10 +6048,10 @@ function BattlegroundTargets:MainDataUpdate()
 
 			GVAR_TargetButton.RoleTexture:SetTexCoord(Textures.RoleIcon[qtalentSpec][1], Textures.RoleIcon[qtalentSpec][2], Textures.RoleIcon[qtalentSpec][3], Textures.RoleIcon[qtalentSpec][4])
 
-			local onlyname = qname
-			if ButtonShowFlag or not ButtonShowRealm then
+			local onlyname, realmname = qname
+			if ButtonShowFlag or not ButtonShowRealm or TransliterationToggle then
 				if strfind(qname, "-", 1, true) then
-					onlyname = strmatch(qname, "(.-)%-(.*)$")
+					onlyname, realmname = strmatch(qname, "(.-)%-(.*)$")
 				end
 				ENEMY_Name4Flag[onlyname] = i
 			end
@@ -6059,7 +6069,11 @@ function BattlegroundTargets:MainDataUpdate()
 				end
 			else
 				if TransliterationToggle then
-					GVAR_TargetButton.name4button = utf8replace(qname, TSL)
+					if realmname then
+						GVAR_TargetButton.name4button = utf8replace(onlyname, TSL) .. "-" .. realmname
+					else
+						GVAR_TargetButton.name4button = utf8replace(onlyname, TSL)
+					end
 				else
 					GVAR_TargetButton.name4button = qname
 				end				
