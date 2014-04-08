@@ -209,11 +209,11 @@ elseif locale == "zhCN" then
 	-- Temple of Kotmogu: --> zhCN: tested with Patch 5.1.0.16135
 	FLG["TOK_PATTERN_TAKEN"] = "(.+)取走了(.+)的球！"
 	FLG["TOK_PATTERN_RETURNED"] = "(.+)宝珠被放回了！"
-	-- Deepwind Gorge: --> TODO (no PTR)
-	FLG["DG_PATTERN_TAKEN"] = "(.+) has taken the (.+) gold cart!" -- TODO
-	FLG["DG_PATTERN_PICKED"] = "(.+) picked up the (.+) gold cart !" -- TODO
-	FLG["DG_PATTERN_DROPPED"] = "The (.+) have dropped the (.+) gold cart!" -- TODO
-	FLG["DG_PATTERN_STOLEN"] = "The (.+) have stolen gold from the (.+)!" -- TODO
+	-- Deepwind Gorge: --> zhCN: tested with Patch 5.4.7.18019
+	FLG["DG_PATTERN_TAKEN"] = "(.+)夺取了(.+)运金车！"
+	FLG["DG_PATTERN_PICKED"] = "(.+)掠夺了(.+)运金车！"
+	FLG["DG_PATTERN_DROPPED"] = "(.+)丢弃了(.+)运金车！"
+	FLG["DG_PATTERN_STOLEN"] = "(.+)偷走了(.+)的黄金！"
 
 elseif locale == "zhTW" then
 
