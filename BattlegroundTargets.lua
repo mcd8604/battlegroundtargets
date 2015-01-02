@@ -228,7 +228,7 @@ local scoreCount      = 0                   -- T scoreupdate
 
 local playerLevel = UnitLevel("player") -- LVLCHK
 local isLowLevel
-local maxLevel = 90
+local maxLevel = 100
 
 local playerName = UnitName("player")
 local _, playerClassEN = UnitClass("player")
