@@ -479,7 +479,7 @@ local ranges = {
 	WARLOCK     =    686, -- Shadow Bolt       (40yd/m) - Lvl  1
 	WARRIOR     =    100, -- Charge          (8-25yd/m) - Lvl  3
 }
---for k, v in pairs(ranges) do local name, _, _, _, _, _, _, min, max = GetSpellInfo(v) print(k, v, name, min, max) end -- TEST
+--for k, v in pairs(ranges) do local name, _, _, _, min, max = GetSpellInfo(v) print(k, v, name, min, max) end -- TEST
 --print("IsSpellKnown", ranges[playerClassEN], "|", IsSpellKnown(ranges[playerClassEN]))
 
 local rangeTypeName = {
@@ -3139,7 +3139,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		----- text
 		local minRange, maxRange
 		if ranges[playerClassEN] then
-			local _, _, _, _, _, _, _, minR, maxR = GetSpellInfo(ranges[playerClassEN])
+			local _, _, _, _, minR, maxR = GetSpellInfo(ranges[playerClassEN])
 			minRange = minR
 			maxRange = maxR
 		end
@@ -3165,7 +3165,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		local playerMClass = "?"
 		for i = 1, #class_IntegerSort do
 			local classEN = class_IntegerSort[i].cid
-			local name, _, _, _, _, _, _, minRange, maxRange = GetSpellInfo(ranges[classEN])
+			local name, _, _, _, minRange, maxRange = GetSpellInfo(ranges[classEN])
 			local classStr = "|cff"..ClassHexColor(classEN)..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[classEN]..")|r"
 			if classEN == playerClassEN then
 				playerMClass = "|cff"..ClassHexColor(classEN)..class_IntegerSort[i].loc.."|r"
@@ -7849,7 +7849,7 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 local function CombatLogRangeCheck(sourceName, destName, spellId)
 	if not SPELL_Range[spellId] then
-		local _, _, _, _, _, _, _, _, maxRange = GetSpellInfo(spellId)
+		local _, _, _, _, _, maxRange = GetSpellInfo(spellId)
 		if not maxRange then return end
 		SPELL_Range[spellId] = maxRange
 	end
@@ -8174,7 +8174,7 @@ function BattlegroundTargets:EventRegister(showerror)
 
 			if ranges[playerClassEN] then
 				if IsSpellKnown(ranges[playerClassEN]) then
-					local SpellName, _, _, _, _, _, _, Min, Max = GetSpellInfo(ranges[playerClassEN])
+					local SpellName, _, _, _, Min, Max = GetSpellInfo(ranges[playerClassEN])
 					rangeSpellName = SpellName
 					rangeMin = Min
 					rangeMax = Max
