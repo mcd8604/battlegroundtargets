@@ -140,7 +140,6 @@ local GetMaxBattlefieldID = GetMaxBattlefieldID
 local GetRaidRosterInfo = GetRaidRosterInfo
 local GetRealZoneText = GetRealZoneText
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
-local GetSpecializationRoleByID = GetSpecializationRoleByID
 local GetSpellInfo = GetSpellInfo
 local GetTime = GetTime
 local InCombatLockdown = InCombatLockdown
@@ -173,6 +172,7 @@ local FLG = prg.FLG -- carrier strings
 local RNA = prg.RNA -- bg race names
 local BGN = prg.BGN -- localized battleground names
 local TSL = prg.TSL -- transliteration table
+local TLT = prg.TLT -- talent table
 
 local utf8replace = prg.utf8replace -- utf8.lua
 
@@ -296,17 +296,17 @@ local function BuildBattlegroundMapTable()
 		elseif bgID == 699 then bgInfo[10][4] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 5, gameType = gameType, icon = icon} -- Temple of Kotmogu
 		elseif bgID == 708 then bgInfo[10][5] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0, gameType = gameType, icon = icon} -- Silvershard Mines
 		elseif bgID == 754 then bgInfo[15][4] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 4, gameType = gameType, icon = icon} -- Deepwind Gorge
+		elseif bgID == 789 then bgInfo[40][3] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = "-"     , icon = "Interface\\PVPFrame\\RandomPVPIcon"} -- Southshore vs Tarren Mill -- DEFAULT_BG_TEXTURE Blizzard_PVPUI.lua
 		end
 	end
 end
 
 local flagIDs = {
-	 [23333] = 1, -- Horde Flag         Warsong Gulch & Twin Peaks
-	 [23335] = 1, -- Alliance Flag      Warsong Gulch & Twin Peaks
 	 [34976] = 1, -- Netherstorm Flag   Eye of the Storm
-	[100196] = 1, -- Netherstorm Flag?  Eye of the Storm
 	[140876] = 1, -- Alliance Mine Cart Deepwind Gorge
 	[141210] = 1, -- Horde Mine Cart    Deepwind Gorge
+	[156618] = 1, -- Horde Flag         Warsong Gulch & Twin Peaks
+	[156621] = 1, -- Alliance Flag      Warsong Gulch & Twin Peaks
 }
 
 local debuffIDs = {
@@ -424,25 +424,51 @@ local classes = {
 	                         {role = 4, icon = nil, specName = ""}}}, -- 5 unknown
 }
 
-for classID = 1, MAX_CLASSES do
-	local _, classTag = GetClassInfoByID(classID)
-	local numTabs = GetNumSpecializationsForClassID(classID)
-	--print("#", classTag, "| numTabs =", numTabs, "| classID =", classID) -- TEST
-	classes[classTag].spec = {}
-	for i = 1, 5 do -- 5 means: maximum numTabs (3 or 4) or MAX_TALENT_TABS (=4) + 1 for unknown spec = 5
-		if i <= numTabs then
-			local id, name, _, icon = GetSpecializationInfoForClassID(classID, i)
-			local role = GetSpecializationRoleByID(id)
-			--print("#", role, id, name, icon) -- TEST
-			if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, icon = icon, specName = name} -- DAMAGER: total = 23
-			elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, icon = icon, specName = name} -- HEALER : total =  6
-			elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, icon = icon, specName = name} -- TANK   : total =  5
+if TLT.SHAMAN then
+	for key, value in pairs(TLT) do
+		classes[key].spec = {}
+		for i = 1, 5 do
+			if TLT[key].spec[i] then
+				classes[key].spec[i] = TLT[key].spec[i]
+			else
+				classes[key].spec[i] = {role = 4, icon = nil, specName = ""}
 			end
-		else
-			classes[classTag].spec[i] = {role = 4, icon = nil, specName = ""}
+		end
+	end
+else
+	for classID = 1, MAX_CLASSES do
+		local _, classTag = GetClassInfoByID(classID)
+		local numTabs = GetNumSpecializationsForClassID(classID)
+		--print("#", classTag, "| numTabs =", numTabs, "| classID =", classID) -- TEST
+		classes[classTag].spec = {}
+		for i = 1, 5 do -- 5 means: maximum numTabs (3 or 4) or MAX_TALENT_TABS (=4) + 1 for unknown spec = 5
+			if i <= numTabs then
+				local id, name, _, icon, _, role = GetSpecializationInfoForClassID(classID, i)
+				--print("#", role, id, name, icon) -- TEST
+				if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, icon = icon, specName = name} -- DAMAGER: total = 23
+				elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, icon = icon, specName = name} -- HEALER : total =  6
+				elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, icon = icon, specName = name} -- TANK   : total =  5
+				end
+			else
+				classes[classTag].spec[i] = {role = 4, icon = nil, specName = ""}
+			end
 		end
 	end
 end
+
+--[[
+for k, v in pairs(classes) do
+	if classes[k] and classes[k].spec then
+		for i = 1, 5 do
+			local str = "";
+			for k2, v2 in pairs(classes[k].spec[i]) do
+				str = str .. k2 .. ": " .. v2 .. " - "
+			end
+			print(k, str)
+		end
+	end
+end
+--]]
 
 local class_LocaSort = {}
 FillLocalizedClassList(class_LocaSort, false) -- Constants.lua
@@ -6327,6 +6353,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 
 	for index = 1, numScore do
 		local name, _, _, _, _, faction, _, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
+		--print(index, name, faction, classToken, talentSpec)
 		if not name then break end
 		if faction == oppositeFactionBG then
 
@@ -6619,11 +6646,12 @@ function BattlegroundTargets:IsBattleground()
 						end
 					end
 					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize]
+					local curTime = GetTime() - 1.1
 					for i = 1, currentSize do
 						GVAR.TargetButton[i].FlagTexture:SetSize(quad, quad)
 						GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
 						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.15625001, 0.84374999, 0.15625001, 0.84374999)--(5/32, 27/32, 5/32, 27/32)
-						GVAR.TargetButton[i].orbDebuffUpdate = nil
+						GVAR.TargetButton[i].orbDebuffUpdate = curTime
 					end
 				-- cart
 				elseif isFlagBG == 4 then
@@ -6636,11 +6664,12 @@ function BattlegroundTargets:IsBattleground()
 						flagIcon = "Interface\\Minimap\\Vehicle-SilvershardMines-MineCartBlue"
 					end
 					local quad = (OPT.ButtonHeight[currentSize]-2) * OPT.ButtonFlagScale[currentSize] * 1.1
+					local curTime = GetTime() - 1.1
 					for i = 1, currentSize do
 						GVAR.TargetButton[i].FlagTexture:SetSize(quad, quad)
 						GVAR.TargetButton[i].FlagTexture:SetTexture(flagIcon)
 						GVAR.TargetButton[i].FlagTexture:SetTexCoord(0.09375, 0.90625, 0.09375, 0.90625)--(3/32, 29/32, 3/32, 29/32)
-						GVAR.TargetButton[i].orbDebuffUpdate = nil
+						GVAR.TargetButton[i].orbDebuffUpdate = curTime
 					end
 				-- orb
 				elseif isFlagBG == 5 then
@@ -7035,11 +7064,18 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		end
 	end
 
-	-- carrier_orb
-	if isFlagBG == 5 and GVAR_TargetButton.orbColor and OPT.ButtonShowFlag[currentSize] then
-		if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
-			GVAR.TargetButton[enemyButton].orbDebuffUpdate = curTime
-			BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, enemyButton)
+	-- carrier_orb_and_debuff
+	if isFlagBG > 0 and OPT.ButtonShowFlag[currentSize] then
+		if isFlagBG < 5 and hasFlag and hasFlag == enemyName then
+			if curTime > GVAR_TargetButton.orbDebuffUpdate + 1 then -- max. 1 update per second
+				GVAR.TargetButton[enemyButton].orbDebuffUpdate = curTime
+				BattlegroundTargets:FlagDebuffCheck(enemyID, enemyName, enemyButton)
+			end
+		elseif isFlagBG == 5 and GVAR_TargetButton.orbColor then
+			if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
+				GVAR.TargetButton[enemyButton].orbDebuffUpdate = curTime
+				BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, enemyButton)
+			end
 		end
 	end
 
@@ -7127,12 +7163,18 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 
 	if healthonly then return end
 
-	-- FLAGSPY -- carrier_orb
+	-- FLAGSPY -- carrier_orb_and_debuff
 	if isFlagBG > 0 and OPT.ButtonShowFlag[currentSize] then
 		if flagCHK then
 			BattlegroundTargets:CheckFlagCarrierCHECK(targetID, targetName)
 		end
-		if isFlagBG == 5 and GVAR_TargetButton.orbColor then
+		if isFlagBG < 5 and hasFlag and hasFlag == targetName then
+			local curTime = GetTime()
+			if curTime > GVAR_TargetButton.orbDebuffUpdate + 1 then -- max. 1 update per second
+				GVAR.TargetButton[targetButton].orbDebuffUpdate = curTime
+				BattlegroundTargets:FlagDebuffCheck(targetID, targetName, targetButton)
+			end
+		elseif isFlagBG == 5 and GVAR_TargetButton.orbColor then
 			local curTime = GetTime()
 			if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
 				GVAR.TargetButton[targetButton].orbDebuffUpdate = curTime
@@ -7165,7 +7207,7 @@ end
 function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 	if not ENEMY_FirstFlagCheck[targetName] then return end
 
-	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
+	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 or isFlagBG == 4 then
 
 		-- enemy buff & debuff check
 		for i = 1, 40 do
@@ -7196,34 +7238,6 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 					if GVAR_TargetButton then
 						GVAR_TargetButton.FlagTexture:SetAlpha(1)
 						BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
-					end
-				end
-
-				BattlegroundTargets:CheckFlagCarrierEND()
-				return
-			end
-		end
-
-	elseif isFlagBG == 4 then
-
-		-- enemy buff check
-		for i = 1, 40 do
-			local _, _, _, _, _, _, _, _, _, _, spellId = UnitBuff(unit, i)
-			if not spellId then break end
-			if flagIDs[spellId] then
-				hasFlag = targetName
-
-				local GVAR_TargetButton = GVAR.TargetButton
-				for j = 1, currentSize do
-					GVAR_TargetButton[j].FlagTexture:SetAlpha(0)
-					GVAR_TargetButton[j].FlagDebuff:SetText("")
-				end
-				local button = ENEMY_Name2Button[targetName]
-				if button then
-					local GVAR_TargetButton = GVAR.TargetButton[button]
-					if GVAR_TargetButton then
-						GVAR_TargetButton.FlagTexture:SetAlpha(1)
-						GVAR_TargetButton.FlagDebuff:SetText("")
 					end
 				end
 
@@ -7293,7 +7307,7 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 		ENEMY_FirstFlagCheck[ENEMY_Data[i].name] = 1
 	end
 
-	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 then
+	if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 or isFlagBG == 4 then
 
 		-- friend buff & debuff check
 		local function chk()
@@ -7418,9 +7432,9 @@ function BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, color)
 	end
 end
 
-function BattlegroundTargets:FlagDebuffCheck(message)
+function BattlegroundTargets:FlagDebuffMessage(message)
 	--print("F.lagDebuffCheck", message) -- TEST
-	if message == FLG["WSG_TP_STRING_FLAG_DEBUFF1"] or message == FLG["WSG_TP_STRING_FLAG_DEBUFF2"] then -- Warsong Gulch & Twin Peaks
+	if message == FLG["WSG_TP_STRING_FLAG_DEBUFF1"] or message == FLG["WSG_TP_STRING_FLAG_DEBUFF2"] then
 		flagDebuff = flagDebuff + 1
 		if hasFlag then
 			local Name2Button = ENEMY_Name2Button[hasFlag]
@@ -7434,9 +7448,21 @@ function BattlegroundTargets:FlagDebuffCheck(message)
 	end
 end
 
+function BattlegroundTargets:FlagDebuffCheck(enemyID, enemyName, buttonNum)
+	for i = 1, 40 do
+		local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(enemyID, i) --print(enemyID, enemyName, i, UnitDebuff(enemyID, i))
+		if not spellId then return end
+		if debuffIDs[spellId] then
+			flagDebuff = count
+			BattlegroundTargets:SetFlagDebuff(GVAR.TargetButton[buttonNum])
+			return
+		end
+	end
+end
+
 function BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, buttonNum)
 	for i = 1, 40 do
-		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(enemyID, i) -- print(enemyID, enemyName, i, UnitDebuff(enemyID, i))
+		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(enemyID, i) --print(enemyID, enemyName, i, UnitDebuff(enemyID, i))
 		if not spellId then return end
 		if orbIDs[spellId] then
 			local hasflg
@@ -7513,7 +7539,7 @@ end
 
 -- Warsong Gulch & Twin Peaks ------------------------------------------------------------------------------------------
 function BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
-	if messageFaction == playerFactionBG then
+	if messageFaction ~= playerFactionBG then
 		-- -------------------------------------------------------------------------
 		local fc = strmatch(message, FLG["WSG_TP_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
 		           strmatch(message, FLG["WSG_TP_PATTERN_PICKED2"])    -- Warsong Gulch & Twin Peaks: flag was picked
@@ -7534,12 +7560,6 @@ function BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
 			end
 		-- -------------------------------------------------------------------------
 		elseif strmatch(message, FLG["WSG_TP_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
-			local GVAR_TargetButton = GVAR.TargetButton
-			for i = 1, currentSize do
-				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
-				GVAR_TargetButton[i].FlagDebuff:SetText("")
-			end
-			hasFlag = nil
 			flags = flags - 1
 			if flags <= 0 then
 				flagDebuff = 0
@@ -7606,6 +7626,12 @@ function BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
 			end
 		-- -------------------------------------------------------------------------
 		elseif strmatch(message, FLG["WSG_TP_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
+			local GVAR_TargetButton = GVAR.TargetButton
+			for i = 1, currentSize do
+				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
+				GVAR_TargetButton[i].FlagDebuff:SetText("")
+			end
+			hasFlag = nil
 			flags = flags - 1
 			if flags <= 0 then
 				flagDebuff = 0
@@ -7620,9 +7646,8 @@ end
 -- Eye of the Storm ----------------------------------------------------------------------------------------------------
 function BattlegroundTargets:Carrier_EOTS(message, messageFaction)
 	-- ---------------------------------------------------------------------------
-	if message == FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] or -- Eye of the Storm: flag was captured
-	   message == FLG["EOTS_STRING_CAPTURED_BY_HORDE"] or    -- Eye of the Storm: flag was captured
-	   message == FLG["EOTS_STRING_DROPPED"]                 -- Eye of the Storm: flag was dropped
+	if message == FLG["EOTS_STRING_DROPPED"] or        -- Eye of the Storm: flag was dropped 
+	   strmatch(message, FLG["EOTS_PATTERN_CAPTURED"]) -- Eye of the Storm: flag was captured
 	then
 		local GVAR_TargetButton = GVAR.TargetButton
 		for i = 1, currentSize do
@@ -7630,6 +7655,7 @@ function BattlegroundTargets:Carrier_EOTS(message, messageFaction)
 			GVAR_TargetButton[i].FlagDebuff:SetText("")
 		end
 		hasFlag = nil
+		flagDebuff = 0
 		if flagCHK then
 			BattlegroundTargets:CheckFlagCarrierEND()
 		end
@@ -7688,8 +7714,8 @@ end
 function BattlegroundTargets:Carrier_DG(message, messageFaction)
 	if messageFaction ~= playerFactionBG then
 		-- -------------------------------------------------------------------------
-		if strmatch(message, FLG["DG_PATTERN_DROPPED"]) or -- Deepwind Gorge: cart dropped
-		   strmatch(message, FLG["DG_PATTERN_STOLEN"])     -- Deepwind Gorge: gold stolen
+		if strmatch(message, FLG["DG_PATTERN_DROPPED"]) or -- Deepwind Gorge: flag dropped
+		   strmatch(message, FLG["DG_PATTERN_CAPTURED"])   -- Deepwind Gorge: flag captured
 		then
 			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, currentSize do
@@ -7697,13 +7723,13 @@ function BattlegroundTargets:Carrier_DG(message, messageFaction)
 				GVAR_TargetButton[i].FlagDebuff:SetText("")
 			end
 			hasFlag = nil
+			flagDebuff = 0
 			if flagCHK then
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
 		else
 		-- -------------------------------------------------------------------------
-			local efc = strmatch(message, FLG["DG_PATTERN_TAKEN"]) or -- Deepwind Gorge: cart taken
-			            strmatch(message, FLG["DG_PATTERN_PICKED"])   -- Deepwind Gorge: cart picked
+			local efc = strmatch(message, FLG["DG_PATTERN_PICKED"]) -- Deepwind Gorge: flag picked
 			if efc then
 				local GVAR_TargetButton = GVAR.TargetButton
 				for i = 1, currentSize do
@@ -8311,7 +8337,7 @@ local function OnEvent(self, event, ...)
 		BattlegroundTargets:CarrierCheck(arg1, 1)
 	elseif event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
 		local arg1 = ...
-		BattlegroundTargets:FlagDebuffCheck(arg1)
+		BattlegroundTargets:FlagDebuffMessage(arg1)
 	elseif event == "CHAT_MSG_RAID_BOSS_EMOTE" then
 		local arg1 = ...
 		BattlegroundTargets:OrbReturnCheck(arg1)

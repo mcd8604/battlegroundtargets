@@ -17,42 +17,38 @@ if locale == "deDE" then
 	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+) hat die Flagge der (.+) aufgenommen!" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "fallenlassen!"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "errungen!"
-	-- Eye of the Storm: --> deDE: tested with Patch 4.3.0.15050 (LIVE)
+	-- Eye of the Storm: --> deDE: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["EOTS_PATTERN_PICKED"] = "(.+) hat die Flagge aufgenommen."
+	FLG["EOTS_PATTERN_CAPTURED"] = "(.+) hat die Flagge erobert!"
 	FLG["EOTS_STRING_DROPPED"] = "Die Flagge wurde fallengelassen."
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "Die Allianz hat die Flagge erobert!"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "Die Horde hat die Flagge erobert!"
 	-- Temple of Kotmogu: --> deDE: tested with Patch 5.1.0.16208 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) hat die (.+) Kugel genommen!"
 	FLG["TOK_PATTERN_RETURNED"] = "Die (.+) Kugel wurde zurückgebracht!"
-	-- Deepwind Gorge: --> deDE: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "(.+) hat den Minenwagen der (.+) erobert!"
-	FLG["DG_PATTERN_PICKED"] = "(.+) hat den Minenwagen der (.+) übernommen!"
-	FLG["DG_PATTERN_DROPPED"] = "Die (.+) hat den Minenwagen der (.+) verloren!"
-	FLG["DG_PATTERN_STOLEN"] = "Die (.+) hat Gold von der (.+) gestohlen!"
+	-- Deepwind Gorge: --> deDE: tested with Patch 6.0.3.19342 (LIVE)
+	FLG["DG_PATTERN_PICKED"] = "(.+) hat die Flagge der .+ aufgenommen!"
+	FLG["DG_PATTERN_DROPPED"] = ".+ hat die Flagge der .+ fallenlassen!"
+	FLG["DG_PATTERN_CAPTURED"] = ".+ hat die Flagge der .+ errungen!"
 
 elseif locale == "esES" then
 
-	-- Warsong Gulch & Twin Peaks: --> esES: tested with Patch 5.1.0.16208 (PTR)
+	-- Warsong Gulch & Twin Peaks: --> esES: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["WSG_TP_STRING_FLAG_DEBUFF1"] = "¡Los portadores de las banderas se han vuelto vulnerables a los ataques!"
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "¡Los portadores de las banderas se han vuelto más vulnerables a los ataques!"
 	FLG["WSG_TP_PATTERN_PICKED1"] = "¡(.+) ha cogido la bandera"
 	FLG["WSG_TP_PATTERN_PICKED2"] = "¡(.+) ha cogido la bandera" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "dejado caer la bandera"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "capturado la bandera"
-	-- Eye of the Storm: --> esES: tested with Patch 4.3.0.15050 (LIVE)
+	-- Eye of the Storm: --> esES: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["EOTS_PATTERN_PICKED"] = "¡(.+) ha tomado la bandera!"
+	FLG["EOTS_PATTERN_CAPTURED"] = "¡(.+) ha capturado la bandera!"
 	FLG["EOTS_STRING_DROPPED"] = "¡Ha caído la bandera!"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "¡La Alianza ha capturado la bandera!"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "¡La Horda ha capturado la bandera!"
 	-- Temple of Kotmogu: --> esES: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "¡(.+) se ha hecho con el orbe (.+)!"
 	FLG["TOK_PATTERN_RETURNED"] = "¡El orbe (.+) ha sido devuelto!"
-	-- Deepwind Gorge: --> esES: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "¡(.+) ha tomado el carro de oro de la (.+)!"
-	FLG["DG_PATTERN_PICKED"] = "¡(.+) ha recogido el carro de oro de la (.+)!"
-	FLG["DG_PATTERN_DROPPED"] = "¡La (.+) ha volcado el carro de oro de la (.+)!"
-	FLG["DG_PATTERN_STOLEN"] = "¡La (.+) ha robado el oro de la (.+)!"
+	-- Deepwind Gorge: --> esES: tested with Patch 6.0.3.19342 (LIVE)
+	FLG["DG_PATTERN_PICKED"] = "¡(.+) ha cogido la bandera"
+	FLG["DG_PATTERN_DROPPED"] = "dejado caer la bandera"
+	FLG["DG_PATTERN_CAPTURED"] = "capturado la bandera"
 
 elseif locale == "esMX" then
 
@@ -63,65 +59,59 @@ elseif locale == "esMX" then
 	FLG["WSG_TP_PATTERN_PICKED2"] = "¡(.+) ha tomado la bandera" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "dejado caer la bandera"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "capturado la bandera"
-	-- Eye of the Storm: --> esMX: tested with Patch 5.4.0.17093 (PTR)
+	-- Eye of the Storm: --> esMX: TODO need check
 	FLG["EOTS_PATTERN_PICKED"] = "¡(.+) ha tomado la bandera!"
+	FLG["EOTS_PATTERN_CAPTURED"] = "¡(.+) ha capturado la bandera!"
 	FLG["EOTS_STRING_DROPPED"] = "¡Ha caído la bandera!"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "¡La Alianza ha capturado la bandera!"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "¡La Horda ha capturado la bandera!"
 	-- Temple of Kotmogu: --> esMX: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "¡(.+) ha tomado el orbe (.+)!"
 	FLG["TOK_PATTERN_RETURNED"] = "¡El orbe (.+) ha sido devuelto!"
-	-- Deepwind Gorge: --> esMX: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "¡(.+) ha tomado el carro de oro de la (.+)!"
-	FLG["DG_PATTERN_PICKED"] = "¡(.+) ha recogido el carro de oro de la (.+)!"
-	FLG["DG_PATTERN_DROPPED"] = "¡La (.+) ha volcado el carro de oro de la (.+)!"
-	FLG["DG_PATTERN_STOLEN"] = "¡La (.+) ha robado el oro de la (.+)!"
+	-- Deepwind Gorge: --> esMX: TODO need check
+	FLG["DG_PATTERN_PICKED"] = "¡(.+) ha tomado la bandera"
+	FLG["DG_PATTERN_DROPPED"] = "dejado caer la bandera"
+	FLG["DG_PATTERN_CAPTURED"] = "capturado la bandera"
 
 elseif locale == "frFR" then
 
-	-- Warsong Gulch & Twin Peaks: --> frFR: tested with Patch 4.3.0.15050 (LIVE)
+	-- Warsong Gulch & Twin Peaks: --> frFR: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["WSG_TP_STRING_FLAG_DEBUFF1"] = "Les porteurs de drapeaux sont devenus vulnérables aux attaques !"
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "Les porteurs de drapeaux sont devenus encore plus vulnérables aux attaques !"
 	FLG["WSG_TP_PATTERN_PICKED1"] = "a été ramassé par (.+) !"
 	FLG["WSG_TP_PATTERN_PICKED2"] = "a été ramassé par (.+) !" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "a été lâché"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "a pris le drapeau"
-	-- Eye of the Storm: --> frFR: tested with Patch 5.3.0.17128 (LIVE)
+	-- Eye of the Storm: --> frFR: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["EOTS_PATTERN_PICKED"] = "(.+) a pris le drapeau !"
+	FLG["EOTS_PATTERN_CAPTURED"] = "(.+) a capturé le drapeau !"
 	FLG["EOTS_STRING_DROPPED"] = "Le drapeau a été lâché !"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "L'Alliance a pris le drapeau !"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "La Horde s'est emparée du drapeau !"
 	-- Temple of Kotmogu: --> frFR: tested with Patch 5.1.0.16208 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) a pris l’orbe (.+) !"
 	FLG["TOK_PATTERN_RETURNED"] = "L’orbe (.+) a été rendu !"
-	-- Deepwind Gorge: --> frFR: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "a été récupéré par (.+) !"  -- "Le chariot d’or de la Horde a été récupéré par (.+) !"   -- TAKEN/PICKED: same string
-	FLG["DG_PATTERN_PICKED"] = "a été récupéré par (.+) !" -- "Le chariot d’or de l’Alliance a été récupéré par (.+) !" -- TAKEN/PICKED: same string
-	FLG["DG_PATTERN_DROPPED"] = "(.+) a lâché le chariot d’or de (.+) !"
-	FLG["DG_PATTERN_STOLEN"] = "(.+) a volé de l’or à (.+) !"
+	-- Deepwind Gorge: --> frFR: tested with Patch 6.0.3.19342 (LIVE)
+	FLG["DG_PATTERN_PICKED"] = "Le drapeau de .+ a été ramassé par (.+) !"
+	FLG["DG_PATTERN_DROPPED"] = "Le drapeau de .+ a été lâché par .+ !"
+	FLG["DG_PATTERN_CAPTURED"] = "a pris le drapeau"
 
 elseif locale == "itIT" then
 
-	-- Warsong Gulch & Twin Peaks: --> itIT: tested with Patch 5.0.4.16016 (LIVE)
+	-- Warsong Gulch & Twin Peaks: --> itIT: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["WSG_TP_STRING_FLAG_DEBUFF1"] = "I portatori di bandiera sono diventati vulnerabili agli attacchi!"
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "I portatori di bandiera sono diventati più vulnerabili agli attacchi!"
 	FLG["WSG_TP_PATTERN_PICKED1"] = "(.+) ha raccolto la bandiera dell'(.+)!"
 	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+) ha raccolto la bandiera dell'(.+)!" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "lasciato cadere la bandiera"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "conquistato la bandiera"
-	-- Eye of the Storm: --> itIT: tested with Patch 5.0.4.16016 (LIVE)
+	-- Eye of the Storm: --> itIT: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["EOTS_PATTERN_PICKED"] = "(.+) ha raccolto la bandiera!"
+	FLG["EOTS_PATTERN_CAPTURED"] = "(.+) ha catturato la bandiera!"
 	FLG["EOTS_STRING_DROPPED"] = "La bandiera è a terra!"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "L'Alleanza ha conquistato la bandiera!"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "L'Orda ha conquistato la bandiera!"
 	-- Temple of Kotmogu: --> itIT: tested with Patch 5.1.0.16208 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) ha preso il globo (.+)!"
 	FLG["TOK_PATTERN_RETURNED"] = "Il globo (.+) è stato restituito!"
-	-- Deepwind Gorge: --> itIT: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "(.+) ha preso il carrello d'oro (.+)!"  -- TAKEN/PICKED: same string
-	FLG["DG_PATTERN_PICKED"] = "(.+) ha preso il carrello d'oro (.+)!" -- TAKEN/PICKED: same string
-	FLG["DG_PATTERN_DROPPED"] = "(.+) ha perso il carrello d'oro (.+)!"
-	FLG["DG_PATTERN_STOLEN"] = "(.+) ha rubato l'oro (.+)!"
+	-- Deepwind Gorge: --> itIT: tested with Patch 6.0.3.19342 (LIVE)
+	FLG["DG_PATTERN_PICKED"] = "(.+) ha raccolto la bandiera"
+	FLG["DG_PATTERN_DROPPED"] = "lasciato cadere la bandiera"
+	FLG["DG_PATTERN_CAPTURED"] = "conquistato la bandiera"
 
 elseif locale == "koKR" then
 
@@ -132,42 +122,38 @@ elseif locale == "koKR" then
 	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+)|1이;가; (.+) 깃발을 손에 넣었습니다!" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "깃발을 떨어뜨렸습니다!"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "깃발 쟁탈에 성공했습니다!"
-	-- Eye of the Storm: --> koKR: tested with Patch 4.3.2.15211 (PTR)
-	FLG["EOTS_PATTERN_PICKED"] = "^(.+)|1이;가; 깃발을 차지했습니다!"
-	FLG["EOTS_STRING_DROPPED"] = "깃발이 떨어졌습니다!"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "얼라이언스가 깃발을 차지했습니다!"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "호드가 깃발을 차지했습니다!"
+	-- Eye of the Storm: --> koKR: TODO
+	FLG["EOTS_PATTERN_PICKED"] = "TODO" -- "^(.+)|1이;가; 깃발을 차지했습니다!"
+	FLG["EOTS_PATTERN_CAPTURED"] = "TODO"
+	FLG["EOTS_STRING_DROPPED"] = "TODO" -- "깃발이 떨어졌습니다!"
 	-- Temple of Kotmogu: --> koKR: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+)|1이;가; (.+) 공을 차지했습니다!"
 	FLG["TOK_PATTERN_RETURNED"] = "(.+) 공이 돌아왔습니다!"
-	-- Deepwind Gorge: --> koKR: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "(.+)|1이;가; (.+) 금광 수레를 빼앗았습니다!"
-	FLG["DG_PATTERN_PICKED"] = "(.+)|1이;가; (.+) 금광 수레를 기지로 돌려보냈습니다!"
-	FLG["DG_PATTERN_DROPPED"] = "(.+) (.+) 금광 수레를 놓쳤습니다!"
-	FLG["DG_PATTERN_STOLEN"] = "(.+) (.+) 황금을 가로챘습니다!"
+	-- Deepwind Gorge: --> koKR: TODO
+	FLG["DG_PATTERN_PICKED"] = "The .+ was picked up by (.+)!"
+	FLG["DG_PATTERN_DROPPED"] = "The .+ was dropped by .+!"
+	FLG["DG_PATTERN_CAPTURED"] = ".+ captured the .+!"
 
 elseif locale == "ptBR" then
 
-	-- Warsong Gulch & Twin Peaks: --> ptBR: tested with Patch 4.3.0.15050 (LIVE)
+	-- Warsong Gulch & Twin Peaks: --> ptBR: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["WSG_TP_STRING_FLAG_DEBUFF1"] = "Os portadores da bandeira estão vulneráveis!"
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "Os portadores da bandeira estão ainda mais vulneráveis!"
 	FLG["WSG_TP_PATTERN_PICKED1"] = "(.+) pegou a Bandeira da (.+)!"
 	FLG["WSG_TP_PATTERN_PICKED2"] = "(.+) pegou a Bandeira da (.+)!" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "largou a Bandeira"
-	FLG["WSG_TP_MATCH_CAPTURED"] = "capturou"
-	-- Eye of the Storm: --> ptBR: tested with Patch 4.3.0.15050 (LIVE)
+	FLG["WSG_TP_MATCH_CAPTURED"] = "capturou a Bandeira"
+	-- Eye of the Storm: --> ptBR: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["EOTS_PATTERN_PICKED"] = "(.+) pegou a bandeira!"
+	FLG["EOTS_PATTERN_CAPTURED"] = "(.+) capturou a bandeira!"
 	FLG["EOTS_STRING_DROPPED"] = "A bandeira foi largada!"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "A Aliança capturou a bandeira!"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "A Horda capturou a bandeira!"
 	-- Temple of Kotmogu: --> ptBR: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) pegou o orbe (.+)!"
 	FLG["TOK_PATTERN_RETURNED"] = "O orbe (.+) foi devolvido!"
-	-- Deepwind Gorge: --> ptBR: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "(.+) tomou o vagonete de ouro (.+)!"
-	FLG["DG_PATTERN_PICKED"] = "(.+) pegou o vagonete de ouro (.+)!"
-	FLG["DG_PATTERN_DROPPED"] = "(.+) derrubou o vagonete de ouro (.+)!"
-	FLG["DG_PATTERN_STOLEN"] = "(.+) roubou ouro (.+)!"
+	-- Deepwind Gorge: --> ptBR: tested with Patch 6.0.3.19342 (LIVE)
+	FLG["DG_PATTERN_PICKED"] = "(.+) pegou a Bandeira da .+!"
+	FLG["DG_PATTERN_DROPPED"] = "largou a Bandeira"
+	FLG["DG_PATTERN_CAPTURED"] = "capturou a Bandeira"
 
 elseif locale == "ruRU" then
 
@@ -178,19 +164,17 @@ elseif locale == "ruRU" then
 	FLG["WSG_TP_PATTERN_PICKED2"] = "Флаг Альянса у |3%-1%((.+)%)!" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "роняет"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "захватывает"
-	-- Eye of the Storm: --> ruRU: tested with Patch 4.3.3.15354 (PTR)
-	FLG["EOTS_PATTERN_PICKED"] = "(.+) захватывает флаг!"
-	FLG["EOTS_STRING_DROPPED"] = "Флаг уронили!"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "Альянс захватил флаг!"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "Орда захватила флаг!"
+	-- Eye of the Storm: --> ruRU: TODO
+	FLG["EOTS_PATTERN_PICKED"] = "TODO" -- "(.+) захватывает флаг!"
+	FLG["EOTS_PATTERN_CAPTURED"] = "TODO"
+	FLG["EOTS_STRING_DROPPED"] = "TODO" -- "Флаг уронили!"
 	-- Temple of Kotmogu: --> ruRU: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) захватывает (.+) сферу!"
 	FLG["TOK_PATTERN_RETURNED"] = "(.+) сфера возвращена!"
-	-- Deepwind Gorge: --> ruRU: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "(.+) захватывает вагонетку с золотом (.+)!"
-	FLG["DG_PATTERN_PICKED"] = "(.+) захватила вагонетку с золотом (.+)!"
-	FLG["DG_PATTERN_DROPPED"] = "Солдаты (.+) бросили вагонетку с золотом (.+)!"
-	FLG["DG_PATTERN_STOLEN"] = "(.+) получает золото (.+)!"
+	-- Deepwind Gorge: --> ruRU: TODO
+	FLG["DG_PATTERN_PICKED"] = "The .+ was picked up by (.+)!"
+	FLG["DG_PATTERN_DROPPED"] = "The .+ was dropped by .+!"
+	FLG["DG_PATTERN_CAPTURED"] = ".+ captured the .+!"
 
 elseif locale == "zhCN" then
 
@@ -201,19 +185,17 @@ elseif locale == "zhCN" then
 	FLG["WSG_TP_PATTERN_PICKED2"] = "旗帜被([^%s]+)拔起了！" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "丢掉了"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "夺取"
-	-- Eye of the Storm: --> zhCN: tested with Patch 5.1.0.16135
-	FLG["EOTS_PATTERN_PICKED"] = "(.+)夺走了旗帜！"
-	FLG["EOTS_STRING_DROPPED"] = "旗帜被扔掉了！"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "联盟夺得了旗帜！"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "部落夺得了旗帜！"
+	-- Eye of the Storm: --> zhCN: TODO
+	FLG["EOTS_PATTERN_PICKED"] = "TODO" -- "(.+)夺走了旗帜！"
+	FLG["EOTS_PATTERN_CAPTURED"] = "TODO"
+	FLG["EOTS_STRING_DROPPED"] = "TODO" -- "旗帜被扔掉了！"
 	-- Temple of Kotmogu: --> zhCN: tested with Patch 5.1.0.16135
 	FLG["TOK_PATTERN_TAKEN"] = "(.+)取走了(.+)的球！"
 	FLG["TOK_PATTERN_RETURNED"] = "(.+)宝珠被放回了！"
-	-- Deepwind Gorge: --> zhCN: tested with Patch 5.4.7.18019
-	FLG["DG_PATTERN_TAKEN"] = "(.+)夺取了(.+)运金车！"
-	FLG["DG_PATTERN_PICKED"] = "(.+)掠夺了(.+)运金车！"
-	FLG["DG_PATTERN_DROPPED"] = "(.+)丢弃了(.+)运金车！"
-	FLG["DG_PATTERN_STOLEN"] = "(.+)偷走了(.+)的黄金！"
+	-- Deepwind Gorge: --> zhCN: TODO
+	FLG["DG_PATTERN_PICKED"] = "The .+ was picked up by (.+)!"
+	FLG["DG_PATTERN_DROPPED"] = "The .+ was dropped by .+!"
+	FLG["DG_PATTERN_CAPTURED"] = ".+ captured the .+!"
 
 elseif locale == "zhTW" then
 
@@ -224,19 +206,17 @@ elseif locale == "zhTW" then
 	FLG["WSG_TP_PATTERN_PICKED2"] = "被(.+)拔掉了!" -- ruRU special
 	FLG["WSG_TP_MATCH_DROPPED"] = "丟掉了"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "佔據了"
-	-- Eye of the Storm: --> zhTW: tested with Patch 4.3.2.15211 (PTR)
-	FLG["EOTS_PATTERN_PICKED"] = "(.+)已經奪走了旗幟!"
-	FLG["EOTS_STRING_DROPPED"] = "旗幟已經掉落!"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "聯盟已奪得旗幟!"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "部落已奪得旗幟!"
+	-- Eye of the Storm: --> zhTW: TODO
+	FLG["EOTS_PATTERN_PICKED"] =  "TODO" -- "(.+)已經奪走了旗幟!"
+	FLG["EOTS_PATTERN_CAPTURED"] = "TODO"
+	FLG["EOTS_STRING_DROPPED"] =  "TODO" -- "旗幟已經掉落!"
 	-- Temple of Kotmogu: --> zhTW: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+)奪走了(.+)異能球!"
 	FLG["TOK_PATTERN_RETURNED"] = "(.+)異能球已回到初始位置!"
-	-- Deepwind Gorge: --> zhTW: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "(.+)奪走了(.+)的黃金礦車!"
-	FLG["DG_PATTERN_PICKED"] = "(.+)控制住(.+)的黃金礦車了!"
-	FLG["DG_PATTERN_DROPPED"] = "(.+)棄置(.+)的黃金礦車了!"
-	FLG["DG_PATTERN_STOLEN"] = "(.+)偷走了(.+)的黃金!"
+	-- Deepwind Gorge: --> zhTW: TODO
+	FLG["DG_PATTERN_PICKED"] = "The .+ was picked up by (.+)!"
+	FLG["DG_PATTERN_DROPPED"] = "The .+ was dropped by .+!"
+	FLG["DG_PATTERN_CAPTURED"] = ".+ captured the .+!"
 
 else--if locale == "enUS" then
 
@@ -245,20 +225,18 @@ else--if locale == "enUS" then
 	FLG["WSG_TP_STRING_FLAG_DEBUFF2"] = "The flag carriers have become increasingly vulnerable to attack!"
 	FLG["WSG_TP_PATTERN_PICKED1"] = "was picked up by (.+)!"
 	FLG["WSG_TP_PATTERN_PICKED2"] = "was picked up by (.+)!" -- ruRU special
-	FLG["WSG_TP_MATCH_DROPPED"] = "dropped"
+	FLG["WSG_TP_MATCH_DROPPED"] = "was dropped"
 	FLG["WSG_TP_MATCH_CAPTURED"] = "captured the"
-	-- Eye of the Storm: --> enUS: tested with Patch 4.3.0.15050 (LIVE)
+	-- Eye of the Storm: --> enUS: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["EOTS_PATTERN_PICKED"] = "(.+) has taken the flag!"
+	FLG["EOTS_PATTERN_CAPTURED"] = "(.+) has captured the flag!"
 	FLG["EOTS_STRING_DROPPED"] = "The flag has been dropped!"
-	FLG["EOTS_STRING_CAPTURED_BY_ALLIANCE"] = "The Alliance have captured the flag!"
-	FLG["EOTS_STRING_CAPTURED_BY_HORDE"] = "The Horde have captured the flag!"
 	-- Temple of Kotmogu: --> enUS: tested with Patch 5.1.0.16208 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) has taken the (.+) orb!"
 	FLG["TOK_PATTERN_RETURNED"] = "The (.+) orb has been returned!"
-	-- Deepwind Gorge: --> enUS: tested with Patch 5.4.0.17093 (PTR)
-	FLG["DG_PATTERN_TAKEN"] = "(.+) has taken the (.+) gold cart!"
-	FLG["DG_PATTERN_PICKED"] = "(.+) picked up the (.+) gold cart(%s*)!" -- "...gold cart !"
-	FLG["DG_PATTERN_DROPPED"] = "The (.+) have dropped the (.+) gold cart!"
-	FLG["DG_PATTERN_STOLEN"] = "The (.+) have stolen gold from the (.+)!"
+	-- Deepwind Gorge: --> enUS: tested with Patch 6.0.3.19342 (LIVE)
+	FLG["DG_PATTERN_PICKED"] = "The .+ was picked up by (.+)!"
+	FLG["DG_PATTERN_DROPPED"] = "The .+ was dropped by .+!"
+	FLG["DG_PATTERN_CAPTURED"] = ".+ captured the .+!"
 
 end
