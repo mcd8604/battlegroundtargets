@@ -85,7 +85,6 @@
 -- # Enemy Carrier: -------------------------------------- VERY LOW CPU USAGE --
 --   - Events:             - CHAT_MSG_BG_SYSTEM_HORDE                         --
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
---                         - CHAT_MSG_BG_SYSTEM_NEUTRAL                       --
 --                         - CHAT_MSG_RAID_BOSS_EMOTE                         --
 --   Carrier detection in case of ReloadUI or mid-battle-joins: (temporarily  --
 --   registered until each enemy is scanned)                                  --
@@ -7255,6 +7254,7 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 		end
 		for i = 1, 40 do
 			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(unit, i)
+			--print(i, spellId, val2, "###", UnitDebuff(unit, i))
 			if not spellId then break end
 			if orbIDs[spellId] then
 				flags = flags + 1 -- FLAG_TOK_CHK
@@ -7432,22 +7432,6 @@ function BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, color)
 	end
 end
 
-function BattlegroundTargets:FlagDebuffMessage(message)
-	--print("F.lagDebuffCheck", message) -- TEST
-	if message == FLG["WSG_TP_STRING_FLAG_DEBUFF1"] or message == FLG["WSG_TP_STRING_FLAG_DEBUFF2"] then
-		flagDebuff = flagDebuff + 1
-		if hasFlag then
-			local Name2Button = ENEMY_Name2Button[hasFlag]
-			if Name2Button then
-				local GVAR_TargetButton = GVAR.TargetButton[Name2Button]
-				if GVAR_TargetButton then
-					BattlegroundTargets:SetFlagDebuff(GVAR_TargetButton)
-				end
-			end
-		end
-	end
-end
-
 function BattlegroundTargets:FlagDebuffCheck(enemyID, enemyName, buttonNum)
 	for i = 1, 40 do
 		local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(enemyID, i) --print(enemyID, enemyName, i, UnitDebuff(enemyID, i))
@@ -7526,7 +7510,7 @@ end
 function BattlegroundTargets:CarrierCheck(message, messageFaction)
 	--print("C.arrierCheck", isFlagBG, "#", message, "#", messageFaction) -- TEST
 	if isFlagBG == 1 or isFlagBG == 3 then
-		BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
+		BattlegroundTargets:Carrier_WG_TP(message, messageFaction)
 	elseif isFlagBG == 2 then
 		BattlegroundTargets:Carrier_EOTS(message, messageFaction)
 	elseif isFlagBG == 4 then
@@ -7538,15 +7522,15 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- Warsong Gulch & Twin Peaks ------------------------------------------------------------------------------------------
-function BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
+function BattlegroundTargets:Carrier_WG_TP(message, messageFaction)
 	if messageFaction ~= playerFactionBG then
 		-- -------------------------------------------------------------------------
-		local fc = strmatch(message, FLG["WSG_TP_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
-		           strmatch(message, FLG["WSG_TP_PATTERN_PICKED2"])    -- Warsong Gulch & Twin Peaks: flag was picked
+		local fc = strmatch(message, FLG["WG_TP_DG_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
+		           strmatch(message, FLG["WG_TP_DG_PATTERN_PICKED2"])    -- Warsong Gulch & Twin Peaks: flag was picked
 		if fc then
 			flags = flags + 1
 		-- -------------------------------------------------------------------------
-		elseif strmatch(message, FLG["WSG_TP_MATCH_CAPTURED"]) then -- Warsong Gulch & Twin Peaks: flag was captured
+		elseif strmatch(message, FLG["WG_TP_DG_MATCH_CAPTURED"]) then -- Warsong Gulch & Twin Peaks: flag was captured
 			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, currentSize do
 				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
@@ -7559,7 +7543,7 @@ function BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
 		-- -------------------------------------------------------------------------
-		elseif strmatch(message, FLG["WSG_TP_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
+		elseif strmatch(message, FLG["WG_TP_DG_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
 			flags = flags - 1
 			if flags <= 0 then
 				flagDebuff = 0
@@ -7569,8 +7553,8 @@ function BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
 		-- -------------------------------------------------------------------------
 	else
 		-- -------------------------------------------------------------------------
-		local efc = strmatch(message, FLG["WSG_TP_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
-		            strmatch(message, FLG["WSG_TP_PATTERN_PICKED2"])    -- Warsong Gulch & Twin Peaks: flag was picked
+		local efc = strmatch(message, FLG["WG_TP_DG_PATTERN_PICKED1"]) or -- Warsong Gulch & Twin Peaks: flag was picked
+		            strmatch(message, FLG["WG_TP_DG_PATTERN_PICKED2"])    -- Warsong Gulch & Twin Peaks: flag was picked
 		if efc then
 			flags = flags + 1
 			local GVAR_TargetButton = GVAR.TargetButton
@@ -7612,7 +7596,7 @@ function BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
 			end
 			-- ---
 		-- -------------------------------------------------------------------------
-		elseif strmatch(message, FLG["WSG_TP_MATCH_CAPTURED"]) then -- Warsong Gulch & Twin Peaks: flag was captured
+		elseif strmatch(message, FLG["WG_TP_DG_MATCH_CAPTURED"]) then -- Warsong Gulch & Twin Peaks: flag was captured
 			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, currentSize do
 				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
@@ -7625,7 +7609,7 @@ function BattlegroundTargets:Carrier_WSG_TP(message, messageFaction)
 				BattlegroundTargets:CheckFlagCarrierEND()
 			end
 		-- -------------------------------------------------------------------------
-		elseif strmatch(message, FLG["WSG_TP_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
+		elseif strmatch(message, FLG["WG_TP_DG_MATCH_DROPPED"]) then -- Warsong Gulch & Twin Peaks: flag was dropped
 			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, currentSize do
 				GVAR_TargetButton[i].FlagTexture:SetAlpha(0)
@@ -7714,8 +7698,8 @@ end
 function BattlegroundTargets:Carrier_DG(message, messageFaction)
 	if messageFaction ~= playerFactionBG then
 		-- -------------------------------------------------------------------------
-		if strmatch(message, FLG["DG_PATTERN_DROPPED"]) or -- Deepwind Gorge: flag dropped
-		   strmatch(message, FLG["DG_PATTERN_CAPTURED"])   -- Deepwind Gorge: flag captured
+		if strmatch(message, FLG["WG_TP_DG_MATCH_DROPPED"]) or -- Deepwind Gorge: flag dropped
+		   strmatch(message, FLG["WG_TP_DG_MATCH_CAPTURED"])   -- Deepwind Gorge: flag captured
 		then
 			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, currentSize do
@@ -7729,7 +7713,8 @@ function BattlegroundTargets:Carrier_DG(message, messageFaction)
 			end
 		else
 		-- -------------------------------------------------------------------------
-			local efc = strmatch(message, FLG["DG_PATTERN_PICKED"]) -- Deepwind Gorge: flag picked
+			local efc = strmatch(message, FLG["WG_TP_DG_PATTERN_PICKED1"]) or -- Deepwind Gorge: flag picked
+			            strmatch(message, FLG["WG_TP_DG_PATTERN_PICKED2"])    -- Deepwind Gorge: flag picked
 			if efc then
 				local GVAR_TargetButton = GVAR.TargetButton
 				for i = 1, currentSize do
@@ -8172,9 +8157,9 @@ function BattlegroundTargets:EventRegister(showerror)
 
 	if OPT.ButtonShowFlag[currentSize] then
 		if isFlagBG > 0 then
+			BattlegroundTargets:RegisterEvent("UNIT_TARGET")
 			BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
 			BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-			BattlegroundTargets:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
 			if isFlagBG == 5 then
 				BattlegroundTargets:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
 			end
@@ -8245,7 +8230,6 @@ function BattlegroundTargets:EventUnregister()
 	BattlegroundTargets:UnregisterEvent("PLAYER_FOCUS_CHANGED")
 	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
 	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-	BattlegroundTargets:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
 	BattlegroundTargets:UnregisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
 	BattlegroundTargets:UnregisterEvent("GROUP_ROSTER_UPDATE")
 	BattlegroundTargets:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -8335,9 +8319,6 @@ local function OnEvent(self, event, ...)
 	elseif event == "CHAT_MSG_BG_SYSTEM_ALLIANCE" then
 		local arg1 = ...
 		BattlegroundTargets:CarrierCheck(arg1, 1)
-	elseif event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
-		local arg1 = ...
-		BattlegroundTargets:FlagDebuffMessage(arg1)
 	elseif event == "CHAT_MSG_RAID_BOSS_EMOTE" then
 		local arg1 = ...
 		BattlegroundTargets:OrbReturnCheck(arg1)
