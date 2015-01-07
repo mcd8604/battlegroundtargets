@@ -1,5 +1,5 @@
 -- -------------------------------------------------------------------------- --
--- BattlegroundTargets Transliteration                                        --
+-- BattlegroundTargets - transliteration                                      --
 -- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 
@@ -11,6 +11,7 @@ prg.TSL = TSL
 -- Machine Readable Travel Documents, Doc 9303, Part 1, Volume 1 (Sixth ed.). ICAO. 2006. Pages IV-50 - IV-52.
 -- http://www.icao.int/publications/Documents/9303_p1_v1_cons_en.pdf
 -- https://en.wikipedia.org/wiki/Romanization_of_Russian
+
 TSL["А"] = "a"
 TSL["а"] = "a"
 TSL["Б"] = "b"

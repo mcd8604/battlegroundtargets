@@ -6359,8 +6359,9 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 
 			if not specicon then
 				if not testData.specTest then testData.specTest = {} end
-				if not testData.specTest.talentSpec then
-					testData.specTest.talentSpec = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
+				if not testData.specTest[class] then testData.specTest[class] = {} end
+				if not testData.specTest[class][talentSpec] then
+					testData.specTest[class][talentSpec] = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
 					Print("ERROR unknown spec:", locale, faction, classToken, talentSpec)
 				end
 			end
@@ -6402,8 +6403,9 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 
 			if not specicon then
 				if not testData.specTest then testData.specTest = {} end
-				if not testData.specTest.talentSpec then
-					testData.specTest.talentSpec = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
+				if not testData.specTest[class] then testData.specTest[class] = {} end
+				if not testData.specTest[class][talentSpec] then
+					testData.specTest[class][talentSpec] = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
 					Print("ERROR unknown spec:", locale, faction, classToken, talentSpec)
 				end
 			end
@@ -6720,7 +6722,9 @@ function BattlegroundTargets:IsNotBattleground()
 
 	if testData.specTest then
 		for k, v in pairs(testData.specTest) do
-			Print("ERROR unknown spec:", v.locale, v.faction, v.classToken, v.talentSpec)
+			for k2, v2 in pairs(v) do
+				Print("ERROR unknown spec:", v2.locale, v2.faction, v2.classToken, v2.talentSpec)
+			end
 		end
 		testData.specTest = nil
 	end
