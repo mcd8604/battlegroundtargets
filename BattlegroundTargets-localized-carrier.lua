@@ -162,20 +162,20 @@ elseif locale == "ruRU" then
 
 elseif locale == "zhCN" then
 
-	-- Warsong Gulch:  --> zhCN: tested with Patch 5.1.0.16135
-	-- Twin Peaks:     --> zhCN: tested with Patch 5.1.0.16135
-	-- Deepwind Gorge: --> zhCN: TODO needs check
+	-- Warsong Gulch:  --> zhCN: tested with Patch 6.0.3.19342 (LIVE)
+	-- Twin Peaks:     --> zhCN: tested with Patch 6.0.3.19342 (LIVE)
+	-- Deepwind Gorge: --> zhCN: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["WG_TP_DG_PATTERN_PICKED1"] = "旗帜被([^%s]+)拔起了！"
 	FLG["WG_TP_DG_PATTERN_PICKED2"] = "旗帜被([^%s]+)拔起了！" -- ruRU special
 	FLG["WG_TP_DG_MATCH_DROPPED"] = "丢掉了"
 	FLG["WG_TP_DG_MATCH_CAPTURED"] = "夺取"
 
-	-- Eye of the Storm: --> zhCN: TODO
-	FLG["EOTS_PATTERN_PICKED"] = "TODO" -- "(.+)夺走了旗帜！"
-	FLG["EOTS_STRING_DROPPED"] = "TODO" -- "旗帜被扔掉了！"
-	FLG["EOTS_PATTERN_CAPTURED"] = "TODO"
+	-- Eye of the Storm: --> zhCN: tested with Patch 6.0.3.19342 (LIVE)
+	FLG["EOTS_PATTERN_PICKED"] = "(.+)夺走了旗帜！"
+	FLG["EOTS_STRING_DROPPED"] = "旗帜被扔掉了！"
+	FLG["EOTS_PATTERN_CAPTURED"] = "(.+)夺得了旗帜！"
 
-	-- Temple of Kotmogu: --> zhCN: tested with Patch 5.1.0.16135
+	-- Temple of Kotmogu: --> zhCN: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+)取走了(.+)的球！"
 	FLG["TOK_PATTERN_RETURNED"] = "(.+)宝珠被放回了！"
 
