@@ -42,7 +42,7 @@ elseif locale == "esES" then
 	FLG["EOTS_STRING_DROPPED"] = "¡Ha caído la bandera!"
 	FLG["EOTS_PATTERN_CAPTURED"] = "¡(.+) ha capturado la bandera!"
 
-	-- Temple of Kotmogu: --> esES: tested with Patch 5.4.0.17093 (PTR)
+	-- Temple of Kotmogu: --> esES: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["TOK_PATTERN_TAKEN"] = "¡(.+) se ha hecho con el orbe (.+)!"
 	FLG["TOK_PATTERN_RETURNED"] = "¡El orbe (.+) ha sido devuelto!"
 
@@ -80,7 +80,7 @@ elseif locale == "frFR" then
 	FLG["EOTS_STRING_DROPPED"] = "Le drapeau a été lâché !"
 	FLG["EOTS_PATTERN_CAPTURED"] = "(.+) a capturé le drapeau !"
 
-	-- Temple of Kotmogu: --> frFR: tested with Patch 5.1.0.16208 (PTR)
+	-- Temple of Kotmogu: --> frFR: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) a pris l’orbe (.+) !"
 	FLG["TOK_PATTERN_RETURNED"] = "L’orbe (.+) a été rendu !"
 
@@ -99,7 +99,7 @@ elseif locale == "itIT" then
 	FLG["EOTS_STRING_DROPPED"] = "La bandiera è a terra!"
 	FLG["EOTS_PATTERN_CAPTURED"] = "(.+) ha catturato la bandiera!"
 
-	-- Temple of Kotmogu: --> itIT: tested with Patch 5.1.0.16208 (PTR)
+	-- Temple of Kotmogu: --> itIT: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) ha preso il globo (.+)!"
 	FLG["TOK_PATTERN_RETURNED"] = "Il globo (.+) è stato restituito!"
 

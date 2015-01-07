@@ -169,7 +169,6 @@ local L if not prg.L then return end for k, v in pairs(prg.L) do if type(v) ~= "
       L   = prg.L   -- localization L[
 local FLG = prg.FLG -- carrier strings
 local RNA = prg.RNA -- bg race names
-local BGN = prg.BGN -- localized battleground names
 local TSL = prg.TSL -- transliteration table
 local TLT = prg.TLT -- talent table
 
@@ -330,7 +329,7 @@ local orbColIDs = {
 }
 
 local function orbData(str)
-	local colorCode = strmatch(str, "^|cFF%x%x%x%x%x(%x).*|r$") -- print("colorCode:", colorCode)
+	local colorCode = strmatch(str, "^|cFF%x%x%x%x%x(%x).*|r$") --print("colorCode:", colorCode)
 	    if colorCode == "7" then return "Blue",   "Interface\\MiniMap\\TempleofKotmogu_ball_cyan"   -- |cFF01DFD__7__Blue|r   |cFF01DFD7Blue|r
 	elseif colorCode == "F" then return "Purple", "Interface\\MiniMap\\TempleofKotmogu_ball_purple" -- |cFFBF00F__F__Purple|r |cFFBF00FFPurple|r
 	elseif colorCode == "1" then return "Green",  "Interface\\MiniMap\\TempleofKotmogu_ball_green"  -- |cFF01DF0__1__Green|r  |cFF01DF01Green|r
@@ -418,29 +417,25 @@ local classes = {
 	ZZZFAILURE  = {coords = {0, 0, 0, 0}},
 }
 
-if TLT.SHAMAN then
-	for classTag in pairs(TLT) do
-		local numSpec = #TLT[classTag].spec
-		--print("#", classTag, numSpec)
-		classes[classTag].spec = {}
-		for i = 1, numSpec do
-			classes[classTag].spec[i] = TLT[classTag].spec[i]
+for classID = 1, MAX_CLASSES do
+	local _, classTag = GetClassInfoByID(classID)
+	local numTabs = GetNumSpecializationsForClassID(classID)
+	--print("#", classTag, numTabs, classID)
+	classes[classTag].spec = {}
+	for i = 1, numTabs do
+		local id, name, _, icon, _, role = GetSpecializationInfoForClassID(classID, i)
+		--print(role, id, name, icon, "#", GetSpecializationInfoForClassID(classID, i))
+		if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, specID = id, specName = name, icon = icon} -- DAMAGER: total = 23
+		elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, specID = id, specName = name, icon = icon} -- HEALER : total =  6
+		elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, specID = id, specName = name, icon = icon} -- TANK   : total =  5
 		end
 	end
-else
-	for classID = 1, MAX_CLASSES do
-		local _, classTag = GetClassInfoByID(classID)
-		local numTabs = GetNumSpecializationsForClassID(classID)
-		--print("#", classTag, numTabs, classID)
-		classes[classTag].spec = {}
-		for i = 1, numTabs do
-			local id, name, _, icon, _, role = GetSpecializationInfoForClassID(classID, i)
-			--print(role, id, name, icon, "#", GetSpecializationInfoForClassID(classID, i))
-			if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, specID = id, specName = name, icon = icon} -- DAMAGER: total = 23
-			elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, specID = id, specName = name, icon = icon} -- HEALER : total =  6
-			elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, specID = id, specName = name, icon = icon} -- TANK   : total =  5
-			end
-		end
+end
+
+for classTag in pairs(TLT) do
+	if not classes[classTag].spec then classes[classTag].spec = {} end
+	for i = 1, #TLT[classTag].spec do
+		tinsert(classes[classTag].spec, TLT[classTag].spec[i])
 	end
 end
 
@@ -6362,7 +6357,13 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 				end
 			end
 
-			--if not specicon then print("ERROR No spec info:", locale, faction, classToken, talentSpec) end
+			if not specicon then
+				if not testData.specTest then testData.specTest = {} end
+				if not testData.specTest.talentSpec then
+					testData.specTest.talentSpec = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
+					Print("ERROR unknown spec:", locale, faction, classToken, talentSpec)
+				end
+			end
 
 			tinsert(ENEMY_Data, {
 				name = name,
@@ -6399,7 +6400,13 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 				end
 			end
 
-			--if not specicon then print("ERROR No spec info:", locale, faction, classToken, talentSpec) end
+			if not specicon then
+				if not testData.specTest then testData.specTest = {} end
+				if not testData.specTest.talentSpec then
+					testData.specTest.talentSpec = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
+					Print("ERROR unknown spec:", locale, faction, classToken, talentSpec)
+				end
+			end
 
 			tinsert(FRIEND_Data, {
 				name = name,
@@ -6451,13 +6458,9 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 
 	if bgMaps[bgName] then
 		BattlegroundTargets:BattlefieldCheck()
-	elseif BGN[bgName] then
-		BattlegroundTargets:BattlefieldCheck()
 	else
 		local zone = GetRealZoneText()
 		if bgMaps[zone] then
-			BattlegroundTargets:BattlefieldCheck()
-		elseif BGN[zone] then
 			BattlegroundTargets:BattlefieldCheck()
 		else
 			reSizeCheck = reSizeCheck + 1
@@ -6495,30 +6498,12 @@ function BattlegroundTargets:IsBattleground()
 		reSizeCheck = 10
 		currentSize = bgMaps[bgName].bgSize
 		isFlagBG    = bgMaps[bgName].flagBG
-	elseif BGN[bgName] then
-		reSizeCheck = 10
-		for k in pairs(bgMaps) do
-			if k == BGN[bgName] then
-				currentSize = bgMaps[k].bgSize
-				isFlagBG    = bgMaps[k].flagBG
-				break
-			end
-		end
 	else
 		local zone = GetRealZoneText()
 		if bgMaps[zone] then
 			reSizeCheck = 10
 			currentSize = bgMaps[zone].bgSize
 			isFlagBG    = bgMaps[zone].flagBG
-		elseif BGN[zone] then
-			reSizeCheck = 10
-			for k in pairs(bgMaps) do
-				if k == BGN[zone] then
-					currentSize = bgMaps[k].bgSize
-					isFlagBG    = bgMaps[k].flagBG
-					break
-				end
-			end
 		else
 			if reSizeCheck == 10 then
 				Print("ERROR", "unknown battleground name", locale, bgName, zone)
@@ -6732,6 +6717,13 @@ function BattlegroundTargets:IsNotBattleground()
 	wipe(ENEMY_Name2Range)
 	wipe(ENEMY_Name2Level)
 	wipe(TARGET_Names)
+
+	if testData.specTest then
+		for k, v in pairs(testData.specTest) do
+			Print("ERROR unknown spec:", v.locale, v.faction, v.classToken, v.talentSpec)
+		end
+		testData.specTest = nil
+	end
 
 	GVAR.MainFrame:SetScript("OnUpdate", nil)
 

@@ -10,7 +10,6 @@
 
 BattlegroundTargets-localized-carrier.lua
 BattlegroundTargets-localized-racenames.lua
-BattlegroundTargets-localized-bgnames.lua
 BattlegroundTargets-localized-talents.lua
 BattlegroundTargets-localized-transliteration.lua
 
