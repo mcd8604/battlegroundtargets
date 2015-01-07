@@ -415,41 +415,30 @@ local classes = {
 	SHAMAN      = {coords = {0.25390625, 0.48828125, 0.2578125,  0.4921875 }}, -- ( 65/256, 125/256,  66/256, 126/256)
 	WARLOCK     = {coords = {0.75,       0.984375,   0.2578125,  0.4921875 }}, -- (192/256, 252/256,  66/256, 126/256)
 	WARRIOR     = {coords = {0.0078125,  0.2421875,  0.0078125,  0.2421875 }}, -- (  2/256,  62/256,   2/256,  62/256)
-	ZZZFAILURE  = {coords = {0, 0, 0, 0},
-	               spec   = {{role = 4, icon = nil, specName = ""},   -- 1 unknown
-	                         {role = 4, icon = nil, specName = ""},   -- 2 unknown
-	                         {role = 4, icon = nil, specName = ""},   -- 3 unknown
-	                         {role = 4, icon = nil, specName = ""},   -- 4 unknown
-	                         {role = 4, icon = nil, specName = ""}}}, -- 5 unknown
+	ZZZFAILURE  = {coords = {0, 0, 0, 0}},
 }
 
 if TLT.SHAMAN then
-	for key, value in pairs(TLT) do
-		classes[key].spec = {}
-		for i = 1, 5 do
-			if TLT[key].spec[i] then
-				classes[key].spec[i] = TLT[key].spec[i]
-			else
-				classes[key].spec[i] = {role = 4, icon = nil, specName = ""}
-			end
+	for classTag in pairs(TLT) do
+		local numSpec = #TLT[classTag].spec
+		--print("#", classTag, numSpec)
+		classes[classTag].spec = {}
+		for i = 1, numSpec do
+			classes[classTag].spec[i] = TLT[classTag].spec[i]
 		end
 	end
 else
 	for classID = 1, MAX_CLASSES do
 		local _, classTag = GetClassInfoByID(classID)
 		local numTabs = GetNumSpecializationsForClassID(classID)
-		--print("#", classTag, "| numTabs =", numTabs, "| classID =", classID) -- TEST
+		--print("#", classTag, numTabs, classID)
 		classes[classTag].spec = {}
-		for i = 1, 5 do -- 5 means: maximum numTabs (3 or 4) or MAX_TALENT_TABS (=4) + 1 for unknown spec = 5
-			if i <= numTabs then
-				local id, name, _, icon, _, role = GetSpecializationInfoForClassID(classID, i)
-				--print("#", role, id, name, icon) -- TEST
-				if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, icon = icon, specName = name} -- DAMAGER: total = 23
-				elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, icon = icon, specName = name} -- HEALER : total =  6
-				elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, icon = icon, specName = name} -- TANK   : total =  5
-				end
-			else
-				classes[classTag].spec[i] = {role = 4, icon = nil, specName = ""}
+		for i = 1, numTabs do
+			local id, name, _, icon, _, role = GetSpecializationInfoForClassID(classID, i)
+			--print(role, id, name, icon, "#", GetSpecializationInfoForClassID(classID, i))
+			if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, specID = id, specName = name, icon = icon} -- DAMAGER: total = 23
+			elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, specID = id, specName = name, icon = icon} -- HEALER : total =  6
+			elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, specID = id, specName = name, icon = icon} -- TANK   : total =  5
 			end
 		end
 	end
@@ -458,7 +447,7 @@ end
 --[[
 for k, v in pairs(classes) do
 	if classes[k] and classes[k].spec then
-		for i = 1, 5 do
+		for i = 1, #classes[k].spec do
 			local str = "";
 			for k2, v2 in pairs(classes[k].spec[i]) do
 				str = str .. k2 .. ": " .. v2 .. " - "
@@ -5373,32 +5362,28 @@ function BattlegroundTargets:EnableConfigMode()
 		ENEMY_Data[40] = {name = L["Target"].."_Zx-servername", classToken = "ROGUE",       talentSpec = nil}
 
 		for i = 1, 40 do
-			local role = 4
-			local spec = 5
-			
+			local specrole = 4
+			local specicon = nil
 			local talentSpec = ENEMY_Data[i].talentSpec
 			local classToken = ENEMY_Data[i].classToken
-			
+
 			if talentSpec and classToken then
-				local token = classes[classToken]
+				local token = classes[classToken] -- BGSPEC
 				if token then
-					if token.spec[1] and talentSpec == token.spec[1].specName then
-						role = classes[classToken].spec[1].role
-						spec = 1
-					elseif token.spec[2] and talentSpec == token.spec[2].specName then
-						role = classes[classToken].spec[2].role
-						spec = 2
-					elseif token.spec[3] and talentSpec == token.spec[3].specName then
-						role = classes[classToken].spec[3].role
-						spec = 3
-					elseif token.spec[4] and talentSpec == token.spec[4].specName then
-						role = classes[classToken].spec[4].role
-						spec = 4
+					if token.spec then
+						for i = 1, #token.spec do
+							if talentSpec == token.spec[i].specName then
+								specrole = token.spec[i].role
+								specicon = token.spec[i].icon
+								break
+							end
+						end
 					end
 				end
 			end
-			ENEMY_Data[i].specNum = spec
-			ENEMY_Data[i].talentSpec = role
+
+			ENEMY_Data[i].specIcon = specicon
+			ENEMY_Data[i].talentSpec = specrole
 		end
 
 		testData.Loaded = true
@@ -6053,7 +6038,7 @@ function BattlegroundTargets:MainDataUpdate()
 
 			local qname       = ENEMY_Data[i].name
 			local qclassToken = ENEMY_Data[i].classToken
-			local qspecNum    = ENEMY_Data[i].specNum
+			local qspecIcon   = ENEMY_Data[i].specIcon
 			local qtalentSpec = ENEMY_Data[i].talentSpec
 
 			ENEMY_Name2Button[qname] = i
@@ -6119,7 +6104,7 @@ function BattlegroundTargets:MainDataUpdate()
 			end
 
 			if ButtonShowSpec then
-				GVAR_TargetButton.SpecTexture:SetTexture(classes[qclassToken].spec[qspecNum].icon)
+				GVAR_TargetButton.SpecTexture:SetTexture(qspecIcon)
 			end
 
 			if ButtonClassIcon then
@@ -6356,78 +6341,74 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 		if not name then break end
 		if faction == oppositeFactionBG then
 
-			local role = 4
-			local spec = 5
+			local specrole = 4
+			local specicon = nil
 			local class = "ZZZFAILURE"
 			if classToken then
-				local token = classes[classToken]
+				local token = classes[classToken] -- BGSPEC
 				if token then
 					if talentSpec then
-						if token.spec[1] and talentSpec == token.spec[1].specName then
-							role = classes[classToken].spec[1].role
-							spec = 1
-						elseif token.spec[2] and talentSpec == token.spec[2].specName then
-							role = classes[classToken].spec[2].role
-							spec = 2
-						elseif token.spec[3] and talentSpec == token.spec[3].specName then
-							role = classes[classToken].spec[3].role
-							spec = 3
-						elseif token.spec[4] and talentSpec == token.spec[4].specName then
-							role = classes[classToken].spec[4].role
-							spec = 4
+						if token.spec then
+							for i = 1, #token.spec do
+								if talentSpec == token.spec[i].specName then
+									specrole = token.spec[i].role
+									specicon = token.spec[i].icon
+									break
+								end
+							end
 						end
 					end
 					class = classToken
 				end
 			end
 
+			--if not specicon then print("ERROR No spec info:", locale, faction, classToken, talentSpec) end
+
 			tinsert(ENEMY_Data, {
 				name = name,
 				classToken = class,
-				specNum = spec,
-				talentSpec = role,
+				specIcon = specicon,
+				talentSpec = specrole,
 			})
 
-			ENEMY_Roles[role] = ENEMY_Roles[role] + 1 -- SUMMARY
+			ENEMY_Roles[specrole] = ENEMY_Roles[specrole] + 1 -- SUMMARY
 			if not ENEMY_Names[name] then
 				ENEMY_Names[name] = 0
 			end
 
 		elseif faction == playerFactionBG then
 
-			local role = 4
-			local spec = 5
+			local specrole = 4
+			local specicon = nil
 			local class = "ZZZFAILURE"
 			if classToken then
-				local token = classes[classToken]
+				local token = classes[classToken] -- BGSPEC
 				if token then
 					if talentSpec then
-						if token.spec[1] and talentSpec == token.spec[1].specName then
-							role = classes[classToken].spec[1].role
-							spec = 1
-						elseif token.spec[2] and talentSpec == token.spec[2].specName then
-							role = classes[classToken].spec[2].role
-							spec = 2
-						elseif token.spec[3] and talentSpec == token.spec[3].specName then
-							role = classes[classToken].spec[3].role
-							spec = 3
-						elseif token.spec[4] and talentSpec == token.spec[4].specName then
-							role = classes[classToken].spec[4].role
-							spec = 4
+						if token.spec then
+							for i = 1, #token.spec do
+								if talentSpec == token.spec[i].specName then
+									specrole = token.spec[i].role
+									specicon = token.spec[i].icon
+									break
+								end
+							end
 						end
 					end
 					class = classToken
 				end
 			end
 
+			--if not specicon then print("ERROR No spec info:", locale, faction, classToken, talentSpec) end
+
 			tinsert(FRIEND_Data, {
 				name = name,
 				classToken = class,
-				specNum = spec,
-				talentSpec = role,
+				specIcon = specicon,
+				talentSpec = specrole,
 			})
 
-			FRIEND_Roles[role] = FRIEND_Roles[role] + 1 -- SUMMARY
+			FRIEND_Roles[specrole] = FRIEND_Roles[specrole] + 1 -- SUMMARY
 			FRIEND_Names[name] = 1
 
 		end
