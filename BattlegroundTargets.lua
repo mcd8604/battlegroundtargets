@@ -6360,6 +6360,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 			if not specicon then
 				if not testData.specTest then testData.specTest = {} end
 				if not testData.specTest[class] then testData.specTest[class] = {} end
+				if not talentSpec then talentSpec = "talentSpec_is_unknown" end
 				if not testData.specTest[class][talentSpec] then
 					testData.specTest[class][talentSpec] = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
 					Print("ERROR unknown spec:", locale, faction, classToken, talentSpec)
@@ -6404,6 +6405,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 			if not specicon then
 				if not testData.specTest then testData.specTest = {} end
 				if not testData.specTest[class] then testData.specTest[class] = {} end
+				if not talentSpec then talentSpec = "talentSpec_is_unknown" end
 				if not testData.specTest[class][talentSpec] then
 					testData.specTest[class][talentSpec] = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
 					Print("ERROR unknown spec:", locale, faction, classToken, talentSpec)
