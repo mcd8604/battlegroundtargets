@@ -70,7 +70,7 @@ elseif locale == "esMX" then -- 18 | Patch 5.1.0.16208 (PTR)
 	RNA["No-muerto"] = HORDE
 	RNA["No-muerta"] = HORDE
 
-elseif locale == "frFR" then -- 18 | Patch 4.3.0.15050 (LIVE)
+elseif locale == "frFR" then -- 19 | Patch 6.0.3.19342 (LIVE)
 
 	RNA["Elfe de la nuit"] = ALLIANCE
 	RNA["Humain"] = ALLIANCE
@@ -79,6 +79,7 @@ elseif locale == "frFR" then -- 18 | Patch 4.3.0.15050 (LIVE)
 	RNA["Worgen"] = ALLIANCE
 	RNA["Gnome"] = ALLIANCE
 	RNA["Nain"] = ALLIANCE
+	RNA["Naine"] = ALLIANCE
 	RNA["Elfe de sang"] = HORDE
 	RNA["Mort-vivant"] = HORDE
 	RNA["Morte-vivante"] = HORDE

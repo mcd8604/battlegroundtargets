@@ -6330,6 +6330,17 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 		end
 	end
 
+	--[[
+	for index = 1, numScore do
+		local _, _, _, _, _, faction, race, _, classToken = GetBattlefieldScore(index)
+		if race and faction and classToken then
+			if not BattlegroundTargets_Options.RNA then BattlegroundTargets_Options.RNA = {} end
+			if not BattlegroundTargets_Options.RNA[locale] then BattlegroundTargets_Options.RNA[locale] = {} end
+			BattlegroundTargets_Options.RNA[locale][race] = 1
+		end
+	end
+	--]]
+
 	for index = 1, numScore do
 		local name, _, _, _, _, faction, _, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
 		--print(index, name, faction, classToken, talentSpec)

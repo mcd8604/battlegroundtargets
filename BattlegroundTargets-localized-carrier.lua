@@ -143,18 +143,18 @@ elseif locale == "ptBR" then
 
 elseif locale == "ruRU" then
 
-	-- Warsong Gulch:  --> ruRU: tested with Patch 4.3.3.15354 (PTR)
-	-- Twin Peaks:     --> ruRU: tested with Patch 4.3.3.15354 (PTR)
-	-- Deepwind Gorge: --> ruRU: TODO needs check
+	-- Warsong Gulch:  --> ruRU: tested with Patch 6.0.3.19342 (LIVE)
+	-- Twin Peaks:     --> ruRU: tested with Patch 6.0.3.19342 (LIVE)
+	-- Deepwind Gorge: --> ruRU: tested with Patch 6.0.3.19342 (LIVE)
 	FLG["WG_TP_DG_PATTERN_PICKED1"] = "(.+) несет флаг Орды!"
 	FLG["WG_TP_DG_PATTERN_PICKED2"] = "Флаг Альянса у |3%-1%((.+)%)!" -- ruRU special
 	FLG["WG_TP_DG_MATCH_DROPPED"] = "роняет"
 	FLG["WG_TP_DG_MATCH_CAPTURED"] = "захватывает"
 
-	-- Eye of the Storm: --> ruRU: TODO
-	FLG["EOTS_PATTERN_PICKED"] = "TODO" -- "(.+) захватывает флаг!"
-	FLG["EOTS_STRING_DROPPED"] = "TODO" -- "Флаг уронили!"
-	FLG["EOTS_PATTERN_CAPTURED"] = "TODO"
+	-- Eye of the Storm: --> ruRU: tested with Patch 6.0.3.19342 (LIVE)
+	FLG["EOTS_PATTERN_PICKED"] = "(.+) захватывает флаг!"
+	FLG["EOTS_STRING_DROPPED"] = "Флаг уронили!"
+	FLG["EOTS_PATTERN_CAPTURED"] = "(.+) захватил флаг!"
 
 	-- Temple of Kotmogu: --> ruRU: tested with Patch 5.4.0.17093 (PTR)
 	FLG["TOK_PATTERN_TAKEN"] = "(.+) захватывает (.+) сферу!"
