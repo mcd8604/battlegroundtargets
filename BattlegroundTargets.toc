@@ -5,7 +5,7 @@
 ## Notes-zhCN: 显示全部战场敌人。战场简洁敌对单位框体。
 ## Notes-zhTW: 顯示全部戰場敵人。戰場簡潔敵對單位框體。
 ## Author: kunda
-## Version: 60000-5
+## Version: 60000-6
 ## SavedVariables: BattlegroundTargets_Options
 
 BattlegroundTargets-localized-carrier.lua

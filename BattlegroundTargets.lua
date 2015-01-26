@@ -86,6 +86,7 @@
 --   - Events:             - CHAT_MSG_BG_SYSTEM_HORDE                         --
 --                         - CHAT_MSG_BG_SYSTEM_ALLIANCE                      --
 --                         - CHAT_MSG_RAID_BOSS_EMOTE                         --
+--                         - UNIT_TARGET                                      --
 --   Carrier detection in case of ReloadUI or mid-battle-joins: (temporarily  --
 --   registered until each enemy is scanned)                                  --
 --                         - UNIT_TARGET                                      --
@@ -162,17 +163,29 @@ local UnitName = UnitName
 -- -------------------------------------------------------------------------- --
 
 BattlegroundTargets_Options = {} -- SavedVariable options table
-local BattlegroundTargets = CreateFrame("Frame") -- container
+local BattlegroundTargets = CreateFrame("Frame")
+
+local function Print(...) print("|cffffff7fBattlegroundTargets:|r", ...) end
 
 local _, prg = ...
-local L if not prg.L then return end for k, v in pairs(prg.L) do if type(v) ~= "string" then prg.L[k] = tostring(k) end end
-      L   = prg.L   -- localization L[
-local FLG = prg.FLG -- carrier strings
-local RNA = prg.RNA -- bg race names
-local TSL = prg.TSL -- transliteration table
-local TLT = prg.TLT -- talent table
+if type(prg.L)           ~= "table" or
+   type(prg.FLG)         ~= "table" or
+   type(prg.RNA)         ~= "table" or
+   type(prg.TLT)         ~= "table" or
+   type(prg.TSL)         ~= "table" or
+   type(prg.utf8replace) ~= "function"
+then
+	Print("ERROR: Restart WoW.")
+	return
+end
 
-local utf8replace = prg.utf8replace -- utf8.lua
+local L for k, v in pairs(prg.L) do if type(v) ~= "string" then prg.L[k] = tostring(k) end end
+      L   = prg.L   -- localization L[
+local FLG = prg.FLG -- flag carrier
+local RNA = prg.RNA -- bg race names
+local TLT = prg.TLT -- talents
+local TSL = prg.TSL -- transliteration
+local utf8replace = prg.utf8replace -- utf8.lua - utf8replace (for transliteration)
 
 local GVAR = {}     -- UI Widgets
 local TEMPLATE = {} -- Templates
@@ -207,7 +220,7 @@ local flagCHK
 local flagflag
 
 -- THROTTLE (reduce CPU usage) | FORCE UPDATE (precise results) | WARNING | MISC
-local range_SPELL_Frequency     = 0.2       -- T rangecheck: [class-spell]: in second per enemy (variable: ENEMY_Name2Range[enemyname]) 
+local range_SPELL_Frequency     = 0.2       -- T rangecheck: [class-spell]: in second per enemy (variable: ENEMY_Name2Range[enemyname])
 local range_CL_Throttle         = 0         -- T rangecheck: [combatlog] C.ombatLogRangeCheck()
 local range_CL_Frequency        = 3         -- T rangecheck: [combatlog] 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% combatlog messages filtered (36% vs overhead: two variables, one addition, one number comparison and if filtered one math.random)
 local range_CL_DisplayThrottle  = GetTime() -- T rangecheck: [combatlog] display update
@@ -250,6 +263,7 @@ local ENEMY_Name2Button = {}    -- key = enemyName               | value = butto
 local ENEMY_Name2Percent = {}   -- key = enemyName | value = health in percent
 local ENEMY_Name2Range = {}     -- key = enemyName | value = time of last contact
 local ENEMY_Name2Level = {}     -- key = enemyName | value = level
+local ENEMY_TransName = {}      -- key = enemyName | value = transliteration name
 local ENEMY_FirstFlagCheck = {} -- key = enemyName | value = 1
 local FRIEND_Data = {}          -- key = numerical | all FRIEND data TEST TODO
 local FRIEND_Names = {}         -- key = friendName | value = 1
@@ -443,7 +457,7 @@ end
 for k, v in pairs(classes) do
 	if classes[k] and classes[k].spec then
 		for i = 1, #classes[k].spec do
-			local str = "";
+			local str = ""
 			for k2, v2 in pairs(classes[k].spec[i]) do
 				str = str .. k2 .. ": " .. v2 .. " - "
 			end
@@ -548,10 +562,6 @@ local sumPos = {0, 45, 90, 135, 180, 225, 270, 315, 360} -- SUMPOSi
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-local function Print(...)
-	print("|cffffff7fBattlegroundTargets:|r", ...)
-end
-
 local function NOOP() end
 
 local function Desaturation(texture, desaturation)
@@ -1034,7 +1044,7 @@ end
 TEMPLATE.Slider = function(slider, width, step, minVal, maxVal, curVal, func, measure)
 	slider:SetWidth(width)
 	slider:SetHeight(16)
-	slider:SetValueStep(step) 
+	slider:SetValueStep(step)
 	slider:SetMinMaxValues(minVal, maxVal)
 	slider:SetValue(curVal)
 	slider:SetOrientation("HORIZONTAL")
@@ -1312,70 +1322,9 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 22
 	end
 
-	if BattlegroundTargets_Options.version < 18 then
+	if BattlegroundTargets_Options.version < 22 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
-		BattlegroundTargets_Options.version = 22
-	end
-
-	if BattlegroundTargets_Options.version == 18 then -- range display remap
-		if type(BattlegroundTargets_Options.ButtonRangeDisplay) == "table" then
-			for i = 1, 3 do
-				local size = 10
-				    if i == 2 then size = 15
-				elseif i == 3 then size = 40 end
-				local num = BattlegroundTargets_Options.ButtonRangeDisplay[size]
-				if type(num) == "number" then
-					    if num == 2 then BattlegroundTargets_Options.ButtonRangeDisplay[size] = 4
-					elseif num == 3 then BattlegroundTargets_Options.ButtonRangeDisplay[size] = 2
-					elseif num == 4 then BattlegroundTargets_Options.ButtonRangeDisplay[size] = 5
-					elseif num == 5 then BattlegroundTargets_Options.ButtonRangeDisplay[size] = 3
-					elseif num == 7 then BattlegroundTargets_Options.ButtonRangeDisplay[size] = 8
-					elseif num == 8 then BattlegroundTargets_Options.ButtonRangeDisplay[size] = 9
-					elseif num == 9 then BattlegroundTargets_Options.ButtonRangeDisplay[size] = 7 end
-				end
-			end
-		end
-		BattlegroundTargets_Options.version = 19
-	end
-
-	if BattlegroundTargets_Options.version == 19 then
-		BattlegroundTargets_Options.TargetIcon = nil
-		BattlegroundTargets_Options.version = 20
-	end
-
-	if BattlegroundTargets_Options.version == 20 then
-		BattlegroundTargets_Options.ButtonShowGuildGroup = nil
-		BattlegroundTargets_Options.ButtonGuildGroupPosition = nil
-		BattlegroundTargets_Options.SummaryScaleGuildGroup = nil
-		BattlegroundTargets_Options.version = 21
-	end
-
-	if BattlegroundTargets_Options.version == 21 then -- summary positioning
-		local s = ""
-		if type(BattlegroundTargets_Options.LayoutTH) == "table" and type(BattlegroundTargets_Options.Summary) == "table" then
-			if BattlegroundTargets_Options.Summary[10] and BattlegroundTargets_Options.LayoutTH[10] == 81 then s = s..".10v10." end
-			if BattlegroundTargets_Options.Summary[15] and BattlegroundTargets_Options.LayoutTH[15] == 81 then s = s..".15v15." end
-			if BattlegroundTargets_Options.Summary[40] and BattlegroundTargets_Options.LayoutTH[40] == 81 then s = s..".40v40." end
-		end
-		if s ~= "" then
-			Print(s.. ": Summary position changed.")
-		end
-		if type(BattlegroundTargets_Options.Summary) == "table" then
-			BattlegroundTargets_Options.SummaryToggle = {}
-			if BattlegroundTargets_Options.Summary[10] == true then BattlegroundTargets_Options.SummaryToggle[10] = true else BattlegroundTargets_Options.SummaryToggle[10] = false end
-			if BattlegroundTargets_Options.Summary[15] == true then BattlegroundTargets_Options.SummaryToggle[15] = true else BattlegroundTargets_Options.SummaryToggle[15] = false end
-			if BattlegroundTargets_Options.Summary[40] == true then BattlegroundTargets_Options.SummaryToggle[40] = true else BattlegroundTargets_Options.SummaryToggle[40] = false end
-		end
-		if type(BattlegroundTargets_Options.SummaryScaleRole) == "table" then
-			BattlegroundTargets_Options.SummaryScale = {}
-			if type(BattlegroundTargets_Options.SummaryScaleRole[10]) == "number" then BattlegroundTargets_Options.SummaryScale[10] = BattlegroundTargets_Options.SummaryScaleRole[10] end
-			if type(BattlegroundTargets_Options.SummaryScaleRole[15]) == "number" then BattlegroundTargets_Options.SummaryScale[15] = BattlegroundTargets_Options.SummaryScaleRole[15] end
-			if type(BattlegroundTargets_Options.SummaryScaleRole[40]) == "number" then BattlegroundTargets_Options.SummaryScale[40] = BattlegroundTargets_Options.SummaryScaleRole[40] end
-		end
-		BattlegroundTargets_Options.Summary = nil
-		BattlegroundTargets_Options.SummaryScaleRole = nil
-		BattlegroundTargets_Options.LayoutButtonSpace = nil
 		BattlegroundTargets_Options.version = 22
 	end
 
@@ -2193,10 +2142,8 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets_Options.IndependentPositioning[currentSize] = not BattlegroundTargets_Options.IndependentPositioning[currentSize]
 		GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options.IndependentPositioning[currentSize])
 		if not BattlegroundTargets_Options.IndependentPositioning[currentSize] then
-			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize] = nil -- NEW 50200-3 or newer
-			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize] = nil -- NEW 50200-3 or newer
-			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize.."_posX"] = nil -- OLD pre50200-3
-			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize.."_posY"] = nil -- OLD pre50200-3
+			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize] = nil
+			BattlegroundTargets_Options.pos["BattlegroundTargets_MainFrame"..currentSize] = nil
 			if inCombat or InCombatLockdown() then
 				reCheckBG = true
 				return
@@ -3962,15 +3909,37 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.MoverBottomText:SetTextColor(0.3, 0.3, 0.3, 1)
 	GVAR.OptionsFrame.MoverBottomText:SetText(L["click & move"])
 
-	GVAR.OptionsFrame.MoverTop:SetScript("OnEnter", function() GVAR.OptionsFrame.MoverTopText:SetTextColor(1, 1, 1, 1) end)
-	GVAR.OptionsFrame.MoverTop:SetScript("OnLeave", function() GVAR.OptionsFrame.MoverTopText:SetTextColor(0.3, 0.3, 0.3, 1) end)
-	GVAR.OptionsFrame.MoverTop:SetScript("OnMouseDown", function() GVAR.OptionsFrame:StartMoving() end)
-	GVAR.OptionsFrame.MoverTop:SetScript("OnMouseUp", function() GVAR.OptionsFrame:StopMovingOrSizing() BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_OptionsFrame") end)
+	GVAR.OptionsFrame.MoverTop:SetScript("OnEnter", function()
+		GVAR.OptionsFrame.MoverTopText:SetTextColor(1, 1, 1, 1)
+		GVAR.OptionsFrame.MoverBottomText:SetTextColor(1, 1, 1, 1)
+	end)
+	GVAR.OptionsFrame.MoverTop:SetScript("OnLeave", function()
+		GVAR.OptionsFrame.MoverTopText:SetTextColor(0.3, 0.3, 0.3, 1)
+		GVAR.OptionsFrame.MoverBottomText:SetTextColor(0.3, 0.3, 0.3, 1)
+	end)
+	GVAR.OptionsFrame.MoverTop:SetScript("OnMouseDown", function()
+		GVAR.OptionsFrame:StartMoving()
+	end)
+	GVAR.OptionsFrame.MoverTop:SetScript("OnMouseUp", function()
+		GVAR.OptionsFrame:StopMovingOrSizing()
+		BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_OptionsFrame")
+	end)
 
-	GVAR.OptionsFrame.MoverBottom:SetScript("OnEnter", function() GVAR.OptionsFrame.MoverBottomText:SetTextColor(1, 1, 1, 1) end)
-	GVAR.OptionsFrame.MoverBottom:SetScript("OnLeave", function() GVAR.OptionsFrame.MoverBottomText:SetTextColor(0.3, 0.3, 0.3, 1) end)
-	GVAR.OptionsFrame.MoverBottom:SetScript("OnMouseDown", function() GVAR.OptionsFrame:StartMoving() end)
-	GVAR.OptionsFrame.MoverBottom:SetScript("OnMouseUp", function() GVAR.OptionsFrame:StopMovingOrSizing() BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_OptionsFrame") end)
+	GVAR.OptionsFrame.MoverBottom:SetScript("OnEnter", function()
+		GVAR.OptionsFrame.MoverTopText:SetTextColor(1, 1, 1, 1)
+		GVAR.OptionsFrame.MoverBottomText:SetTextColor(1, 1, 1, 1)
+	end)
+	GVAR.OptionsFrame.MoverBottom:SetScript("OnLeave", function()
+		GVAR.OptionsFrame.MoverTopText:SetTextColor(0.3, 0.3, 0.3, 1)
+		GVAR.OptionsFrame.MoverBottomText:SetTextColor(0.3, 0.3, 0.3, 1)
+	end)
+	GVAR.OptionsFrame.MoverBottom:SetScript("OnMouseDown", function()
+		GVAR.OptionsFrame:StartMoving()
+	end)
+	GVAR.OptionsFrame.MoverBottom:SetScript("OnMouseUp", function()
+		GVAR.OptionsFrame:StopMovingOrSizing()
+		BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_OptionsFrame")
+	end)
 	-- ###
 	-- ####################################################################################################
 
@@ -5047,7 +5016,6 @@ end
 
 function BattlegroundTargets:Frame_SetupPosition(frameName)
 	if frameName == "BattlegroundTargets_MainFrame" then
-		-- NEW 50200-3 or newer
 		if BattlegroundTargets_Options.IndependentPositioning[currentSize] and BattlegroundTargets_Options.pos[frameName..currentSize] then
 			local x = BattlegroundTargets_Options.pos[frameName..currentSize].x or 0
 			local y = BattlegroundTargets_Options.pos[frameName..currentSize].y or 0
@@ -5055,7 +5023,6 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 			local s = BattlegroundTargets_Options.pos[frameName..currentSize].s or 1
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
-		-- NEW 50200-3 or newer
 		elseif BattlegroundTargets_Options.pos[frameName] then
 			local x = BattlegroundTargets_Options.pos[frameName].x or 0
 			local y = BattlegroundTargets_Options.pos[frameName].y or 0
@@ -5063,21 +5030,6 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 			local s = BattlegroundTargets_Options.pos[frameName].s or 1
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
-		-- OLD pre50200-3
-		elseif BattlegroundTargets_Options.IndependentPositioning[currentSize] and BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"] then
-			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"], BattlegroundTargets_Options.pos[frameName..currentSize.."_posY"])
-			BattlegroundTargets_Options.pos[frameName..currentSize.."_posX"] = nil
-			BattlegroundTargets_Options.pos[frameName..currentSize.."_posY"] = nil
-			BattlegroundTargets:Frame_SavePosition(frameName) --> save NEW pos
-		-- OLD pre50200-3
-		elseif BattlegroundTargets_Options.pos[frameName.."_posX"] then
-			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
-			BattlegroundTargets_Options.pos[frameName.."_posX"] = nil
-			BattlegroundTargets_Options.pos[frameName.."_posY"] = nil
-			BattlegroundTargets:Frame_SavePosition(frameName) --> save NEW pos
-		-- default pos
 		else
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("TOPRIGHT", GVAR.OptionsFrame, "TOPLEFT", -80, 19)
@@ -5087,7 +5039,6 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", X, Y)
 		end
 	elseif frameName == "BattlegroundTargets_OptionsFrame" then
-		-- NEW 50200-3 or newer
 		if BattlegroundTargets_Options.pos[frameName] then
 			local x = BattlegroundTargets_Options.pos[frameName].x or 0
 			local y = BattlegroundTargets_Options.pos[frameName].y or 0
@@ -5095,14 +5046,6 @@ function BattlegroundTargets:Frame_SetupPosition(frameName)
 			local s = BattlegroundTargets_Options.pos[frameName].s or 1
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
-		-- OLD pre50200-3
-		elseif BattlegroundTargets_Options.pos[frameName.."_posX"] then
-			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", BattlegroundTargets_Options.pos[frameName.."_posX"], BattlegroundTargets_Options.pos[frameName.."_posY"])
-			BattlegroundTargets_Options.pos[frameName.."_posX"] = nil
-			BattlegroundTargets_Options.pos[frameName.."_posY"] = nil
-			BattlegroundTargets:Frame_SavePosition(frameName) --> save NEW pos
-		-- default pos
 		else
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("CENTER", UIParent, "CENTER", 0, 50)
@@ -6063,7 +6006,10 @@ function BattlegroundTargets:MainDataUpdate()
 
 			if not ButtonShowRealm then
 				if TransliterationToggle then
-					GVAR_TargetButton.name4button = utf8replace(onlyname, TSL)
+					if not ENEMY_TransName[onlyname] then
+						ENEMY_TransName[onlyname] = utf8replace(onlyname, TSL)
+					end
+					GVAR_TargetButton.name4button = ENEMY_TransName[onlyname]
 				else
 					GVAR_TargetButton.name4button = onlyname
 				end
@@ -6074,10 +6020,13 @@ function BattlegroundTargets:MainDataUpdate()
 				end
 			else
 				if TransliterationToggle then
+					if not ENEMY_TransName[onlyname] then
+						ENEMY_TransName[onlyname] = utf8replace(onlyname, TSL)
+					end
 					if realmname then
-						GVAR_TargetButton.name4button = utf8replace(onlyname, TSL) .. "-" .. realmname
+						GVAR_TargetButton.name4button = ENEMY_TransName[onlyname] .. "-" .. realmname
 					else
-						GVAR_TargetButton.name4button = utf8replace(onlyname, TSL)
+						GVAR_TargetButton.name4button = ENEMY_TransName[onlyname]
 					end
 				else
 					GVAR_TargetButton.name4button = qname
@@ -6731,6 +6680,7 @@ function BattlegroundTargets:IsNotBattleground()
 	wipe(ENEMY_Name2Percent)
 	wipe(ENEMY_Name2Range)
 	wipe(ENEMY_Name2Level)
+	wipe(ENEMY_TransName)
 	wipe(TARGET_Names)
 
 	if testData.specTest then
@@ -7015,7 +6965,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 			for i = 1, currentSize do
 				TargetButton[i].AssistTexture:SetAlpha(0)
 			end
-			playerAssistTargetName = enemyName 
+			playerAssistTargetName = enemyName
 			GVAR_TargetButton.AssistTexture:SetAlpha(1)
 		end
 	end
@@ -7357,6 +7307,7 @@ function BattlegroundTargets:CheckFlagCarrierEND() -- FLAGSPY
 	wipe(ENEMY_FirstFlagCheck)
 	if not OPT.ButtonShowHealthBar[currentSize] and
 	   not OPT.ButtonShowHealthText[currentSize] and
+	   not OPT.ButtonShowFlag[currentSize] and
 	   not OPT.ButtonShowTargetCount[currentSize] and
 	   not OPT.ButtonShowAssist[currentSize] and
 	   not OPT.ButtonShowLeader[currentSize] and
@@ -7620,7 +7571,7 @@ end
 -- Eye of the Storm ----------------------------------------------------------------------------------------------------
 function BattlegroundTargets:Carrier_EOTS(message, messageFaction)
 	-- ---------------------------------------------------------------------------
-	if message == FLG["EOTS_STRING_DROPPED"] or        -- Eye of the Storm: flag was dropped 
+	if message == FLG["EOTS_STRING_DROPPED"] or        -- Eye of the Storm: flag was dropped
 	   strmatch(message, FLG["EOTS_PATTERN_CAPTURED"]) -- Eye of the Storm: flag was captured
 	then
 		local GVAR_TargetButton = GVAR.TargetButton
