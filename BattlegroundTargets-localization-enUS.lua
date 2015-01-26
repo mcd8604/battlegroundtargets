@@ -53,6 +53,7 @@ L["Name"] = NAME
 L["10v10"] = format(PVP_TEAMTYPE, 10, 10)
 L["15v15"] = format(PVP_TEAMTYPE, 15, 15)
 L["40v40"] = format(PVP_TEAMTYPE, 40, 40)
+L["Target of Target"] = SHOW_TARGET_OF_TARGET_TEXT
 
 -- font test for all languages
 L["Test_abc_"] = "abc_ABCXYZabcxyz_"
