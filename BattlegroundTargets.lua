@@ -67,6 +67,10 @@
 -- # Target Count: ------------------------------------ HIGH MEDIUM CPU USAGE --
 --   - Event:              - UNIT_TARGET                                      --
 --                                                                            --
+-- # Target of Target: ------------------------------------- MEDIUM CPU USAGE --
+--   - Events:             - UNIT_TARGET                                      --
+--                         - PLAYER_TARGET_CHANGED                            --
+--                                                                            --
 -- # Main Assist Target: ------------------------------- LOW MEDIUM CPU USAGE --
 --   - Events:             - GROUP_ROSTER_UPDATE                              --
 --                         - UNIT_TARGET                                      --
@@ -79,10 +83,6 @@
 --                                                                            --
 -- # Target: -------------------------------------------------- LOW CPU USAGE --
 --   - Event:              - PLAYER_TARGET_CHANGED                            --
---                                                                            --
--- # Target of Target: --------------------------------- LOW MEDIUM CPU USAGE --
---   - Events:             - UNIT_TARGET                                      --
---                         - PLAYER_TARGET_CHANGED                            --
 --                                                                            --
 -- # Focus: --------------------------------------------------- LOW CPU USAGE --
 --   - Event:              - PLAYER_FOCUS_CHANGED                             --
@@ -239,8 +239,10 @@ local targetCountUpdate    = GetTime()      -- F targetcount: C.heckUnitTarget()
 local targetCountFrequency = 30             -- F targetcount: a complete raid/raidtarget check every 30 seconds (brute force)
 local scoreLastUpdate = GetTime()           -- W scoreupdate: B.attlefieldScoreUpdate()
 local scoreWarning    = 60                  -- W scoreupdate: inCombat-warning icon
-local scoreFrequency  = 1                   -- T scoreupdate
-local scoreCount      = 0                   -- T scoreupdate
+local scoreFrequency  = 1                   -- T scoreupdate:               1 second |                2 seconds |              5 seconds
+local scoreCount      = 0                   -- T scoreupdate: 0-10 updates: 1 second | 11-50 updates: 2 seconds | 51+ updates: 5 seconds
+local targettargetFrequency = 0.24          -- T targetoftarget: max/forced update frequency in seconds per button
+local flagDebuffFrequency = 1               -- T flagdebuff: max update frequency in seconds per button
 
 local playerLevel = UnitLevel("player") -- LVLCHK
 local isLowLevel
@@ -583,11 +585,10 @@ local function Desaturation(texture, desaturation)
 end
 
 local function ClassHexColor(class)
-	local hex
 	if classcolors[class] then
-		hex = format("%.2x%.2x%.2x", classcolors[class].r*255, classcolors[class].g*255, classcolors[class].b*255)
+		return format("%.2x%.2x%.2x", classcolors[class].r*255, classcolors[class].g*255, classcolors[class].b*255)
 	end
-	return hex or "cccccc"
+	return "cccccc"
 end
 
 local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
@@ -5596,6 +5597,7 @@ function BattlegroundTargets:SetConfigButtonValues()
 		if ButtonTargetofTarget then -- TARGET_OF_TARGET
 			if testData.TargetofTarget[i] < 50 then
 				GVAR_TargetButton.TargetofTargetButton:SetAlpha(1)
+				GVAR_TargetButton.TargetofTargetButton.FactionTexture:SetTexture(Textures.Path)
 				GVAR_TargetButton.TargetofTargetButton.FactionTexture:SetTexCoord(unpack(Textures.CombatIcon))
 			else
 				GVAR_TargetButton.TargetofTargetButton:SetAlpha(0)
@@ -6179,20 +6181,7 @@ function BattlegroundTargets:MainDataUpdate()
 			if ButtonTargetofTarget then -- TARGET_OF_TARGET
 				local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
 				if GVAR_TargetofTargetButton.totData then
-					local colR = classcolors[ GVAR_TargetofTargetButton.totData.classToken ].r
-					local colG = classcolors[ GVAR_TargetofTargetButton.totData.classToken ].g
-					local colB = classcolors[ GVAR_TargetofTargetButton.totData.classToken ].b
-					local spec = GVAR_TargetofTargetButton.totData.talentSpec
-
-					GVAR_TargetofTargetButton.Name:SetText(GVAR_TargetofTargetButton.totData.totName)
-					GVAR_TargetofTargetButton.ClassColorBackground:SetTexture(colR, colG, colB, 1)
-					GVAR_TargetofTargetButton.RoleTexture:SetTexCoord(Textures.RoleIcon[spec][1], Textures.RoleIcon[spec][2], Textures.RoleIcon[spec][3], Textures.RoleIcon[spec][4])
-					if GVAR_TargetofTargetButton.totData.isEnemy then
-						GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(unpack(Textures.CombatIcon))
-					else
-						GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(0, 0, 0, 0)
-					end
-
+					BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetofTargetButton)
 					local totTimer = GVAR_TargetofTargetButton.totTimer
 					if curTime > totTimer + 5 then
 						GVAR_TargetofTargetButton.totTimer = nil
@@ -6370,7 +6359,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	local curTime = GetTime()
 	local diff = curTime - scoreLastUpdate
 	if diff < scoreFrequency then return end
-	if scoreCount > 50 then -- 0-10 updates: 1 second | 11-50 updates: 2 seconds | 51+ updates: 5 seconds
+	if scoreCount > 50 then
 		scoreFrequency = 5
 	elseif scoreCount > 10 then
 		scoreFrequency = 2
@@ -6627,12 +6616,7 @@ function BattlegroundTargets:IsBattleground()
 		currentSize = 10
 	end
 
-	-- ---------- BG_FACTION_CHK
-	-- GetBattlefieldArenaFaction() can return a wrong value which results
-	-- in a bgt frame that shows your group instead of the enemy group.
-	-- Workaround: If the factions differs we track until GetBattlefieldScore()
-	-- has collected the enemy data. If playerName is in that enemy data we have
-	-- found the bug.
+	-- BG_FACTION_CHK
 	if BattlegroundTargets.ForceDefaultFaction then
 		if playerFactionDEF == 0 then
 			playerFactionBG   = 0 -- Horde
@@ -6657,7 +6641,6 @@ function BattlegroundTargets:IsBattleground()
 			BattlegroundTargets.TrackFaction = true
 		end
 	end
-	-- ----------
 
 	if playerLevel >= maxLevel then -- LVLCHK
 		isLowLevel = nil
@@ -6863,48 +6846,105 @@ end
 
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, unitID) -- TARGET_OF_TARGET
+function BattlegroundTargets:CheckClassRange(GVAR_TargetButton, unitName, unitID)
+	if not rangeSpellName then return end
+	if OPT.ButtonTypeRangeCheck[currentSize] < 2 then return end
+
+	local curTime = GetTime()
+	local Name2Range = ENEMY_Name2Range[unitName]
+	if Name2Range and Name2Range + range_SPELL_Frequency > curTime then
+		return
+	end
+	if IsSpellInRange(rangeSpellName, unitID) == 1 then
+		ENEMY_Name2Range[unitName] = curTime
+		Range_Display(true, GVAR_TargetButton)
+	else
+		ENEMY_Name2Range[unitName] = nil
+		Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetofTargetButton) -- TARGET_OF_TARGET
+	local totName    = GVAR_TargetofTargetButton.totData.totName
+	local classToken = GVAR_TargetofTargetButton.totData.classToken
+	local talentSpec = GVAR_TargetofTargetButton.totData.talentSpec
+	local isEnemy    = GVAR_TargetofTargetButton.totData.isEnemy
+
+	GVAR_TargetofTargetButton.Name:SetText(totName)
+	GVAR_TargetofTargetButton.ClassColorBackground:SetTexture(classcolors[classToken].r, classcolors[classToken].g, classcolors[classToken].b, 1)
+	GVAR_TargetofTargetButton.RoleTexture:SetTexCoord(Textures.RoleIcon[talentSpec][1], Textures.RoleIcon[talentSpec][2], Textures.RoleIcon[talentSpec][3], Textures.RoleIcon[talentSpec][4])
+	if isEnemy then
+		if oppositeFactionREAL and oppositeFactionREAL ~= playerFactionDEF then
+			if oppositeFactionREAL == 0 then
+				GVAR_TargetofTargetButton.FactionTexture:SetTexture("Interface\\WorldStateFrame\\HordeIcon")
+				GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(0, 1, 0, 1)
+			else
+				GVAR_TargetofTargetButton.FactionTexture:SetTexture("Interface\\WorldStateFrame\\AllianceIcon")
+				GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(0, 1, 0, 1)
+			end
+		else
+			GVAR_TargetofTargetButton.FactionTexture:SetTexture(Textures.Path)
+			GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(unpack(Textures.CombatIcon))
+		end
+	else
+		GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(0, 0, 0, 0)
+	end
+end
+-- ---------------------------------------------------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------------------------------------------------
+function BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, unitID, caller) -- TARGET_OF_TARGET
 	if not OPT.ButtonTargetofTarget[currentSize] then return end
 
 	local curTime = GetTime()
+	if GVAR_TargetButton.targetTimer and curTime < GVAR_TargetButton.targetTimer + targettargetFrequency then
+		return
+	end
+
 	local totName, totRealm, totNameRealm = UnitName(unitID.."target")
 	if totRealm and totRealm ~= "" then
 		totNameRealm = totName.."-"..totRealm
 	end
 
+	--[[
+	local dif = "0-NEW"
+	if GVAR_TargetButton.targetTimer then
+		dif = curTime - GVAR_TargetButton.targetTimer
+	end
+	print(caller, GVAR_TargetButton.buttonNum, unitID, "#", dif, "#", totNameRealm, "#", totName, totRealm)
+	--]]
+
+	GVAR_TargetButton.targetTimer = curTime
+
 	local classToken
 	local talentSpec
 	local isEnemy = true
-	if ENEMY_Name2Button[totName] then
-		classToken = ENEMY_Data[ ENEMY_Name2Button[totName] ].classToken
-		talentSpec = ENEMY_Data[ ENEMY_Name2Button[totName] ].talentSpec
-	elseif ENEMY_Name2Button[totNameRealm] then
-		classToken = ENEMY_Data[ ENEMY_Name2Button[totNameRealm] ].classToken
-		talentSpec = ENEMY_Data[ ENEMY_Name2Button[totNameRealm] ].talentSpec
-	elseif FRIEND_Names[totName] or FRIEND_Names[totNameRealm] then
+	if FRIEND_Names[totNameRealm] or FRIEND_Names[totName] then
 		isEnemy = false
 		for k, v in pairs(FRIEND_Data) do
-			if v.name == totName or v.name == totNameRealm then
+			if v.name == totNameRealm or v.name == totName then
 				classToken = v.classToken
 				talentSpec = v.talentSpec
 				break
 			end
 		end
+	elseif ENEMY_Name2Button[totNameRealm] then
+		classToken = ENEMY_Data[ ENEMY_Name2Button[totNameRealm] ].classToken
+		talentSpec = ENEMY_Data[ ENEMY_Name2Button[totNameRealm] ].talentSpec
+	elseif ENEMY_Name2Button[totName] then
+		classToken = ENEMY_Data[ ENEMY_Name2Button[totName] ].classToken
+		talentSpec = ENEMY_Data[ ENEMY_Name2Button[totName] ].talentSpec
 	end
 
 	if classToken then
 		local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
 		GVAR_TargetofTargetButton.totTimer = curTime
 		GVAR_TargetofTargetButton.totData = {totName=totName, classToken=classToken, talentSpec=talentSpec, isEnemy=isEnemy}
-		-- TODO inCombat check
-		GVAR_TargetofTargetButton.Name:SetText(totName)
-		GVAR_TargetofTargetButton.ClassColorBackground:SetTexture(classcolors[classToken].r, classcolors[classToken].g, classcolors[classToken].b, 1)
-		GVAR_TargetofTargetButton.RoleTexture:SetTexCoord(Textures.RoleIcon[talentSpec][1], Textures.RoleIcon[talentSpec][2], Textures.RoleIcon[talentSpec][3], Textures.RoleIcon[talentSpec][4])
-		if isEnemy then
-			GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(unpack(Textures.CombatIcon))
-		else
-			GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(0, 0, 0, 0)
-		end
+		BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetofTargetButton)
 		GVAR_TargetofTargetButton:SetAlpha(1)
 	end
 
@@ -6939,6 +6979,7 @@ function BattlegroundTargets:CheckPlayerTarget()
 		playerTargetName = playerTargetName.."-"..playerTargetRealm
 	end
 
+	local ButtonTargetofTarget = OPT.ButtonTargetofTarget[currentSize]
 	for i = 1, currentSize do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
 		GVAR_TargetButton.TargetTexture:SetAlpha(0)
@@ -6946,6 +6987,13 @@ function BattlegroundTargets:CheckPlayerTarget()
 		GVAR_TargetButton.HighlightR:SetTexture(0, 0, 0, 1)
 		GVAR_TargetButton.HighlightB:SetTexture(0, 0, 0, 1)
 		GVAR_TargetButton.HighlightL:SetTexture(0, 0, 0, 1)
+
+		if ButtonTargetofTarget then
+
+			GVAR_TargetButton.targetTimer = nil
+			GVAR_TargetButton:SetScript("OnUpdate", nil)
+
+		end
 	end
 	isTarget = 0
 
@@ -6963,6 +7011,20 @@ function BattlegroundTargets:CheckPlayerTarget()
 		GVAR_TargetButton.HighlightB:SetTexture(0.5, 0.5, 0.5, 1)
 		GVAR_TargetButton.HighlightL:SetTexture(0.5, 0.5, 0.5, 1)
 		isTarget = targetButton
+
+		if OPT.ButtonTargetofTarget[currentSize] then
+
+			GVAR_TargetButton.targetTimer = GetTime()
+			BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, "target", "OnUpdate")
+			local elapsed = 0
+			GVAR_TargetButton:SetScript("OnUpdate", function(self, elap)
+				elapsed = elapsed + elap
+				if elapsed < targettargetFrequency then return end
+				elapsed = 0
+				BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, "target", "OnUpdate")
+			end)
+
+		end
 	end
 
 	if isDeadUpdateStop then return end
@@ -7026,21 +7088,8 @@ function BattlegroundTargets:CheckPlayerFocus()
 	-- focus
 	GVAR_TargetButton.FocusTexture:SetAlpha(1)
 
-	-- class_range (Check Player Focus)
-	if rangeSpellName and OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
-		local curTime = GetTime()
-		local Name2Range = ENEMY_Name2Range[playerFocusName]
-		if Name2Range then
-			if Name2Range + range_SPELL_Frequency > curTime then return end -- ATTENTION
-		end
-		if IsSpellInRange(rangeSpellName, "focus") == 1 then
-			ENEMY_Name2Range[playerFocusName] = curTime
-			Range_Display(true, GVAR_TargetButton)
-		else
-			ENEMY_Name2Range[playerFocusName] = nil
-			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-		end
-	end
+	-- class_range
+	BattlegroundTargets:CheckClassRange(GVAR_TargetButton, playerFocusName, "focus")
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -7127,9 +7176,6 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	end
 
 	-- real opposite faction check
-	-- NOTE: The Pandaren race name is the same on Alliance and Horde side, and so it's not possible
-	--       to get the real opposite faction with GetBattlefieldScore() if all enemies are Pandaren.
-	--       This check covers such a rare case...but it will only work if the option 'Target' is enabled...
 	if not oppositeFactionREAL then -- summary_flag_texture
 		local factionGroup = UnitFactionGroup(enemyID)
 		if factionGroup == "Horde" then
@@ -7156,7 +7202,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	if not GVAR_TargetButton then return end
 
 	-- targetoftarget
-	BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, enemyID) -- TARGET_OF_TARGET
+	BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, enemyID, "CheckUnitTarget") -- TARGET_OF_TARGET
 
 	-- assist_
 	if isAssistName and OPT.ButtonShowAssist[currentSize] then
@@ -7225,13 +7271,13 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	-- carrier_orb_and_debuff
 	if isFlagBG > 0 and OPT.ButtonShowFlag[currentSize] then
 		if isFlagBG < 5 and hasFlag and hasFlag == enemyName then
-			if curTime > GVAR_TargetButton.orbDebuffUpdate + 1 then -- max. 1 update per second
-				GVAR.TargetButton[enemyButton].orbDebuffUpdate = curTime
+			if curTime > GVAR_TargetButton.orbDebuffUpdate + flagDebuffFrequency then
+				GVAR_TargetButton.orbDebuffUpdate = curTime
 				BattlegroundTargets:FlagDebuffCheck(enemyID, enemyName, enemyButton)
 			end
 		elseif isFlagBG == 5 and GVAR_TargetButton.orbColor then
-			if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
-				GVAR.TargetButton[enemyButton].orbDebuffUpdate = curTime
+			if curTime > GVAR_TargetButton.orbDebuffUpdate + flagDebuffFrequency then
+				GVAR_TargetButton.orbDebuffUpdate = curTime
 				BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, enemyButton)
 			end
 		end
@@ -7246,20 +7292,8 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		end
 	end
 
-	-- class_range (Check Unit Target)
-	if rangeSpellName and OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
-		local Name2Range = ENEMY_Name2Range[enemyName]
-		if Name2Range then
-			if Name2Range + range_SPELL_Frequency > curTime then return end -- ATTENTION
-		end
-		if IsSpellInRange(rangeSpellName, enemyID) == 1 then
-			ENEMY_Name2Range[enemyName] = curTime
-			Range_Display(true, GVAR_TargetButton)
-		else
-			ENEMY_Name2Range[enemyName] = nil
-			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-		end
-	end
+	-- class_range
+	BattlegroundTargets:CheckClassRange(GVAR_TargetButton, enemyName, enemyID)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -7322,7 +7356,7 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 	if healthonly then return end
 
 	-- targetoftarget
-	BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, targetID, curTime) -- TARGET_OF_TARGET
+	BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, targetID, "CheckUnitHealth") -- TARGET_OF_TARGET
 
 	-- FLAGSPY -- carrier_orb_and_debuff
 	if isFlagBG > 0 and OPT.ButtonShowFlag[currentSize] then
@@ -7331,34 +7365,21 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 		end
 		if isFlagBG < 5 and hasFlag and hasFlag == targetName then
 			local curTime = GetTime()
-			if curTime > GVAR_TargetButton.orbDebuffUpdate + 1 then -- max. 1 update per second
-				GVAR.TargetButton[targetButton].orbDebuffUpdate = curTime
+			if curTime > GVAR_TargetButton.orbDebuffUpdate + flagDebuffFrequency then
+				GVAR_TargetButton.orbDebuffUpdate = curTime
 				BattlegroundTargets:FlagDebuffCheck(targetID, targetName, targetButton)
 			end
 		elseif isFlagBG == 5 and GVAR_TargetButton.orbColor then
 			local curTime = GetTime()
-			if curTime > GVAR_TargetButton.orbDebuffUpdate + 2 then -- max. 1 update in 2 seconds per button
-				GVAR.TargetButton[targetButton].orbDebuffUpdate = curTime
+			if curTime > GVAR_TargetButton.orbDebuffUpdate + flagDebuffFrequency then
+				GVAR_TargetButton.orbDebuffUpdate = curTime
 				BattlegroundTargets:OrbDebuffCheck(targetID, targetName, targetButton)
 			end
 		end
 	end
 
-	-- class_range (Check Unit Health)
-	if rangeSpellName and OPT.ButtonTypeRangeCheck[currentSize] >= 2 then
-		local curTime = GetTime()
-		local Name2Range = ENEMY_Name2Range[targetName]
-		if Name2Range then
-			if Name2Range + range_SPELL_Frequency > curTime then return end -- ATTENTION
-		end
-		if IsSpellInRange(rangeSpellName, targetID) == 1 then
-			ENEMY_Name2Range[targetName] = curTime
-			Range_Display(true, GVAR_TargetButton)
-		else
-			ENEMY_Name2Range[targetName] = nil
-			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
-		end
-	end
+	-- class_range
+	BattlegroundTargets:CheckClassRange(GVAR_TargetButton, targetName, targetID)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
