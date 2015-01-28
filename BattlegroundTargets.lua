@@ -64,12 +64,12 @@
 --   - A raidmember/raidpet MUST target(focus/mouseover) an enemy OR          --
 --     you/yourpet MUST target/focus/mouseover an enemy to get the health.    --
 --                                                                            --
--- # Target Count: ------------------------------------ HIGH MEDIUM CPU USAGE --
---   - Event:              - UNIT_TARGET                                      --
---                                                                            --
--- # Target of Target: ------------------------------------- MEDIUM CPU USAGE --
+-- # Target of Target: --------------------------------------- HIGH CPU USAGE --
 --   - Events:             - UNIT_TARGET                                      --
 --                         - PLAYER_TARGET_CHANGED                            --
+--                                                                            --
+-- # Target Count: ------------------------------------ HIGH MEDIUM CPU USAGE --
+--   - Event:              - UNIT_TARGET                                      --
 --                                                                            --
 -- # Main Assist Target: ------------------------------- LOW MEDIUM CPU USAGE --
 --   - Events:             - GROUP_ROSTER_UPDATE                              --
@@ -225,7 +225,7 @@ local flagCHK
 local flagflag
 
 -- THROTTLE (reduce CPU usage) | FORCE UPDATE (precise results) | WARNING | MISC
-local range_SPELL_Frequency     = 0.2       -- T rangecheck: [class-spell]: in second per enemy (variable: ENEMY_Name2Range[enemyname])
+local range_SPELL_Frequency     = 0.25      -- T rangecheck: [class-spell]: in second per enemy (variable: ENEMY_Name2Range[enemyname] / .classrangeTimer)
 local range_CL_Throttle         = 0         -- T rangecheck: [combatlog] C.ombatLogRangeCheck()
 local range_CL_Frequency        = 3         -- T rangecheck: [combatlog] 50/50 or 66/33 or 75/25 (%Yes/%No) => 64/36 = 36% combatlog messages filtered (36% vs overhead: two variables, one addition, one number comparison and if filtered one math.random)
 local range_CL_DisplayThrottle  = GetTime() -- T rangecheck: [combatlog] display update
@@ -241,8 +241,8 @@ local scoreLastUpdate = GetTime()           -- W scoreupdate: B.attlefieldScoreU
 local scoreWarning    = 60                  -- W scoreupdate: inCombat-warning icon
 local scoreFrequency  = 1                   -- T scoreupdate:               1 second |                2 seconds |              5 seconds
 local scoreCount      = 0                   -- T scoreupdate: 0-10 updates: 1 second | 11-50 updates: 2 seconds | 51+ updates: 5 seconds
-local targettargetFrequency = 0.24          -- T targetoftarget: max/forced update frequency in seconds per button
-local flagDebuffFrequency = 1               -- T flagdebuff: max update frequency in seconds per button
+local targettargetFrequency = 0.33          -- T targetoftarget: max/forced update frequency in seconds per button
+local flagDebuffFrequency = 2               -- T flagdebuff: max update frequency in seconds per button
 
 local playerLevel = UnitLevel("player") -- LVLCHK
 local isLowLevel
@@ -304,7 +304,8 @@ local bgMaps = {}
 local bgInfo = {[10]={},[15]={},[40]={}}
 local function BuildBattlegroundMapTable()
 	for i = 1, GetNumBattlegroundTypes() do
-		local localizedName, _, _, _, bgID, _, _, _, gameType, icon = GetBattlegroundInfo(i) --print(i, GetBattlegroundInfo(i))
+		local localizedName, _, _, _, bgID, _, _, _, gameType, icon = GetBattlegroundInfo(i)
+		--print(localizedName, bgID, gameType, icon, i, "#", GetBattlegroundInfo(i))
 		    if bgID ==   1 then bgInfo[40][1] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = gameType, icon = icon} -- Alterac Valley
 		elseif bgID ==   2 then bgInfo[10][1] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 1, gameType = gameType, icon = icon} -- Warsong Gulch
 		elseif bgID ==   3 then bgInfo[15][1] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0, gameType = gameType, icon = icon} -- Arathi Basin
@@ -351,7 +352,8 @@ local orbColIDs = {
 }
 
 local function orbData(str)
-	local colorCode = strmatch(str, "^|cFF%x%x%x%x%x(%x).*|r$") --print("colorCode:", colorCode)
+	local colorCode = strmatch(str, "^|cFF%x%x%x%x%x(%x).*|r$")
+	--print("colorCode:", colorCode)
 	    if colorCode == "7" then return "Blue",   "Interface\\MiniMap\\TempleofKotmogu_ball_cyan"   -- |cFF01DFD__7__Blue|r   |cFF01DFD7Blue|r
 	elseif colorCode == "F" then return "Purple", "Interface\\MiniMap\\TempleofKotmogu_ball_purple" -- |cFFBF00F__F__Purple|r |cFFBF00FFPurple|r
 	elseif colorCode == "1" then return "Green",  "Interface\\MiniMap\\TempleofKotmogu_ball_green"  -- |cFF01DF0__1__Green|r  |cFF01DF01Green|r
@@ -442,11 +444,11 @@ local classes = {
 for classID = 1, MAX_CLASSES do
 	local _, classTag = GetClassInfoByID(classID)
 	local numTabs = GetNumSpecializationsForClassID(classID)
-	--print("#", classTag, numTabs, classID)
+	--print(numTabs, classID, "#", GetNumSpecializationsForClassID(classID))
 	classes[classTag].spec = {}
 	for i = 1, numTabs do
 		local id, name, _, icon, _, role = GetSpecializationInfoForClassID(classID, i)
-		--print(role, id, name, icon, "#", GetSpecializationInfoForClassID(classID, i))
+		--print(role, id, classID, i, name, icon, "#", GetSpecializationInfoForClassID(classID, i))
 		if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, specID = id, specName = name, icon = icon} -- DAMAGER: total = 23
 		elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, specID = id, specName = name, icon = icon} -- HEALER : total =  6
 		elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, specID = id, specName = name, icon = icon} -- TANK   : total =  5
@@ -498,20 +500,24 @@ local class_IntegerSort = { -- .cid .blizz .eng .loc
 }
 
 local ranges = {
-	DEATHKNIGHT =  47541, -- Death Coil        (30yd/m) - Lvl 55
-	DRUID       =   5176, -- Wrath             (40yd/m) - Lvl  1
-	HUNTER      =     75, -- Auto Shot         (40yd/m) - Lvl  1
-	MAGE        =  44614, -- Frostfire Bolt    (40yd/m) - Lvl  1
-	MONK        = 115546, -- Provoke           (40yd/m) - Lvl 14 MON14
-	PALADIN     =  20271, -- Judgment          (30yd/m) - Lvl  3
-	PRIEST      =    589, -- Shadow Word: Pain (40yd/m) - Lvl  4
-	ROGUE       =   6770, -- Sap               (10yd/m) - Lvl 12 ROG12
-	SHAMAN      =    403, -- Lightning Bolt    (30yd/m) - Lvl  1
-	WARLOCK     =    686, -- Shadow Bolt       (40yd/m) - Lvl  1
-	WARRIOR     =    100, -- Charge          (8-25yd/m) - Lvl  3
+	DEATHKNIGHT =  47541, -- Death Coil        (0-40yd/m) - Lvl 55
+	DRUID       =   5176, -- Wrath             (0-40yd/m) - Lvl  1
+	HUNTER      =     75, -- Auto Shot         (0-40yd/m) - Lvl  1
+	MAGE        =  44614, -- Frostfire Bolt    (0-40yd/m) - Lvl  1
+	MONK        = 115546, -- Provoke           (0-40yd/m) - Lvl 14 MON14
+	PALADIN     =  20271, -- Judgment          (0-30yd/m) - Lvl  3
+	PRIEST      =    589, -- Shadow Word: Pain (0-40yd/m) - Lvl  4
+	ROGUE       =   6770, -- Sap               (0-10yd/m) - Lvl 12 ROG12
+	SHAMAN      =    403, -- Lightning Bolt    (0-30yd/m) - Lvl  1
+	WARLOCK     =    686, -- Shadow Bolt       (0-40yd/m) - Lvl  1
+	WARRIOR     =    100, -- Charge            (8-25yd/m) - Lvl  3
 }
---for k, v in pairs(ranges) do local name, _, _, _, min, max = GetSpellInfo(v) print(k, v, name, min, max) end -- TEST
---print("IsSpellKnown", ranges[playerClassEN], "|", IsSpellKnown(ranges[playerClassEN]))
+--[[
+for k, v in pairs(ranges) do
+	local name, _, _, _, min, max = GetSpellInfo(v)
+	print(k, v, name, min, max, IsSpellKnown(ranges[k]), ranges[k], "#", GetSpellInfo(v))
+end
+--]]
 
 local rangeTypeName = {
 	"1) CombatLog |cffffff790-73|r", -- 1 1) combatlog
@@ -6426,7 +6432,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 
 	for index = 1, numScore do
 		local name, _, _, _, _, faction, _, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
-		--print(index, name, faction, classToken, talentSpec)
+		--print(index, name, faction, classToken, talentSpec, "#", GetBattlefieldScore(index))
 		if not name then break end
 		if faction == oppositeFactionBG then
 
@@ -6585,7 +6591,8 @@ function BattlegroundTargets:IsBattleground()
 
 	local queueStatus, queueMapName, bgName
 	for i=1, GetMaxBattlefieldID() do
-		queueStatus, queueMapName = GetBattlefieldStatus(i) --print(i, GetBattlefieldStatus(i))
+		queueStatus, queueMapName = GetBattlefieldStatus(i)
+		--print(i, queueStatus, queueMapName, "#", GetBattlefieldStatus(i))
 		if queueStatus == "active" then
 			bgName = queueMapName
 			break
@@ -6846,15 +6853,25 @@ end
 
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckClassRange(GVAR_TargetButton, unitName, unitID)
+function BattlegroundTargets:CheckClassRange(GVAR_TargetButton, unitName, unitID, caller) -- class_range
 	if not rangeSpellName then return end
 	if OPT.ButtonTypeRangeCheck[currentSize] < 2 then return end
 
 	local curTime = GetTime()
-	local Name2Range = ENEMY_Name2Range[unitName]
-	if Name2Range and Name2Range + range_SPELL_Frequency > curTime then
+	if GVAR_TargetButton.classrangeTimer and curTime < GVAR_TargetButton.classrangeTimer + range_SPELL_Frequency then
 		return
 	end
+
+	--[[
+	local dif = "0-NEW"
+	if GVAR_TargetButton.classrangeTimer then
+		dif = curTime - GVAR_TargetButton.classrangeTimer
+	end
+	print(caller, GVAR_TargetButton.buttonNum, unitID, unitName, "#", dif)
+	--]]
+
+	GVAR_TargetButton.classrangeTimer = curTime
+
 	if IsSpellInRange(rangeSpellName, unitID) == 1 then
 		ENEMY_Name2Range[unitName] = curTime
 		Range_Display(true, GVAR_TargetButton)
@@ -6897,8 +6914,17 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, unitID, caller) -- TARGET_OF_TARGET
+function BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, unitName, unitID, caller) -- TARGET_OF_TARGET
 	if not OPT.ButtonTargetofTarget[currentSize] then return end
+
+	if ENEMY_Name2Percent[unitName] == 0 then
+		local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
+		GVAR_TargetofTargetButton.totTimer = nil
+		GVAR_TargetofTargetButton.totData = nil
+		GVAR_TargetofTargetButton:SetAlpha(0)
+		GVAR_TargetButton.targetTimer = nil
+		return
+	end
 
 	local curTime = GetTime()
 	if GVAR_TargetButton.targetTimer and curTime < GVAR_TargetButton.targetTimer + targettargetFrequency then
@@ -6922,20 +6948,31 @@ function BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, unitID, call
 
 	local classToken
 	local talentSpec
-	local isEnemy = true
-	if FRIEND_Names[totNameRealm] or FRIEND_Names[totName] then
+	local isEnemy
+	if FRIEND_Names[totNameRealm] then
 		isEnemy = false
 		for k, v in pairs(FRIEND_Data) do
-			if v.name == totNameRealm or v.name == totName then
+			if v.name == totNameRealm then
 				classToken = v.classToken
 				talentSpec = v.talentSpec
 				break
 			end
 		end
 	elseif ENEMY_Name2Button[totNameRealm] then
+		isEnemy = true
 		classToken = ENEMY_Data[ ENEMY_Name2Button[totNameRealm] ].classToken
 		talentSpec = ENEMY_Data[ ENEMY_Name2Button[totNameRealm] ].talentSpec
+	elseif FRIEND_Names[totName] then
+		isEnemy = false
+		for k, v in pairs(FRIEND_Data) do
+			if v.name == totName then
+				classToken = v.classToken
+				talentSpec = v.talentSpec
+				break
+			end
+		end
 	elseif ENEMY_Name2Button[totName] then
+		isEnemy = true
 		classToken = ENEMY_Data[ ENEMY_Name2Button[totName] ].classToken
 		talentSpec = ENEMY_Data[ ENEMY_Name2Button[totName] ].talentSpec
 	end
@@ -6980,6 +7017,8 @@ function BattlegroundTargets:CheckPlayerTarget()
 	end
 
 	local ButtonTargetofTarget = OPT.ButtonTargetofTarget[currentSize]
+	local ButtonShowFlag = OPT.ButtonShowFlag[currentSize]
+
 	for i = 1, currentSize do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
 		GVAR_TargetButton.TargetTexture:SetAlpha(0)
@@ -6987,12 +7026,12 @@ function BattlegroundTargets:CheckPlayerTarget()
 		GVAR_TargetButton.HighlightR:SetTexture(0, 0, 0, 1)
 		GVAR_TargetButton.HighlightB:SetTexture(0, 0, 0, 1)
 		GVAR_TargetButton.HighlightL:SetTexture(0, 0, 0, 1)
-
 		if ButtonTargetofTarget then
-
 			GVAR_TargetButton.targetTimer = nil
-			GVAR_TargetButton:SetScript("OnUpdate", nil)
-
+			GVAR_TargetButton.TargetofTargetButton:SetScript("OnUpdate", nil)
+		end
+		if ButtonShowFlag then
+			GVAR_TargetButton.FlagDebuffButton:SetScript("OnUpdate", nil)
 		end
 	end
 	isTarget = 0
@@ -7011,20 +7050,32 @@ function BattlegroundTargets:CheckPlayerTarget()
 		GVAR_TargetButton.HighlightB:SetTexture(0.5, 0.5, 0.5, 1)
 		GVAR_TargetButton.HighlightL:SetTexture(0.5, 0.5, 0.5, 1)
 		isTarget = targetButton
+	end
 
-		if OPT.ButtonTargetofTarget[currentSize] then
-
-			GVAR_TargetButton.targetTimer = GetTime()
-			BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, "target", "OnUpdate")
-			local elapsed = 0
-			GVAR_TargetButton:SetScript("OnUpdate", function(self, elap)
-				elapsed = elapsed + elap
-				if elapsed < targettargetFrequency then return end
+	-- TARGET_OF_TARGET
+	if ButtonTargetofTarget then
+		BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, playerTargetName, "target", "onupdate1")
+		GVAR_TargetButton.targetTimer = GetTime()
+		local elapsed = 0
+		GVAR_TargetButton.TargetofTargetButton:SetScript("OnUpdate", function(self, elap)
+			elapsed = elapsed + elap
+			if elapsed > targettargetFrequency then
 				elapsed = 0
-				BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, "target", "OnUpdate")
-			end)
+				BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, playerTargetName, "target", "onupdate2")
+			end
+		end)
+	end
 
-		end
+	-- enemy_carrier_debuff
+	if ButtonShowFlag and ((hasFlag and hasFlag == playerTargetName) or (GVAR_TargetButton.orbColor)) then
+		local elapsed = 0
+		GVAR_TargetButton.FlagDebuffButton:SetScript("OnUpdate", function(self, elap)
+			elapsed = elapsed + elap
+			if elapsed > flagDebuffFrequency then
+				elapsed = 0
+				BattlegroundTargets:EnemyCarrierDebuffCheck("target", playerTargetName, GVAR_TargetButton.buttonNum)
+			end
+		end)
 	end
 
 	if isDeadUpdateStop then return end
@@ -7089,7 +7140,7 @@ function BattlegroundTargets:CheckPlayerFocus()
 	GVAR_TargetButton.FocusTexture:SetAlpha(1)
 
 	-- class_range
-	BattlegroundTargets:CheckClassRange(GVAR_TargetButton, playerFocusName, "focus")
+	BattlegroundTargets:CheckClassRange(GVAR_TargetButton, playerFocusName, "focus", "focus")
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -7202,7 +7253,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	if not GVAR_TargetButton then return end
 
 	-- targetoftarget
-	BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, enemyID, "CheckUnitTarget") -- TARGET_OF_TARGET
+	BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, enemyName, enemyID, "checkunittarget") -- TARGET_OF_TARGET
 
 	-- assist_
 	if isAssistName and OPT.ButtonShowAssist[currentSize] then
@@ -7268,7 +7319,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 		end
 	end
 
-	-- carrier_orb_and_debuff
+	-- enemy_carrier_debuff
 	if isFlagBG > 0 and OPT.ButtonShowFlag[currentSize] then
 		if isFlagBG < 5 and hasFlag and hasFlag == enemyName then
 			if curTime > GVAR_TargetButton.orbDebuffUpdate + flagDebuffFrequency then
@@ -7293,7 +7344,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName)
 	end
 
 	-- class_range
-	BattlegroundTargets:CheckClassRange(GVAR_TargetButton, enemyName, enemyID)
+	BattlegroundTargets:CheckClassRange(GVAR_TargetButton, enemyName, enemyID, "checkunittarget")
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -7356,9 +7407,9 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 	if healthonly then return end
 
 	-- targetoftarget
-	BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, targetID, "CheckUnitHealth") -- TARGET_OF_TARGET
+	BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, targetName, targetID, "checkunithealth") -- TARGET_OF_TARGET
 
-	-- FLAGSPY -- carrier_orb_and_debuff
+	-- FLAGSPY -- enemy_carrier_debuff
 	if isFlagBG > 0 and OPT.ButtonShowFlag[currentSize] then
 		if flagCHK then
 			BattlegroundTargets:CheckFlagCarrierCHECK(targetID, targetName)
@@ -7379,7 +7430,7 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 	end
 
 	-- class_range
-	BattlegroundTargets:CheckClassRange(GVAR_TargetButton, targetName, targetID)
+	BattlegroundTargets:CheckClassRange(GVAR_TargetButton, targetName, targetID, "checkunithealth")
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -7437,7 +7488,7 @@ function BattlegroundTargets:CheckFlagCarrierCHECK(unit, targetName) -- FLAGSPY
 		end
 		for i = 1, 40 do
 			local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(unit, i)
-			--print(i, spellId, val2, "###", UnitDebuff(unit, i))
+			--print(i, spellId, val2, "#", UnitDebuff(unit, i))
 			if not spellId then break end
 			if orbIDs[spellId] then
 				flags = flags + 1 -- FLAG_TOK_CHK
@@ -7618,9 +7669,18 @@ function BattlegroundTargets:SetOrbCorner(GVAR_TargetButton, color)
 	end
 end
 
-function BattlegroundTargets:FlagDebuffCheck(enemyID, enemyName, buttonNum)
+function BattlegroundTargets:EnemyCarrierDebuffCheck(enemyID, enemyName, buttonNum) -- enemy_carrier_debuff
+	if isFlagBG > 0 and isFlagBG < 5 then
+		BattlegroundTargets:FlagDebuffCheck(enemyID, enemyName, buttonNum)
+	elseif isFlagBG == 5 then
+		BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, buttonNum)
+	end
+end
+
+function BattlegroundTargets:FlagDebuffCheck(enemyID, enemyName, buttonNum) -- enemy_carrier_debuff
 	for i = 1, 40 do
-		local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(enemyID, i) --print(enemyID, enemyName, i, UnitDebuff(enemyID, i))
+		local _, _, _, count, _, _, _, _, _, _, spellId = UnitDebuff(enemyID, i)
+		--print(enemyID, enemyName, i, count, spellId, "#", UnitDebuff(enemyID, i))
 		if not spellId then return end
 		if debuffIDs[spellId] then
 			flagDebuff = count
@@ -7630,9 +7690,10 @@ function BattlegroundTargets:FlagDebuffCheck(enemyID, enemyName, buttonNum)
 	end
 end
 
-function BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, buttonNum)
+function BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, buttonNum) -- enemy_carrier_debuff
 	for i = 1, 40 do
-		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(enemyID, i) --print(enemyID, enemyName, i, UnitDebuff(enemyID, i))
+		local _, _, _, _, _, _, _, _, _, _, spellId, _, _, _, _, val2 = UnitDebuff(enemyID, i)
+		--print(enemyID, enemyName, i, spellId, val2, "#", UnitDebuff(enemyID, i))
 		if not spellId then return end
 		if orbIDs[spellId] then
 			local hasflg
@@ -7664,7 +7725,7 @@ function BattlegroundTargets:OrbDebuffCheck(enemyID, enemyName, buttonNum)
 end
 
 function BattlegroundTargets:OrbReturnCheck(message)
-	--print("O.rbReturnCheck", message) -- TEST
+	--print("O.rbReturnCheck", message)
 	local orbColor = strmatch(message, FLG["TOK_PATTERN_RETURNED"]) -- Temple of Kotmogu: orb was returned
 	if orbColor then
 		local color = orbData(orbColor)
@@ -7694,7 +7755,7 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CarrierCheck(message, messageFaction)
-	--print("C.arrierCheck", isFlagBG, "#", message, "#", messageFaction) -- TEST
+	--print("C.arrierCheck", isFlagBG, "#", message, "#", messageFaction)
 	if isFlagBG == 1 or isFlagBG == 3 then
 		BattlegroundTargets:Carrier_WG_TP(message, messageFaction)
 	elseif isFlagBG == 2 then
