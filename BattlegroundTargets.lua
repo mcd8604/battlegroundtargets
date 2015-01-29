@@ -280,7 +280,9 @@ local SPELL_Range = {}          -- key = spellId | value = maxRange
 local ENEMY_Roles = {0,0,0,0}
 local FRIEND_Roles = {0,0,0,0}
 
-local healthBarWidth = 0.01
+GVAR.healthBarWidth = 0.01
+GVAR.totHealthBarWidth = 0.01
+
 local currentSize = 10
 local testSize = 10
 local testData = {
@@ -1718,6 +1720,7 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.HealthText:SetAlpha(0.6)
 
 		GVAR_TargetButton.Name = GVAR_TargetButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 2, 0)
 		GVAR_TargetButton.Name:SetJustifyH("LEFT")
 		GVAR_TargetButton.Name:SetShadowOffset(0, 0)
 		GVAR_TargetButton.Name:SetShadowColor(0, 0, 0, 0)
@@ -1806,7 +1809,7 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.TargetofTargetButton = CreateFrame("Button", nil, GVAR_TargetButton) -- TARGET_OF_TARGET -- xBUT
 		local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
 
-		GVAR_TargetofTargetButton:SetPoint("TOPLEFT", GVAR_TargetButton, "TOPRIGHT", 10, 0)
+		GVAR_TargetofTargetButton:SetPoint("TOPLEFT", GVAR_TargetButton, "TOPRIGHT", 20, 0) -- positioning TODO
 		GVAR_TargetofTargetButton:EnableMouse(false)
 		GVAR_TargetofTargetButton:SetAlpha(0)
 
@@ -1820,16 +1823,29 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(unpack(Textures.CombatIcon))
 
 		GVAR_TargetofTargetButton.RoleTexture = GVAR_TargetofTargetButton:CreateTexture(nil, "BORDER")
-		GVAR_TargetofTargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetofTargetButton.FactionTexture, "RIGHT", 1, 0)
+		GVAR_TargetofTargetButton.RoleTexture:SetPoint("LEFT", GVAR_TargetofTargetButton.FactionTexture, "RIGHT", 0, 0)
 		GVAR_TargetofTargetButton.RoleTexture:SetTexture(Textures.Path)
 		GVAR_TargetofTargetButton.RoleTexture:SetTexCoord(0, 0, 0, 0)
 
 		GVAR_TargetofTargetButton.ClassColorBackground = GVAR_TargetofTargetButton:CreateTexture(nil, "BORDER")
-		GVAR_TargetofTargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetofTargetButton.RoleTexture, "RIGHT", 0, 0)
 		GVAR_TargetofTargetButton.ClassColorBackground:SetTexture(0, 0, 0, 0)
 
+		GVAR_TargetofTargetButton.HealthBar = GVAR_TargetofTargetButton:CreateTexture(nil, "ARTWORK")
+		GVAR_TargetofTargetButton.HealthBar:SetPoint("LEFT", GVAR_TargetofTargetButton.ClassColorBackground, "LEFT", 0, 0)
+		GVAR_TargetofTargetButton.HealthBar:SetTexture(0, 0, 0, 0)
+
+		GVAR_TargetofTargetButton.HealthTextButton = CreateFrame("Button", nil, GVAR_TargetofTargetButton) -- xBUT
+		GVAR_TargetofTargetButton.HealthText = GVAR_TargetofTargetButton.HealthTextButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		GVAR_TargetofTargetButton.HealthText:SetWidth(100)
+		GVAR_TargetofTargetButton.HealthText:SetPoint("RIGHT", GVAR_TargetofTargetButton.ClassColorBackground, "RIGHT", 0, 0)
+		GVAR_TargetofTargetButton.HealthText:SetJustifyH("RIGHT")
+		GVAR_TargetofTargetButton.HealthText:SetShadowOffset(0, 0)
+		GVAR_TargetofTargetButton.HealthText:SetShadowColor(0, 0, 0, 0)
+		GVAR_TargetofTargetButton.HealthText:SetTextColor(1, 1, 1, 1)
+		GVAR_TargetofTargetButton.HealthText:SetAlpha(0.6)
+
 		GVAR_TargetofTargetButton.Name = GVAR_TargetofTargetButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		GVAR_TargetofTargetButton.Name:SetPoint("LEFT", GVAR_TargetofTargetButton.RoleTexture, "RIGHT", 2, 0)
+		GVAR_TargetofTargetButton.Name:SetPoint("LEFT", GVAR_TargetofTargetButton.ClassColorBackground, "LEFT", 2, 0)
 		GVAR_TargetofTargetButton.Name:SetJustifyH("LEFT")
 		GVAR_TargetofTargetButton.Name:SetShadowOffset(0, 0)
 		GVAR_TargetofTargetButton.Name:SetShadowColor(0, 0, 0, 0)
@@ -4819,31 +4835,53 @@ function BattlegroundTargets:SetupButtonLayout()
 		withIconWidth = (ButtonWidth - (ButtonHeight_2*iconNum)) - 2
 	end
 
+	if ButtonShowTargetCount then
+		GVAR.healthBarWidth = withIconWidth - 20
+	else
+		GVAR.healthBarWidth = withIconWidth
+	end
+
+	if ButtonShowRole then
+		GVAR.totHealthBarWidth = (ButtonWidth - (ButtonHeight_2*2)) - 2
+	else
+		GVAR.totHealthBarWidth = (ButtonWidth - (ButtonHeight_2*1)) - 2
+	end
+
 	for i = 1, currentSize do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
 
 		if ButtonTargetofTarget then -- TARGET_OF_TARGET
 			local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
 
+			local lvl = GVAR_TargetofTargetButton:GetFrameLevel()
+			GVAR_TargetofTargetButton.HealthTextButton:SetFrameLevel(lvl+1) -- xBUT
+
 			GVAR_TargetofTargetButton:SetSize(ButtonWidth, ButtonHeight)
 			GVAR_TargetofTargetButton.Background:SetSize(ButtonWidth, ButtonHeight)
 
 			GVAR_TargetofTargetButton.FactionTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
-			GVAR_TargetofTargetButton.RoleTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
+			if ButtonShowRole then
+				GVAR_TargetofTargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetofTargetButton.RoleTexture, "RIGHT", 0, 0)
+				GVAR_TargetofTargetButton.RoleTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
+				GVAR_TargetofTargetButton.RoleTexture:SetAlpha(1)
+			else
+				GVAR_TargetofTargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetofTargetButton.FactionTexture, "RIGHT", 0, 0)
+				GVAR_TargetofTargetButton.RoleTexture:SetAlpha(0)
+			end
 			
-			GVAR_TargetofTargetButton.ClassColorBackground:SetWidth((ButtonWidth - (ButtonHeight_2*2)) - 2)
+			GVAR_TargetofTargetButton.ClassColorBackground:SetWidth(GVAR.totHealthBarWidth)
 			GVAR_TargetofTargetButton.ClassColorBackground:SetHeight(ButtonHeight_2)
+
+			GVAR_TargetofTargetButton.HealthBar:SetWidth(GVAR.totHealthBarWidth)
+			GVAR_TargetofTargetButton.HealthBar:SetHeight(ButtonHeight_2)
+
+			GVAR_TargetofTargetButton.HealthText:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize, "OUTLINE")
+			GVAR_TargetofTargetButton.HealthText:SetHeight(backfallFontSize)
 
 			GVAR_TargetofTargetButton.Name:SetFont(fButtonFontNameStyle, ButtonFontNameSize, "")
 			GVAR_TargetofTargetButton.Name:SetHeight(backfallFontSize)
-			GVAR_TargetofTargetButton.Name:SetWidth((ButtonWidth - (ButtonHeight_2*2)) - 2)
-
-			-- TODO --------------
-			GVAR_TargetofTargetButton.Name:SetText(L["Target of Target"].."1234567891234567890-1234567890")
-			GVAR_TargetofTargetButton.ClassColorBackground:SetTexture(0.8, 0, 0, 1)
-			----------------------
+			GVAR_TargetofTargetButton.Name:SetWidth(GVAR.totHealthBarWidth - 2)
 		end
-
 
 		local lvl = GVAR_TargetButton:GetFrameLevel()
 		GVAR_TargetButton.HealthTextButton:SetFrameLevel(lvl+1) -- xBUT
@@ -4983,10 +5021,8 @@ function BattlegroundTargets:SetupButtonLayout()
 		GVAR_TargetButton.HealthText:SetHeight(backfallFontSize)
 
 		if ButtonShowTargetCount then
-			healthBarWidth = withIconWidth-20
 			GVAR_TargetButton.ClassColorBackground:SetWidth(withIconWidth-20)
 			GVAR_TargetButton.HealthBar:SetWidth(withIconWidth-20)
-			GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 2, 0)
 			GVAR_TargetButton.Name:SetWidth(withIconWidth-20-2)
 			GVAR_TargetButton.TargetCountBackground:SetHeight(ButtonHeight_2)
 			GVAR_TargetButton.TargetCountBackground:Show()
@@ -4995,10 +5031,8 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR_TargetButton.TargetCount:SetText("")
 			GVAR_TargetButton.TargetCount:Show()
 		else
-			healthBarWidth = withIconWidth
 			GVAR_TargetButton.ClassColorBackground:SetWidth(withIconWidth)
 			GVAR_TargetButton.HealthBar:SetWidth(withIconWidth)
-			GVAR_TargetButton.Name:SetPoint("LEFT", GVAR_TargetButton.ClassColorBackground, "LEFT", 2, 0)
 			GVAR_TargetButton.Name:SetWidth(withIconWidth-2)
 			GVAR_TargetButton.TargetCountBackground:Hide()
 			GVAR_TargetButton.TargetCount:Hide()
@@ -5274,6 +5308,11 @@ function BattlegroundTargets:LocalizedFontNameTest(show, font)
 			for i = 1, currentSize do
 				GVAR_TargetButton[i].Name:SetFont(f, s, "")
 			end
+			if OPT.ButtonTargetofTarget[currentSize] then -- TARGET_OF_TARGET
+				for i = 1, currentSize do
+					GVAR_TargetButton[i].TargetofTargetButton.Name:SetFont(f, s, "")
+				end
+			end
 		end
 		if IsModifierKeyDown() then return end
 		GVAR.TargetButton[1].Name:SetText(L["Test_abc_"])
@@ -5293,6 +5332,11 @@ function BattlegroundTargets:LocalizedFontNameTest(show, font)
 			local GVAR_TargetButton = GVAR.TargetButton
 			for i = 1, currentSize do
 				GVAR_TargetButton[i].Name:SetFont(f, s, "")
+			end
+			if OPT.ButtonTargetofTarget[currentSize] then -- TARGET_OF_TARGET
+				for i = 1, currentSize do
+					GVAR_TargetButton[i].TargetofTargetButton.Name:SetFont(f, s, "")
+				end
 			end
 		end
 		if isLowLevel then
@@ -5320,6 +5364,11 @@ function BattlegroundTargets:LocalizedFontNumberTest(show, font)
 			GVAR_TargetButton.FlagDebuff:SetFont(f, s, "OUTLINE")
 			GVAR_TargetButton.OrbDebuff:SetFont(f, s-2, "OUTLINE")
 		end
+		if OPT.ButtonTargetofTarget[currentSize] then -- TARGET_OF_TARGET
+			for i = 1, currentSize do
+				GVAR.TargetButton[i].TargetofTargetButton.HealthText:SetFont(f, s, "OUTLINE")
+			end
+		end
 		GVAR.Summary.HealerFriend:SetFont(f, s*2, "OUTLINE")
 		GVAR.Summary.HealerEnemy:SetFont(f, s*2, "OUTLINE")
 		GVAR.Summary.TankFriend:SetFont(f, s*2, "OUTLINE")
@@ -5335,6 +5384,11 @@ function BattlegroundTargets:LocalizedFontNumberTest(show, font)
 			GVAR_TargetButton.TargetCount:SetFont(f, s, "")
 			GVAR_TargetButton.FlagDebuff:SetFont(f, s, "OUTLINE")
 			GVAR_TargetButton.OrbDebuff:SetFont(f, s-2, "OUTLINE")
+		end
+		if OPT.ButtonTargetofTarget[currentSize] then -- TARGET_OF_TARGET
+			for i = 1, currentSize do
+				GVAR.TargetButton[i].TargetofTargetButton.HealthText:SetFont(f, s, "OUTLINE")
+			end
 		end
 		GVAR.Summary.HealerFriend:SetFont(f, s*2, "OUTLINE")
 		GVAR.Summary.HealerEnemy:SetFont(f, s*2, "OUTLINE")
@@ -5550,7 +5604,6 @@ function BattlegroundTargets:SetConfigButtonValues()
 	local ButtonShowHealthText  = OPT.ButtonShowHealthText[currentSize]
 	local ButtonRangeCheck      = OPT.ButtonRangeCheck[currentSize]
 	local ButtonRangeDisplay    = OPT.ButtonRangeDisplay[currentSize]
-	local ButtonTargetofTarget  = OPT.ButtonTargetofTarget[currentSize]
 
 	for i = 1, currentSize do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
@@ -5575,12 +5628,12 @@ function BattlegroundTargets:SetConfigButtonValues()
 
 		-- health
 		if ButtonShowHealthBar then
-			local width = healthBarWidth * (testData.Health[i] / 100)
+			local width = GVAR.healthBarWidth * (testData.Health[i] / 100)
 			width = math_max(0.01, width)
-			width = math_min(healthBarWidth, width)
+			width = math_min(GVAR.healthBarWidth, width)
 			GVAR_TargetButton.HealthBar:SetWidth(width)
 		else
-			GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
+			GVAR_TargetButton.HealthBar:SetWidth(GVAR.healthBarWidth)
 		end
 		if ButtonShowHealthText then
 			GVAR_TargetButton.HealthText:SetText(testData.Health[i])
@@ -5598,18 +5651,67 @@ function BattlegroundTargets:SetConfigButtonValues()
 		else
 			Range_Display(true, GVAR_TargetButton)
 		end
-		
-		-- targetoftarget
-		if ButtonTargetofTarget then -- TARGET_OF_TARGET
-			if testData.TargetofTarget[i] < 50 then
-				GVAR_TargetButton.TargetofTargetButton:SetAlpha(1)
-				GVAR_TargetButton.TargetofTargetButton.FactionTexture:SetTexture(Textures.Path)
-				GVAR_TargetButton.TargetofTargetButton.FactionTexture:SetTexCoord(unpack(Textures.CombatIcon))
+	end
+
+	-- TARGET_OF_TARGET
+	if OPT.ButtonTargetofTarget[currentSize] then
+		local ButtonShowHealthBar  = OPT.ButtonShowHealthBar[currentSize]
+		local ButtonShowHealthText = OPT.ButtonShowHealthText[currentSize]
+		for i = 1, currentSize do
+			local GVAR_TargetofTargetButton = GVAR.TargetButton[i].TargetofTargetButton
+			if testData.TargetofTarget[i].rnd <= 33 then
+				local totName = testData.TargetofTarget[i].totName
+				local classToken = testData.TargetofTarget[i].classToken
+				local talentSpec = testData.TargetofTarget[i].talentSpec
+				local isEnemy = testData.TargetofTarget[i].isEnemy
+				local num = testData.TargetofTarget[i].healthvalue
+				local colR  = classcolors[classToken].r
+				local colG  = classcolors[classToken].g
+				local colB  = classcolors[classToken].b
+				local colR5 = colR*0.5
+				local colG5 = colG*0.5
+				local colB5 = colB*0.5
+
+				GVAR_TargetofTargetButton.Name:SetText(totName)
+				GVAR_TargetofTargetButton.RoleTexture:SetTexCoord(Textures.RoleIcon[talentSpec][1], Textures.RoleIcon[talentSpec][2], Textures.RoleIcon[talentSpec][3], Textures.RoleIcon[talentSpec][4])
+
+				if isEnemy == 2 then
+					if playerFactionDEF == 1 then
+						GVAR_TargetofTargetButton.FactionTexture:SetTexture("Interface\\WorldStateFrame\\HordeIcon")
+						GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(0, 1, 0, 1)
+					else
+						GVAR_TargetofTargetButton.FactionTexture:SetTexture("Interface\\WorldStateFrame\\AllianceIcon")
+						GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(0, 1, 0, 1)
+					end
+				else
+					GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(0, 0, 0, 0)
+				end
+
+				if ButtonShowHealthBar then
+					GVAR_TargetofTargetButton.ClassColorBackground:SetTexture(colR5, colG5, colB5, 1)
+					GVAR_TargetofTargetButton.HealthBar:SetTexture(colR, colG, colB, 1)
+					local width = GVAR.totHealthBarWidth * (num / 100)
+					width = math_max(0.01, width)
+					width = math_min(GVAR.totHealthBarWidth, width)
+					GVAR_TargetofTargetButton.HealthBar:SetWidth(width)
+				else
+					--GVAR_TargetofTargetButton.ClassColorBackground:SetTexture(colR5, colG5, colB5, 1)
+					GVAR_TargetofTargetButton.HealthBar:SetTexture(colR, colG, colB, 1)
+				end
+				if ButtonShowHealthText then
+					GVAR_TargetofTargetButton.HealthText:SetText(num)
+				else
+					GVAR_TargetofTargetButton.HealthText:SetText("")
+				end
+
+				GVAR_TargetofTargetButton:SetAlpha(1)
 			else
-				GVAR_TargetButton.TargetofTargetButton:SetAlpha(0)
+				GVAR_TargetofTargetButton:SetAlpha(0)
 			end
-		else
-			GVAR_TargetButton.TargetofTargetButton:SetAlpha(0)
+		end
+	else
+		for i = 1, currentSize do
+			GVAR.TargetButton[i].TargetofTargetButton:SetAlpha(0)
 		end
 	end
 
@@ -5696,7 +5798,7 @@ function BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, clearRan
 
 	-- health
 	GVAR_TargetButton.HealthBar:SetTexture(0, 0, 0, 0)
-	GVAR_TargetButton.HealthBar:SetWidth(healthBarWidth)
+	GVAR_TargetButton.HealthBar:SetWidth(GVAR.healthBarWidth)
 	GVAR_TargetButton.HealthText:SetText("")
 
 	-- range
@@ -5708,7 +5810,17 @@ function BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, clearRan
 	GVAR_TargetButton.SpecTexture:SetTexture(nil)
 	GVAR_TargetButton.ClassTexture:SetTexCoord(0, 0, 0, 0)
 	GVAR_TargetButton.ClassColorBackground:SetTexture(0, 0, 0, 0)
-	
+
+	--targetoftarget
+	GVAR_TargetButton.TargetofTargetButton:SetAlpha(0) -- TARGET_OF_TARGET
+	GVAR_TargetButton.TargetofTargetButton.Name:SetText("")
+	GVAR_TargetButton.TargetofTargetButton.ClassColorBackground:SetTexture(0, 0, 0, 0)
+	GVAR_TargetButton.TargetofTargetButton.RoleTexture:SetTexCoord(0, 0, 0, 0)
+	GVAR_TargetButton.TargetofTargetButton.FactionTexture:SetTexCoord(0, 0, 0, 0)
+	GVAR_TargetButton.TargetofTargetButton.HealthBar:SetTexture(0, 0, 0, 0)
+	GVAR_TargetButton.TargetofTargetButton.HealthBar:SetWidth(GVAR.healthBarWidth)
+	GVAR_TargetButton.TargetofTargetButton.HealthText:SetText("")
+
 	if clearRange then
 		if OPT.ButtonRangeCheck[currentSize] then
 			Range_Display(false, GVAR_TargetButton, OPT.ButtonRangeDisplay[currentSize])
@@ -5725,7 +5837,30 @@ function BattlegroundTargets:DefaultShuffle()
 	for i = 1, 40 do
 		testData.Health[i] = random(0,100)
 		testData.Range[i] = random(0,100)
+	end
+	-- TARGET_OF_TARGET
+	for i = 1, 40 do
 		testData.TargetofTarget[i] = random(0,100)
+	end
+	local isOneValueCheck = 0
+	for i = 1, currentSize do
+		if testData.TargetofTarget[i] > 33 then
+			isOneValueCheck = isOneValueCheck + 1
+		end
+	end
+	if isOneValueCheck == currentSize then
+		testData.TargetofTarget[1] = 1
+	end
+	for i = 1, 40 do
+		local rndnum = testData.TargetofTarget[i]
+		testData.TargetofTarget[i] = {
+			rnd = rndnum,
+			totName = L["Target of Target"]..i,
+			classToken = class_IntegerSort[ random(1,11) ].cid,
+			talentSpec = random(1,3),
+			isEnemy = random(1,2),
+			healthvalue = random(1,100)
+			}
 	end
 	-- target focus assi leader
 	testData.IconTarget = random(1,10)
@@ -5796,6 +5931,7 @@ function BattlegroundTargets:ShufflerFunc(what)
 		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetSize(30, 30)
 	elseif what == "ShuffleCheck" then
 		if OPT.ButtonShowTarget[currentSize] or
+		   OPT.ButtonTargetofTarget[currentSize] or
 		   OPT.ButtonShowFlag[currentSize] or
 		   OPT.ButtonShowHealthBar[currentSize] or
 		   OPT.ButtonShowHealthText[currentSize] or
@@ -6187,7 +6323,7 @@ function BattlegroundTargets:MainDataUpdate()
 			if ButtonTargetofTarget then -- TARGET_OF_TARGET
 				local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
 				if GVAR_TargetofTargetButton.totData then
-					BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetofTargetButton)
+					BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetButton)
 					local totTimer = GVAR_TargetofTargetButton.totTimer
 					if curTime > totTimer + 5 then
 						GVAR_TargetofTargetButton.totTimer = nil
@@ -6209,9 +6345,9 @@ function BattlegroundTargets:MainDataUpdate()
 
 			if nameE and percentE then
 				if ButtonShowHealthBar then
-					local width = healthBarWidth * (percentE / 100)
+					local width = GVAR.healthBarWidth * (percentE / 100)
 					width = math_max(0.01, width)
-					width = math_min(healthBarWidth, width)
+					width = math_min(GVAR.healthBarWidth, width)
 					GVAR_TargetButton.HealthBar:SetWidth(width)
 				end
 				if ButtonShowHealthText then
@@ -6674,7 +6810,6 @@ function BattlegroundTargets:IsBattleground()
 				local GVAR_TargetButton = GVAR.TargetButton[i]
 				if i < currentSize+1 then
 					BattlegroundTargets:ClearConfigButtonValues(GVAR_TargetButton, 1)
-					GVAR_TargetButton.TargetofTargetButton:SetAlpha(0) -- TARGET_OF_TARGET
 					GVAR_TargetButton:Show()
 				else
 					GVAR_TargetButton:Hide()
@@ -6885,16 +7020,44 @@ end
 
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetofTargetButton) -- TARGET_OF_TARGET
-	local totName    = GVAR_TargetofTargetButton.totData.totName
-	local classToken = GVAR_TargetofTargetButton.totData.classToken
-	local talentSpec = GVAR_TargetofTargetButton.totData.talentSpec
-	local isEnemy    = GVAR_TargetofTargetButton.totData.isEnemy
+function BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetButton) -- TARGET_OF_TARGET
+	local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
+	local totName      = GVAR_TargetofTargetButton.totData.totName
+	local totNameRealm = GVAR_TargetofTargetButton.totData.totNameRealm
+	local classToken   = GVAR_TargetofTargetButton.totData.classToken
+	local talentSpec   = GVAR_TargetofTargetButton.totData.talentSpec
+	local callerUnit   = GVAR_TargetofTargetButton.totData.callerUnit
+	local isEnemy      = GVAR_TargetofTargetButton.totData.isEnemy
+	local colR  = classcolors[classToken].r
+	local colG  = classcolors[classToken].g
+	local colB  = classcolors[classToken].b
+	local colR5 = colR*0.5
+	local colG5 = colG*0.5
+	local colB5 = colB*0.5
 
 	GVAR_TargetofTargetButton.Name:SetText(totName)
-	GVAR_TargetofTargetButton.ClassColorBackground:SetTexture(classcolors[classToken].r, classcolors[classToken].g, classcolors[classToken].b, 1)
+	GVAR_TargetofTargetButton.ClassColorBackground:SetTexture(colR5, colG5, colB5, 1)
+	GVAR_TargetofTargetButton.HealthBar:SetTexture(colR, colG, colB, 1)
 	GVAR_TargetofTargetButton.RoleTexture:SetTexCoord(Textures.RoleIcon[talentSpec][1], Textures.RoleIcon[talentSpec][2], Textures.RoleIcon[talentSpec][3], Textures.RoleIcon[talentSpec][4])
+
+	local ButtonShowHealthBar  = OPT.ButtonShowHealthBar[currentSize]
+	local ButtonShowHealthText = OPT.ButtonShowHealthText[currentSize]
 	if isEnemy then
+		if ButtonShowHealthBar or ButtonShowHealthText then
+			--print("isEnemy", GVAR_TargetButton.buttonNum, callerUnit, "#", totName, totNameRealm, "#", ENEMY_Name2Percent[totNameRealm], ENEMY_Name2Percent[totName])
+			if ENEMY_Name2Percent[totNameRealm] then
+				if ButtonShowHealthBar then
+					local width = GVAR.totHealthBarWidth * (ENEMY_Name2Percent[totNameRealm] / 100)
+					width = math_max(0.01, width)
+					width = math_min(GVAR.totHealthBarWidth, width)
+					GVAR_TargetofTargetButton.HealthBar:SetWidth(width)
+				end
+				if ButtonShowHealthText then
+					GVAR_TargetofTargetButton.HealthText:SetText(ENEMY_Name2Percent[totNameRealm])
+				end
+			end
+		end
+
 		if oppositeFactionREAL and oppositeFactionREAL ~= playerFactionDEF then
 			if oppositeFactionREAL == 0 then
 				GVAR_TargetofTargetButton.FactionTexture:SetTexture("Interface\\WorldStateFrame\\HordeIcon")
@@ -6908,10 +7071,39 @@ function BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetofTargetButto
 			GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(unpack(Textures.CombatIcon))
 		end
 	else
+		if ButtonShowHealthBar or ButtonShowHealthText then
+			local maxHealth = UnitHealthMax(callerUnit.."target")
+			if maxHealth then
+				local health = UnitHealth(callerUnit.."target")
+				if health then
+					local width = 0.01
+					local percent = 0
+					if maxHealth > 0 and health > 0 then
+						local hvalue = maxHealth / health
+						width = GVAR.healthBarWidth / hvalue
+						width = math_max(0.01, width)
+						width = math_min(GVAR.healthBarWidth, width)
+						percent = floor( (100/hvalue) + 0.5 )
+						percent = math_max(0, percent)
+						percent = math_min(100, percent)
+					end
+					--print("isFriend", GVAR_TargetButton.buttonNum, callerUnit, "#", totName, totNameRealm, "#", health, maxHealth, width)
+					if ButtonShowHealthBar then
+						GVAR_TargetofTargetButton.HealthBar:SetWidth(width)
+					end
+					if ButtonShowHealthText then
+						GVAR_TargetofTargetButton.HealthText:SetText(percent)
+					end
+				end
+			end
+		end
+
 		GVAR_TargetofTargetButton.FactionTexture:SetTexCoord(0, 0, 0, 0)
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
+
+
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, unitName, unitID, caller) -- TARGET_OF_TARGET
@@ -6978,10 +7170,20 @@ function BattlegroundTargets:CheckTargetofTarget(GVAR_TargetButton, unitName, un
 	end
 
 	if classToken then
+		if BattlegroundTargets_Options.TransliterationToggle and ENEMY_TransName[totName] then
+			totName = ENEMY_TransName[totName]
+		end
 		local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
 		GVAR_TargetofTargetButton.totTimer = curTime
-		GVAR_TargetofTargetButton.totData = {totName=totName, classToken=classToken, talentSpec=talentSpec, isEnemy=isEnemy}
-		BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetofTargetButton)
+		GVAR_TargetofTargetButton.totData = {
+			totName = totName,
+			totNameRealm = totNameRealm,
+			classToken = classToken,
+			talentSpec = talentSpec,
+			callerUnit = unitID,
+			isEnemy = isEnemy
+		}
+		BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetButton)
 		GVAR_TargetofTargetButton:SetAlpha(1)
 	end
 
@@ -7386,9 +7588,9 @@ function BattlegroundTargets:CheckUnitHealth(unitID, unitName, healthonly)
 				local percent = 0
 				if maxHealth > 0 and health > 0 then
 					local hvalue = maxHealth / health
-					width = healthBarWidth / hvalue
+					width = GVAR.healthBarWidth / hvalue
 					width = math_max(0.01, width)
-					width = math_min(healthBarWidth, width)
+					width = math_min(GVAR.healthBarWidth, width)
 					percent = floor( (100/hvalue) + 0.5 )
 					percent = math_max(0, percent)
 					percent = math_min(100, percent)
