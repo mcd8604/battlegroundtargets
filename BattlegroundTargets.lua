@@ -1061,6 +1061,7 @@ TEMPLATE.Slider = function(slider, width, step, minVal, maxVal, curVal, func, me
 	slider:SetWidth(width)
 	slider:SetHeight(16)
 	slider:SetValueStep(step)
+	slider:SetObeyStepOnDrag(true)
 	slider:SetMinMaxValues(minVal, maxVal)
 	slider:SetValue(curVal)
 	slider:SetOrientation("HORIZONTAL")
@@ -1401,6 +1402,8 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonFlagPosition)           ~= "table"   then BattlegroundTargets_Options.ButtonFlagPosition           = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowTargetCount)        ~= "table"   then BattlegroundTargets_Options.ButtonShowTargetCount        = {}    end
 	if type(BattlegroundTargets_Options.ButtonTargetofTarget)         ~= "table"   then BattlegroundTargets_Options.ButtonTargetofTarget         = {}    end
+	if type(BattlegroundTargets_Options.ButtonToTScale)               ~= "table"   then BattlegroundTargets_Options.ButtonToTScale               = {}    end
+	if type(BattlegroundTargets_Options.ButtonToTPosition)            ~= "table"   then BattlegroundTargets_Options.ButtonToTPosition            = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowHealthBar)          ~= "table"   then BattlegroundTargets_Options.ButtonShowHealthBar          = {}    end
 	if type(BattlegroundTargets_Options.ButtonShowHealthText)         ~= "table"   then BattlegroundTargets_Options.ButtonShowHealthText         = {}    end
 	if type(BattlegroundTargets_Options.ButtonRangeCheck)             ~= "table"   then BattlegroundTargets_Options.ButtonRangeCheck             = {}    end
@@ -1435,6 +1438,8 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonFlagPosition[10])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[10]       = 60    end
 	if type(BattlegroundTargets_Options.ButtonShowTargetCount[10])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[10]    = false end
 	if type(BattlegroundTargets_Options.ButtonTargetofTarget[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonTargetofTarget[10]     = false end
+	if type(BattlegroundTargets_Options.ButtonToTScale[10])           ~= "number"  then BattlegroundTargets_Options.ButtonToTScale[10]           = 0.8   end
+	if type(BattlegroundTargets_Options.ButtonToTPosition[10])        ~= "number"  then BattlegroundTargets_Options.ButtonToTPosition[10]        = 4     end
 	if type(BattlegroundTargets_Options.ButtonShowHealthBar[10])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[10]      = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthText[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[10]     = false end
 	if type(BattlegroundTargets_Options.ButtonRangeCheck[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[10]         = false end
@@ -1469,6 +1474,8 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonFlagPosition[15])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[15]       = 60    end
 	if type(BattlegroundTargets_Options.ButtonShowTargetCount[15])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[15]    = false end
 	if type(BattlegroundTargets_Options.ButtonTargetofTarget[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonTargetofTarget[15]     = false end
+	if type(BattlegroundTargets_Options.ButtonToTScale[15])           ~= "number"  then BattlegroundTargets_Options.ButtonToTScale[15]           = 0.8   end
+	if type(BattlegroundTargets_Options.ButtonToTPosition[15])        ~= "number"  then BattlegroundTargets_Options.ButtonToTPosition[15]        = 4     end
 	if type(BattlegroundTargets_Options.ButtonShowHealthBar[15])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[15]      = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthText[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[15]     = false end
 	if type(BattlegroundTargets_Options.ButtonRangeCheck[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[15]         = false end
@@ -1503,6 +1510,8 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonFlagPosition[40])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[40]       = 100   end
 	if type(BattlegroundTargets_Options.ButtonShowTargetCount[40])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[40]    = false end
 	if type(BattlegroundTargets_Options.ButtonTargetofTarget[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonTargetofTarget[40]     = false end
+	if type(BattlegroundTargets_Options.ButtonToTScale[40])           ~= "number"  then BattlegroundTargets_Options.ButtonToTScale[40]           = 0.8   end
+	if type(BattlegroundTargets_Options.ButtonToTPosition[40])        ~= "number"  then BattlegroundTargets_Options.ButtonToTPosition[40]        = 4     end
 	if type(BattlegroundTargets_Options.ButtonShowHealthBar[40])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[40]      = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthText[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[40]     = false end
 	if type(BattlegroundTargets_Options.ButtonRangeCheck[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[40]         = false end
@@ -1539,6 +1548,8 @@ function BattlegroundTargets:InitOptions()
 	OPT.ButtonFlagPosition       = {[10] = BTO.ButtonFlagPosition[10]      , [15] = BTO.ButtonFlagPosition[15]      , [40] = BTO.ButtonFlagPosition[40]      }
 	OPT.ButtonShowTargetCount    = {[10] = BTO.ButtonShowTargetCount[10]   , [15] = BTO.ButtonShowTargetCount[15]   , [40] = BTO.ButtonShowTargetCount[40]   }
 	OPT.ButtonTargetofTarget     = {[10] = BTO.ButtonTargetofTarget[10]    , [15] = BTO.ButtonTargetofTarget[15]    , [40] = BTO.ButtonTargetofTarget[40]    }
+	OPT.ButtonToTScale           = {[10] = BTO.ButtonToTScale[10]          , [15] = BTO.ButtonToTScale[15]          , [40] = BTO.ButtonToTScale[40]          }
+	OPT.ButtonToTPosition        = {[10] = BTO.ButtonToTPosition[10]       , [15] = BTO.ButtonToTPosition[15]       , [40] = BTO.ButtonToTPosition[40]       }
 	OPT.ButtonShowHealthBar      = {[10] = BTO.ButtonShowHealthBar[10]     , [15] = BTO.ButtonShowHealthBar[15]     , [40] = BTO.ButtonShowHealthBar[40]     }
 	OPT.ButtonShowHealthText     = {[10] = BTO.ButtonShowHealthText[10]    , [15] = BTO.ButtonShowHealthText[15]    , [40] = BTO.ButtonShowHealthText[40]    }
 	OPT.ButtonRangeCheck         = {[10] = BTO.ButtonRangeCheck[10]        , [15] = BTO.ButtonRangeCheck[15]        , [40] = BTO.ButtonRangeCheck[40]        }
@@ -1809,7 +1820,6 @@ function BattlegroundTargets:CreateFrames()
 		GVAR_TargetButton.TargetofTargetButton = CreateFrame("Button", nil, GVAR_TargetButton) -- TARGET_OF_TARGET -- xBUT
 		local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
 
-		GVAR_TargetofTargetButton:SetPoint("TOPLEFT", GVAR_TargetButton, "TOPRIGHT", 20, 0) -- positioning TODO
 		GVAR_TargetofTargetButton:EnableMouse(false)
 		GVAR_TargetofTargetButton:SetAlpha(0)
 
@@ -1871,6 +1881,11 @@ function BattlegroundTargets:CreateFrames()
 
 	GVAR.MonoblockAnchor = CreateFrame("Frame", nil, GVAR.TargetButton[1]) -- SUMPOSi
 	GVAR.MonoblockAnchor:SetPoint("TOPLEFT", GVAR.TargetButton[1], "TOPLEFT", 0, 0)
+--[[ TEST
+	GVAR.MonoblockAnchorTexture = GVAR.MonoblockAnchor:CreateTexture(nil, "OVERLAY")
+	GVAR.MonoblockAnchorTexture:SetTexture(0.5, 0.5, 0.5, 1)
+	GVAR.MonoblockAnchorTexture:SetAllPoints()
+--]]
 
 
 
@@ -2014,16 +2029,18 @@ function BattlegroundTargets:CreateOptionsFrame()
 	BattlegroundTargets:DefaultShuffle()
 
 	local heightBase = 58 -- 10+16+10+22
-	local heightBracket = 568
-	-- 10+16 +8+1+8+                              43 -- top enable
-	-- 16+10 + 16 +                               42 -- layout -> summary
-	-- 8+1+8 + 24 +                               41 -- copy button
-	-- 8+1+8 + 16+10 + 16+10 + 16 +               85 -- 1. row role -> targetcount
-	-- 8+1+8 + 16+10 + 16+10 + 16+10 + 16        111 -- 2. target -> targetassist
-	-- 8+1+8 + 16+10 + 16 +                       59 -- 3. health -> range
-	-- 8+1+8 + 16 +                               33 -- 4. sort
-	-- 8+1+8 + 16+10 + 16 +                       59 -- 5. fonts
-	-- 8+1+8 + 16+10 + 16+10 + 16 + 10            95 -- 6. scale -> height
+	local heightBracket = 594
+	-- 10+16 +8+1+8+                                        43 -- top enable
+	-- 16+10 + 16 +                                         42 -- layout -> summary
+	-- 8+1+8 + 24 +                                         41 -- copy button
+	-- 8+1+8 + 16+10 + 16+10 + 16 +                         85 -- 1. row role -> targetcount
+	-- 8+1+8 + 16+10 + 16+10 + 16+10 + 16+10 + 16          137 -- 2. target -> targetassist
+	-- 8+1+8 + 16+10 + 16 +                                 59 -- 3. health -> range
+	-- 8+1+8 + 16 +                                         33 -- 4. sort
+	-- 8+1+8 + 16+10 + 16 +                                 59 -- 5. fonts
+	-- 8+1+8 + 16+10 + 16+10 + 16 + 10                      95 -- 6. scale -> height
+	--                                                    =====
+	--                                                     594
 	local heightTotal = heightBase + heightBracket + 30 + 10
 
 	-- ####################################################################################################
@@ -2442,17 +2459,21 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.SummaryText.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.SummaryToggle.Highlight:Show()
 		GVAR.OptionsFrame.SummaryScale.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.SummaryPosition.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL ----------
+		GVAR.OptionsFrame.SummaryPosition.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		----------
 		GVAR.OptionsFrame.ShowRole.Highlight:Show()
 		GVAR.OptionsFrame.ShowSpec.Highlight:Show()
 		GVAR.OptionsFrame.ClassIcon.Highlight:Show()
 		GVAR.OptionsFrame.ShowLeader.Highlight:Show()
 		GVAR.OptionsFrame.ShowRealm.Highlight:Show()
 		GVAR.OptionsFrame.ShowTargetCount.Highlight:Show()
-		GVAR.OptionsFrame.TargetofTarget.Highlight:Show()----------
+		----------
 		GVAR.OptionsFrame.ShowTargetIndicator.Highlight:Show()
 		GVAR.OptionsFrame.TargetScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.TargetPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.TargetofTarget.Highlight:Show()
+		GVAR.OptionsFrame.ToTScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.ToTPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.ShowFocusIndicator.Highlight:Show()
 		GVAR.OptionsFrame.FocusScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.FocusPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
@@ -2461,7 +2482,8 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.FlagPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.ShowAssist.Highlight:Show()
 		GVAR.OptionsFrame.AssistScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.AssistPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL ----------
+		GVAR.OptionsFrame.AssistPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		----------
 		GVAR.OptionsFrame.ShowHealthBar.Highlight:Show()
 		GVAR.OptionsFrame.ShowHealthText.Highlight:Show()
 		GVAR.OptionsFrame.RangeCheck.Highlight:Show()
@@ -2469,7 +2491,8 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.RangeDisplayPullDown:LockHighlight()
 		GVAR.OptionsFrame.SortByTitle.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.SortByPullDown:LockHighlight()
-		GVAR.OptionsFrame.SortDetailPullDown:LockHighlight()----------
+		GVAR.OptionsFrame.SortDetailPullDown:LockHighlight()
+		----------
 		GVAR.OptionsFrame.FontNameTitle.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.FontNamePullDown:LockHighlight()
 		GVAR.OptionsFrame.FontNameSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
@@ -2493,17 +2516,21 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.SummaryText.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.SummaryToggle.Highlight:Hide()
 		GVAR.OptionsFrame.SummaryScale.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.SummaryPosition.Background:SetTexture(0, 0, 0, 0)----------
+		GVAR.OptionsFrame.SummaryPosition.Background:SetTexture(0, 0, 0, 0)
+		----------
 		GVAR.OptionsFrame.ShowRole.Highlight:Hide()
 		GVAR.OptionsFrame.ShowSpec.Highlight:Hide()
 		GVAR.OptionsFrame.ClassIcon.Highlight:Hide()
 		GVAR.OptionsFrame.ShowLeader.Highlight:Hide()
 		GVAR.OptionsFrame.ShowRealm.Highlight:Hide()
 		GVAR.OptionsFrame.ShowTargetCount.Highlight:Hide()
-		GVAR.OptionsFrame.TargetofTarget.Highlight:Hide()----------
+		----------
 		GVAR.OptionsFrame.ShowTargetIndicator.Highlight:Hide()
 		GVAR.OptionsFrame.TargetScaleSlider.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.TargetPositionSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.TargetofTarget.Highlight:Hide()
+		GVAR.OptionsFrame.ToTScaleSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.ToTPositionSlider.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.ShowFocusIndicator.Highlight:Hide()
 		GVAR.OptionsFrame.FocusScaleSlider.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.FocusPositionSlider.Background:SetTexture(0, 0, 0, 0)
@@ -2512,7 +2539,8 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.FlagPositionSlider.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.ShowAssist.Highlight:Hide()
 		GVAR.OptionsFrame.AssistScaleSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.AssistPositionSlider.Background:SetTexture(0, 0, 0, 0)----------
+		GVAR.OptionsFrame.AssistPositionSlider.Background:SetTexture(0, 0, 0, 0)
+		----------
 		GVAR.OptionsFrame.ShowHealthBar.Highlight:Hide()
 		GVAR.OptionsFrame.ShowHealthText.Highlight:Hide()
 		GVAR.OptionsFrame.RangeCheck.Highlight:Hide()
@@ -2520,7 +2548,8 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.RangeDisplayPullDown:UnlockHighlight()
 		GVAR.OptionsFrame.SortByTitle.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.SortByPullDown:UnlockHighlight()
-		GVAR.OptionsFrame.SortDetailPullDown:UnlockHighlight()----------
+		GVAR.OptionsFrame.SortDetailPullDown:UnlockHighlight()
+		----------
 		GVAR.OptionsFrame.FontNameTitle.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.FontNamePullDown:UnlockHighlight()
 		GVAR.OptionsFrame.FontNameSlider.Background:SetTexture(0, 0, 0, 0)
@@ -2623,19 +2652,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
-	-- show targetoftarget
-	GVAR.OptionsFrame.TargetofTarget = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.TargetofTarget, 16, 4, L["Target of Target"])
-	--GVAR.OptionsFrame.TargetofTarget:SetPoint()
-	GVAR.OptionsFrame.TargetofTarget:SetChecked(OPT.ButtonTargetofTarget[currentSize])
-	GVAR.OptionsFrame.TargetofTarget:SetScript("OnClick", function()
-		BattlegroundTargets_Options.ButtonTargetofTarget[currentSize] = not BattlegroundTargets_Options.ButtonTargetofTarget[currentSize]
-		                        OPT.ButtonTargetofTarget[currentSize] = not                         OPT.ButtonTargetofTarget[currentSize]
-		GVAR.OptionsFrame.TargetofTarget:SetChecked(OPT.ButtonTargetofTarget[currentSize])
-		ConfigFontNumberOptionCheck(currentSize)
-		BattlegroundTargets:EnableConfigMode()
-	end)
-
 	local eq, sw = 0, 0
 	sw = GVAR.OptionsFrame.ShowRole:GetWidth() if sw > eq then eq = sw end
 	sw = GVAR.OptionsFrame.ShowRealm:GetWidth() if sw > eq then eq = sw end
@@ -2643,7 +2659,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ShowLeader:SetPoint("LEFT", GVAR.OptionsFrame.ShowRealm, "LEFT", eq+50, 0)
 	GVAR.OptionsFrame.ShowSpec:SetPoint("LEFT", GVAR.OptionsFrame.ShowRole, "LEFT", eq+50, 0)
 	GVAR.OptionsFrame.ClassIcon:SetPoint("LEFT", GVAR.OptionsFrame.ShowSpec, "LEFT", GVAR.OptionsFrame.ShowSpec:GetWidth()+50, 0)
-	GVAR.OptionsFrame.TargetofTarget:SetPoint("LEFT", GVAR.OptionsFrame.ShowTargetCount, "LEFT", eq+50, 0)
 
 	local generalIconW = 10 + eq + 50 + GVAR.OptionsFrame.ShowSpec:GetWidth() + 50 + GVAR.OptionsFrame.ClassIcon:GetWidth() + 10
 
@@ -2724,11 +2739,75 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TargetPositionSliderText:SetText(OPT.ButtonTargetPosition[currentSize])
 	GVAR.OptionsFrame.TargetPositionSliderText:SetTextColor(1, 1, 0.49, 1)
 
+	-- show targetoftarget
+	GVAR.OptionsFrame.TargetofTarget = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.TargetofTarget, 16, 4, L["Target of Target"])
+	GVAR.OptionsFrame.TargetofTarget:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.TargetofTarget:SetPoint("TOP", GVAR.OptionsFrame.ShowTargetIndicator, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.TargetofTarget:SetChecked(OPT.ButtonTargetofTarget[currentSize])
+	GVAR.OptionsFrame.TargetofTarget:SetScript("OnClick", function()
+		BattlegroundTargets_Options.ButtonTargetofTarget[currentSize] = not BattlegroundTargets_Options.ButtonTargetofTarget[currentSize]
+		                        OPT.ButtonTargetofTarget[currentSize] = not                         OPT.ButtonTargetofTarget[currentSize]
+		GVAR.OptionsFrame.TargetofTarget:SetChecked(OPT.ButtonTargetofTarget[currentSize])
+		ConfigFontNumberOptionCheck(currentSize)
+		if OPT.ButtonTargetofTarget[currentSize] then
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.ToTScaleSlider)
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.ToTPositionSlider)
+		else
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.ToTScaleSlider)
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.ToTPositionSlider)
+		end
+		BattlegroundTargets:EnableConfigMode()
+	end)
+	local iw = GVAR.OptionsFrame.TargetofTarget:GetWidth()
+	if iw > equalTextWidthIcons then
+		equalTextWidthIcons = iw
+	end
+
+	-- targetoftarget scale
+	GVAR.OptionsFrame.ToTScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
+	GVAR.OptionsFrame.ToTScaleSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	TEMPLATE.Slider(GVAR.OptionsFrame.ToTScaleSlider, 85, 10, 50, 100, OPT.ButtonToTScale[currentSize]*100,
+	function(self, value)
+		local nvalue = value/100
+		if nvalue == BattlegroundTargets_Options.ButtonToTScale[currentSize] then return end
+		BattlegroundTargets_Options.ButtonToTScale[currentSize] = nvalue
+		                        OPT.ButtonToTScale[currentSize] = nvalue
+		GVAR.OptionsFrame.ToTScaleSliderText:SetText(value.."%")
+		BattlegroundTargets:EnableConfigMode()
+	end,
+	"blank")
+	GVAR.OptionsFrame.ToTScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.TargetofTarget, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.ToTScaleSliderText:SetHeight(20)
+	GVAR.OptionsFrame.ToTScaleSliderText:SetPoint("LEFT", GVAR.OptionsFrame.ToTScaleSlider, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.ToTScaleSliderText:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.ToTScaleSliderText:SetText((OPT.ButtonToTScale[currentSize]*100).."%")
+	GVAR.OptionsFrame.ToTScaleSliderText:SetTextColor(1, 1, 0.49, 1)
+
+	-- targetoftarget position
+	GVAR.OptionsFrame.ToTPositionSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
+	GVAR.OptionsFrame.ToTPositionSliderText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	TEMPLATE.Slider(GVAR.OptionsFrame.ToTPositionSlider, 85, 1, 1, 9, OPT.ButtonToTPosition[currentSize],
+	function(self, value)
+		if value == BattlegroundTargets_Options.ButtonToTPosition[currentSize] then return end
+		BattlegroundTargets_Options.ButtonToTPosition[currentSize] = value
+		                        OPT.ButtonToTPosition[currentSize] = value
+		GVAR.OptionsFrame.ToTPositionSliderText:SetText(value)
+		BattlegroundTargets:EnableConfigMode()
+	end,
+	"blank")
+	GVAR.OptionsFrame.ToTPositionSlider:SetPoint("LEFT", GVAR.OptionsFrame.ToTScaleSlider, "RIGHT", 50, 0)
+	GVAR.OptionsFrame.ToTPositionSliderText:SetHeight(20)
+	GVAR.OptionsFrame.ToTPositionSliderText:SetPoint("LEFT", GVAR.OptionsFrame.ToTPositionSlider, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.ToTPositionSliderText:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.ToTPositionSliderText:SetText(OPT.ButtonToTPosition[currentSize])
+	GVAR.OptionsFrame.ToTPositionSliderText:SetTextColor(1, 1, 0.49, 1)
+
 	-- show focus indicator
 	GVAR.OptionsFrame.ShowFocusIndicator = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowFocusIndicator, 16, 4, L["Focus"])
 	GVAR.OptionsFrame.ShowFocusIndicator:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowFocusIndicator:SetPoint("TOP", GVAR.OptionsFrame.ShowTargetIndicator, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowFocusIndicator:SetPoint("TOP", GVAR.OptionsFrame.TargetofTarget, "BOTTOM", 0, -10)
 	GVAR.OptionsFrame.ShowFocusIndicator:SetChecked(OPT.ButtonShowFocus[currentSize])
 	GVAR.OptionsFrame.ShowFocusIndicator:SetScript("OnClick", function()
 		BattlegroundTargets_Options.ButtonShowFocus[currentSize] = not BattlegroundTargets_Options.ButtonShowFocus[currentSize]
@@ -3129,6 +3208,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 	GVAR.OptionsFrame.TargetScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ShowTargetIndicator, "LEFT", equalTextWidthIcons+10, 0)
+	GVAR.OptionsFrame.ToTScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.TargetofTarget, "LEFT", equalTextWidthIcons+10, 0)
 	GVAR.OptionsFrame.FocusScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ShowFocusIndicator, "LEFT", equalTextWidthIcons+10, 0)
 	GVAR.OptionsFrame.FlagScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ShowFlag, "LEFT", equalTextWidthIcons+10, 0)
 	GVAR.OptionsFrame.AssistScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ShowAssist, "LEFT", equalTextWidthIcons+10, 0)
@@ -4177,6 +4257,10 @@ function BattlegroundTargets:SetOptions()
 
 	GVAR.OptionsFrame.ShowTargetCount:SetChecked(OPT.ButtonShowTargetCount[currentSize])
 	GVAR.OptionsFrame.TargetofTarget:SetChecked(OPT.ButtonTargetofTarget[currentSize])
+	GVAR.OptionsFrame.ToTScaleSlider:SetValue(OPT.ButtonToTScale[currentSize]*100)
+	GVAR.OptionsFrame.ToTScaleSliderText:SetText((OPT.ButtonToTScale[currentSize]*100).."%")
+	GVAR.OptionsFrame.ToTPositionSlider:SetValue(OPT.ButtonToTPosition[currentSize])
+	GVAR.OptionsFrame.ToTPositionSliderText:SetText(OPT.ButtonToTPosition[currentSize])
 
 	GVAR.OptionsFrame.ShowHealthBar:SetChecked(OPT.ButtonShowHealthBar[currentSize])
 	GVAR.OptionsFrame.ShowHealthText:SetChecked(OPT.ButtonShowHealthText[currentSize])
@@ -4308,6 +4392,13 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.TargetofTarget)
+		if OPT.ButtonTargetofTarget[bracketSize] then
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.ToTScaleSlider)
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.ToTPositionSlider)
+		else
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.ToTScaleSlider)
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.ToTPositionSlider)
+		end
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowHealthText)
@@ -4404,6 +4495,8 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.TargetofTarget)
+		TEMPLATE.DisableSlider(GVAR.OptionsFrame.ToTScaleSlider)
+		TEMPLATE.DisableSlider(GVAR.OptionsFrame.ToTPositionSlider)
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
@@ -4485,6 +4578,8 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetCount)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.TargetofTarget)
+	TEMPLATE.DisableSlider(GVAR.OptionsFrame.ToTScaleSlider)
+	TEMPLATE.DisableSlider(GVAR.OptionsFrame.ToTPositionSlider)
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthBar)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowHealthText)
@@ -4797,6 +4892,8 @@ function BattlegroundTargets:SetupButtonLayout()
 	local ButtonClassIcon          = OPT.ButtonClassIcon[currentSize]
 	local ButtonShowTargetCount    = OPT.ButtonShowTargetCount[currentSize]
 	local ButtonTargetofTarget     = OPT.ButtonTargetofTarget[currentSize]
+	local ButtonToTScale           = OPT.ButtonToTScale[currentSize]
+	local ButtonToTPosition        = OPT.ButtonToTPosition[currentSize]
 	local ButtonShowTarget         = OPT.ButtonShowTarget[currentSize]
 	local ButtonTargetScale        = OPT.ButtonTargetScale[currentSize]
 	local ButtonTargetPosition     = OPT.ButtonTargetPosition[currentSize]
@@ -4881,6 +4978,31 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR_TargetofTargetButton.Name:SetFont(fButtonFontNameStyle, ButtonFontNameSize, "")
 			GVAR_TargetofTargetButton.Name:SetHeight(backfallFontSize)
 			GVAR_TargetofTargetButton.Name:SetWidth(GVAR.totHealthBarWidth - 2)
+			
+			GVAR_TargetofTargetButton:ClearAllPoints()
+			if ButtonToTPosition == 1 then
+				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
+			elseif ButtonToTPosition == 2 then
+				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 10, 0)
+			elseif ButtonToTPosition == 3 then
+				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 20, 0)
+			elseif ButtonToTPosition == 4 then
+				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 30, 0)
+			elseif ButtonToTPosition == 5 then
+				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", 0, 0)
+			elseif ButtonToTPosition == 6 then
+				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", -10, 0)
+			elseif ButtonToTPosition == 7 then
+				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", -20, 0)
+			elseif ButtonToTPosition == 8 then
+				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", -30, 0)
+			elseif ButtonToTPosition == 9 then
+				GVAR_TargetofTargetButton:SetPoint("BOTTOM", GVAR.MonoblockAnchor, "BOTTOM", 0, -50 - (i*ButtonHeight))
+			end
+			
+			GVAR_TargetofTargetButton:SetScale(ButtonToTScale)
+			
+			
 		end
 
 		local lvl = GVAR_TargetButton:GetFrameLevel()
@@ -5853,11 +5975,13 @@ function BattlegroundTargets:DefaultShuffle()
 	end
 	for i = 1, 40 do
 		local rndnum = testData.TargetofTarget[i]
+		local classToken = class_IntegerSort[ random(1,11) ].cid
+		local talentSpec = classes[ classToken ].spec[ random(1,3) ].role
 		testData.TargetofTarget[i] = {
 			rnd = rndnum,
 			totName = L["Target of Target"]..i,
-			classToken = class_IntegerSort[ random(1,11) ].cid,
-			talentSpec = random(1,3),
+			classToken = classToken,
+			talentSpec = talentSpec,
 			isEnemy = random(1,2),
 			healthvalue = random(1,100)
 			}
@@ -6032,6 +6156,10 @@ function BattlegroundTargets:CopySettings(sourceSize)
 	                        OPT.ButtonShowTargetCount[destinationSize]    =                         OPT.ButtonShowTargetCount[sourceSize]
 	BattlegroundTargets_Options.ButtonTargetofTarget[destinationSize]     = BattlegroundTargets_Options.ButtonTargetofTarget[sourceSize]
 	                        OPT.ButtonTargetofTarget[destinationSize]     =                         OPT.ButtonTargetofTarget[sourceSize]
+	BattlegroundTargets_Options.ButtonToTScale[destinationSize]           = BattlegroundTargets_Options.ButtonToTScale[sourceSize]
+	                        OPT.ButtonToTScale[destinationSize]           =                         OPT.ButtonToTScale[sourceSize]
+	BattlegroundTargets_Options.ButtonToTPosition[destinationSize]        = BattlegroundTargets_Options.ButtonToTPosition[sourceSize]
+	                        OPT.ButtonToTPosition[destinationSize]        =                         OPT.ButtonToTPosition[sourceSize]
 	BattlegroundTargets_Options.ButtonShowFocus[destinationSize]          = BattlegroundTargets_Options.ButtonShowFocus[sourceSize]
 	                        OPT.ButtonShowFocus[destinationSize]          =                         OPT.ButtonShowFocus[sourceSize]
 	BattlegroundTargets_Options.ButtonFocusScale[destinationSize]         = BattlegroundTargets_Options.ButtonFocusScale[sourceSize]
@@ -7080,9 +7208,9 @@ function BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetButton) -- TA
 					local percent = 0
 					if maxHealth > 0 and health > 0 then
 						local hvalue = maxHealth / health
-						width = GVAR.healthBarWidth / hvalue
+						width = GVAR.totHealthBarWidth / hvalue
 						width = math_max(0.01, width)
-						width = math_min(GVAR.healthBarWidth, width)
+						width = math_min(GVAR.totHealthBarWidth, width)
 						percent = floor( (100/hvalue) + 0.5 )
 						percent = math_max(0, percent)
 						percent = math_min(100, percent)
