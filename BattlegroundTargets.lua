@@ -422,9 +422,10 @@ local fontPath = fontStyles[defaultFont].font
 
 local classcolors = {}
 for class, color in pairs(RAID_CLASS_COLORS) do -- Constants.lua
-	classcolors[class] = {r = color.r, g = color.g, b = color.b}
+	classcolors[class] = {r = color.r, g = color.g, b = color.b, colorStr = format("%.2x%.2x%.2x", color.r*255, color.g*255, color.b*255)}
 end
-classcolors["ZZZFAILURE"] = {r = 0.4, g = 0.4, b = 0.4}
+classcolors["ZZZFAILURE"] = {r = 0.4, g = 0.4, b = 0.4, colorStr = "666666"}
+--for k, v in pairs(classcolors) do print(k, v.r, v.g, v.b, v.colorStr) end
 
 -- texture: Interface\\WorldStateFrame\\Icons-Classes
 -- role   : 1 = HEALER | 2 = TANK | 3 = DAMAGER | 4 = UNKNOWN
@@ -590,13 +591,6 @@ local function Desaturation(texture, desaturation)
 			texture:SetVertexColor(1.0, 1.0, 1.0)
 		end
 	end
-end
-
-local function ClassHexColor(class)
-	if classcolors[class] then
-		return format("%.2x%.2x%.2x", classcolors[class].r*255, classcolors[class].g*255, classcolors[class].b*255)
-	end
-	return "cccccc"
 end
 
 local function Range_Display(state, GVAR_TargetButton, display) -- RANGE_DISP_LAY
@@ -1025,7 +1019,7 @@ TEMPLATE.TabButton = function(button, text, active, monotext)
 		button.TabTexture:SetHeight(17)
 		button.TabTexture:SetTexture(AddonIcon)
 	end
-	
+
 	button:SetScript("OnEnter", function() if not button.show then button.TextureBorder:SetTexture(0.4, 0.4, 0.4, 0.8) end end)
 	button:SetScript("OnLeave", function() if not button.show then button.TextureBorder:SetTexture(0.4, 0.4, 0.4, 0.4) end end)
 end
@@ -1260,7 +1254,7 @@ TEMPLATE.PullDownMenu = function(button, contentName, buttonText, pulldownWidth,
 			button.PullDownMenu.Button[i].value1 = i
 		elseif contentName == "SortDetail" then
 			button.PullDownMenu.Button[i].Text:SetText(sortDetail[i])
-			button.PullDownMenu.Button[i].value1 = i	
+			button.PullDownMenu.Button[i].value1 = i
 		elseif contentName == "RangeType" then
 			button.PullDownMenu.Button[i].Text:SetText(rangeTypeName[i])
 			button.PullDownMenu.Button[i].value1 = i
@@ -1336,13 +1330,37 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if type(BattlegroundTargets_Options.version) ~= "number" then
-		BattlegroundTargets_Options.version = 22
+		BattlegroundTargets_Options.version = 23
 	end
 
 	if BattlegroundTargets_Options.version < 22 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
-		BattlegroundTargets_Options.version = 22
+		BattlegroundTargets_Options.version = 23
+	end
+
+	if BattlegroundTargets_Options.version == 22 then -- targetoftarget position reset
+		if type(BattlegroundTargets_Options.ButtonToTPosition) == "table" then
+			local v10 = BattlegroundTargets_Options.ButtonToTPosition[10]
+			if v10 <= 4 then
+				BattlegroundTargets_Options.ButtonToTPosition[10] = v10 + 4
+			elseif v10 < 9 then
+				BattlegroundTargets_Options.ButtonToTPosition[10] = v10 - 4
+			end
+			local v15 = BattlegroundTargets_Options.ButtonToTPosition[15]
+			if v15 <= 4 then
+				BattlegroundTargets_Options.ButtonToTPosition[15] = v15 + 4
+			elseif v15 < 9 then
+				BattlegroundTargets_Options.ButtonToTPosition[15] = v15 - 4
+			end
+			local v40 = BattlegroundTargets_Options.ButtonToTPosition[40]
+			if v40 <= 4 then
+				BattlegroundTargets_Options.ButtonToTPosition[40] = v40 + 4
+			elseif v40 < 9 then
+				BattlegroundTargets_Options.ButtonToTPosition[40] = v40 - 4
+			end
+		end
+		BattlegroundTargets_Options.version = 23
 	end
 
 	if type(BattlegroundTargets_Options.pos)                          ~= "table"   then BattlegroundTargets_Options.pos                          = {}    end
@@ -1439,7 +1457,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonShowTargetCount[10])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[10]    = false end
 	if type(BattlegroundTargets_Options.ButtonTargetofTarget[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonTargetofTarget[10]     = false end
 	if type(BattlegroundTargets_Options.ButtonToTScale[10])           ~= "number"  then BattlegroundTargets_Options.ButtonToTScale[10]           = 0.8   end
-	if type(BattlegroundTargets_Options.ButtonToTPosition[10])        ~= "number"  then BattlegroundTargets_Options.ButtonToTPosition[10]        = 4     end
+	if type(BattlegroundTargets_Options.ButtonToTPosition[10])        ~= "number"  then BattlegroundTargets_Options.ButtonToTPosition[10]        = 8     end
 	if type(BattlegroundTargets_Options.ButtonShowHealthBar[10])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[10]      = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthText[10])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[10]     = false end
 	if type(BattlegroundTargets_Options.ButtonRangeCheck[10])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[10]         = false end
@@ -1475,7 +1493,7 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonShowTargetCount[15])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[15]    = false end
 	if type(BattlegroundTargets_Options.ButtonTargetofTarget[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonTargetofTarget[15]     = false end
 	if type(BattlegroundTargets_Options.ButtonToTScale[15])           ~= "number"  then BattlegroundTargets_Options.ButtonToTScale[15]           = 0.8   end
-	if type(BattlegroundTargets_Options.ButtonToTPosition[15])        ~= "number"  then BattlegroundTargets_Options.ButtonToTPosition[15]        = 4     end
+	if type(BattlegroundTargets_Options.ButtonToTPosition[15])        ~= "number"  then BattlegroundTargets_Options.ButtonToTPosition[15]        = 8     end
 	if type(BattlegroundTargets_Options.ButtonShowHealthBar[15])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[15]      = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthText[15])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[15]     = false end
 	if type(BattlegroundTargets_Options.ButtonRangeCheck[15])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[15]         = false end
@@ -1510,8 +1528,8 @@ function BattlegroundTargets:InitOptions()
 	if type(BattlegroundTargets_Options.ButtonFlagPosition[40])       ~= "number"  then BattlegroundTargets_Options.ButtonFlagPosition[40]       = 100   end
 	if type(BattlegroundTargets_Options.ButtonShowTargetCount[40])    ~= "boolean" then BattlegroundTargets_Options.ButtonShowTargetCount[40]    = false end
 	if type(BattlegroundTargets_Options.ButtonTargetofTarget[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonTargetofTarget[40]     = false end
-	if type(BattlegroundTargets_Options.ButtonToTScale[40])           ~= "number"  then BattlegroundTargets_Options.ButtonToTScale[40]           = 0.8   end
-	if type(BattlegroundTargets_Options.ButtonToTPosition[40])        ~= "number"  then BattlegroundTargets_Options.ButtonToTPosition[40]        = 4     end
+	if type(BattlegroundTargets_Options.ButtonToTScale[40])           ~= "number"  then BattlegroundTargets_Options.ButtonToTScale[40]           = 0.6   end
+	if type(BattlegroundTargets_Options.ButtonToTPosition[40])        ~= "number"  then BattlegroundTargets_Options.ButtonToTPosition[40]        = 9     end
 	if type(BattlegroundTargets_Options.ButtonShowHealthBar[40])      ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthBar[40]      = false end
 	if type(BattlegroundTargets_Options.ButtonShowHealthText[40])     ~= "boolean" then BattlegroundTargets_Options.ButtonShowHealthText[40]     = false end
 	if type(BattlegroundTargets_Options.ButtonRangeCheck[40])         ~= "boolean" then BattlegroundTargets_Options.ButtonRangeCheck[40]         = false end
@@ -1654,12 +1672,7 @@ function BattlegroundTargets:CreateFrames()
 		GVAR.TargetButton[i] = CreateFrame("Button", nil, UIParent, "SecureActionButtonTemplate")
 
 		local GVAR_TargetButton = GVAR.TargetButton[i]
-
-		if i == 1 then
-			GVAR_TargetButton:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, 0)
-		else
-			GVAR_TargetButton:SetPoint("TOPLEFT", GVAR.TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
-		end
+		GVAR_TargetButton:SetPoint("TOPLEFT", GVAR.MainFrame, "BOTTOMLEFT", 0, 0)
 		GVAR_TargetButton:Hide()
 
 		GVAR_TargetButton.colR  = 0
@@ -1883,7 +1896,7 @@ function BattlegroundTargets:CreateFrames()
 	GVAR.MonoblockAnchor:SetPoint("TOPLEFT", GVAR.TargetButton[1], "TOPLEFT", 0, 0)
 --[[ TEST
 	GVAR.MonoblockAnchorTexture = GVAR.MonoblockAnchor:CreateTexture(nil, "OVERLAY")
-	GVAR.MonoblockAnchorTexture:SetTexture(0.5, 0.5, 0.5, 1)
+	GVAR.MonoblockAnchorTexture:SetTexture(0.5, 0.5, 0.5, 0.5)
 	GVAR.MonoblockAnchorTexture:SetAllPoints()
 --]]
 
@@ -2313,7 +2326,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	end)
 	GVAR.OptionsFrame.LayoutSpace = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
 	GVAR.OptionsFrame.LayoutSpaceText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.LayoutSpace, 85, 1, 0, 20, BattlegroundTargets_Options.LayoutSpace[currentSize],
+	TEMPLATE.Slider(GVAR.OptionsFrame.LayoutSpace, 100, 5, 0, 300, BattlegroundTargets_Options.LayoutSpace[currentSize],
 	function(self, value)
 		if value == BattlegroundTargets_Options.LayoutSpace[currentSize] then return end
 		BattlegroundTargets_Options.LayoutSpace[currentSize] = value
@@ -3287,9 +3300,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 		for i = 1, #class_IntegerSort do
 			local classEN = class_IntegerSort[i].cid
 			local name, _, _, _, minRange, maxRange = GetSpellInfo(ranges[classEN])
-			local classStr = "|cff"..ClassHexColor(classEN)..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[classEN]..")|r"
+			local classStr = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[classEN]..")|r"
 			if classEN == playerClassEN then
-				playerMClass = "|cff"..ClassHexColor(classEN)..class_IntegerSort[i].loc.."|r"
+				playerMClass = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r"
 				rangeInfoTxt = rangeInfoTxt..">>> "..classStr.." <<<"
 			else
 				rangeInfoTxt = rangeInfoTxt.."     "..classStr
@@ -3501,7 +3514,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		local infoTxt1 = sortDetail[1]..":\n"
 		table_sort(class_IntegerSort, function(a, b) return a.loc < b.loc end)
 		for i = 1, #class_IntegerSort do
-			infoTxt1 = infoTxt1.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].loc.."|r"
+			infoTxt1 = infoTxt1.." |cff"..classcolors[class_IntegerSort[i].cid].colorStr..class_IntegerSort[i].loc.."|r"
 			if i <= #class_IntegerSort then
 				infoTxt1 = infoTxt1.."\n"
 			end
@@ -3509,7 +3522,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		local infoTxt2 = sortDetail[2]..":\n"
 		table_sort(class_IntegerSort, function(a, b) return a.eng < b.eng end)
 		for i = 1, #class_IntegerSort do
-			infoTxt2 = infoTxt2.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].eng.." ("..class_IntegerSort[i].loc..")|r"
+			infoTxt2 = infoTxt2.." |cff"..classcolors[class_IntegerSort[i].cid].colorStr..class_IntegerSort[i].eng.." ("..class_IntegerSort[i].loc..")|r"
 			if i <= #class_IntegerSort then
 				infoTxt2 = infoTxt2.."\n"
 			end
@@ -3517,7 +3530,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		local infoTxt3 = sortDetail[3]..":\n"
 		table_sort(class_IntegerSort, function(a, b) return a.blizz < b.blizz end)
 		for i = 1, #class_IntegerSort do
-			infoTxt3 = infoTxt3.." |cff"..ClassHexColor(class_IntegerSort[i].cid)..class_IntegerSort[i].loc.."|r"
+			infoTxt3 = infoTxt3.." |cff"..classcolors[class_IntegerSort[i].cid].colorStr..class_IntegerSort[i].loc.."|r"
 			if i <= #class_IntegerSort then
 				infoTxt3 = infoTxt3.."\n"
 			end
@@ -3667,7 +3680,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FontNamePullDown:SetScript("OnLeave", function(self)
 		BattlegroundTargets:LocalizedFontNameTest(false, true)
 		if oldOnLeave then oldOnLeave() end
-	end)	
+	end)
 	local oldOnEnter = GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:GetScript("OnEnter")
 	local oldOnLeave = GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:GetScript("OnLeave")
 	GVAR.OptionsFrame.FontNamePullDown.PullDownMenu:SetScript("OnEnter", function(self)
@@ -3740,7 +3753,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FontNumberPullDown:SetScript("OnLeave", function(self)
 		BattlegroundTargets:LocalizedFontNumberTest(false)
 		if oldOnLeave then oldOnLeave() end
-	end)	
+	end)
 	local oldOnLeave = GVAR.OptionsFrame.FontNumberPullDown.PullDownMenu:GetScript("OnLeave")
 	GVAR.OptionsFrame.FontNumberPullDown.PullDownMenu:SetScript("OnLeave", function(self)
 		BattlegroundTargets:LocalizedFontNumberTest(false)
@@ -4735,17 +4748,33 @@ function BattlegroundTargets:SetupLayout()
 	local LayoutSpace = BattlegroundTargets_Options.LayoutSpace[currentSize]
 	local GVAR_TargetButton = GVAR.TargetButton
 
+	local isToTFX -- TARGET_OF_TARGET
+	if OPT.ButtonTargetofTarget[currentSize] and OPT.ButtonToTPosition[currentSize] >= 9 then
+		isToTFX = true
+	end
+
 	if currentSize == 10 then
 		for i = 1, currentSize do
 			if LayoutTH == 81 then
 				if i == 6 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:ClearAllPoints()
+					if isToTFX then
+						GVAR_TargetButton[i]:SetPoint("TOPRIGHT", GVAR.TargetButton[(i-1)].TargetofTargetButton, "BOTTOMRIGHT", 0, 0)
+					else
+						GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					end
 				end
 			elseif LayoutTH == 18 then
 				if i > 1 then
-					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:ClearAllPoints()
+					if isToTFX then
+						GVAR_TargetButton[i]:SetPoint("TOPRIGHT", GVAR.TargetButton[(i-1)].TargetofTargetButton, "BOTTOMRIGHT", 0, 0)
+					else
+						GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					end
 				end
 			end
 		end
@@ -4753,15 +4782,27 @@ function BattlegroundTargets:SetupLayout()
 		for i = 1, currentSize do
 			if LayoutTH == 81 then
 				if i == 6 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 11 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[6], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:ClearAllPoints()
+					if isToTFX then
+						GVAR_TargetButton[i]:SetPoint("TOPRIGHT", GVAR.TargetButton[(i-1)].TargetofTargetButton, "BOTTOMRIGHT", 0, 0)
+					else
+						GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					end
 				end
 			elseif LayoutTH == 18 then
 				if i > 1 then
-					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:ClearAllPoints()
+					if isToTFX then
+						GVAR_TargetButton[i]:SetPoint("TOPRIGHT", GVAR.TargetButton[(i-1)].TargetofTargetButton, "BOTTOMRIGHT", 0, 0)
+					else
+						GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					end
 				end
 			end
 		end
@@ -4769,41 +4810,72 @@ function BattlegroundTargets:SetupLayout()
 		for i = 1, currentSize do
 			if LayoutTH == 81 then
 				if i == 6 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 11 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[6], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 16 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[11], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 21 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[16], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 26 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[21], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 31 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[26], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 36 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[31], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:ClearAllPoints()
+					if isToTFX then
+						GVAR_TargetButton[i]:SetPoint("TOPRIGHT", GVAR.TargetButton[(i-1)].TargetofTargetButton, "BOTTOMRIGHT", 0, 0)
+					else
+						GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					end
 				end
 			elseif LayoutTH == 42 then
 				if i == 11 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 21 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[11], "TOPRIGHT", LayoutSpace, 0)
 				elseif i == 31 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[21], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:ClearAllPoints()
+					if isToTFX then
+						GVAR_TargetButton[i]:SetPoint("TOPRIGHT", GVAR.TargetButton[(i-1)].TargetofTargetButton, "BOTTOMRIGHT", 0, 0)
+					else
+						GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					end
 				end
 			elseif LayoutTH == 24 then
 				if i == 21 then
+					GVAR_TargetButton[i]:ClearAllPoints()
 					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[1], "TOPRIGHT", LayoutSpace, 0)
 				elseif i > 1 then
-					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:ClearAllPoints()
+					if isToTFX then
+						GVAR_TargetButton[i]:SetPoint("TOPRIGHT", GVAR.TargetButton[(i-1)].TargetofTargetButton, "BOTTOMRIGHT", 0, 0)
+					else
+						GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					end
 				end
 			elseif LayoutTH == 18 then
 				if i > 1 then
-					GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					GVAR_TargetButton[i]:ClearAllPoints()
+					if isToTFX then
+						GVAR_TargetButton[i]:SetPoint("TOPRIGHT", GVAR.TargetButton[(i-1)].TargetofTargetButton, "BOTTOMRIGHT", 0, 0)
+					else
+						GVAR_TargetButton[i]:SetPoint("TOPLEFT", GVAR_TargetButton[(i-1)], "BOTTOMLEFT", 0, 0)
+					end
 				end
 			end
 		end
@@ -4821,21 +4893,27 @@ function BattlegroundTargets:SetupMonoblockPosition() -- SUMPOSi
 	local ButtonHeight = BattlegroundTargets_Options.ButtonHeight[currentSize]
 	local ButtonScale  = BattlegroundTargets_Options.ButtonScale[currentSize]
 
-	local totalWidth, totalHeight
+	local ButtonToTScale = OPT.ButtonToTScale[currentSize]
+
+	local totalWidth, totalHeight, totalToTHeight
 	if currentSize == 10 then
-		    if LayoutTH == 18 then totalWidth =    ButtonWidth                    totalHeight = 10*ButtonHeight
-		elseif LayoutTH == 81 then totalWidth = (2*ButtonWidth) +    LayoutSpace  totalHeight =  5*ButtonHeight
+		    if LayoutTH == 18 then totalWidth =    ButtonWidth                    totalHeight = 10*ButtonHeight totalToTHeight = totalHeight + (10*ButtonHeight*ButtonToTScale)
+		elseif LayoutTH == 81 then totalWidth = (2*ButtonWidth) +    LayoutSpace  totalHeight =  5*ButtonHeight totalToTHeight = totalHeight + ( 5*ButtonHeight*ButtonToTScale)
 		end
 	elseif currentSize == 15 then
-		    if LayoutTH == 18 then totalWidth =    ButtonWidth                    totalHeight = 15*ButtonHeight
-		elseif LayoutTH == 81 then totalWidth = (3*ButtonWidth) + (2*LayoutSpace) totalHeight =  5*ButtonHeight
+		    if LayoutTH == 18 then totalWidth =    ButtonWidth                    totalHeight = 15*ButtonHeight totalToTHeight = totalHeight + (15*ButtonHeight*ButtonToTScale)
+		elseif LayoutTH == 81 then totalWidth = (3*ButtonWidth) + (2*LayoutSpace) totalHeight =  5*ButtonHeight totalToTHeight = totalHeight + ( 5*ButtonHeight*ButtonToTScale)
 		end
 	elseif currentSize == 40 then
-		    if LayoutTH == 18 then totalWidth =    ButtonWidth                    totalHeight = 40*ButtonHeight
-		elseif LayoutTH == 24 then totalWidth = (2*ButtonWidth) + (1*LayoutSpace) totalHeight = 20*ButtonHeight
-		elseif LayoutTH == 42 then totalWidth = (4*ButtonWidth) + (3*LayoutSpace) totalHeight = 10*ButtonHeight
-		elseif LayoutTH == 81 then totalWidth = (8*ButtonWidth) + (7*LayoutSpace) totalHeight =  5*ButtonHeight
+		    if LayoutTH == 18 then totalWidth =    ButtonWidth                    totalHeight = 40*ButtonHeight totalToTHeight = totalHeight + (40*ButtonHeight*ButtonToTScale)
+		elseif LayoutTH == 24 then totalWidth = (2*ButtonWidth) + (1*LayoutSpace) totalHeight = 20*ButtonHeight totalToTHeight = totalHeight + (20*ButtonHeight*ButtonToTScale)
+		elseif LayoutTH == 42 then totalWidth = (4*ButtonWidth) + (3*LayoutSpace) totalHeight = 10*ButtonHeight totalToTHeight = totalHeight + (10*ButtonHeight*ButtonToTScale)
+		elseif LayoutTH == 81 then totalWidth = (8*ButtonWidth) + (7*LayoutSpace) totalHeight =  5*ButtonHeight totalToTHeight = totalHeight + ( 5*ButtonHeight*ButtonToTScale)
 		end
+	end
+
+	if OPT.ButtonTargetofTarget[currentSize] and OPT.ButtonToTPosition[currentSize] >= 9 then -- TARGET_OF_TARGET
+		totalHeight = totalToTHeight
 	end
 
 	if inBattleground and isDeadUpdateStop then
@@ -4891,9 +4969,6 @@ function BattlegroundTargets:SetupButtonLayout()
 	local ButtonShowSpec           = OPT.ButtonShowSpec[currentSize]
 	local ButtonClassIcon          = OPT.ButtonClassIcon[currentSize]
 	local ButtonShowTargetCount    = OPT.ButtonShowTargetCount[currentSize]
-	local ButtonTargetofTarget     = OPT.ButtonTargetofTarget[currentSize]
-	local ButtonToTScale           = OPT.ButtonToTScale[currentSize]
-	local ButtonToTPosition        = OPT.ButtonToTPosition[currentSize]
 	local ButtonShowTarget         = OPT.ButtonShowTarget[currentSize]
 	local ButtonTargetScale        = OPT.ButtonTargetScale[currentSize]
 	local ButtonTargetPosition     = OPT.ButtonTargetPosition[currentSize]
@@ -4946,64 +5021,6 @@ function BattlegroundTargets:SetupButtonLayout()
 
 	for i = 1, currentSize do
 		local GVAR_TargetButton = GVAR.TargetButton[i]
-
-		if ButtonTargetofTarget then -- TARGET_OF_TARGET
-			local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
-
-			local lvl = GVAR_TargetofTargetButton:GetFrameLevel()
-			GVAR_TargetofTargetButton.HealthTextButton:SetFrameLevel(lvl+1) -- xBUT
-
-			GVAR_TargetofTargetButton:SetSize(ButtonWidth, ButtonHeight)
-			GVAR_TargetofTargetButton.Background:SetSize(ButtonWidth, ButtonHeight)
-
-			GVAR_TargetofTargetButton.FactionTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
-			if ButtonShowRole then
-				GVAR_TargetofTargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetofTargetButton.RoleTexture, "RIGHT", 0, 0)
-				GVAR_TargetofTargetButton.RoleTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
-				GVAR_TargetofTargetButton.RoleTexture:SetAlpha(1)
-			else
-				GVAR_TargetofTargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetofTargetButton.FactionTexture, "RIGHT", 0, 0)
-				GVAR_TargetofTargetButton.RoleTexture:SetAlpha(0)
-			end
-			
-			GVAR_TargetofTargetButton.ClassColorBackground:SetWidth(GVAR.totHealthBarWidth)
-			GVAR_TargetofTargetButton.ClassColorBackground:SetHeight(ButtonHeight_2)
-
-			GVAR_TargetofTargetButton.HealthBar:SetWidth(GVAR.totHealthBarWidth)
-			GVAR_TargetofTargetButton.HealthBar:SetHeight(ButtonHeight_2)
-
-			GVAR_TargetofTargetButton.HealthText:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize, "OUTLINE")
-			GVAR_TargetofTargetButton.HealthText:SetHeight(backfallFontSize)
-
-			GVAR_TargetofTargetButton.Name:SetFont(fButtonFontNameStyle, ButtonFontNameSize, "")
-			GVAR_TargetofTargetButton.Name:SetHeight(backfallFontSize)
-			GVAR_TargetofTargetButton.Name:SetWidth(GVAR.totHealthBarWidth - 2)
-			
-			GVAR_TargetofTargetButton:ClearAllPoints()
-			if ButtonToTPosition == 1 then
-				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
-			elseif ButtonToTPosition == 2 then
-				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 10, 0)
-			elseif ButtonToTPosition == 3 then
-				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 20, 0)
-			elseif ButtonToTPosition == 4 then
-				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 30, 0)
-			elseif ButtonToTPosition == 5 then
-				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", 0, 0)
-			elseif ButtonToTPosition == 6 then
-				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", -10, 0)
-			elseif ButtonToTPosition == 7 then
-				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", -20, 0)
-			elseif ButtonToTPosition == 8 then
-				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", -30, 0)
-			elseif ButtonToTPosition == 9 then
-				GVAR_TargetofTargetButton:SetPoint("BOTTOM", GVAR.MonoblockAnchor, "BOTTOM", 0, -50 - (i*ButtonHeight))
-			end
-			
-			GVAR_TargetofTargetButton:SetScale(ButtonToTScale)
-			
-			
-		end
 
 		local lvl = GVAR_TargetButton:GetFrameLevel()
 		GVAR_TargetButton.HealthTextButton:SetFrameLevel(lvl+1) -- xBUT
@@ -5239,6 +5256,81 @@ function BattlegroundTargets:SetupButtonLayout()
 			GVAR_TargetButton.AssistTexture:Show()
 		else
 			GVAR_TargetButton.AssistTexture:Hide()
+		end
+	end
+
+	if OPT.ButtonTargetofTarget[currentSize] then -- TARGET_OF_TARGET
+		local ButtonToTScale    = OPT.ButtonToTScale[currentSize]
+		local ButtonToTPosition = OPT.ButtonToTPosition[currentSize]
+
+		for i = 1, currentSize do
+			local GVAR_TargetButton = GVAR.TargetButton[i]
+			local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
+
+			local lvl = GVAR_TargetofTargetButton:GetFrameLevel()
+			GVAR_TargetofTargetButton.HealthTextButton:SetFrameLevel(lvl+1) -- xBUT
+
+			GVAR_TargetofTargetButton:SetSize(ButtonWidth, ButtonHeight)
+			GVAR_TargetofTargetButton.Background:SetSize(ButtonWidth, ButtonHeight)
+
+			GVAR_TargetofTargetButton.FactionTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
+			if ButtonShowRole then
+				GVAR_TargetofTargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetofTargetButton.RoleTexture, "RIGHT", 0, 0)
+				GVAR_TargetofTargetButton.RoleTexture:SetSize(ButtonHeight_2, ButtonHeight_2)
+				GVAR_TargetofTargetButton.RoleTexture:SetAlpha(1)
+			else
+				GVAR_TargetofTargetButton.ClassColorBackground:SetPoint("LEFT", GVAR_TargetofTargetButton.FactionTexture, "RIGHT", 0, 0)
+				GVAR_TargetofTargetButton.RoleTexture:SetAlpha(0)
+			end
+
+			GVAR_TargetofTargetButton.ClassColorBackground:SetWidth(GVAR.totHealthBarWidth)
+			GVAR_TargetofTargetButton.ClassColorBackground:SetHeight(ButtonHeight_2)
+
+			GVAR_TargetofTargetButton.HealthBar:SetWidth(GVAR.totHealthBarWidth)
+			GVAR_TargetofTargetButton.HealthBar:SetHeight(ButtonHeight_2)
+
+			GVAR_TargetofTargetButton.HealthText:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize, "OUTLINE")
+			GVAR_TargetofTargetButton.HealthText:SetHeight(backfallFontSize)
+
+			GVAR_TargetofTargetButton.Name:SetFont(fButtonFontNameStyle, ButtonFontNameSize, "")
+			GVAR_TargetofTargetButton.Name:SetHeight(backfallFontSize)
+			GVAR_TargetofTargetButton.Name:SetWidth(GVAR.totHealthBarWidth - 2)
+
+			GVAR_TargetofTargetButton:ClearAllPoints()
+			if ButtonToTPosition == 1 then
+				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", 0, 0)
+			elseif ButtonToTPosition == 2 then
+				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", -10, 0)
+			elseif ButtonToTPosition == 3 then
+				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", -20, 0)
+			elseif ButtonToTPosition == 4 then
+				GVAR_TargetofTargetButton:SetPoint("RIGHT", GVAR_TargetButton, "LEFT", -30, 0)
+			elseif ButtonToTPosition == 5 then
+				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 0, 0)
+			elseif ButtonToTPosition == 6 then
+				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 10, 0)
+			elseif ButtonToTPosition == 7 then
+				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 20, 0)
+			elseif ButtonToTPosition == 8 then
+				GVAR_TargetofTargetButton:SetPoint("LEFT", GVAR_TargetButton, "RIGHT", 30, 0)
+			elseif ButtonToTPosition == 9 then
+				GVAR_TargetofTargetButton:SetPoint("TOPRIGHT", GVAR_TargetButton, "BOTTOMRIGHT", 0, 0)
+			end
+
+			GVAR_TargetButton.HighlightR:ClearAllPoints()
+			GVAR_TargetButton.HighlightB:ClearAllPoints()
+			GVAR_TargetButton.HighlightL:ClearAllPoints()
+			if ButtonToTPosition == 9 then
+				GVAR_TargetButton.HighlightR:SetPoint("TOPRIGHT", GVAR_TargetButton.HighlightT, "TOPRIGHT", 0, 0)
+				GVAR_TargetButton.HighlightB:SetPoint("BOTTOMRIGHT", GVAR_TargetButton.HighlightR, "BOTTOMRIGHT", 0, 0)
+				GVAR_TargetButton.HighlightL:SetPoint("TOPLEFT", GVAR_TargetButton.HighlightT, "TOPLEFT", 0, 0)
+			else
+				GVAR_TargetButton.HighlightR:SetPoint("RIGHT", 0, 0)
+				GVAR_TargetButton.HighlightB:SetPoint("BOTTOM", 0, 0)
+				GVAR_TargetButton.HighlightL:SetPoint("LEFT", 0, 0)
+			end
+
+			GVAR_TargetofTargetButton:SetScale(ButtonToTScale)
 		end
 	end
 
@@ -5711,7 +5803,7 @@ function BattlegroundTargets:DisableConfigMode()
 			end
 		end
 	end
-	
+
 	if curTime - scoreLastUpdate >= scoreWarning then
 		GVAR.ScoreUpdateTexture:Show()
 	else
@@ -6077,7 +6169,7 @@ function BattlegroundTargets:Shuffle(shuffleStyle)
 		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetAlpha(0)
 	else
 		GVAR.OptionsFrame.TestShuffler.TextureHighlight:SetAlpha(0.5)
-	end	
+	end
 
 	if shuffleStyle then
 		BattlegroundTargets:DefaultShuffle()
@@ -6412,7 +6504,7 @@ function BattlegroundTargets:MainDataUpdate()
 					end
 				else
 					GVAR_TargetButton.name4button = qname
-				end				
+				end
 				if isLowLevel and ENEMY_Name2Level[qname] then
 					GVAR_TargetButton.Name:SetText(ENEMY_Name2Level[qname].." "..GVAR_TargetButton.name4button)
 				else
@@ -6706,14 +6798,12 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 			if classToken then
 				local token = classes[classToken] -- BGSPEC
 				if token then
-					if talentSpec then
-						if token.spec then
-							for i = 1, #token.spec do
-								if talentSpec == token.spec[i].specName then
-									specrole = token.spec[i].role
-									specicon = token.spec[i].icon
-									break
-								end
+					if talentSpec and token.spec then
+						for i = 1, #token.spec do
+							if talentSpec == token.spec[i].specName then
+								specrole = token.spec[i].role
+								specicon = token.spec[i].icon
+								break
 							end
 						end
 					end
@@ -6751,14 +6841,12 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 			if classToken then
 				local token = classes[classToken] -- BGSPEC
 				if token then
-					if talentSpec then
-						if token.spec then
-							for i = 1, #token.spec do
-								if talentSpec == token.spec[i].specName then
-									specrole = token.spec[i].role
-									specicon = token.spec[i].icon
-									break
-								end
+					if talentSpec and token.spec then
+						for i = 1, #token.spec do
+							if talentSpec == token.spec[i].specName then
+								specrole = token.spec[i].role
+								specicon = token.spec[i].icon
+								break
 							end
 						end
 					end
