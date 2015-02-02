@@ -173,7 +173,8 @@ local BattlegroundTargets = CreateFrame("Frame")
 local function Print(...) print("|cffffff7fBattlegroundTargets:|r", ...) end
 
 local _, prg = ...
-if type(prg.L)           ~= "table" or
+if type(prg)             ~= "table" or
+   type(prg.L)           ~= "table" or
    type(prg.FLG)         ~= "table" or
    type(prg.RNA)         ~= "table" or
    type(prg.TLT)         ~= "table" or
@@ -264,7 +265,7 @@ local oppositeFactionREAL    -- real opposite faction
 --local eventTest = {} -- TEST event order
 
 local ENEMY_Data = {}           -- key = numerical | all ENEMY data
-local ENEMY_Names = {}          -- key = enemyName | value = count
+local ENEMY_Names = {}          -- key = enemyName | value = target count
 local ENEMY_Name4Flag = {}      -- key = enemyName without realm | value = button number
 local ENEMY_Name2Button = {}    -- key = enemyName               | value = button number
 local ENEMY_Name2Percent = {}   -- key = enemyName | value = health in percent
@@ -361,7 +362,7 @@ local function orbData(str)
 	elseif colorCode == "1" then return "Green",  "Interface\\MiniMap\\TempleofKotmogu_ball_green"  -- |cFF01DF0__1__Green|r  |cFF01DF01Green|r
 	elseif colorCode == "0" then return "Orange", "Interface\\MiniMap\\TempleofKotmogu_ball_orange" -- |cFFFF800__0__Orange|r |cFFFF8000Orange|r
 	end
-	return "Unknown", nil
+	return nil, nil
 end
 
 local sortBy = {
@@ -424,7 +425,7 @@ local classcolors = {}
 for class, color in pairs(RAID_CLASS_COLORS) do -- Constants.lua
 	classcolors[class] = {r = color.r, g = color.g, b = color.b, colorStr = format("%.2x%.2x%.2x", color.r*255, color.g*255, color.b*255)}
 end
-classcolors["ZZZFAILURE"] = {r = 0.4, g = 0.4, b = 0.4, colorStr = "666666"}
+classcolors["ZZZFAILURE"] = {r = 0.6, g = 0.6, b = 0.6, colorStr = "999999"}
 --for k, v in pairs(classcolors) do print(k, v.r, v.g, v.b, v.colorStr) end
 
 -- texture: Interface\\WorldStateFrame\\Icons-Classes
@@ -490,16 +491,16 @@ end
 
 local class_IntegerSort = { -- .cid .blizz .eng .loc
 	{cid = "DEATHKNIGHT", blizz = class_BlizzSort.DEATHKNIGHT or  2, eng = "Death Knight", loc = class_LocaSort.DEATHKNIGHT or "Death Knight"}, -- 1
-	{cid = "DRUID",       blizz = class_BlizzSort.DRUID       or  7, eng = "Druid",        loc = class_LocaSort.DRUID or "Druid"},              -- 2
-	{cid = "HUNTER",      blizz = class_BlizzSort.HUNTER      or 11, eng = "Hunter",       loc = class_LocaSort.HUNTER or "Hunter"},            -- 3
-	{cid = "MAGE",        blizz = class_BlizzSort.MAGE        or  9, eng = "Mage",         loc = class_LocaSort.MAGE or "Mage"},                -- 4
-	{cid = "MONK",        blizz = class_BlizzSort.MONK        or  4, eng = "Monk",         loc = class_LocaSort.MONK or "Monk"},                -- 5
-	{cid = "PALADIN",     blizz = class_BlizzSort.PALADIN     or  3, eng = "Paladin",      loc = class_LocaSort.PALADIN or "Paladin"},          -- 6
-	{cid = "PRIEST",      blizz = class_BlizzSort.PRIEST      or  5, eng = "Priest",       loc = class_LocaSort.PRIEST or "Priest"},            -- 7
-	{cid = "ROGUE",       blizz = class_BlizzSort.ROGUE       or  8, eng = "Rogue",        loc = class_LocaSort.ROGUE or "Rogue"},              -- 8
-	{cid = "SHAMAN",      blizz = class_BlizzSort.SHAMAN      or  6, eng = "Shaman",       loc = class_LocaSort.SHAMAN or "Shaman"},            -- 9
-	{cid = "WARLOCK",     blizz = class_BlizzSort.WARLOCK     or 10, eng = "Warlock",      loc = class_LocaSort.WARLOCK or "Warlock"},          -- 10
-	{cid = "WARRIOR",     blizz = class_BlizzSort.WARRIOR     or  1, eng = "Warrior",      loc = class_LocaSort.WARRIOR or "Warrior"},          -- 11
+	{cid = "DRUID",       blizz = class_BlizzSort.DRUID       or  7, eng = "Druid",        loc = class_LocaSort.DRUID       or "Druid"},        -- 2
+	{cid = "HUNTER",      blizz = class_BlizzSort.HUNTER      or 11, eng = "Hunter",       loc = class_LocaSort.HUNTER      or "Hunter"},       -- 3
+	{cid = "MAGE",        blizz = class_BlizzSort.MAGE        or  9, eng = "Mage",         loc = class_LocaSort.MAGE        or "Mage"},         -- 4
+	{cid = "MONK",        blizz = class_BlizzSort.MONK        or  4, eng = "Monk",         loc = class_LocaSort.MONK        or "Monk"},         -- 5
+	{cid = "PALADIN",     blizz = class_BlizzSort.PALADIN     or  3, eng = "Paladin",      loc = class_LocaSort.PALADIN     or "Paladin"},      -- 6
+	{cid = "PRIEST",      blizz = class_BlizzSort.PRIEST      or  5, eng = "Priest",       loc = class_LocaSort.PRIEST      or "Priest"},       -- 7
+	{cid = "ROGUE",       blizz = class_BlizzSort.ROGUE       or  8, eng = "Rogue",        loc = class_LocaSort.ROGUE       or "Rogue"},        -- 8
+	{cid = "SHAMAN",      blizz = class_BlizzSort.SHAMAN      or  6, eng = "Shaman",       loc = class_LocaSort.SHAMAN      or "Shaman"},       -- 9
+	{cid = "WARLOCK",     blizz = class_BlizzSort.WARLOCK     or 10, eng = "Warlock",      loc = class_LocaSort.WARLOCK     or "Warlock"},      -- 10
+	{cid = "WARRIOR",     blizz = class_BlizzSort.WARRIOR     or  1, eng = "Warrior",      loc = class_LocaSort.WARRIOR     or "Warrior"},      -- 11
 }
 
 local ranges = {
@@ -3300,7 +3301,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		for i = 1, #class_IntegerSort do
 			local classEN = class_IntegerSort[i].cid
 			local name, _, _, _, minRange, maxRange = GetSpellInfo(ranges[classEN])
-			local classStr = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or UNKNOWN).."|r   |cffbbbbbb(spell ID = "..ranges[classEN]..")|r"
+			local classStr = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or L["Unknown"]).."|r   |cffbbbbbb(spell ID = "..ranges[classEN]..")|r"
 			if classEN == playerClassEN then
 				playerMClass = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r"
 				rangeInfoTxt = rangeInfoTxt..">>> "..classStr.." <<<"
@@ -3944,10 +3945,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetHighlightTexture(GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].TextureHighlight)
 
 		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetScript("OnEnter", function(self)
-			local bgName = self.bginfo
-			GVAR.OptionsFrame.ConfigBrackets.BGdata.Texture:SetTexture(bgMaps[bgName].icon)
-			GVAR.OptionsFrame.ConfigBrackets.BGdata.Title:SetText(bgName)
-			GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType:SetText(bgMaps[bgName].gameType)
+			local bgname = self.bgname
+			GVAR.OptionsFrame.ConfigBrackets.BGdata.Texture:SetTexture(bgMaps[bgname].icon)
+			GVAR.OptionsFrame.ConfigBrackets.BGdata.Title:SetText(bgname)
+			GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType:SetText(bgMaps[bgname].gameType)
 			GVAR.OptionsFrame.ConfigBrackets.BGdata:Show()
 		end)
 		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:SetScript("OnLeave", function()
@@ -3977,9 +3978,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ConfigBrackets.BGdata.Texture:SetHeight(100)
 	GVAR.OptionsFrame.ConfigBrackets.BGdata.Texture:SetPoint("TOP", GVAR.OptionsFrame.ConfigBrackets.BGdata.GameType, "BOTTOM", 0, -5)
 
-	    if currentSize == 10 then BattlegroundTargets:BGInfo(10)
-	elseif currentSize == 15 then BattlegroundTargets:BGInfo(15)
-	elseif currentSize == 40 then BattlegroundTargets:BGInfo(40) end
+	BattlegroundTargets:BGInfo(currentSize)
 	-- ###
 	-- ####################################################################################################
 
@@ -4187,9 +4186,9 @@ function BattlegroundTargets:BGInfo(bracketSize)
 		i = i + 1
 	end
 	for i = 1, #bgInfo[bracketSize] do
-		local bgName = bgInfo[bracketSize][i]
-		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Texture:SetTexture(bgMaps[bgName].icon)
-		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].bginfo = bgName
+		local bgname = bgInfo[bracketSize][i]
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].Texture:SetTexture(bgMaps[bgname].icon)
+		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i].bgname = bgname
 		GVAR.OptionsFrame.ConfigBrackets.BGinformation[i]:Show()
 	end
 end
@@ -4539,9 +4538,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize)
 		GVAR.OptionsFrame.HeightTitle:SetTextColor(0.5, 0.5, 0.5, 1)
 		GVAR.OptionsFrame.TestShuffler:Hide()
 	end
-	    if bracketSize == 10 then BattlegroundTargets:BGInfo(10)
-	elseif bracketSize == 15 then BattlegroundTargets:BGInfo(15)
-	elseif bracketSize == 40 then BattlegroundTargets:BGInfo(40) end
+	BattlegroundTargets:BGInfo(bracketSize)
 end
 
 function BattlegroundTargets:DisableInsecureConfigWidges()
@@ -6529,6 +6526,7 @@ function BattlegroundTargets:MainDataUpdate()
 				GVAR_TargetButton.ClassTexture:SetTexCoord(classes[qclassToken].coords[1], classes[qclassToken].coords[2], classes[qclassToken].coords[3], classes[qclassToken].coords[4])
 			end
 
+			-- ----------
 			local nameE = ENEMY_Names[qname]
 			local percentE = ENEMY_Name2Percent[qname]
 
@@ -6537,29 +6535,6 @@ function BattlegroundTargets:MainDataUpdate()
 					GVAR_TargetButton.TargetCount:SetText(nameE)
 				else
 					GVAR_TargetButton.TargetCount:SetText("0")
-				end
-			end
-
-			if ButtonTargetofTarget then -- TARGET_OF_TARGET
-				local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
-				if GVAR_TargetofTargetButton.totData then
-					BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetButton)
-					local totTimer = GVAR_TargetofTargetButton.totTimer
-					if curTime > totTimer + 5 then
-						GVAR_TargetofTargetButton.totTimer = nil
-						GVAR_TargetofTargetButton.totData = nil
-						GVAR_TargetofTargetButton:SetAlpha(0)
-					elseif curTime > totTimer + 4 then
-						GVAR_TargetofTargetButton:SetAlpha(0.2)
-					elseif curTime > totTimer + 3 then
-						GVAR_TargetofTargetButton:SetAlpha(0.4)
-					elseif curTime > totTimer + 2 then
-						GVAR_TargetofTargetButton:SetAlpha(0.6)
-					elseif curTime > totTimer + 1 then
-						GVAR_TargetofTargetButton:SetAlpha(0.8)
-					else
-						GVAR_TargetofTargetButton:SetAlpha(1)
-					end
 				end
 			end
 
@@ -6574,6 +6549,7 @@ function BattlegroundTargets:MainDataUpdate()
 					GVAR_TargetButton.HealthText:SetText(percentE)
 				end
 			end
+			-- ----------
 
 			if ButtonShowTarget and playerTargetName then
 				if qname == playerTargetName then
@@ -6659,6 +6635,29 @@ function BattlegroundTargets:MainDataUpdate()
 					GVAR_TargetButton.LeaderTexture:SetAlpha(0.75)
 				else
 					GVAR_TargetButton.LeaderTexture:SetAlpha(0)
+				end
+			end
+
+			if ButtonTargetofTarget then -- TARGET_OF_TARGET
+				local GVAR_TargetofTargetButton = GVAR_TargetButton.TargetofTargetButton
+				if GVAR_TargetofTargetButton.totData then
+					BattlegroundTargets:UpdateTargetofTargetButton(GVAR_TargetButton)
+					local totTimer = GVAR_TargetofTargetButton.totTimer
+					if curTime > totTimer + 5 then
+						GVAR_TargetofTargetButton.totTimer = nil
+						GVAR_TargetofTargetButton.totData = nil
+						GVAR_TargetofTargetButton:SetAlpha(0)
+					elseif curTime > totTimer + 4 then
+						GVAR_TargetofTargetButton:SetAlpha(0.2)
+					elseif curTime > totTimer + 3 then
+						GVAR_TargetofTargetButton:SetAlpha(0.4)
+					elseif curTime > totTimer + 2 then
+						GVAR_TargetofTargetButton:SetAlpha(0.6)
+					elseif curTime > totTimer + 1 then
+						GVAR_TargetofTargetButton:SetAlpha(0.8)
+					else
+						GVAR_TargetofTargetButton:SetAlpha(1)
+					end
 				end
 			end
 
@@ -6789,7 +6788,15 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	for index = 1, numScore do
 		local name, _, _, _, _, faction, _, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
 		--print(index, name, faction, classToken, talentSpec, "#", GetBattlefieldScore(index))
-		if not name then break end
+		if not name then
+			if not BattlegroundTargets.UnknownNameIndex then
+				BattlegroundTargets.UnknownNameIndex = 1
+				name = L["Unknown"]
+			else
+				BattlegroundTargets.UnknownNameIndex = BattlegroundTargets.UnknownNameIndex + 1
+				name = L["Unknown"]..BattlegroundTargets.UnknownNameIndex
+			end
+		end
 		if faction == oppositeFactionBG then
 
 			local specrole = 4
@@ -7150,6 +7157,7 @@ function BattlegroundTargets:IsNotBattleground()
 
 	BattlegroundTargets.ForceDefaultFaction = nil
 	BattlegroundTargets.TrackFaction = nil
+	BattlegroundTargets.UnknownNameIndex = nil
 
 	if isLowLevel then -- LVLCHK
 		BattlegroundTargets:CheckPlayerLevel()
