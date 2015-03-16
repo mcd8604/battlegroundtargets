@@ -1,6 +1,5 @@
 -- -------------------------------------------------------------------------- --
 -- BattlegroundTargets DEFAULT (english) Localization                         --
--- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 
 local L, _, prg = {}, ...
@@ -11,9 +10,11 @@ L["Close Configuration"] = true
 
 L["Configuration"] = true
 L["Independent Positioning"] = true
+L["Friend"] = true
+L["Enemy"] = true
 L["Layout"] = true
 L["Summary"] = true
-L["Copy this settings to %s"] = true
+L["Copy settings to"] = true
 L["Class Icon"] = true
 L["Realm"] = true
 L["Leader"] = true
@@ -23,11 +24,6 @@ L["Target Count"] = true
 L["Health Bar"] = true
 L["Percent"] = true
 L["Range"] = true
- L["This option uses the CombatLog to check range."] = true
- L["This option uses a pre-defined spell to check range:"] = true
- L["Mix"] = true
- L["if you are attacked only"] = true
- L["(class dependent)"] = true
  L["Disable this option if you have CPU/FPS problems in combat."] = true
 L["Sort By"] = true
 L["Text"] = true
@@ -55,6 +51,8 @@ L["15v15"] = format(PVP_TEAMTYPE, 15, 15)
 L["40v40"] = format(PVP_TEAMTYPE, 40, 40)
 L["Target of Target"] = SHOW_TARGET_OF_TARGET_TEXT
 L["Unknown"] = UNKNOWN
+L["Friendly Players"] = UNIT_NAME_FRIENDLY
+L["Enemy Players"] = UNIT_NAME_ENEMY
 
 -- font test for all languages
 L["Test_abc_"] = "abc_ABCXYZabcxyz_"

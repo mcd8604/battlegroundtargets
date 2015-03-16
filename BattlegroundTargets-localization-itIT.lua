@@ -1,6 +1,5 @@
 -- -------------------------------------------------------------------------- --
 -- BattlegroundTargets itIT Localization                                      --
--- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 if GetLocale() ~= "itIT" then return end
 local L, _, prg = {}, ...
@@ -11,9 +10,11 @@ L["Close Configuration"] = true
 
 L["Configuration"] = true
 L["Independent Positioning"] = true
+L["Friend"] = FRIEND
+L["Enemy"] = ENEMY
 L["Layout"] = true
 L["Summary"] = true
-L["Copy this settings to %s"] = true
+L["Copy settings to"] = true
 L["Class Icon"] = true
 L["Realm"] = true
 L["Leader"] = true
@@ -23,11 +24,6 @@ L["Target Count"] = true
 L["Health Bar"] = "Barra della salute"
 L["Percent"] = true
 L["Range"] = true
- L["This option uses the CombatLog to check range."] = true
- L["This option uses a pre-defined spell to check range:"] = true
- L["Mix"] = true
- L["if you are attacked only"] = true
- L["(class dependent)"] = true
  L["Disable this option if you have CPU/FPS problems in combat."] = true
 L["Sort By"] = true
 L["Text"] = "Testo"

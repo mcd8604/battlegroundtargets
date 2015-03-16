@@ -1,6 +1,5 @@
 -- -------------------------------------------------------------------------- --
 -- BattlegroundTargets zhCN Localization (Thanks ananhaid)                    --
--- Please make sure to save this file as UTF-8. ¶                             --
 -- -------------------------------------------------------------------------- --
 if GetLocale() ~= "zhCN" then return end
 local L, _, prg = {}, ...
@@ -11,9 +10,11 @@ L["Close Configuration"] = "关闭配置"
 
 L["Configuration"] = "配置"
 L["Independent Positioning"] = "独立定位"
+L["Friend"] = FRIEND
+L["Enemy"] = ENEMY
 L["Layout"] = "布局"
 L["Summary"] = "摘要"
-L["Copy this settings to %s"] = "复制此设置到 %s"
+L["Copy settings to"] = true
 L["Class Icon"] = "职业图标"
 L["Realm"] = "服务器"
 L["Leader"] = "领袖"
@@ -23,11 +24,6 @@ L["Target Count"] = "目标计数"
 L["Health Bar"] = "生命条"
 L["Percent"] = "百分比"
 L["Range"] = "范围"
- L["This option uses the CombatLog to check range."] = "此选项使用战斗记录检查范围。"
- L["This option uses a pre-defined spell to check range:"] = "此选项使用预定法术范围检查："
- L["Mix"] = "混合"
- L["if you are attacked only"] = "仅自身被攻击"
- L["(class dependent)"] = "（以职业）"
  L["Disable this option if you have CPU/FPS problems in combat."] = "当你 CPU/帧数在战斗中出现问题时禁用此选项。"
 L["Sort By"] = "排序"
 L["Text"] = "文本"
