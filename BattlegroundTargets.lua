@@ -13,7 +13,7 @@
 -- # Main Assist Target                                                       --
 -- # Focus                                                                    --
 -- # Flag/Orb/Cart Carrier                                                    --
--- # Target Count                                                             --
+-- # Friend/Enemy Target Count                                                --
 -- # Health                                                                   --
 -- # Range Check                                                              --
 -- # PvP Trinket                                                              --
@@ -55,6 +55,9 @@
 --   - A raidmember/raidpet MUST target(focus/mouseover) an enemy OR          --
 --     you/yourpet MUST target/focus/mouseover an enemy to get the health.    --
 --                                                                            --
+-- # Target: ---------------------------------------------------------------- --
+--   - Event:              - PLAYER_TARGET_CHANGED                            --
+--                                                                            --
 -- # Target of Target: ------------------------------------------------------ --
 --   - Events:             - UNIT_TARGET                                      --
 --                         - PLAYER_TARGET_CHANGED                            --
@@ -71,9 +74,6 @@
 --                                                                            --
 -- # Level: (only registered if playerLevel < maxLevel) --------------------- --
 --   - Event:              - UNIT_TARGET                                      --
---                                                                            --
--- # Target: ---------------------------------------------------------------- --
---   - Event:              - PLAYER_TARGET_CHANGED                            --
 --                                                                            --
 -- # Focus: ----------------------------------------------------------------- --
 --   - Event:              - PLAYER_FOCUS_CHANGED                             --
@@ -372,6 +372,7 @@ for frc = 1, #FRAMES do
 		Range          = {},                          -- testData[side].Range            | testData.Friend.Range          | testData.Enemy.Range
 		TargetofTarget = {},                          -- testData[side].TargetofTarget   | testData.Friend.TargetofTarget | testData.Enemy.TargetofTarget
 		Leader         = 4,                           -- testData[side].Leader           | testData.Friend.Leader         | testData.Enemy.Leader
+		PVPTrinket     = {},                          -- testData[side].PVPTrinket       | testData.Friend.PVPTrinket     | testData.Enemy.PVPTrinket
 	}
 end
 
@@ -632,8 +633,6 @@ local rangeDisplay = { -- RANGE_DISP_LAY
 	"X 50 mono",    --  9
 	"X 10 mono",    -- 10
 }
-
-local RangeInfoTxt = {}
 
 local Textures = {}
 Textures.AddonIcon     = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-button"
@@ -984,11 +983,6 @@ function BattlegroundTargets:InitOptions()
 		if type(BattlegroundTargets_Options[side].ButtonScale[40])              ~= "number"  then BattlegroundTargets_Options[side].ButtonScale[40]              = 1     end
 		if type(BattlegroundTargets_Options[side].ButtonWidth[40])              ~= "number"  then BattlegroundTargets_Options[side].ButtonWidth[40]              = 100   end
 		if type(BattlegroundTargets_Options[side].ButtonHeight[40])             ~= "number"  then BattlegroundTargets_Options[side].ButtonHeight[40]             = 16    end
-
-		BattlegroundTargets_Options[side].ButtonPvPTrinketToggle[10] = true--TODO
-		BattlegroundTargets_Options[side].ButtonPvPTrinketToggle[15] = true
-		BattlegroundTargets_Options[side].ButtonPvPTrinketToggle[40] = true
-
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -1226,7 +1220,7 @@ function BattlegroundTargets:CreateFrames()
 				button.PVPTrinketTexture = button:CreateTexture(nil, "BORDER")
 				button.PVPTrinketTexture:SetPoint("RIGHT", button, "LEFT", -2, 0)
 				button.PVPTrinketTexture:SetTexture("Interface\\Icons\\INV_Jewelry_TrinketPVP_01")
-				button.PVPTrinketTexture:SetTexCoord(0.07812501, 0.92187499, 0.07812501, 0.92187499)--(5/64, 59/64, 5/64, 59/64)
+				--button.PVPTrinketTexture:SetTexCoord(0.07812501, 0.92187499, 0.07812501, 0.92187499)--(5/64, 59/64, 5/64, 59/64)
 				button.PVPTrinketTxt = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 				button.PVPTrinketTxt:SetWidth(50)
 				button.PVPTrinketTxt:SetPoint("CENTER", button.PVPTrinketTexture, "CENTER", 0, 0)
@@ -1458,15 +1452,16 @@ function BattlegroundTargets:CreateOptionsFrame()
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 
 	BattlegroundTargets:DefaultShuffle()
-	RangeInfoTxt.Friend = BattlegroundTargets:CreateRangeInfoText("Friend")
-	RangeInfoTxt.Enemy = BattlegroundTargets:CreateRangeInfoText("Enemy")
 
 	local heightBase = 58 -- 10+16+10+22
-	local heightBracket = 621+32
-	-- 10+22 fraction
-	-- 10+16 +8+1+8+                                        43 -- top enable
-	-- 16+10 + 16 +                                         42 -- layout -> summary
-	-- 8+1+8 + 24 + 10 + 24                                 68 -- copy button
+	local heightBracket = 626-10
+
+	-- 58                                                   58 -- heightBase
+
+	-- 10+22                                                32 -- fraction
+	-- 10+16                                                26 -- top enable
+	-- 8+1+8 + 16+10 + 16 +                                 59 -- layout -> summary
+	-- 8+1+8 + 24                                           41 -- copy button
 	-- 8+1+8 + 16+10 + 16+10 + 16 +                         85 -- 1. row role -> targetcount
 	-- 8+1+8 + 16+10 + 16+10 + 16+10 + 16+10 + 16          137 -- 2. target -> targetassist
 	-- 8+1+8 + 16+10 + 16 +                                 59 -- 3. health -> range
@@ -1474,7 +1469,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- 8+1+8 + 16+10 + 16 +                                 59 -- 5. fonts
 	-- 8+1+8 + 16+10 + 16+10 + 16 + 10                      95 -- 6. scale -> height
 	--                                                    =====
-	--                                                     621
+	--                                                     626
 	local heightTotal = heightBase + heightBracket + 30 + 10
 
 	-- ####################################################################################################
@@ -1640,7 +1635,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.EnableFriendBracket = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.TabButton(
 		GVAR.OptionsFrame.EnableFriendBracket,
-		L["Friendly Players"],
+		L["Friendly Players"],--L["Friend"],--
 		BattlegroundTargets_Options.Friend.EnableBracket[currentSize],
 		nil,
 		Textures.FriendIconStr
@@ -1664,7 +1659,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.EnableEnemyBracket = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.TabButton(
 		GVAR.OptionsFrame.EnableEnemyBracket,
-		L["Enemy Players"],
+		L["Enemy Players"],--
 		BattlegroundTargets_Options.Enemy.EnableBracket[currentSize],
 		nil,
 		Textures.EnemyIconStr
@@ -1842,7 +1837,8 @@ function BattlegroundTargets:CreateOptionsFrame()
 		   BattlegroundTargets_Options[fraction].ButtonShowFlag[size] or
 		   BattlegroundTargets_Options[fraction].ButtonShowHealthText[size] or
 		   BattlegroundTargets_Options[fraction].ButtonShowFTargetCount[size] or
-		   BattlegroundTargets_Options[fraction].ButtonShowETargetCount[size]
+		   BattlegroundTargets_Options[fraction].ButtonShowETargetCount[size] or
+		   BattlegroundTargets_Options[fraction].ButtonPvPTrinketToggle[size]
 		then
 			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
 			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
@@ -1963,6 +1959,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.ClassIcon.Highlight:Show()
 		GVAR.OptionsFrame.ShowLeader.Highlight:Show()
 		GVAR.OptionsFrame.ShowRealm.Highlight:Show()
+		GVAR.OptionsFrame.ShowPVPTrinket.Highlight:Show()
 		GVAR.OptionsFrame.ShowFTargetCount.Highlight:Show()
 		GVAR.OptionsFrame.ShowETargetCount.Highlight:Show()
 		----------
@@ -2048,6 +2045,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.ClassIcon.Highlight:Hide()
 		GVAR.OptionsFrame.ShowLeader.Highlight:Hide()
 		GVAR.OptionsFrame.ShowRealm.Highlight:Hide()
+		GVAR.OptionsFrame.ShowPVPTrinket.Highlight:Hide()
 		GVAR.OptionsFrame.ShowFTargetCount.Highlight:Hide()
 		GVAR.OptionsFrame.ShowETargetCount.Highlight:Hide()
 		----------
@@ -2136,7 +2134,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- BOOM GVAR.OptionsFrame.Dummy3:SetWidth()
 	GVAR.OptionsFrame.Dummy3:SetHeight(1)
 	GVAR.OptionsFrame.Dummy3:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy3:SetPoint("TOP", GVAR.OptionsFrame.CopySettings2, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy3:SetPoint("TOP", GVAR.OptionsFrame.CopyText, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.Dummy3:SetTexture(0.73, 0.26, 0.21, 0.5)
 
 
@@ -2198,11 +2196,23 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
-	-- show targetcount
+	-- pvp trinket
+	GVAR.OptionsFrame.ShowPVPTrinket = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowPVPTrinket, 16, 4, L["PvP Trinket"])
+	GVAR.OptionsFrame.ShowPVPTrinket:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.ShowPVPTrinket:SetPoint("TOP", GVAR.OptionsFrame.ShowRealm, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.ShowPVPTrinket:SetChecked(BattlegroundTargets_Options[fraction].ButtonPvPTrinketToggle[currentSize])
+	GVAR.OptionsFrame.ShowPVPTrinket:SetScript("OnClick", function()
+		BattlegroundTargets_Options[fraction].ButtonPvPTrinketToggle[currentSize] = not BattlegroundTargets_Options[fraction].ButtonPvPTrinketToggle[currentSize]
+		GVAR.OptionsFrame.ShowPVPTrinket:SetChecked(BattlegroundTargets_Options[fraction].ButtonPvPTrinketToggle[currentSize])
+		ConfigFontNumberOptionCheck(currentSize)
+		BattlegroundTargets:EnableConfigMode()
+	end)
+
+	-- targetcount friend
 	GVAR.OptionsFrame.ShowFTargetCount = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowFTargetCount, 16, 4, L["Target Count"].." " ..L["Friend"])
-	GVAR.OptionsFrame.ShowFTargetCount:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowFTargetCount:SetPoint("TOP", GVAR.OptionsFrame.ShowRealm, "BOTTOM", 0, -10)
+	--GVAR.OptionsFrame.ShowFTargetCount:SetPoint()
 	GVAR.OptionsFrame.ShowFTargetCount:SetChecked(BattlegroundTargets_Options[fraction].ButtonShowFTargetCount[currentSize])
 	GVAR.OptionsFrame.ShowFTargetCount:SetScript("OnClick", function()
 		BattlegroundTargets_Options[fraction].ButtonShowFTargetCount[currentSize] = not BattlegroundTargets_Options[fraction].ButtonShowFTargetCount[currentSize]
@@ -2211,9 +2221,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
+	-- targetcount enemy
 	GVAR.OptionsFrame.ShowETargetCount = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowETargetCount, 16, 4, L["Target Count"].." "..L["Enemy"])
-	GVAR.OptionsFrame.ShowETargetCount:SetPoint("LEFT", GVAR.OptionsFrame.ShowFTargetCount, "RIGHT", 10, 0)
+	--GVAR.OptionsFrame.ShowETargetCount:SetPoint()
 	GVAR.OptionsFrame.ShowETargetCount:SetChecked(BattlegroundTargets_Options[fraction].ButtonShowETargetCount[currentSize])
 	GVAR.OptionsFrame.ShowETargetCount:SetScript("OnClick", function()
 		BattlegroundTargets_Options[fraction].ButtonShowETargetCount[currentSize] = not BattlegroundTargets_Options[fraction].ButtonShowETargetCount[currentSize]
@@ -2222,15 +2233,26 @@ function BattlegroundTargets:CreateOptionsFrame()
 		BattlegroundTargets:EnableConfigMode()
 	end)
 
-	local eq, sw = 0, 0
-	sw = GVAR.OptionsFrame.ShowRole:GetWidth() if sw > eq then eq = sw end
-	sw = GVAR.OptionsFrame.ShowRealm:GetWidth() if sw > eq then eq = sw end
-	sw = GVAR.OptionsFrame.ShowFTargetCount:GetWidth() if sw > eq then eq = sw end
-	GVAR.OptionsFrame.ShowLeader:SetPoint("LEFT", GVAR.OptionsFrame.ShowRealm, "LEFT", eq+50, 0)
-	GVAR.OptionsFrame.ShowSpec:SetPoint("LEFT", GVAR.OptionsFrame.ShowRole, "LEFT", eq+50, 0)
-	GVAR.OptionsFrame.ClassIcon:SetPoint("LEFT", GVAR.OptionsFrame.ShowSpec, "LEFT", GVAR.OptionsFrame.ShowSpec:GetWidth()+50, 0)
+	local eq1, sw = 0, 0
+	sw = GVAR.OptionsFrame.ShowRole:GetWidth() if sw > eq1 then eq1 = sw end
+	sw = GVAR.OptionsFrame.ShowRealm:GetWidth() if sw > eq1 then eq1 = sw end
+	sw = GVAR.OptionsFrame.ShowPVPTrinket:GetWidth() if sw > eq1 then eq1 = sw end
+	GVAR.OptionsFrame.ShowSpec:SetPoint("LEFT", GVAR.OptionsFrame.ShowRole, "LEFT", eq1+50, 0)
+	GVAR.OptionsFrame.ShowLeader:SetPoint("LEFT", GVAR.OptionsFrame.ShowRealm, "LEFT", eq1+50, 0)
+	GVAR.OptionsFrame.ShowFTargetCount:SetPoint("LEFT", GVAR.OptionsFrame.ShowPVPTrinket, "LEFT", eq1+50, 0)
 
-	local generalIconW = 10 + eq + 50 + GVAR.OptionsFrame.ShowSpec:GetWidth() + 50 + GVAR.OptionsFrame.ClassIcon:GetWidth() + 10
+	local eq2, sw = 0, 0
+	sw = GVAR.OptionsFrame.ShowSpec:GetWidth() if sw > eq2 then eq2 = sw end
+	sw = GVAR.OptionsFrame.ShowLeader:GetWidth() if sw > eq2 then eq2 = sw end
+	sw = GVAR.OptionsFrame.ShowFTargetCount:GetWidth() if sw > eq2 then eq2 = sw end
+	GVAR.OptionsFrame.ClassIcon:SetPoint("LEFT", GVAR.OptionsFrame.ShowSpec, "LEFT", eq2+50, 0)
+	GVAR.OptionsFrame.ShowETargetCount:SetPoint("LEFT", GVAR.OptionsFrame.ShowFTargetCount, "LEFT", eq2+50, 0)
+
+	local eq3, sw = 0, 0
+	sw = GVAR.OptionsFrame.ClassIcon:GetWidth() if sw > eq3 then eq3 = sw end
+	sw = GVAR.OptionsFrame.ShowETargetCount:GetWidth() if sw > eq3 then eq3 = sw end
+
+	local generalIconW = 10 + eq1 + 50 + eq2 + 50 + eq3 + 10
 
 
 
@@ -2848,7 +2870,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.RangeCheckInfo.Text = GVAR.OptionsFrame.RangeCheckInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.RangeCheckInfo.Text:SetPoint("CENTER", 0, 0)
 	GVAR.OptionsFrame.RangeCheckInfo.Text:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.RangeCheckInfo.Text:SetText( RangeInfoTxt[fraction] )
+	BattlegroundTargets:RangeInfoText( GVAR.OptionsFrame.RangeCheckInfo.Text ) --GVAR.OptionsFrame.RangeCheckInfo.Text:SetText()
 	GVAR.OptionsFrame.RangeCheckInfo.Text:SetTextColor(1, 1, 0.49, 1)
 	GVAR.OptionsFrame.RangeCheckInfo:SetScript("OnEnter", function()
 		local txtWidth = GVAR.OptionsFrame.RangeCheckInfo.Text:GetStringWidth()
@@ -3682,6 +3704,9 @@ function BattlegroundTargets:SetOptions(side)
 		elseif currentSize == 15 then
 			GVAR.OptionsFrame.CopySettings1.Text:SetText(L["10v10"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
 			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["15v15"].." "..Textures.FriendIconStr.." "..L["Friend"])
+		elseif currentSize == 40 then
+			--GVAR.OptionsFrame.CopySettings1.Text:SetText(L["10v10"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
+			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["40v40"].." "..Textures.FriendIconStr.." "..L["Friend"])
 		end
 	else
 		if currentSize == 10 then
@@ -3690,6 +3715,9 @@ function BattlegroundTargets:SetOptions(side)
 		elseif currentSize == 15 then
 			GVAR.OptionsFrame.CopySettings1.Text:SetText(L["10v10"].." "..Textures.FriendIconStr.." "..L["Friend"])
 			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["15v15"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
+		elseif currentSize == 40 then
+			--GVAR.OptionsFrame.CopySettings1.Text:SetText(L["10v10"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
+			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["40v40"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
 		end
 	end
 
@@ -3729,6 +3757,7 @@ function BattlegroundTargets:SetOptions(side)
 	GVAR.OptionsFrame.ClassIcon:SetChecked(BattlegroundTargets_Options[side].ButtonClassIcon[currentSize])
 	GVAR.OptionsFrame.ShowLeader:SetChecked(BattlegroundTargets_Options[side].ButtonShowLeader[currentSize])
 	GVAR.OptionsFrame.ShowRealm:SetChecked(BattlegroundTargets_Options[side].ButtonShowRealm[currentSize])
+	GVAR.OptionsFrame.ShowPVPTrinket:SetChecked(BattlegroundTargets_Options[side].ButtonPvPTrinketToggle[currentSize])
 
 	GVAR.OptionsFrame.ShowTargetIndicator:SetChecked(BattlegroundTargets_Options[side].ButtonShowTarget[currentSize])
 	GVAR.OptionsFrame.TargetScaleSlider:SetValue(BattlegroundTargets_Options[side].ButtonTargetScale[currentSize]*100)
@@ -3801,6 +3830,12 @@ end
 function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 
+	if BattlegroundTargets_Options.Friend.EnableBracket[bracketSize] or BattlegroundTargets_Options.Enemy.EnableBracket[bracketSize] then
+		GVAR.OptionsFrame["TabRaidSize"..bracketSize].TabText:SetTextColor(0, 0.75, 0, 1)
+	else
+		GVAR.OptionsFrame["TabRaidSize"..bracketSize].TabText:SetTextColor(1, 0, 0, 1)
+	end
+
 	if BattlegroundTargets_Options.Friend.EnableBracket[bracketSize] and BattlegroundTargets_Options.Enemy.EnableBracket[bracketSize] then
 		GVAR.OptionsFrame.EnableFriendBracket.TabText:SetTextColor(0, 0.75, 0, 1)
 		GVAR.OptionsFrame.EnableEnemyBracket.TabText:SetTextColor(0, 0.75, 0, 1)
@@ -3820,8 +3855,6 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 
 	if BattlegroundTargets_Options[side].EnableBracket[bracketSize] then
 		-- ----------------------------------------
-		GVAR.OptionsFrame["TabRaidSize"..bracketSize].TabText:SetTextColor(0, 0.75, 0, 1)
-
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.IndependentPos)
 
 		GVAR.OptionsFrame.LayoutTHText:SetTextColor(1, 1, 1, 1)
@@ -3852,7 +3885,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 
 		if bracketSize == 40 then
  			GVAR.OptionsFrame.CopySettings1:Hide()
- 			GVAR.OptionsFrame.CopySettings2:Hide()
+ 			TEMPLATE.EnableTextButton(GVAR.OptionsFrame.CopySettings2)
 		else
 			GVAR.OptionsFrame.CopySettings1:Show()
 			GVAR.OptionsFrame.CopySettings2:Show()
@@ -3865,6 +3898,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowLeader)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowRealm)
+		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowPVPTrinket)
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowTargetIndicator)
 		if BattlegroundTargets_Options[side].ButtonShowTarget[bracketSize] then
@@ -3924,7 +3958,6 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.RangeCheck)
 		if BattlegroundTargets_Options[side].ButtonRangeCheck[bracketSize] then
-			GVAR.OptionsFrame.RangeCheckInfo.Text:SetText( RangeInfoTxt[side] )
 			GVAR.OptionsFrame.RangeCheckInfo:Enable() Desaturation(GVAR.OptionsFrame.RangeCheckInfo.Texture, false)
 			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.RangeDisplayPullDown)
 		else
@@ -3965,8 +3998,6 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 		-- ----------------------------------------
 	else
 		-- ----------------------------------------
-		GVAR.OptionsFrame["TabRaidSize"..bracketSize].TabText:SetTextColor(1, 0, 0, 1)
-
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.IndependentPos)
 
 		GVAR.OptionsFrame.LayoutTHText:SetTextColor(0.5, 0.5, 0.5, 1)
@@ -3983,7 +4014,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 
 		if bracketSize == 40 then
  			GVAR.OptionsFrame.CopySettings1:Hide()
- 			GVAR.OptionsFrame.CopySettings2:Hide()
+			TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings2)
 		else
 			GVAR.OptionsFrame.CopySettings1:Show()
 			GVAR.OptionsFrame.CopySettings2:Show()
@@ -3996,6 +4027,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowLeader)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRealm)
+		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowPVPTrinket)
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetIndicator)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.TargetScaleSlider)
@@ -4083,6 +4115,7 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ClassIcon)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowLeader)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRealm)
+	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowPVPTrinket)
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowTargetIndicator)
 	TEMPLATE.DisableSlider(GVAR.OptionsFrame.TargetScaleSlider)
@@ -4651,7 +4684,7 @@ function BattlegroundTargets:SetupButtonLayout(side)
 
 		-- pvp_trinket_
 		button.PVPTrinketTexture:SetSize(B_uttonHeight_2, B_uttonHeight_2)
-		button.PVPTrinketTxt:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize-2, "OUTLINE")
+		button.PVPTrinketTxt:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize-1, "OUTLINE")
 		button.PVPTrinketTxt:SetHeight(fallbackFontSize)
 
 		-- target count
@@ -4856,7 +4889,7 @@ function BattlegroundTargets:SetupButtonTextures(side) -- BG_Faction_Dependent
 				trinketTexture = "Interface\\Icons\\INV_Jewelry_TrinketPVP_01" -- Alliance
 			end
 		else
-			if oppositeFactionREAL == 0 then
+			if oppositeFactionBG == 0 then
 				trinketTexture = "Interface\\Icons\\INV_Jewelry_TrinketPVP_02" -- Horde
 			else
 				trinketTexture = "Interface\\Icons\\INV_Jewelry_TrinketPVP_01" -- Alliance
@@ -4925,38 +4958,43 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:CreateRangeInfoText(side)
-	local minRange, maxRange
-	if ranges[side][playerClassEN] then
-		local _, _, _, _, minR, maxR = GetSpellInfo(ranges[side][playerClassEN])
-		minRange = minR
-		maxRange = maxR
-	end
-	minRange = minRange or "?"
-	maxRange = maxRange or "?"
-
+function BattlegroundTargets:RangeInfoText(buttonTxt)
 	local rangeInfoTxt = ""
-	rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog:|r max: |cffffff790-68 (40+28)|r\n\n"
-	rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["Class"]..":|r\n"
-	table_sort(class_IntegerSort, function(a, b) return a.loc < b.loc end)
-	local playerMClass = "?"
-	for i = 1, #class_IntegerSort do
-		local classEN = class_IntegerSort[i].cid
-		local name, _, _, _, minRange, maxRange = GetSpellInfo(ranges[side][classEN])
-		local classStr = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or L["Unknown"]).."|r   |cffbbbbbb(spell ID = "..ranges[side][classEN]..")|r"
-		if classEN == playerClassEN then
-			playerMClass = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r"
-			rangeInfoTxt = rangeInfoTxt..">>> "..classStr.." <<<"
-		else
-			rangeInfoTxt = rangeInfoTxt.."     "..classStr
+
+	for frc = 1, #FRAMES do
+		local side = FRAMES[frc]
+
+		local minRange, maxRange
+		if ranges[side][playerClassEN] then
+			local _, _, _, _, minR, maxR = GetSpellInfo(ranges[side][playerClassEN])
+			minRange = minR
+			maxRange = maxR
+		end
+		minRange = minRange or "?"
+		maxRange = maxRange or "?"
+
+  	rangeInfoTxt = rangeInfoTxt.."   "..L[side].."\n\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog:|r 40 - max: |cffffff790-"..(40+maxRange).." (40+"..maxRange..")|r\n\n"
+		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["Class"]..":|r\n"
+		table_sort(class_IntegerSort, function(a, b) return a.loc < b.loc end)
+		local playerMClass = "?"
+		for i = 1, #class_IntegerSort do
+			local classEN = class_IntegerSort[i].cid
+			local name, _, _, _, minRange, maxRange = GetSpellInfo(ranges[side][classEN])
+			local classStr = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or L["Unknown"]).."|r   |cffbbbbbb(spell ID = "..ranges[side][classEN]..")|r"
+			if classEN == playerClassEN then
+				playerMClass = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r"
+				rangeInfoTxt = rangeInfoTxt..">>> "..classStr.." <<<"
+			else
+				rangeInfoTxt = rangeInfoTxt.."     "..classStr
+			end
+			rangeInfoTxt = rangeInfoTxt.."\n"
 		end
 		rangeInfoTxt = rangeInfoTxt.."\n"
-	end
-	rangeInfoTxt = rangeInfoTxt.."\n"
-	rangeInfoTxt = rangeInfoTxt.."|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:28:32:0:0:64:64:0:64:0:56|t"
-	rangeInfoTxt = rangeInfoTxt.."|cffffff00 "..L["Disable this option if you have CPU/FPS problems in combat."].." |r"
 
-	return rangeInfoTxt
+	end
+
+	buttonTxt:SetText(rangeInfoTxt)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -5218,6 +5256,7 @@ function BattlegroundTargets:LocalizedFontNumberTest(show, font)
 					button[i].ETargetCount:SetFont(f, s, "")
 					button[i].FlagDebuff:SetFont(f, s-2, "OUTLINE")
 					button[i].RangeTxt:SetFont(f, s-1, "OUTLINE")
+					button[i].PVPTrinketTxt:SetFont(f, s-1, "OUTLINE")
 				end
 				if BattlegroundTargets_Options[side].ButtonTargetofTarget[currentSize] then -- target_of_target
 					for i = 1, currentSize do
@@ -5240,6 +5279,7 @@ function BattlegroundTargets:LocalizedFontNumberTest(show, font)
 					button[i].ETargetCount:SetFont(f, s, "")
 					button[i].FlagDebuff:SetFont(f, s-2, "OUTLINE")
 					button[i].RangeTxt:SetFont(f, s-1, "OUTLINE")
+					button[i].PVPTrinketTxt:SetFont(f, s-1, "OUTLINE")
 				end
 				if BattlegroundTargets_Options[side].ButtonTargetofTarget[currentSize] then -- target_of_target
 					for i = 1, currentSize do
@@ -5413,8 +5453,9 @@ function BattlegroundTargets:EnableConfigMode()
 	-- delete global_OnUpdate
 	if GVAR.FriendMainFrame then GVAR.FriendMainFrame:SetScript("OnUpdate", nil) end
 	if GVAR.EnemyMainFrame then GVAR.EnemyMainFrame:SetScript("OnUpdate", nil) end
-	if GVAR.Range_Check_Button then GVAR.Range_Check_Button:SetScript("OnUpdate", nil) end
+	if GVAR.RangeCheck_Timer_Button then GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", nil) end
 	if GVAR.PVPTrinket_Timer_Button then GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", nil) end
+	if GVAR.Target_Timer_Button then GVAR.Target_Timer_Button:SetScript("OnUpdate", nil) end
 
 	if BattlegroundTargets_Options.Friend.EnableBracket[currentSize] or BattlegroundTargets_Options.Enemy.EnableBracket[currentSize] then
 		BattlegroundTargets:SetOptions(fraction)
@@ -5526,6 +5567,7 @@ function BattlegroundTargets:SetConfigButtonValues(side)
 	local ButtonRangeDisplay     = BattlegroundTargets_Options[side].ButtonRangeDisplay[currentSize]
 	local ButtonShowFTargetCount = BattlegroundTargets_Options[side].ButtonShowFTargetCount[currentSize]
 	local ButtonShowETargetCount = BattlegroundTargets_Options[side].ButtonShowETargetCount[currentSize]
+	local ButtonPvPTrinketToggle = BattlegroundTargets_Options[side].ButtonPvPTrinketToggle[currentSize]
 
 	local button = GVAR[side.."Button"]
 	for i = 1, currentSize do
@@ -5584,6 +5626,20 @@ function BattlegroundTargets:SetConfigButtonValues(side)
 			end
 		else
 			BattlegroundTargets:Range_Display(true, button, nil)
+		end
+
+		-- pvp_trinket_
+		if ButtonPvPTrinketToggle then
+			if testData[side].PVPTrinket[i].isEnable == 1 then
+				button.PVPTrinketTexture:SetAlpha(1)
+				button.PVPTrinketTxt:SetText(testData[side].PVPTrinket[i].isTime)
+			else
+				button.PVPTrinketTexture:SetAlpha(0)
+				button.PVPTrinketTxt:SetText("")
+			end
+		else
+			button.PVPTrinketTexture:SetAlpha(0)
+			button.PVPTrinketTxt:SetText("")
 		end
 	end
 
@@ -5709,6 +5765,7 @@ end
 function BattlegroundTargets:ClearConfigButtonValues(side, button, clearRange)
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 
+	-- colors
 	button.colR  = 0
 	button.colG  = 0
 	button.colB  = 0
@@ -5716,42 +5773,53 @@ function BattlegroundTargets:ClearConfigButtonValues(side, button, clearRange)
 	button.colG5 = 0
 	button.colB5 = 0
 
-	-- target, targetcount, focus, flag, assist, leader
-	button.TargetTexture:SetAlpha(0)
-	button.HighlightT:SetTexture(0, 0, 0, 1)
-	button.HighlightR:SetTexture(0, 0, 0, 1)
-	button.HighlightB:SetTexture(0, 0, 0, 1)
-	button.HighlightL:SetTexture(0, 0, 0, 1)
-	button.FTargetCount:SetText("")
-	button.ETargetCount:SetText("")
-	button.FocusTexture:SetAlpha(0)
-	button.FlagTexture:SetAlpha(0)
-	button.FlagDebuff:SetText("")
-	button.OrbCornerTL:SetAlpha(0)
-	button.OrbCornerTR:SetAlpha(0)
-	button.OrbCornerBL:SetAlpha(0)
-	button.OrbCornerBR:SetAlpha(0)
-	button.AssistTargetTexture:SetAlpha(0)
-	button.AssistSourceTexture:SetAlpha(0)
-	button.LeaderTexture:SetAlpha(0)
-
-	-- health
-	button.HealthBar:SetTexture(0, 0, 0, 0)
-	button.HealthBar:SetWidth(DATA[side].healthBarWidth)
-	button.HealthText:SetText("")
-
-	-- range
-	button.RangeTexture:SetTexture(0, 0, 0, 0)
-
-	-- basics
+	-- basic
 	button.Name:SetText("")
 	button.RoleTexture:SetTexCoord(0, 0, 0, 0)
 	button.SpecTexture:SetTexture(nil)
 	button.ClassTexture:SetTexCoord(0, 0, 0, 0)
 	button.ClassColorBackground:SetTexture(0, 0, 0, 0)
 
-	--targetoftarget
-	button.ToTButton:SetAlpha(0) -- target_of_target
+	-- target
+	button.TargetTexture:SetAlpha(0)
+	button.HighlightT:SetTexture(0, 0, 0, 1)
+	button.HighlightR:SetTexture(0, 0, 0, 1)
+	button.HighlightB:SetTexture(0, 0, 0, 1)
+	button.HighlightL:SetTexture(0, 0, 0, 1)
+
+	-- targetcount
+	button.FTargetCount:SetText("")
+	button.ETargetCount:SetText("")
+
+	-- focus
+	button.FocusTexture:SetAlpha(0)
+
+	-- flag
+	button.FlagTexture:SetAlpha(0)
+	button.FlagDebuff:SetText("")
+	button.OrbCornerTL:SetAlpha(0)
+	button.OrbCornerTR:SetAlpha(0)
+	button.OrbCornerBL:SetAlpha(0)
+	button.OrbCornerBR:SetAlpha(0)
+
+	-- assist
+	button.AssistTargetTexture:SetAlpha(0)
+	button.AssistSourceTexture:SetAlpha(0)
+
+	-- leader
+	button.LeaderTexture:SetAlpha(0)
+
+	-- pvp trinket
+	button.PVPTrinketTexture:SetAlpha(0)
+	button.PVPTrinketTxt:SetText("")
+
+	-- health
+	button.HealthBar:SetTexture(0, 0, 0, 0)
+	button.HealthBar:SetWidth(DATA[side].healthBarWidth)
+	button.HealthText:SetText("")
+
+	-- target_of_target
+	button.ToTButton:SetAlpha(0)
 	button.ToTButton.Name:SetText("")
 	button.ToTButton.ClassColorBackground:SetTexture(0, 0, 0, 0)
 	button.ToTButton.RoleTexture:SetTexCoord(0, 0, 0, 0)
@@ -5759,6 +5827,9 @@ function BattlegroundTargets:ClearConfigButtonValues(side, button, clearRange)
 	button.ToTButton.HealthBar:SetTexture(0, 0, 0, 0)
 	button.ToTButton.HealthBar:SetWidth(DATA[side].healthBarWidth)
 	button.ToTButton.HealthText:SetText("")
+
+	-- range
+	button.RangeTexture:SetTexture(0, 0, 0, 0)
 
 	if clearRange then
 		if BattlegroundTargets_Options[side].ButtonRangeCheck[currentSize] then
@@ -5821,6 +5892,17 @@ function BattlegroundTargets:DefaultShuffle()
 		-- flag
 		testData[side].IconFlag.button = random(1,10)
 		testData[side].IconFlag.txt = random(1,10)
+		-- pvp_trinket_
+		testData[side].PVPTrinket[ random(1,10) ] = { -- show at least one
+			isEnable = 1,
+			isTime = random(1,120)
+		}
+		for i = 1, 40 do
+			testData[side].PVPTrinket[i] = {
+				isEnable = random(1,2),
+				isTime = random(1,120)
+			}
+		end
 	end
 	-- orb friend
 	local count1 = 0
@@ -5918,7 +6000,8 @@ function BattlegroundTargets:ShufflerFunc(what, side)
 		   BattlegroundTargets_Options[side].ButtonShowFocus[currentSize] or
 		   BattlegroundTargets_Options[side].ButtonShowAssist[currentSize] or
 		   BattlegroundTargets_Options[side].ButtonShowLeader[currentSize] or
-		   BattlegroundTargets_Options[side].ButtonRangeCheck[currentSize]
+		   BattlegroundTargets_Options[side].ButtonRangeCheck[currentSize] or
+		   BattlegroundTargets_Options[side].ButtonPvPTrinketToggle[currentSize]
 		then
 			GVAR.OptionsFrame.TestShuffler:Show()
 		else
@@ -6009,6 +6092,8 @@ function BattlegroundTargets:CopyAllSettings(sourceSize, sameSize)
 	local destinationSize = 10
 	if sourceSize == 10 then
 		destinationSize = 15
+	elseif sourceSize == 40 then
+		destinationSize = 40
 	end
 
 	local sourceFraction = fraction
@@ -6037,6 +6122,7 @@ function BattlegroundTargets:CopyAllSettings(sourceSize, sameSize)
 	BattlegroundTargets_Options[destinationFraction].ButtonClassIcon[destinationSize]          = BattlegroundTargets_Options[sourceFraction].ButtonClassIcon[sourceSize]
 	BattlegroundTargets_Options[destinationFraction].ButtonShowLeader[destinationSize]         = BattlegroundTargets_Options[sourceFraction].ButtonShowLeader[sourceSize]
 	BattlegroundTargets_Options[destinationFraction].ButtonShowRealm[destinationSize]          = BattlegroundTargets_Options[sourceFraction].ButtonShowRealm[sourceSize]
+	BattlegroundTargets_Options[destinationFraction].ButtonPvPTrinketToggle[destinationSize]   = BattlegroundTargets_Options[sourceFraction].ButtonPvPTrinketToggle[sourceSize]
 	BattlegroundTargets_Options[destinationFraction].ButtonShowTarget[destinationSize]         = BattlegroundTargets_Options[sourceFraction].ButtonShowTarget[sourceSize]
 	BattlegroundTargets_Options[destinationFraction].ButtonTargetScale[destinationSize]        = BattlegroundTargets_Options[sourceFraction].ButtonTargetScale[sourceSize]
 	BattlegroundTargets_Options[destinationFraction].ButtonTargetPosition[destinationSize]     = BattlegroundTargets_Options[sourceFraction].ButtonTargetPosition[sourceSize]
@@ -6081,11 +6167,16 @@ function BattlegroundTargets:CopyAllSettings(sourceSize, sameSize)
 		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, true)
 		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
 		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
-	else
+	elseif destinationSize == 15 then
 		testSize = 15
 		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
 		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, true)
 		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
+	elseif destinationSize == 40 then
+		testSize = 40
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, true)
 	end
 
 	BattlegroundTargets:CheckForEnabledBracket(testSize, destinationFraction)
@@ -6663,6 +6754,11 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 		end
 	end
 
+	if BattlegroundTargets.GroupUpdateTimer and curTime > BattlegroundTargets.GroupUpdateTimer + 2 then
+		--print("Group Update Timer:", curTime - BattlegroundTargets.GroupUpdateTimer)
+		BattlegroundTargets:GroupUnitIDUpdate()
+	end
+
 	if BattlegroundTargets.TrackFaction and DATA.Enemy.MainData[1] then -- BG_FACTION_CHK
 		for i = 1, #DATA.Enemy.MainData do
 			if DATA.Enemy.MainData[i].name == playerName then
@@ -6693,15 +6789,6 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 				flagCHK = true
 				BattlegroundTargets:CheckFlagCarrierSTART()
 			end
-		end
-	end
-
-	if BattlegroundTargets.GroupUpdateTimer then
-		--print("GroupUpdateTimer:", curTime - BattlegroundTargets.GroupUpdateTimer)
-		if curTime > BattlegroundTargets.GroupUpdateTimer + 2 then
-			--print("GroupUpdateTimer: upd")
-			BattlegroundTargets.GroupUpdateTimer = curTime
-			BattlegroundTargets:GroupUnitIDUpdate()
 		end
 	end
 
@@ -6860,6 +6947,13 @@ function BattlegroundTargets:IsBattleground()
 		end
 		-- --------------------------------------------------------
 
+		-- delete global_OnUpdate
+		if GVAR.FriendMainFrame then GVAR.FriendMainFrame:SetScript("OnUpdate", nil) end
+		if GVAR.EnemyMainFrame then GVAR.EnemyMainFrame:SetScript("OnUpdate", nil) end
+		if GVAR.RangeCheck_Timer_Button then GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", nil) end
+		if GVAR.PVPTrinket_Timer_Button then GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", nil) end
+		if GVAR.Target_Timer_Button then GVAR.Target_Timer_Button:SetScript("OnUpdate", nil) end
+
 		-- set global_OnUpdate BEGIN -----------------------------------
 		local side
 		if BattlegroundTargets_Options.Enemy.EnableBracket[currentSize] then
@@ -6897,18 +6991,41 @@ function BattlegroundTargets:IsBattleground()
 		end
 		--]] -- screenshot_ END --
 
-		--[[ -- pvp_trinket_ BEGIN --
+		-- targeet target_of_target BEGIN --
 		if side then -- singleside
-			local elapsed = 0
-			GVAR.PVPTrinket_Timer_Button = CreateFrame("Button", nil, GVAR[side.."MainFrame"])
-			GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", function(self, elap)
-				elapsed = elapsed + elap
-				if elapsed < pvptrinketFrequency then return end
-				elapsed = 0
-				BattlegroundTargets:UpdateAllPvPTrinkets()
-			end)
+			if BattlegroundTargets_Options.Friend.ButtonShowTarget[currentSize] or
+			   BattlegroundTargets_Options.Enemy.ButtonShowTarget[currentSize] or
+			   BattlegroundTargets_Options.Friend.ButtonTargetofTarget[currentSize] or
+			   BattlegroundTargets_Options.Enemy.ButtonTargetofTarget[currentSize]
+			then
+				local elapsed = 0
+				GVAR.Target_Timer_Button = CreateFrame("Button", nil, GVAR[side.."MainFrame"])
+				GVAR.Target_Timer_Button:SetScript("OnUpdate", function(self, elap)
+					elapsed = elapsed + elap
+					if elapsed < targetFrequency then return end
+					elapsed = 0
+					BattlegroundTargets:CheckUnitTarget("target", playerTargetName)
+				end)
+			end
 		end
-		--]] -- pvp_trinket_ END --
+		-- targeet target_of_target END --
+
+		-- pvp_trinket_ BEGIN --
+		if side then -- singleside
+			if BattlegroundTargets_Options.Friend.ButtonPvPTrinketToggle[currentSize] or
+			   BattlegroundTargets_Options.Enemy.ButtonPvPTrinketToggle[currentSize]
+			then
+				local elapsed = 0
+				GVAR.PVPTrinket_Timer_Button = CreateFrame("Button", nil, GVAR[side.."MainFrame"])
+				GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", function(self, elap)
+					elapsed = elapsed + elap
+					if elapsed < pvptrinketFrequency then return end
+					elapsed = 0
+					BattlegroundTargets:UpdateAllPvPTrinkets(true)
+				end)
+			end
+		end
+		-- pvp_trinket_ END --
 
 		-- class_range_ BEGIN --
 		local Friend_ButtonRangeCheck = BattlegroundTargets_Options.Friend.EnableBracket[currentSize] and BattlegroundTargets_Options.Friend.ButtonRangeCheck[currentSize]
@@ -6916,8 +7033,8 @@ function BattlegroundTargets:IsBattleground()
 
 		if Friend_ButtonRangeCheck and Enemy_ButtonRangeCheck then
 			local elapsed = 0
-			GVAR.Range_Check_Button = CreateFrame("Button", nil, GVAR.FriendMainFrame)
-			GVAR.Range_Check_Button:SetScript("OnUpdate", function(self, elap)
+			GVAR.RangeCheck_Timer_Button = CreateFrame("Button", nil, GVAR.FriendMainFrame)
+			GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", function(self, elap)
 				elapsed = elapsed + elap
 				if elapsed > rangeFrequency then
 					elapsed = 0
@@ -6934,8 +7051,8 @@ function BattlegroundTargets:IsBattleground()
 		elseif Friend_ButtonRangeCheck then
 
 			local elapsed = 0
-			GVAR.Range_Check_Button = CreateFrame("Button", nil, GVAR.FriendMainFrame)
-			GVAR.Range_Check_Button:SetScript("OnUpdate", function(self, elap)
+			GVAR.RangeCheck_Timer_Button = CreateFrame("Button", nil, GVAR.FriendMainFrame)
+			GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", function(self, elap)
 				elapsed = elapsed + elap
 				if elapsed > rangeFrequency then
 					elapsed = 0
@@ -6951,8 +7068,8 @@ function BattlegroundTargets:IsBattleground()
 		elseif Enemy_ButtonRangeCheck then
 
 			local elapsed = 0
-			GVAR.Range_Check_Button = CreateFrame("Button", nil, GVAR.EnemyMainFrame)
-			GVAR.Range_Check_Button:SetScript("OnUpdate", function(self, elap)
+			GVAR.RangeCheck_Timer_Button = CreateFrame("Button", nil, GVAR.EnemyMainFrame)
+			GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", function(self, elap)
 				elapsed = elapsed + elap
 				if elapsed > rangeFrequency then
 					elapsed = 0
@@ -7042,12 +7159,6 @@ function BattlegroundTargets:IsNotBattleground()
 		testData.specTest = nil
 	end
 
-	-- delete global_OnUpdate
-	if GVAR.FriendMainFrame then GVAR.FriendMainFrame:SetScript("OnUpdate", nil) end
-	if GVAR.EnemyMainFrame then GVAR.EnemyMainFrame:SetScript("OnUpdate", nil) end
-	if GVAR.Range_Check_Button then GVAR.Range_Check_Button:SetScript("OnUpdate", nil) end
-	if GVAR.PVPTrinket_Timer_Button then GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", nil) end
-
 	if inCombat or InCombatLockdown() then
 		reCheckBG = true
 	else
@@ -7063,10 +7174,20 @@ function BattlegroundTargets:IsNotBattleground()
 			GVAR.FriendSummary.Logo2:SetTexture("Interface\\Timer\\Panda-Logo")
 			GVAR.EnemySummary.Logo2:SetTexture("Interface\\Timer\\Panda-Logo")
 		end
+
+		-- delete global_OnUpdate
+		if GVAR.FriendMainFrame then GVAR.FriendMainFrame:SetScript("OnUpdate", nil) end
+		if GVAR.EnemyMainFrame then GVAR.EnemyMainFrame:SetScript("OnUpdate", nil) end
+		if GVAR.RangeCheck_Timer_Button then GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", nil) end
+		if GVAR.PVPTrinket_Timer_Button then GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", nil) end
+		if GVAR.Target_Timer_Button then GVAR.Target_Timer_Button:SetScript("OnUpdate", nil) end
+
 		GVAR.FriendMainFrame:Hide()
 		GVAR.EnemyMainFrame:Hide()
 		for i = 1, 40 do
+			GVAR.FriendButton[i].FocusTextureButton:SetScript("OnUpdate", nil) -- TODO
 			GVAR.FriendButton[i]:Hide()
+			GVAR.EnemyButton[i].FocusTextureButton:SetScript("OnUpdate", nil) -- TODO
 			GVAR.EnemyButton[i]:Hide()
 		end
 	end
@@ -7108,6 +7229,7 @@ function BattlegroundTargets:GroupUnitIDUpdate()
 	local doUpdate
 	local numMembers = GetNumGroupMembers()
 	local verified = 0
+
 	for num = 1, numMembers do
 		local unitID = "raid"..num
 		if UnitExists(unitID) then
@@ -7116,39 +7238,19 @@ function BattlegroundTargets:GroupUnitIDUpdate()
 				DATA.Friend.Name2UnitID[ fName ] = unitID
 				DATA.Friend.UnitID2Name[ unitID ] = fName
 				verified = verified + 1
-				-----------------
-				if not DATA.Friend.Name2Button[ fName ] then -- immediate update
-					class = class or "ZZZFAILURE"
-					local specicon = nil
-					local specrole = 4
-					--print("Group.UnitID.Update:", fName, class, specicon, specrole)
-					DATA.Friend.Roles[specrole] = DATA.Friend.Roles[specrole] + 1 -- SUMMARY
-					tinsert(DATA.Friend.MainData, {
-						name       = fName,
-						classToken = class,
-						specIcon   = specicon,
-						talentSpec = specrole
-					})
-					doUpdate = true
-				end
-				-----------------
 			end
 		end
 	end
 
-	--print("numMembers:", numMembers, "verified:", verified)
 	if numMembers == verified then
 		BattlegroundTargets.GroupUpdateTimer = nil
 	else
 		BattlegroundTargets.GroupUpdateTimer = GetTime()
 	end
 
-	if doUpdate then
-		BattlegroundTargets:MainDataUpdate("Friend")
-	end
-
 	--[[
 	print("- BEGIN ---------------------------")
+	print("numMembers:", numMembers, "verified:", verified)
 	for k,v in pairs(DATA.Friend.Name2UnitID) do print(k,v) end
 	print("- END ---------------------------")
 	--]]
@@ -7364,7 +7466,7 @@ end
 --                                       "player", playerName, "focus" , "name-realm"
 function BattlegroundTargets:CheckTarget(friendID, friendName, targetID, targetName, caller) -- targetcount_ -- target_of_target
 	if isDeadUpdateStop then return end
-	--EGAL--if targetID == "focus" then return end-- targetcount_focus - focus is not a target
+	if targetID == "focus" then return end -- targetcount_focus
 
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 	local TargetCount = BattlegroundTargets_Options.Enemy.ButtonShowETargetCount[currentSize] or
@@ -7565,9 +7667,7 @@ function BattlegroundTargets:CheckPlayerTarget()
 				button[i].HighlightR:SetTexture(0, 0, 0, 1)
 				button[i].HighlightB:SetTexture(0, 0, 0, 1)
 				button[i].HighlightL:SetTexture(0, 0, 0, 1)
-				button[i].ToTButton:SetScript("OnUpdate", nil)
 				button[i].FlagDebuffButton:SetScript("OnUpdate", nil)
-				button[i].TargetTextureButton:SetScript("OnUpdate", nil)
 			end
 			-- targeet reset all END -----
 		end
@@ -7615,21 +7715,6 @@ function BattlegroundTargets:CheckPlayerTarget()
 		end
 	end
 	-- -- carrier_debuff_ END -----
-
-	-- -- targeet target_of_target pvp_trinket_ BEGIN -----
-	if BattlegroundTargets_Options[isTargetSide].ButtonShowTarget[currentSize] or
-	   BattlegroundTargets_Options[isTargetSide].ButtonTargetofTarget[currentSize]
-	then
-		local elapsed = targetFrequency -- immediate init update
-		isTargetButton.TargetTextureButton:SetScript("OnUpdate", function(self, elap)
-			elapsed = elapsed + elap
-			if elapsed > targetFrequency then
-				elapsed = 0
-				BattlegroundTargets:CheckUnitTarget("target", playerTargetName)
-			end
-		end)
-	end
-	-- -- targeet target_of_target pvp_trinket_ END -----
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -7648,14 +7733,14 @@ function BattlegroundTargets:CheckPlayerFocus()
 			local button = GVAR[side.."Button"]
 			for i = 1, currentSize do
 				button[i].FocusTexture:SetAlpha(0)
-				button[i].FocusTextureButton:SetScript("OnUpdate", nil)
+				button[i].FocusTextureButton:SetScript("OnUpdate", nil) -- TODO
 			end
 		end
 	end
 
 	if not playerFocusName then return end
 
-	-- set focus_
+	-- set focus_ -- TODO
 	for frc = 1, #FRAMES do
 		local side = FRAMES[frc]
 		if BattlegroundTargets_Options[side].EnableBracket[currentSize] then
@@ -7822,6 +7907,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName, isEvent)
 	end
 	-- friendName = nil is possible
 	-- targetName = nil is possible
+	--print("friendID:", friendID, "friendName:", friendName, "targetID:", targetID, "targetName:", targetName)
 
 	BattlegroundTargets:CheckTarget(friendID, friendName, targetID, targetName, "checkunittarget") -- targetcount_ -- target_of_target
 	BattlegroundTargets:UpdateAllPvPTrinkets() -- pvp_trinket_
@@ -7920,9 +8006,6 @@ function BattlegroundTargets:CheckUnitHealth(sourceID)
 			-- -----
 			if targetID then
 				local uName = GetUnitFullName(targetID)
-
---TODO				BattlegroundTargets:CheckTarget(sourceID, nil, targetID, uName, "checkunithealth") -- targetcount_ -- target_of_target
-
 				local button = GVAR[side.."Button"][ DATA[side].Name2Button[ uName ] ]
 				if button then
 					BattlegroundTargets:CheckPlayerHealth(side, button, targetID, uName, "checkunithealth") -- health_
@@ -8711,9 +8794,9 @@ end
 
 
 -- ---------------------------------------------------------------------------------------------------------------------
-function BattlegroundTargets:UpdateAllPvPTrinkets() -- pvp_trinket_
+function BattlegroundTargets:UpdateAllPvPTrinkets(force) -- pvp_trinket_
 	local curTime = GetTime()
-	if curTime < BattlegroundTargets.pvptrinketTimer + pvptrinketFrequency then
+	if not force and curTime < BattlegroundTargets.pvptrinketTimer + pvptrinketFrequency then
 		return
 	end
 
