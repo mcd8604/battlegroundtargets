@@ -133,7 +133,9 @@ local GetBattlefieldScore = GetBattlefieldScore
 local GetBattlefieldStatus = GetBattlefieldStatus
 local GetBattlegroundInfo = GetBattlegroundInfo
 local GetClassInfoByID = GetClassInfoByID
+local GetCurrentMapAreaID = GetCurrentMapAreaID
 local GetLocale = GetLocale
+local GetMaxPlayerLevel = GetMaxPlayerLevel
 local GetNumBattlefieldScores = GetNumBattlefieldScores
 local GetNumBattlegroundTypes = GetNumBattlegroundTypes
 local GetNumGroupMembers = GetNumGroupMembers
@@ -152,6 +154,7 @@ local IsSpellInRange = IsSpellInRange
 local IsSpellKnown = IsSpellKnown
 local RequestBattlefieldScoreData = RequestBattlefieldScoreData
 local SetBattlefieldScoreFaction = SetBattlefieldScoreFaction
+local SetMapToCurrentZone = SetMapToCurrentZone
 local UnitBuff = UnitBuff
 local UnitClass = UnitClass
 local UnitDebuff = UnitDebuff
@@ -175,12 +178,15 @@ local function GetUnitFullName(unit)
 end
 local function UnitInCheckedRange(unit)
 	local inRange, checkedRange = UnitInRange(unit)
-	--print("RANGE_CHK UnitInRange:", inRange, checkedRange, "#", unit)
-	if checkedRange then
-		return inRange
-	else
+	--print("RANGE_CHK UnitInRange:", inRange, checkedRange, "#", unit, "#", UnitInRange(unit))
+	if inRange and checkedRange then
 		return true
 	end
+	--if checkedRange then
+	--	return inRange
+	--else
+	--	return true
+	--end
 end
 
 --[[ TEST
@@ -274,16 +280,16 @@ local assistFrequency = 1          -- FORCE_UPDATE          | assist_         : 
 local targetCountFrequency = 10    -- FORCE_UPDATE          | targetcount_    :     forced update frequency in seconds            - complete raid check
 local pvptrinketFrequency = 0.95   -- FORCE_UPDATE          | pvp_trinket_    :     forced update frequency in seconds
 
-local scoreLastUpdate = GetTime()  -- WARNING  | scoreupdate: B.attlefieldScoreUpdate()
+local scoreLastUpdate = GetTime()  -- WARNING  | scoreupdate: BattlefieldScoreUpdate()
 local scoreWarning = 60            -- WARNING  | scoreupdate: inCombat-score-warning-icon
 local scoreFrequency = 1           -- THROTTLE | scoreupdate:               1 second |                2 seconds |              5 seconds
-local scoreCount = 0               -- THROTTLE | scoreupdate: 0-10 updates: 1 second | 11-50 updates: 2 seconds | 51+ updates: 5 seconds
+local scoreCount = 0               -- THROTTLE | scoreupdate: 0-30 updates: 1 second | 31-60 updates: 2 seconds | 61+ updates: 5 seconds
 
 local playerName = GetUnitFullName("player")
 local _, playerClassEN = UnitClass("player")
 local playerLevel = UnitLevel("player") -- LVLCHK
-local isLowLevel
-local maxLevel = 100
+local maxLevel = GetMaxPlayerLevel()
+local isLowLevel = nil
 
 local playerTargetName
 local playerFocusName
@@ -347,6 +353,7 @@ end
 local SPELL_Range = {} -- key = spellId | value = maxRange
 
 local currentSize = 10
+local currentBGMap = nil
 local testSize = 10
 local testData = {
 	Loaded = nil,            -- testData.Loaded
@@ -376,24 +383,25 @@ for frc = 1, #FRAMES do
 	}
 end
 
+local mapID = {}
 local bgMaps = {}
 local bgInfo = {[10]={},[15]={},[40]={}}
 local function BuildBattlegroundMapTable()
 	for i = 1, GetNumBattlegroundTypes() do
 		local localizedName, _, _, _, bgID, _, _, _, gameType, icon = GetBattlegroundInfo(i)
 		--print(localizedName, bgID, gameType, icon, i, "#", GetBattlegroundInfo(i))
-		    if bgID ==   1 then bgInfo[40][1] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = gameType, icon = icon} -- Alterac Valley
-		elseif bgID ==   2 then bgInfo[10][1] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 1, gameType = gameType, icon = icon} -- Warsong Gulch
-		elseif bgID ==   3 then bgInfo[15][1] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0, gameType = gameType, icon = icon} -- Arathi Basin
-		elseif bgID ==   7 then bgInfo[15][2] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 2, gameType = gameType, icon = icon} -- Eye of the Storm
-		elseif bgID ==   9 then bgInfo[15][3] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0, gameType = gameType, icon = icon} -- Strand of the Ancients
-		elseif bgID ==  30 then bgInfo[40][2] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = gameType, icon = icon} -- Isle of Conquest
-		elseif bgID == 108 then bgInfo[10][2] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 3, gameType = gameType, icon = icon} -- Twin Peaks
-		elseif bgID == 120 then bgInfo[10][3] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0, gameType = gameType, icon = icon} -- The Battle for Gilneas
-		elseif bgID == 699 then bgInfo[10][4] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 5, gameType = gameType, icon = icon} -- Temple of Kotmogu
-		elseif bgID == 708 then bgInfo[10][5] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0, gameType = gameType, icon = icon} -- Silvershard Mines
-		elseif bgID == 754 then bgInfo[15][4] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 4, gameType = gameType, icon = icon} -- Deepwind Gorge
-		elseif bgID == 789 then bgInfo[40][3] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = "-"     , icon = "Interface\\PVPFrame\\RandomPVPIcon"} -- Southshore vs Tarren Mill -- DEFAULT_BG_TEXTURE Blizzard_PVPUI.lua
+		    if bgID ==   1 then mapID[401] = localizedName bgInfo[40][1] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = gameType, icon = icon} -- Alterac Valley
+		elseif bgID ==   2 then mapID[443] = localizedName bgInfo[10][1] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 1, gameType = gameType, icon = icon} -- Warsong Gulch
+		elseif bgID ==   3 then mapID[461] = localizedName bgInfo[15][1] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0, gameType = gameType, icon = icon} -- Arathi Basin
+		elseif bgID ==   7 then mapID[482] = localizedName bgInfo[15][2] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 2, gameType = gameType, icon = icon} -- Eye of the Storm
+		elseif bgID ==   9 then mapID[512] = localizedName bgInfo[15][3] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0, gameType = gameType, icon = icon} -- Strand of the Ancients
+		elseif bgID ==  30 then mapID[540] = localizedName bgInfo[40][2] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = gameType, icon = icon} -- Isle of Conquest
+		elseif bgID == 108 then mapID[626] = localizedName bgInfo[10][2] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 3, gameType = gameType, icon = icon} -- Twin Peaks
+		elseif bgID == 120 then mapID[736] = localizedName bgInfo[10][3] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0, gameType = gameType, icon = icon} -- The Battle for Gilneas
+		elseif bgID == 699 then mapID[856] = localizedName bgInfo[10][4] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 5, gameType = gameType, icon = icon} -- Temple of Kotmogu
+		elseif bgID == 708 then mapID[860] = localizedName bgInfo[10][5] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0, gameType = gameType, icon = icon} -- Silvershard Mines
+		elseif bgID == 754 then mapID[935] = localizedName bgInfo[15][4] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 4, gameType = gameType, icon = icon} -- Deepwind Gorge
+		elseif bgID == 789 then                            bgInfo[40][3] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = "-"     , icon = "Interface\\PVPFrame\\RandomPVPIcon"} -- Southshore vs Tarren Mill -- DEFAULT_BG_TEXTURE Blizzard_PVPUI.lua
 		end
 	end
 end
@@ -586,37 +594,37 @@ local class_IntegerSort = { -- .cid .blizz .eng .loc
 
 local ranges = {
 	Friend = {
-		DEATHKNIGHT =  61999, -- Raise Ally        (  0 - 40yd/m) - Lvl 72 DKN72
-		DRUID       =    774, -- Rejuvenation      (  0 - 40yd/m) - Lvl  4
-		HUNTER      =  34477, -- Misdirection      (  0 -100yd/m) - Lvl 42 HUN42 -- no_def_range
-		MAGE        =    475, -- Remove Curse      (  0 - 40yd/m) - Lvl 29 MAG29
-		MONK        = 115178, -- Resuscitate       (  0 - 40yd/m) - Lvl 18 MON18
-		PALADIN     =  85673, -- Word of Glory     (  0 - 40yd/m) - Lvl  9
-		PRIEST      =   2061, -- Flash Heal        (  0 - 40yd/m) - Lvl  7
-		ROGUE       =      1, --                   (  ? - ??yd/m) - Lvl  ? TODO ROGXX -- no_def_range
-		SHAMAN      =   8004, -- Healing Surge     (  0 - 40yd/m) - Lvl  7
-		WARLOCK     =  20707, -- Soulstone         (  0 - 40yd/m) - Lvl 18 WLK18
-		WARRIOR     =   3411, -- Intervene         (  0 -100yd/m) - Lvl 72 WRR72 -- no_def_range
+		DEATHKNIGHT = {id =  61999, lvl =  72}, -- Raise Ally          (  0 - 40yd/m) - Lvl 72 DKN72
+		DRUID       = {id =    774, lvl =   4}, -- Rejuvenation        (  0 - 40yd/m) - Lvl  4
+		HUNTER      = {id =  34477, lvl =  42}, -- Misdirection        (  0 -100yd/m) - Lvl 42 HUN42 -- no_def_range
+		MAGE        = {id =    475, lvl =  29}, -- Remove Curse        (  0 - 40yd/m) - Lvl 29 MAG29
+		MONK        = {id = 115178, lvl =  18}, -- Resuscitate         (  0 - 40yd/m) - Lvl 18 MON18
+		PALADIN     = {id =  85673, lvl =   9}, -- Word of Glory       (  0 - 40yd/m) - Lvl  9
+		PRIEST      = {id =   2061, lvl =   7}, -- Flash Heal          (  0 - 40yd/m) - Lvl  7
+		ROGUE       = {id =  57934, lvl =  78}, -- Tricks of the Trade (  0 -100yd/m) - Lvl 78 ROG78 -- no_def_range
+		SHAMAN      = {id =   8004, lvl =   7}, -- Healing Surge       (  0 - 40yd/m) - Lvl  7
+		WARLOCK     = {id =  20707, lvl =  18}, -- Soulstone           (  0 - 40yd/m) - Lvl 18 WLK18
+		WARRIOR     = {id =   3411, lvl =  72}, -- Intervene           (  0 -100yd/m) - Lvl 72 WRR72 -- no_def_range
 	},
 	Enemy = {
-		DEATHKNIGHT =  47541, -- Death Coil        (  0 - 40yd/m) - Lvl 55
-		DRUID       =   5176, -- Wrath             (  0 - 40yd/m) - Lvl  1
-		HUNTER      =     75, -- Auto Shot         (  0 - 40yd/m) - Lvl  1
-		MAGE        =  44614, -- Frostfire Bolt    (  0 - 40yd/m) - Lvl  1
-		MONK        = 115546, -- Provoke           (  0 - 40yd/m) - Lvl 14 MON14
-		PALADIN     =  20271, -- Judgment          (  0 - 30yd/m) - Lvl  3
-		PRIEST      =    589, -- Shadow Word: Pain (  0 - 40yd/m) - Lvl  4
-		ROGUE       =   6770, -- Sap               (  0 - 10yd/m) - Lvl 12 ROG12
-		SHAMAN      =    403, -- Lightning Bolt    (  0 - 30yd/m) - Lvl  1
-		WARLOCK     =    686, -- Shadow Bolt       (  0 - 40yd/m) - Lvl  1
-		WARRIOR     =    100, -- Charge            (  8 - 25yd/m) - Lvl  3
+		DEATHKNIGHT = {id =  47541, lvl =  55}, -- Death Coil          (  0 - 40yd/m) - Lvl 55
+		DRUID       = {id =   5176, lvl =   1}, -- Wrath               (  0 - 40yd/m) - Lvl  1
+		HUNTER      = {id =     75, lvl =   1}, -- Auto Shot           (  0 - 40yd/m) - Lvl  1
+		MAGE        = {id =  44614, lvl =   1}, -- Frostfire Bolt      (  0 - 40yd/m) - Lvl  1
+		MONK        = {id = 115546, lvl =  14}, -- Provoke             (  0 - 40yd/m) - Lvl 14 MON14
+		PALADIN     = {id =  20271, lvl =   3}, -- Judgment            (  0 - 30yd/m) - Lvl  3
+		PRIEST      = {id =    589, lvl =   4}, -- Shadow Word: Pain   (  0 - 40yd/m) - Lvl  4
+		ROGUE       = {id =   6770, lvl =  12}, -- Sap                 (  0 - 10yd/m) - Lvl 12 ROG12
+		SHAMAN      = {id =    403, lvl =   1}, -- Lightning Bolt      (  0 - 30yd/m) - Lvl  1
+		WARLOCK     = {id =    686, lvl =   1}, -- Shadow Bolt         (  0 - 40yd/m) - Lvl  1
+		WARRIOR     = {id =    100, lvl =   3}, -- Charge              (  8 - 25yd/m) - Lvl  3
 	}
 }
 --[[
 for k1, v1 in pairs(ranges) do
 	for k2, v2 in pairs(v1) do
-		local name, _, _, _, min, max = GetSpellInfo(v2)
-		print(k1, k2, v2, "#", name, min, max, IsSpellKnown(v2), "#", GetSpellInfo(v2))
+		local name, _, _, _, min, max = GetSpellInfo(v2.id)
+		print(k1, k2, "#", "id:", v2.id, "lvl:", v2.lvl, "#", name, min, max, "#", IsSpellKnown(v2.id), "#", GetSpellInfo(v2.id))
 	end
 end
 --]]
@@ -1007,7 +1015,7 @@ end
 
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:CreateInterfaceOptions()
-	GVAR.InterfaceOptions = CreateFrame("Frame", nil)--TODO check "BattlegroundTargets_InterfaceOptions")
+	GVAR.InterfaceOptions = CreateFrame("Frame", nil)
 	GVAR.InterfaceOptions.name = "BattlegroundTargets"
 
 	GVAR.InterfaceOptions.Title = GVAR.InterfaceOptions:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
@@ -1047,7 +1055,7 @@ function BattlegroundTargets:CreateFrames()
 		local buttonname = side.."Button"    -- FriendButton    / EnemyButton
 
 		-- main frame
- 		GVAR[framename] = CreateFrame("Frame", "BattlegroundTargets_"..framename, UIParent)
+		GVAR[framename] = CreateFrame("Frame", "BattlegroundTargets_"..framename, UIParent)
 		GVAR[framename]:EnableMouse(true)
 		GVAR[framename]:SetMovable(true)
 		GVAR[framename]:SetResizable(true)
@@ -1057,6 +1065,13 @@ function BattlegroundTargets:CreateFrames()
 		GVAR[framename]:SetHeight(0.001)
 		GVAR[framename]:Hide()
 		-- main frame
+
+		-- create global_OnUpdate
+		GVAR[side.."ScreenShot_Timer_Button"] = CreateFrame("Button", nil, GVAR[framename])
+		GVAR[side.."Target_Timer_Button"] = CreateFrame("Button", nil, GVAR[framename])
+		GVAR[side.."PVPTrinket_Timer_Button"] = CreateFrame("Button", nil, GVAR[framename])
+		GVAR[side.."RangeCheck_Timer_Button"] = CreateFrame("Button", nil, GVAR[framename])
+		-- create global_OnUpdate
 
 		-- create button
 		GVAR[buttonname] = {}
@@ -1157,7 +1172,7 @@ function BattlegroundTargets:CreateFrames()
 
 	-- button
 	BattlegroundTargets.targetCountTimer = 0 -- _TIMER_
-	BattlegroundTargets.pvptrinketTimer = 0 -- _TIMER_
+	BattlegroundTargets.pvptrinketTimer = 0 -- _TIMER_ -- pvp_trinket_
 	for frc = 1, #FRAMES do
 		local side = FRAMES[frc]
 		local buttonname = GVAR[side.."Button"]
@@ -3884,8 +3899,8 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 		end
 
 		if bracketSize == 40 then
- 			GVAR.OptionsFrame.CopySettings1:Hide()
- 			TEMPLATE.EnableTextButton(GVAR.OptionsFrame.CopySettings2)
+			GVAR.OptionsFrame.CopySettings1:Hide()
+			TEMPLATE.EnableTextButton(GVAR.OptionsFrame.CopySettings2)
 		else
 			GVAR.OptionsFrame.CopySettings1:Show()
 			GVAR.OptionsFrame.CopySettings2:Show()
@@ -4013,7 +4028,7 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryPosition)
 
 		if bracketSize == 40 then
- 			GVAR.OptionsFrame.CopySettings1:Hide()
+			GVAR.OptionsFrame.CopySettings1:Hide()
 			TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings2)
 		else
 			GVAR.OptionsFrame.CopySettings1:Show()
@@ -4960,40 +4975,35 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:RangeInfoText(buttonTxt)
 	local rangeInfoTxt = ""
-
 	for frc = 1, #FRAMES do
 		local side = FRAMES[frc]
-
 		local minRange, maxRange
-		if ranges[side][playerClassEN] then
-			local _, _, _, _, minR, maxR = GetSpellInfo(ranges[side][playerClassEN])
+		local rangeSpellCLASS = ranges[side][playerClassEN]
+		if rangeSpellCLASS then
+			local _, _, _, _, minR, maxR = GetSpellInfo(rangeSpellCLASS.id)
 			minRange = minR
 			maxRange = maxR
 		end
-		minRange = minRange or "?"
-		maxRange = maxRange or "?"
-
-  	rangeInfoTxt = rangeInfoTxt.."   "..L[side].."\n\n"
+		minRange = minRange or 0
+		maxRange = maxRange or 0
+		rangeInfoTxt = rangeInfoTxt.."   "..L[side].."\n\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog:|r 40 - max: |cffffff790-"..(40+maxRange).." (40+"..maxRange..")|r\n\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["Class"]..":|r\n"
 		table_sort(class_IntegerSort, function(a, b) return a.loc < b.loc end)
-		local playerMClass = "?"
 		for i = 1, #class_IntegerSort do
 			local classEN = class_IntegerSort[i].cid
-			local name, _, _, _, minRange, maxRange = GetSpellInfo(ranges[side][classEN])
-			local classStr = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or L["Unknown"]).."|r   |cffbbbbbb(spell ID = "..ranges[side][classEN]..")|r"
+			local rangeSpellId = ranges[side][classEN].id
+			local rangeSpellLvl = ranges[side][classEN].lvl
+			local name, _, _, _, minRange, maxRange = GetSpellInfo(rangeSpellId)
+			local txtStr = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r   "..(minRange or "?").."-"..(maxRange or "?").."   |cffffffff"..(name or L["Unknown"]).."|r   |cffbbbbbb(spell ID = "..rangeSpellId..", level = "..rangeSpellLvl..")|r"
 			if classEN == playerClassEN then
-				playerMClass = "|cff"..classcolors[classEN].colorStr..class_IntegerSort[i].loc.."|r"
-				rangeInfoTxt = rangeInfoTxt..">>> "..classStr.." <<<"
+				rangeInfoTxt = rangeInfoTxt..">>> "..txtStr.." <<<\n"
 			else
-				rangeInfoTxt = rangeInfoTxt.."     "..classStr
+				rangeInfoTxt = rangeInfoTxt.."     "..txtStr.."\n"
 			end
-			rangeInfoTxt = rangeInfoTxt.."\n"
 		end
 		rangeInfoTxt = rangeInfoTxt.."\n"
-
 	end
-
 	buttonTxt:SetText(rangeInfoTxt)
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -5312,7 +5322,7 @@ function BattlegroundTargets:EnableConfigMode()
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 
 	if not testData.Loaded then
- 		for frc = 1, #FRAMES do
+		for frc = 1, #FRAMES do
 			local side = FRAMES[frc]
 
 			DATA[side].MainData[1]  = {name = L["Target"].."_Aa-servername", classToken = "DRUID",       talentSpec = classes["DRUID"      ].spec[3].specName}
@@ -5451,11 +5461,14 @@ function BattlegroundTargets:EnableConfigMode()
 	end
 
 	-- delete global_OnUpdate
-	if GVAR.FriendMainFrame then GVAR.FriendMainFrame:SetScript("OnUpdate", nil) end
-	if GVAR.EnemyMainFrame then GVAR.EnemyMainFrame:SetScript("OnUpdate", nil) end
-	if GVAR.RangeCheck_Timer_Button then GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", nil) end
-	if GVAR.PVPTrinket_Timer_Button then GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", nil) end
-	if GVAR.Target_Timer_Button then GVAR.Target_Timer_Button:SetScript("OnUpdate", nil) end
+	for frc = 1, #FRAMES do
+		local side = FRAMES[frc]
+		GVAR[side.."MainFrame"]:SetScript("OnUpdate", nil)
+		GVAR[side.."ScreenShot_Timer_Button"]:SetScript("OnUpdate", nil)
+		GVAR[side.."Target_Timer_Button"]:SetScript("OnUpdate", nil)
+		GVAR[side.."PVPTrinket_Timer_Button"]:SetScript("OnUpdate", nil)
+		GVAR[side.."RangeCheck_Timer_Button"]:SetScript("OnUpdate", nil)
+	end
 
 	if BattlegroundTargets_Options.Friend.EnableBracket[currentSize] or BattlegroundTargets_Options.Enemy.EnableBracket[currentSize] then
 		BattlegroundTargets:SetOptions(fraction)
@@ -6589,9 +6602,9 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	local curTime = GetTime()
 	local diff = curTime - scoreLastUpdate
 	if diff < scoreFrequency then return end
-	if scoreCount > 50 then
+	if scoreCount > 60 then
 		scoreFrequency = 5
-	elseif scoreCount > 10 then
+	elseif scoreCount > 30 then
 		scoreFrequency = 2
 		scoreCount = scoreCount + 1
 	else
@@ -6793,26 +6806,8 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	end
 
 	if reSizeCheck >= 10 then return end
-
-	local queueStatus, queueMapName, bgName
-	for i=1, GetMaxBattlefieldID() do
-		queueStatus, queueMapName = GetBattlefieldStatus(i)
-		if queueStatus == "active" then
-			bgName = queueMapName
-			break
-		end
-	end
-
-	if bgMaps[bgName] then
-		BattlegroundTargets:BattlefieldCheck()
-	else
-		local zone = GetRealZoneText()
-		if bgMaps[zone] then
-			BattlegroundTargets:BattlefieldCheck()
-		else
-			reSizeCheck = reSizeCheck + 1
-		end
-	end
+	reSizeCheck = reSizeCheck + 1
+	BattlegroundTargets:BattlefieldCheck()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -6834,35 +6829,58 @@ function BattlegroundTargets:IsBattleground()
 
 	inBattleground = true
 
-	local queueStatus, queueMapName, bgName
-	for i=1, GetMaxBattlefieldID() do
-		queueStatus, queueMapName = GetBattlefieldStatus(i)
-		--print(i, queueStatus, queueMapName, "#", GetBattlefieldStatus(i))
-		if queueStatus == "active" then
-			bgName = queueMapName
-			break
+	-- Battleground name BEGIN ----------
+	local bgName, zoneName, mapName
+	if not currentBGMap then
+		local queueStatus, queueMapName
+		for i = 1, GetMaxBattlefieldID() do
+			local queueStatus, queueMapName = GetBattlefieldStatus(i)
+			--print(i, queueStatus, queueMapName, "#", GetBattlefieldStatus(i))
+			if queueStatus == "active" then
+				bgName = queueMapName
+				break
+			end
+		end
+		if bgMaps[bgName] then
+			currentBGMap = bgName
+			--print("currentBGMap1", bgName)
 		end
 	end
 
-	if bgMaps[bgName] then
-		reSizeCheck = 10
-		currentSize = bgMaps[bgName].bgSize
-		isFlagBG = bgMaps[bgName].flagBG
-	else
-		local zone = GetRealZoneText()
-		if bgMaps[zone] then
-			reSizeCheck = 10
-			currentSize = bgMaps[zone].bgSize
-			isFlagBG = bgMaps[zone].flagBG
-		else
-			if reSizeCheck == 10 then
-				Print("ERROR", "unknown battleground name", locale, bgName, zone)
-			end
-			reSizeCheck = reSizeCheck + 1
-			currentSize = 10
-			isFlagBG = 0
+	if not currentBGMap then
+		zoneName = GetRealZoneText()
+		if bgMaps[zoneName] then
+			currentBGMap = zoneName
+			--print("currentBGMap2", zoneName)
 		end
 	end
+
+	if not currentBGMap then
+		local wmf = WorldMapFrame
+		if wmf and not wmf:IsShown() then
+			SetMapToCurrentZone()
+			local mapId = GetCurrentMapAreaID()
+			mapName = mapID[mapId]
+			if bgMaps[mapName] then
+				currentBGMap = mapName
+				--print("currentBGMap3", mapName)
+			end
+		end
+	end
+
+	if currentBGMap then
+		reSizeCheck = 10
+		currentSize = bgMaps[ currentBGMap ].bgSize
+		isFlagBG = bgMaps[ currentBGMap ].flagBG
+	else
+		if reSizeCheck == 10 then
+			Print("ERROR", "unknown battleground name", locale, currentBGMap, "#", "bgName:", bgName, "zoneName:", zoneName, "mapName:", mapName)
+		end
+		reSizeCheck = reSizeCheck + 1
+		currentSize = 10
+		isFlagBG = 0
+	end
+	-- Battleground name END ----------
 
 	if IsRatedBattleground() then
 		currentSize = 10
@@ -6948,11 +6966,14 @@ function BattlegroundTargets:IsBattleground()
 		-- --------------------------------------------------------
 
 		-- delete global_OnUpdate
-		if GVAR.FriendMainFrame then GVAR.FriendMainFrame:SetScript("OnUpdate", nil) end
-		if GVAR.EnemyMainFrame then GVAR.EnemyMainFrame:SetScript("OnUpdate", nil) end
-		if GVAR.RangeCheck_Timer_Button then GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", nil) end
-		if GVAR.PVPTrinket_Timer_Button then GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", nil) end
-		if GVAR.Target_Timer_Button then GVAR.Target_Timer_Button:SetScript("OnUpdate", nil) end
+		for frc = 1, #FRAMES do
+			local side = FRAMES[frc]
+			GVAR[side.."MainFrame"]:SetScript("OnUpdate", nil)
+			GVAR[side.."ScreenShot_Timer_Button"]:SetScript("OnUpdate", nil)
+			GVAR[side.."Target_Timer_Button"]:SetScript("OnUpdate", nil)
+			GVAR[side.."PVPTrinket_Timer_Button"]:SetScript("OnUpdate", nil)
+			GVAR[side.."RangeCheck_Timer_Button"]:SetScript("OnUpdate", nil)
+		end
 
 		-- set global_OnUpdate BEGIN -----------------------------------
 		local side
@@ -6978,10 +6999,10 @@ function BattlegroundTargets:IsBattleground()
 		--[[ -- screenshot_ BEGIN TEST TODO --
 		if side then -- singleside
 			local elapsed = 0
-			GVAR.ScreenShot_Timer_Button = CreateFrame("Button", nil, GVAR[side.."MainFrame"])
-			GVAR.ScreenShot_Timer_Button:SetScript("OnUpdate", function(self, elap)
+			GVAR[side.."ScreenShot_Timer_Button"]:SetScript("OnUpdate", function(self, elap)
 				elapsed = elapsed + elap
 				if elapsed > 5 then
+					if not inBattleground then return end
 					if isConfig then return end
 					--if inCombat then return end
 					elapsed = 0
@@ -6999,8 +7020,7 @@ function BattlegroundTargets:IsBattleground()
 			   BattlegroundTargets_Options.Enemy.ButtonTargetofTarget[currentSize]
 			then
 				local elapsed = 0
-				GVAR.Target_Timer_Button = CreateFrame("Button", nil, GVAR[side.."MainFrame"])
-				GVAR.Target_Timer_Button:SetScript("OnUpdate", function(self, elap)
+				GVAR[side.."Target_Timer_Button"]:SetScript("OnUpdate", function(self, elap)
 					elapsed = elapsed + elap
 					if elapsed < targetFrequency then return end
 					elapsed = 0
@@ -7016,8 +7036,7 @@ function BattlegroundTargets:IsBattleground()
 			   BattlegroundTargets_Options.Enemy.ButtonPvPTrinketToggle[currentSize]
 			then
 				local elapsed = 0
-				GVAR.PVPTrinket_Timer_Button = CreateFrame("Button", nil, GVAR[side.."MainFrame"])
-				GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", function(self, elap)
+				GVAR[side.."PVPTrinket_Timer_Button"]:SetScript("OnUpdate", function(self, elap)
 					elapsed = elapsed + elap
 					if elapsed < pvptrinketFrequency then return end
 					elapsed = 0
@@ -7033,8 +7052,7 @@ function BattlegroundTargets:IsBattleground()
 
 		if Friend_ButtonRangeCheck and Enemy_ButtonRangeCheck then
 			local elapsed = 0
-			GVAR.RangeCheck_Timer_Button = CreateFrame("Button", nil, GVAR.FriendMainFrame)
-			GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", function(self, elap)
+			GVAR.EnemyRangeCheck_Timer_Button:SetScript("OnUpdate", function(self, elap)
 				elapsed = elapsed + elap
 				if elapsed > rangeFrequency then
 					elapsed = 0
@@ -7051,8 +7069,7 @@ function BattlegroundTargets:IsBattleground()
 		elseif Friend_ButtonRangeCheck then
 
 			local elapsed = 0
-			GVAR.RangeCheck_Timer_Button = CreateFrame("Button", nil, GVAR.FriendMainFrame)
-			GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", function(self, elap)
+			GVAR.FriendRangeCheck_Timer_Button:SetScript("OnUpdate", function(self, elap)
 				elapsed = elapsed + elap
 				if elapsed > rangeFrequency then
 					elapsed = 0
@@ -7068,8 +7085,7 @@ function BattlegroundTargets:IsBattleground()
 		elseif Enemy_ButtonRangeCheck then
 
 			local elapsed = 0
-			GVAR.RangeCheck_Timer_Button = CreateFrame("Button", nil, GVAR.EnemyMainFrame)
-			GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", function(self, elap)
+			GVAR.EnemyRangeCheck_Timer_Button:SetScript("OnUpdate", function(self, elap)
 				elapsed = elapsed + elap
 				if elapsed > rangeFrequency then
 					elapsed = 0
@@ -7102,6 +7118,8 @@ function BattlegroundTargets:IsNotBattleground()
 
 	reCheckBG = nil
 	reCheckScore = nil
+
+	currentBGMap = nil
 	reSizeCheck = 0
 
 	oppositeFactionREAL = nil
@@ -7176,11 +7194,14 @@ function BattlegroundTargets:IsNotBattleground()
 		end
 
 		-- delete global_OnUpdate
-		if GVAR.FriendMainFrame then GVAR.FriendMainFrame:SetScript("OnUpdate", nil) end
-		if GVAR.EnemyMainFrame then GVAR.EnemyMainFrame:SetScript("OnUpdate", nil) end
-		if GVAR.RangeCheck_Timer_Button then GVAR.RangeCheck_Timer_Button:SetScript("OnUpdate", nil) end
-		if GVAR.PVPTrinket_Timer_Button then GVAR.PVPTrinket_Timer_Button:SetScript("OnUpdate", nil) end
-		if GVAR.Target_Timer_Button then GVAR.Target_Timer_Button:SetScript("OnUpdate", nil) end
+		for frc = 1, #FRAMES do
+			local side = FRAMES[frc]
+			GVAR[side.."MainFrame"]:SetScript("OnUpdate", nil)
+			GVAR[side.."ScreenShot_Timer_Button"]:SetScript("OnUpdate", nil)
+			GVAR[side.."Target_Timer_Button"]:SetScript("OnUpdate", nil)
+			GVAR[side.."PVPTrinket_Timer_Button"]:SetScript("OnUpdate", nil)
+			GVAR[side.."RangeCheck_Timer_Button"]:SetScript("OnUpdate", nil)
+		end
 
 		GVAR.FriendMainFrame:Hide()
 		GVAR.EnemyMainFrame:Hide()
@@ -7226,7 +7247,6 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:GroupUnitIDUpdate()
 	wipe(DATA.Friend.Name2UnitID)
-	local doUpdate
 	local numMembers = GetNumGroupMembers()
 	local verified = 0
 
@@ -8116,7 +8136,7 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 	if isFlagBG >= 1 and isFlagBG <= 4 then--if isFlagBG == 1 or isFlagBG == 2 or isFlagBG == 3 or isFlagBG == 4 then
 
 		-- friend buff & debuff check
-		do
+		local function chk()
 			for num = 1, GetNumGroupMembers() do
 				local unitID = "raid"..num
 				for i = 1, 40 do
@@ -8152,11 +8172,12 @@ function BattlegroundTargets:CheckFlagCarrierSTART() -- FLAGSPY
 						end
 						-- ----------
 
-						return--do
+						return
 					end
 				end
 			end
 		end
+		chk()
 
 	elseif isFlagBG == 5 then
 
@@ -8867,26 +8888,35 @@ end
 
 
 -- ---------------------------------------------------------------------------------------------------------------------
-local function clrc_set(button, name, distance)
-	DATA.Enemy.Name2Range[name] = distance
-	BattlegroundTargets:Range_Display(true, button, DATA.Enemy.Name2Range[name])
+local function range_check(side, unitID)
+	if DATA[side].rangeSpellName then
+		if IsSpellInRange(DATA[side].rangeSpellName, unitID) == 1 then
+			return DATA[side].rangeMax
+		end
+	else
+		if UnitInCheckedRange(unitID) then
+			return 40 -- inDefaultRange
+		elseif CheckInteractDistance(unitID, 3) then -- 3: Duel = 9.9 -- ?11/35? TODO_CHK
+			return 10
+		elseif CheckInteractDistance(unitID, 1) then -- 1: Inspect = 28 -- ?11/35? TODO_CHK
+			return 28
+		end
+	end
+	return false
 end
 
-local function clrc_idcheck(button, name)
-	for tcnSourceName, tcnTargetName in pairs(DATA.TargetCountNames) do -- search target count for source name
-		if name == tcnTargetName then--and DATA.Friend.Name2Button[tcnSourceName] then
-			local targetID = DATA.TargetCountTargetID[tcnSourceName]
-			if targetID then
-				if CheckInteractDistance(targetID, 3) then -- 3: Duel = 9.9 -- ?11/35? TODO_CHK
-					clrc_set(button, name, 10)
-					return true
-				elseif CheckInteractDistance(targetID, 1) then -- 1: Inspect = 28 -- ?11/35? TODO_CHK
-					clrc_set(button, name, 28)
-					return true
-				elseif IsSpellInRange(DATA.Enemy.rangeSpellName, targetID) == 1 then
-					clrc_set(button, name, DATA.Enemy.rangeMax)
-					return true
-				end
+local function clrc_idcheck(button, name) -- name is always enemy
+	for tcnSourceName, tcnTargetName in pairs(DATA.TargetCountNames) do -- TC_DEFDEL_same -- search target count for source name
+		if name == tcnTargetName then
+			local targetID = DATA.TargetCountTargetID[tcnSourceName] -- TC_DEFDEL_same -- target id is never nil
+			local isRange = range_check("Enemy", targetID)
+			if isRange then
+				DATA.Enemy.Name2Range[name] = isRange
+				BattlegroundTargets:Range_Display(true, button, isRange)
+				return true
+			else
+				DATA.Enemy.Name2Range[name] = nil
+				BattlegroundTargets:Range_Display(false, button, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
 			end
 			return false
 		end
@@ -8908,17 +8938,18 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 
 	local sourceButton = GVAR.EnemyButton[ DATA.Enemy.Name2Button[sourceName] ]
 	-- source is enemy ----------------------------------------
+
 	do if sourceButton then
 
 		if DATA.Enemy.Name2Percent[sourceName] == 0 then
 			DATA.Enemy.Name2Range[sourceName] = nil
 			BattlegroundTargets:Range_Display(false, sourceButton, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
-			return--do
+			return--TODO
 		end
 
 		local curTime = GetTime()
 		if curTime < sourceButton.rangeTimer + rangeFrequency then
-			return--do
+			return--TODO
 		end
 
 		--[[ _TIMER_
@@ -8947,16 +8978,19 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 			isMatch = true
 			local is = clrc_idcheck(sourceButton, sourceName)
 			if is then
-				return--do
+				return--TODO
 			end
 			local friendID = DATA.Friend.Name2UnitID[destName]
-			if friendID and SPELL_Range[spellId] <= 40 and IsSpellInRange(DATA.Friend.rangeSpellName, friendID) == 1 then -- inDefaultRange +
-				DATA.Enemy.Name2Range[sourceName] = SPELL_Range[spellId] + DATA.Friend.rangeMax
-				BattlegroundTargets:Range_Display(true, sourceButton, DATA.Enemy.Name2Range[sourceName])
-			else
-				DATA.Enemy.Name2Range[sourceName] = nil
-				BattlegroundTargets:Range_Display(false, sourceButton, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
+			if friendID and SPELL_Range[spellId] <= 40 then -- inDefaultRange +
+				local isRange = range_check("Friend", friendID)
+				if isRange then
+					DATA.Enemy.Name2Range[sourceName] = SPELL_Range[spellId] + isRange
+					BattlegroundTargets:Range_Display(true, sourceButton, DATA.Enemy.Name2Range[sourceName])
+					return--TODO
+				end
 			end
+			DATA.Enemy.Name2Range[sourceName] = nil
+			BattlegroundTargets:Range_Display(false, sourceButton, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
 		-- --------------------------------------------- END
 
 		-- --------------------------------------------- BEGIN
@@ -9026,7 +9060,6 @@ function BattlegroundTargets:CheckClassRange(side, button, unitID, unitName, cal
 		return
 	end
 
-	if not DATA[side].rangeSpellName then return end
 	if unitName == playerName then return end
 
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
@@ -9039,21 +9072,14 @@ function BattlegroundTargets:CheckClassRange(side, button, unitID, unitName, cal
 
 	button.rangeTimer = curTime
 
-	if IsSpellInRange(DATA[side].rangeSpellName, unitID) == 1 then
-		DATA[side].Name2Range[unitName] = DATA[side].rangeMax
-		BattlegroundTargets:Range_Display(true, button, DATA[side].Name2Range[unitName])
-		return
+	local isRange = range_check(side, unitID)
+	if isRange then
+		DATA[side].Name2Range[unitName] = isRange
+		BattlegroundTargets:Range_Display(true, button, isRange)
+	else
+		DATA[side].Name2Range[unitName] = nil
+		BattlegroundTargets:Range_Display(false, button, nil, BattlegroundTargets_Options[side].ButtonRangeDisplay[currentSize])
 	end
-	if DATA.Friend.rangeMax == 0 and side == "Friend" then -- ROGXX TODO
-		if UnitInCheckedRange(unitID) then
-			DATA.Friend.Name2Range[unitName] = 1
-			BattlegroundTargets:Range_Display(true, button, DATA.Friend.Name2Range[unitName])
-			return
-		end
-	end
-
-	DATA[side].Name2Range[unitName] = nil
-	BattlegroundTargets:Range_Display(false, button, nil, BattlegroundTargets_Options[side].ButtonRangeDisplay[currentSize])
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -9146,8 +9172,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.RoleTexture:SetAlpha(0.25)
 		button.SpecTexture:SetAlpha(0.25)
 		button.ClassTexture:SetAlpha(0.25)
- 	elseif display == 4 then -- STD 100 mono
- 		button.RangeTxt:SetText("")
+	elseif display == 4 then -- STD 100 mono
+		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(1)
 		button.TargetCountBackground:SetAlpha(1)
 		button.ClassColorBackground:SetAlpha(1)
@@ -9158,8 +9184,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.ClassTexture:SetAlpha(1)
 		button.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 		button.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
- 	elseif display == 5 then -- STD 50 mono
- 		button.RangeTxt:SetText("")
+	elseif display == 5 then -- STD 50 mono
+		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(0.5)
 		button.TargetCountBackground:SetAlpha(0.1)
 		button.ClassColorBackground:SetAlpha(0.5)
@@ -9192,8 +9218,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.RoleTexture:SetAlpha(0.25)
 		button.SpecTexture:SetAlpha(0.25)
 		button.ClassTexture:SetAlpha(0.25)
- 	elseif display == 8 then -- X 100 mono
- 		button.RangeTxt:SetText("")
+	elseif display == 8 then -- X 100 mono
+		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(1)
 		button.TargetCountBackground:SetAlpha(1)
 		button.ClassColorBackground:SetAlpha(1)
@@ -9204,8 +9230,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.ClassTexture:SetAlpha(1)
 		button.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
 		button.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
- 	elseif display == 9 then -- X 50 mono
- 		button.RangeTxt:SetText("")
+	elseif display == 9 then -- X 50 mono
+		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(0.5)
 		button.TargetCountBackground:SetAlpha(0.1)
 		button.ClassColorBackground:SetAlpha(0.5)
@@ -9468,103 +9494,45 @@ function BattlegroundTargets:EventRegister(showerror)
 		BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	end
 
---[[ TODO
-	DATA.Friend.rangeSpellName = nil
-	DATA.Friend.rangeMin = nil
-	DATA.Friend.rangeMax = nil
-	if BattlegroundTargets_Options.Friend.ButtonRangeCheck[currentSize] then
-
-		local rangeSpellNum = ranges.Friend[playerClassEN]
-		if rangeSpellNum then
-			local isKnown = IsSpellKnown(rangeSpellNum)
-			local SpellName, _, _, _, Min, Max = GetSpellInfo(rangeSpellNum)
-
-
-		else
-			if showerror then Print("ERROR", "unknown class (rangecheck)", locale, playerClassEN) end
-		end
-
-	end
---]]
-
-	-- class_range_ (Friend)
-	DATA.Friend.rangeSpellName = nil
-	DATA.Friend.rangeMin = nil
-	DATA.Friend.rangeMax = nil
-	if BattlegroundTargets_Options.Friend.ButtonRangeCheck[currentSize] then
-
-		if ranges.Friend[playerClassEN] then
-			if IsSpellKnown(ranges.Friend[playerClassEN]) then
-				local SpellName, _, _, _, Min, Max = GetSpellInfo(ranges.Friend[playerClassEN])
-				DATA.Friend.rangeSpellName = SpellName
-				DATA.Friend.rangeMin = Min
-				DATA.Friend.rangeMax = Max
-				if not DATA.Friend.rangeSpellName then
-					if showerror then Print("ERROR", "unknown spell name (rangecheck)", locale, playerClassEN, "spellID:", ranges.Friend[playerClassEN]) end
-				elseif (not DATA.Friend.rangeMin or not DATA.Friend.rangeMax) or (DATA.Friend.rangeMin <= 0 and DATA.Friend.rangeMax <= 0) and
-				       playerClassEN ~= "ROGUE" -- ROGXX TODO
-				then
-					if showerror then Print("ERROR", "spell min/max fail (rangecheck)", locale, DATA.Friend.rangeSpellName, DATA.Friend.rangeMin, DATA.Friend.rangeMax) end
-				else
+	-- class_range_
+	for frc = 1, #FRAMES do
+		local side = FRAMES[frc]
+		DATA[side].rangeSpellName = nil
+		DATA[side].rangeMin = nil
+		DATA[side].rangeMax = nil
+		if BattlegroundTargets_Options[side].ButtonRangeCheck[currentSize] then
+			local errortxt
+			local rangeSpellCLASS = ranges[side][playerClassEN]
+			if rangeSpellCLASS then
+				local rangeSpellID = rangeSpellCLASS.id
+				local isKnown = IsSpellKnown(rangeSpellID)
+				local SpellName, _, _, _, Min, Max = GetSpellInfo(rangeSpellID)
+				DATA[side].rangeSpellName = SpellName
+				DATA[side].rangeMin = Min
+				DATA[side].rangeMax = Max
+				if isKnown and SpellName and Min and Min >= 0 and Max and Max > 0 then
 					BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
 					BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 					BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
 					BattlegroundTargets:RegisterEvent("UNIT_TARGET")
+				else
+					local rangeSpellLEVEL = rangeSpellCLASS.lvl -- Friend: DKN72 HUN42 MAG29 MON18 ROG78 WLK18 WRR72 | Enemy: MON14 ROG12
+					if rangeSpellLEVEL > playerLevel then
+						errortxt = "WARNING rangecheck LEVEL - Level: "..rangeSpellLEVEL.." > "..(playerLevel or "0").." SpellID: "..(rangeSpellID or "-")
+					else
+						errortxt = "WARNING rangecheck UNKNOWN - SpellID: "..(rangeSpellID or "-")
+					end
 				end
-			elseif playerClassEN == "DEATHKNIGHT" and playerLevel < 72 then -- DKN72
-				if showerror then Print("WARNING", playerClassEN, "spellID:", ranges.Friend[playerClassEN], "Required level for class-spell based rangecheck is 72.") end
-			elseif playerClassEN == "HUNTER" and playerLevel < 42 then -- HUN42
-				if showerror then Print("WARNING", playerClassEN, "spellID:", ranges.Friend[playerClassEN], "Required level for class-spell based rangecheck is 42.") end
-			elseif playerClassEN == "MAGE" and playerLevel < 29 then -- MAG29
-				if showerror then Print("WARNING", playerClassEN, "spellID:", ranges.Friend[playerClassEN], "Required level for class-spell based rangecheck is 29.") end
-			elseif playerClassEN == "MONK" and playerLevel < 18 then -- MON18
-				if showerror then Print("WARNING", playerClassEN, "spellID:", ranges.Friend[playerClassEN], "Required level for class-spell based rangecheck is 18.") end
-			elseif playerClassEN == "WARLOCK" and playerLevel < 18 then -- WLK18
-				if showerror then Print("WARNING", playerClassEN, "spellID:", ranges.Friend[playerClassEN], "Required level for class-spell based rangecheck is 18.") end
-			elseif playerClassEN == "WARRIOR" and playerLevel < 72 then -- WRR72
-				if showerror then Print("WARNING", playerClassEN, "spellID:", ranges.Friend[playerClassEN], "Required level for class-spell based rangecheck is 72.") end
 			else
-				if showerror then Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "spellID:", ranges.Friend[playerClassEN]) end
+				errortxt = "ERROR rangecheck CLASS - Class: "..(playerClassEN or "-")
 			end
-		else
-			if showerror then Print("ERROR", "unknown class (rangecheck)", locale, playerClassEN) end
+			if errortxt and showerror then
+				Print(errortxt, locale, side, "SpellName:", DATA[side].rangeSpellName, "Min:", DATA[side].rangeMin, "Max:", DATA[side].rangeMax)
+			end
 		end
 	end
-
-	-- class_range_ (Enemy)
-	DATA.Enemy.rangeSpellName = nil
-	DATA.Enemy.rangeMin = nil
-	DATA.Enemy.rangeMax = nil
 	if BattlegroundTargets_Options.Enemy.ButtonRangeCheck[currentSize] then
-
 		BattlegroundTargets:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-
-		if ranges.Enemy[playerClassEN] then
-			if IsSpellKnown(ranges.Enemy[playerClassEN]) then
-				local SpellName, _, _, _, Min, Max = GetSpellInfo(ranges.Enemy[playerClassEN])
-				DATA.Enemy.rangeSpellName = SpellName
-				DATA.Enemy.rangeMin = Min
-				DATA.Enemy.rangeMax = Max
-				if not DATA.Enemy.rangeSpellName then
-					if showerror then Print("ERROR", "unknown spell name (rangecheck)", locale, playerClassEN, "spellID:", ranges.Enemy[playerClassEN]) end
-				elseif (not DATA.Enemy.rangeMin or not DATA.Enemy.rangeMax) or (DATA.Enemy.rangeMin <= 0 and DATA.Enemy.rangeMax <= 0) then
-					if showerror then Print("ERROR", "spell min/max fail (rangecheck)", locale, DATA.Enemy.rangeSpellName, DATA.Enemy.rangeMin, DATA.Enemy.rangeMax) end
-				else
-					BattlegroundTargets:RegisterEvent("UNIT_HEALTH_FREQUENT")
-					BattlegroundTargets:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-					BattlegroundTargets:RegisterEvent("PLAYER_TARGET_CHANGED")
-					BattlegroundTargets:RegisterEvent("UNIT_TARGET")
-				end
-			elseif playerClassEN == "MONK" and playerLevel < 14 then -- MON14
-				if showerror then Print("WARNING", playerClassEN, "spellID:", ranges.Enemy[playerClassEN], "Required level for class-spell based rangecheck is 14.") end
-			elseif playerClassEN == "ROGUE" and playerLevel < 12 then -- ROG12
-				if showerror then Print("WARNING", playerClassEN, "spellID:", ranges.Enemy[playerClassEN], "Required level for class-spell based rangecheck is 12.") end
-			else
-				if showerror then Print("ERROR", "unknown spell (rangecheck)", locale, playerClassEN, "spellID:", ranges.Enemy[playerClassEN]) end
-			end
-		else
-			if showerror then Print("ERROR", "unknown class (rangecheck)", locale, playerClassEN) end
-		end
 	end
 
 	BattlegroundTargets:RegisterEvent("UPDATE_BATTLEFIELD_SCORE")
