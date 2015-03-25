@@ -8938,71 +8938,71 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 
 	local sourceButton = GVAR.EnemyButton[ DATA.Enemy.Name2Button[sourceName] ]
 	-- source is enemy ----------------------------------------
-
-	do if sourceButton then
-
-		if DATA.Enemy.Name2Percent[sourceName] == 0 then
-			DATA.Enemy.Name2Range[sourceName] = nil
-			BattlegroundTargets:Range_Display(false, sourceButton, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
-			return--TODO
-		end
-
-		local curTime = GetTime()
-		if curTime < sourceButton.rangeTimer + rangeFrequency then
-			return--TODO
-		end
-
-		--[[ _TIMER_
-		local dif = curTime - sourceButton.rangeTimer
-		print("rAngecheck:", "Enemy", sourceName, sourceButton.buttonNum, "#", dif, "#", SPELL_Range[spellId], "CLrange: _sourceButton_")
-		--]]
-
-		sourceButton.rangeTimer = curTime
-
-		-- --------------------------------------------- BEGIN
-		-- source: enemy | dest: playerName
-		if destName == playerName then
-			isMatch = true
-			if SPELL_Range[spellId] <= 40 then -- inDefaultRange
-				DATA.Enemy.Name2Range[sourceName] = SPELL_Range[spellId]
-				BattlegroundTargets:Range_Display(true, sourceButton, DATA.Enemy.Name2Range[sourceName])
-			else
+	if sourceButton then
+		while true do 
+			if DATA.Enemy.Name2Percent[sourceName] == 0 then
 				DATA.Enemy.Name2Range[sourceName] = nil
 				BattlegroundTargets:Range_Display(false, sourceButton, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
+				break--while_break
 			end
-		-- --------------------------------------------- END
 
-		-- --------------------------------------------- BEGIN
-		-- source: enemy | dest: friend
-		elseif DATA.Friend.Name2Button[destName] then
-			isMatch = true
-			local is = clrc_idcheck(sourceButton, sourceName)
-			if is then
-				return--TODO
+			local curTime = GetTime()
+			if curTime < sourceButton.rangeTimer + rangeFrequency then
+				break--while_break
 			end
-			local friendID = DATA.Friend.Name2UnitID[destName]
-			if friendID and SPELL_Range[spellId] <= 40 then -- inDefaultRange +
-				local isRange = range_check("Friend", friendID)
-				if isRange then
-					DATA.Enemy.Name2Range[sourceName] = SPELL_Range[spellId] + isRange
+
+			--[[ _TIMER_
+			local dif = curTime - sourceButton.rangeTimer
+			print("rAngecheck:", "Enemy", sourceName, sourceButton.buttonNum, "#", dif, "#", SPELL_Range[spellId], "CLrange: _sourceButton_")
+			--]]
+
+			sourceButton.rangeTimer = curTime
+
+			-- --------------------------------------------- BEGIN
+			-- source: enemy | dest: playerName
+			if destName == playerName then
+				isMatch = true
+				if SPELL_Range[spellId] <= 40 then -- inDefaultRange
+					DATA.Enemy.Name2Range[sourceName] = SPELL_Range[spellId]
 					BattlegroundTargets:Range_Display(true, sourceButton, DATA.Enemy.Name2Range[sourceName])
-					return--TODO
+				else
+					DATA.Enemy.Name2Range[sourceName] = nil
+					BattlegroundTargets:Range_Display(false, sourceButton, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
 				end
+			-- --------------------------------------------- END
+
+			-- --------------------------------------------- BEGIN
+			-- source: enemy | dest: friend
+			elseif DATA.Friend.Name2Button[destName] then
+				isMatch = true
+				local is = clrc_idcheck(sourceButton, sourceName)
+				if is then
+					break--while_break
+				end
+				local friendID = DATA.Friend.Name2UnitID[destName]
+				if friendID and SPELL_Range[spellId] <= 40 then -- inDefaultRange +
+					local isRange = range_check("Friend", friendID)
+					if isRange then
+						DATA.Enemy.Name2Range[sourceName] = SPELL_Range[spellId] + isRange
+						BattlegroundTargets:Range_Display(true, sourceButton, DATA.Enemy.Name2Range[sourceName])
+						break--while_break
+					end
+				end
+				DATA.Enemy.Name2Range[sourceName] = nil
+				BattlegroundTargets:Range_Display(false, sourceButton, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
+			-- --------------------------------------------- END
+
+			-- --------------------------------------------- BEGIN
+			-- source: enemy | dest: enemy
+			elseif DATA.Enemy.Name2Button[destName] then
+				isMatch = true
+				clrc_idcheck(sourceButton, sourceName)
+				clrc_idcheck(sourceButton, destName)
+			-- --------------------------------------------- END
 			end
-			DATA.Enemy.Name2Range[sourceName] = nil
-			BattlegroundTargets:Range_Display(false, sourceButton, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
-		-- --------------------------------------------- END
-
-		-- --------------------------------------------- BEGIN
-		-- source: enemy | dest: enemy
-		elseif DATA.Enemy.Name2Button[destName] then
-			isMatch = true
-			clrc_idcheck(sourceButton, sourceName)
-			clrc_idcheck(sourceButton, destName)
-		-- --------------------------------------------- END
+		break--while_break
 		end
-
-	end end
+	end
 	-- source is enemy ----------------------------------------
 
 	if isMatch then return end
