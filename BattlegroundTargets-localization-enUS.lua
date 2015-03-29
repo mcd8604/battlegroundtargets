@@ -53,6 +53,7 @@ L["Target of Target"] = SHOW_TARGET_OF_TARGET_TEXT
 L["Unknown"] = UNKNOWN
 L["Friendly Players"] = UNIT_NAME_FRIENDLY
 L["Enemy Players"] = UNIT_NAME_ENEMY
+L["Mode"] = MODE
 
 -- font test for all languages
 L["Test_abc_"] = "abc_ABCXYZabcxyz_"

@@ -315,7 +315,7 @@ TEMPLATE.EnableTabButton = function(button, active)
 	button:Enable()
 end
 
-TEMPLATE.TabButton = function(button, text, active, monotext, iconstr)
+TEMPLATE.TabButton = function(button, text, active, monotext)
 	button.monotext = monotext
 	button.Texture = button:CreateTexture(nil, "BORDER")
 	button.Texture:SetPoint("TOPLEFT", 1, -1)
@@ -341,10 +341,6 @@ TEMPLATE.TabButton = function(button, text, active, monotext, iconstr)
 	button.TextureHighlight:SetPoint("BOTTOMRIGHT", -3, 3)
 	button.TextureHighlight:SetTexture(1, 1, 1, 0.1)
 	button:SetHighlightTexture(button.TextureHighlight)
-
-	if type(iconstr) == "string" then
-		text = iconstr..text
-	end
 
 	button.TabText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	button.TabText:SetText(text)

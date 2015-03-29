@@ -16,7 +16,7 @@
 -- # Friend/Enemy Target Count                                                --
 -- # Health                                                                   --
 -- # Range Check                                                              --
--- # PvP Trinket                                                              --
+-- # PvP Trinket Timer                                                        --
 --                                                                            --
 -- -------------------------------------------------------------------------- --
 --                                                                            --
@@ -182,11 +182,6 @@ local function UnitInCheckedRange(unit)
 	if inRange and checkedRange then
 		return true
 	end
-	--if checkedRange then
-	--	return inRange
-	--else
-	--	return true
-	--end
 end
 
 --[[ TEST
@@ -328,6 +323,8 @@ DATA.FirstFlagCheck = {}      -- key = unitName | value (number) = 1
 for frc = 1, #FRAMES do
 	local side = FRAMES[frc]
 	DATA[side] = {}
+
+	DATA[side].MainMoverModeValue = false
 
 	DATA[side].rangeSpellName = nil -- for class-spell based range check
 	DATA[side].rangeMin = nil       -- for class-spell based range check
@@ -659,6 +656,7 @@ Textures.FriendIcon    = {path = "Interface\\Common\\friendship-heart", coords =
 Textures.EnemyIcon     = {path = "Interface\\PVPFrame\\Icon-Combat", coords = {0, 1, 0, 1}}
 Textures.FriendIconStr = "|TInterface\\Common\\friendship-heart:16:16:0:0:32:32:6:26:3:23|t"
 Textures.EnemyIconStr  = "|TInterface\\PVPFrame\\Icon-Combat:16:16:0:0:16:16:0:16:0:16|t"
+Textures.MoverModeStr  = "|TInterface\\Common\\UI-ModelControlPanel:14:14:0:0:64:128:20:34:38:52|t"
 
 local raidUnitID = {}
 for i = 1, 40 do
@@ -705,13 +703,13 @@ function BattlegroundTargets:InitOptions()
 	SLASH_BATTLEGROUNDTARGETS3 = "/battlegroundtargets"
 
 	if type(BattlegroundTargets_Options.version) ~= "number" then
-		BattlegroundTargets_Options.version = 25
+		BattlegroundTargets_Options.version = 26
 	end
 
 	if BattlegroundTargets_Options.version < 22 then
 		wipe(BattlegroundTargets_Options)
 		Print("Option reset.")
-		BattlegroundTargets_Options.version = 25
+		BattlegroundTargets_Options.version = 26
 	end
 
 	if BattlegroundTargets_Options.version == 22 then -- targetoftarget position reset
@@ -740,17 +738,21 @@ function BattlegroundTargets:InitOptions()
 
 	if BattlegroundTargets_Options.version == 23 then
 		if type(BattlegroundTargets_Options.pos) == "table" then
+			local pos = {}
 			for k, v in pairs(BattlegroundTargets_Options.pos) do
 				if strfind(k, "BattlegroundTargets_MainFrame", 1, true) then
 					local size = strmatch(k, "^BattlegroundTargets_MainFrame(.*)$")
-					if size then
-						BattlegroundTargets_Options.pos["BattlegroundTargets_EnemyMainFrame"..size] = BattlegroundTargets_Options.pos[k]
+					if size and size ~= "" then
+						pos["BattlegroundTargets_EnemyMainFrame"..size] = v
 					else
-						BattlegroundTargets_Options.pos["BattlegroundTargets_EnemyMainFrame"] = BattlegroundTargets_Options.pos[k]
+						pos["BattlegroundTargets_EnemyMainFrame"] = v
 					end
-					BattlegroundTargets_Options.pos[k] = nil
+				elseif strfind(k, "BattlegroundTargets_OptionsFrame", 1, true) then
+					pos["BattlegroundTargets_OptionsFrame"] = v
 				end
 			end
+			BattlegroundTargets_Options.pos = nil
+			BattlegroundTargets_Options.pos = pos
 		end
 		BattlegroundTargets_Options.version = 24
 	end
@@ -803,7 +805,44 @@ function BattlegroundTargets:InitOptions()
 		BattlegroundTargets_Options.version = 25
 	end
 
-	if type(BattlegroundTargets_Options.pos)                   ~= "table"   then BattlegroundTargets_Options.pos                   = {}    end
+	if BattlegroundTargets_Options.version == 25 then
+		if type(BattlegroundTargets_Options.pos) == "table" then
+			BattlegroundTargets_Options.FramePosition = {}
+			-- friend
+			local posFdef = BattlegroundTargets_Options.pos.BattlegroundTargets_FriendMainFrame
+			if posFdef then
+				BattlegroundTargets_Options.FramePosition.FriendMainFrame10 = posFdef
+				BattlegroundTargets_Options.FramePosition.FriendMainFrame15 = posFdef
+				BattlegroundTargets_Options.FramePosition.FriendMainFrame40 = posFdef
+			end
+			local posF10 = BattlegroundTargets_Options.pos.BattlegroundTargets_FriendMainFrame10 if posF10 then BattlegroundTargets_Options.FramePosition.FriendMainFrame10 = posF10 end
+			local posF15 = BattlegroundTargets_Options.pos.BattlegroundTargets_FriendMainFrame15 if posF15 then BattlegroundTargets_Options.FramePosition.FriendMainFrame15 = posF15 end
+			local posF40 = BattlegroundTargets_Options.pos.BattlegroundTargets_FriendMainFrame40 if posF40 then BattlegroundTargets_Options.FramePosition.FriendMainFrame40 = posF40 end
+			-- enemy
+			local posEdef = BattlegroundTargets_Options.pos.BattlegroundTargets_EnemyMainFrame
+			if posEdef then
+				BattlegroundTargets_Options.FramePosition.EnemyMainFrame10 = posEdef
+				BattlegroundTargets_Options.FramePosition.EnemyMainFrame15 = posEdef
+				BattlegroundTargets_Options.FramePosition.EnemyMainFrame40 = posEdef
+			end
+			local posE10 = BattlegroundTargets_Options.pos.BattlegroundTargets_EnemyMainFrame10 if posE10 then BattlegroundTargets_Options.FramePosition.EnemyMainFrame10 = posE10 end
+			local posE15 = BattlegroundTargets_Options.pos.BattlegroundTargets_EnemyMainFrame15 if posE15 then BattlegroundTargets_Options.FramePosition.EnemyMainFrame15 = posE15 end
+			local posE40 = BattlegroundTargets_Options.pos.BattlegroundTargets_EnemyMainFrame40 if posE40 then BattlegroundTargets_Options.FramePosition.EnemyMainFrame40 = posE40 end
+			-- options
+			local posOpt = BattlegroundTargets_Options.pos.BattlegroundTargets_OptionsFrame
+			if posOpt then
+				BattlegroundTargets_Options.FramePosition.OptionsFrame = posOpt
+			end
+		end
+		BattlegroundTargets_Options.pos = nil
+		if BattlegroundTargets_Options.Friend then BattlegroundTargets_Options.Friend.IndependentPositioning = nil end
+		if BattlegroundTargets_Options.Enemy then BattlegroundTargets_Options.Enemy.IndependentPositioning = nil end
+		BattlegroundTargets_Options.version = 26
+	end
+
+	--BattlegroundTargets_Options = {} -- TEST
+
+	if type(BattlegroundTargets_Options.FramePosition)         ~= "table"   then BattlegroundTargets_Options.FramePosition         = {}    end
 	if type(BattlegroundTargets_Options.MinimapButton)         ~= "boolean" then BattlegroundTargets_Options.MinimapButton         = false end
 	if type(BattlegroundTargets_Options.MinimapButtonPos)      ~= "number"  then BattlegroundTargets_Options.MinimapButtonPos      = -90   end
 	if type(BattlegroundTargets_Options.TransliterationToggle) ~= "boolean" then BattlegroundTargets_Options.TransliterationToggle = false end
@@ -816,11 +855,6 @@ function BattlegroundTargets:InitOptions()
 		if type(BattlegroundTargets_Options[side].EnableBracket[10])            ~= "boolean" then BattlegroundTargets_Options[side].EnableBracket[10]            = false end
 		if type(BattlegroundTargets_Options[side].EnableBracket[15])            ~= "boolean" then BattlegroundTargets_Options[side].EnableBracket[15]            = false end
 		if type(BattlegroundTargets_Options[side].EnableBracket[40])            ~= "boolean" then BattlegroundTargets_Options[side].EnableBracket[40]            = false end
-
-		if type(BattlegroundTargets_Options[side].IndependentPositioning)       ~= "table"   then BattlegroundTargets_Options[side].IndependentPositioning       = {}    end
-		if type(BattlegroundTargets_Options[side].IndependentPositioning[10])   ~= "boolean" then BattlegroundTargets_Options[side].IndependentPositioning[10]   = false end
-		if type(BattlegroundTargets_Options[side].IndependentPositioning[15])   ~= "boolean" then BattlegroundTargets_Options[side].IndependentPositioning[15]   = false end
-		if type(BattlegroundTargets_Options[side].IndependentPositioning[40])   ~= "boolean" then BattlegroundTargets_Options[side].IndependentPositioning[40]   = false end
 
 		if type(BattlegroundTargets_Options[side].LayoutTH)                     ~= "table"   then BattlegroundTargets_Options[side].LayoutTH                     = {}    end
 		if type(BattlegroundTargets_Options[side].LayoutTH[10])                 ~= "number"  then BattlegroundTargets_Options[side].LayoutTH[10]                 = 18    end
@@ -885,7 +919,7 @@ function BattlegroundTargets:InitOptions()
 		if type(BattlegroundTargets_Options[side].ButtonShowSpec[10])           ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowSpec[10]           = false end
 		if type(BattlegroundTargets_Options[side].ButtonClassIcon[10])          ~= "boolean" then BattlegroundTargets_Options[side].ButtonClassIcon[10]          = false end
 		if type(BattlegroundTargets_Options[side].ButtonShowRealm[10])          ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowRealm[10]          = true  end
-		if type(BattlegroundTargets_Options[side].ButtonShowLeader[10])         ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowLeader[10]         = false end
+		if type(BattlegroundTargets_Options[side].ButtonShowLeader[10])         ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowLeader[10]         = true  end
 		if type(BattlegroundTargets_Options[side].ButtonShowTarget[10])         ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowTarget[10]         = true  end
 		if type(BattlegroundTargets_Options[side].ButtonTargetScale[10])        ~= "number"  then BattlegroundTargets_Options[side].ButtonTargetScale[10]        = 1.5   end
 		if type(BattlegroundTargets_Options[side].ButtonTargetPosition[10])     ~= "number"  then BattlegroundTargets_Options[side].ButtonTargetPosition[10]     = 100   end
@@ -922,7 +956,7 @@ function BattlegroundTargets:InitOptions()
 		if type(BattlegroundTargets_Options[side].ButtonShowSpec[15])           ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowSpec[15]           = false end
 		if type(BattlegroundTargets_Options[side].ButtonClassIcon[15])          ~= "boolean" then BattlegroundTargets_Options[side].ButtonClassIcon[15]          = false end
 		if type(BattlegroundTargets_Options[side].ButtonShowRealm[15])          ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowRealm[15]          = true  end
-		if type(BattlegroundTargets_Options[side].ButtonShowLeader[15])         ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowLeader[15]         = false end
+		if type(BattlegroundTargets_Options[side].ButtonShowLeader[15])         ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowLeader[15]         = true  end
 		if type(BattlegroundTargets_Options[side].ButtonShowTarget[15])         ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowTarget[15]         = true  end
 		if type(BattlegroundTargets_Options[side].ButtonTargetScale[15])        ~= "number"  then BattlegroundTargets_Options[side].ButtonTargetScale[15]        = 1.5   end
 		if type(BattlegroundTargets_Options[side].ButtonTargetPosition[15])     ~= "number"  then BattlegroundTargets_Options[side].ButtonTargetPosition[15]     = 100   end
@@ -959,7 +993,7 @@ function BattlegroundTargets:InitOptions()
 		if type(BattlegroundTargets_Options[side].ButtonShowSpec[40])           ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowSpec[40]           = false end
 		if type(BattlegroundTargets_Options[side].ButtonClassIcon[40])          ~= "boolean" then BattlegroundTargets_Options[side].ButtonClassIcon[40]          = false end
 		if type(BattlegroundTargets_Options[side].ButtonShowRealm[40])          ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowRealm[40]          = false end
-		if type(BattlegroundTargets_Options[side].ButtonShowLeader[40])         ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowLeader[40]         = false end
+		if type(BattlegroundTargets_Options[side].ButtonShowLeader[40])         ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowLeader[40]         = true  end
 		if type(BattlegroundTargets_Options[side].ButtonShowTarget[40])         ~= "boolean" then BattlegroundTargets_Options[side].ButtonShowTarget[40]         = true  end
 		if type(BattlegroundTargets_Options[side].ButtonTargetScale[40])        ~= "number"  then BattlegroundTargets_Options[side].ButtonTargetScale[40]        = 1     end
 		if type(BattlegroundTargets_Options[side].ButtonTargetPosition[40])     ~= "number"  then BattlegroundTargets_Options[side].ButtonTargetPosition[40]     = 85    end
@@ -1060,7 +1094,7 @@ function BattlegroundTargets:CreateFrames()
 		GVAR[framename]:SetMovable(true)
 		GVAR[framename]:SetResizable(true)
 		GVAR[framename]:SetToplevel(true)
-		GVAR[framename]:SetClampedToScreen(true)
+		GVAR[framename]:SetClampedToScreen(true) -- TODO bug? -- CLAMP_FIX_MAIN TODO
 		GVAR[framename]:SetWidth(0.001)
 		GVAR[framename]:SetHeight(0.001)
 		GVAR[framename]:Hide()
@@ -1114,61 +1148,148 @@ function BattlegroundTargets:CreateFrames()
 		-- MonoblockAnchor
 		GVAR[framename].MonoblockAnchor = CreateFrame("Frame", nil, GVAR[buttonname][1]) -- SUMPOSi
 		GVAR[framename].MonoblockAnchor:SetPoint("TOPLEFT", GVAR[buttonname][1], "TOPLEFT", 0, 0)
-		--[[ TEST
-		local texture = GVAR[framename].MonoblockAnchor:CreateTexture(nil, "OVERLAY")
-		texture:SetTexture(0.5, 0.5, 0.5, 0.5)
-		texture:SetAllPoints()
-		--]]
 		-- MonoblockAnchor
-
-		-- create mover
-		GVAR[framename].Mover = CreateFrame("Frame", nil, GVAR[framename])
-		GVAR[framename].Mover:SetPoint("CENTER", GVAR[framename].MonoblockAnchor, "CENTER", 0, 0)
-		for topORbottom = 1, 2 do
-			GVAR[framename].Mover[topORbottom] = CreateFrame("Button", nil, GVAR[framename].Mover)
-			--TEMPLATE.BorderTRBL(GVAR[framename].Mover[topORbottom])
-			GVAR[framename].Mover[topORbottom]:SetWidth(200)
-			GVAR[framename].Mover[topORbottom]:SetHeight(20)
-			if topORbottom == 1 then
-				GVAR[framename].Mover[topORbottom]:SetPoint("BOTTOM", GVAR[framename].MonoblockAnchor, "TOP", 0, 0) -- TOP
-			else
-				GVAR[framename].Mover[topORbottom]:SetPoint("TOP", GVAR[framename].MonoblockAnchor, "BOTTOM", 0, 0) -- BOTTOM
-			end
-			GVAR[framename].Mover[topORbottom]:SetScript("OnEnter", function(self)
-				if inCombat or InCombatLockdown() then return end
-				self.Txt:SetTextColor(1, 1, 1, 1)
-				self.Txt:SetTextColor(1, 1, 1, 1)
-			end)
-			GVAR[framename].Mover[topORbottom]:SetScript("OnLeave", function(self)
-				self.Txt:SetTextColor(0.3, 0.3, 0.3, 1)
-				self.Txt:SetTextColor(0.3, 0.3, 0.3, 1)
-			end)
-			GVAR[framename].Mover[topORbottom]:SetScript("OnMouseDown", function()
-				if inCombat or InCombatLockdown() then return end
-				GVAR[framename].isMoving = true
-				GVAR[framename]:StartMoving()
-			end)
-			GVAR[framename].Mover[topORbottom]:SetScript("OnMouseUp", function()
-				if not GVAR[framename].isMoving then return end
-				GVAR[framename].isMoving = nil
-				GVAR[framename]:StopMovingOrSizing()
-				if inCombat or InCombatLockdown() then
-					rePosMain = true
-					return
-				end
-				rePosMain = nil
-				BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_"..framename, side)
-			end)
-			GVAR[framename].Mover[topORbottom].Texture = GVAR[framename].Mover[topORbottom]:CreateTexture(nil, "BACKGROUND")
-			GVAR[framename].Mover[topORbottom].Texture:SetAllPoints()
-			GVAR[framename].Mover[topORbottom].Texture:SetTexture(1, 1, 1, 0.2)
-			GVAR[framename].Mover[topORbottom].Txt = GVAR[framename].Mover[topORbottom]:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-			GVAR[framename].Mover[topORbottom].Txt:SetAllPoints()
-			GVAR[framename].Mover[topORbottom].Txt:SetText(Textures[side.."IconStr"].."   "..L["click & move"].."   "..Textures[side.."IconStr"])
-			GVAR[framename].Mover[topORbottom].Txt:SetTextColor(0.3, 0.3, 0.3, 1)
-		end
-		-- create mover
 	end
+
+	-- main mover
+	local function OnMouseDown(side, framename)
+		if inCombat or InCombatLockdown() then return end
+		GVAR[framename].isMoving = true
+		BattlegroundTargets:ClickOnFractionTab(side)
+		GVAR[framename]:StartMoving()
+	end
+	local function OnMouseUp(side, framename)
+		if not GVAR[framename].isMoving then return end
+		GVAR[framename].isMoving = nil
+		GVAR[framename]:StopMovingOrSizing()
+		if inCombat or InCombatLockdown() then
+			rePosMain = true
+			return
+		end
+		rePosMain = nil
+		BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_"..framename, side)
+	end
+
+	for frc = 1, #FRAMES do
+		local side = FRAMES[frc]
+		local framename  = side.."MainFrame" -- FriendMainFrame / EnemyMainFrame
+		local buttonname = side.."Button"    -- FriendButton    / EnemyButton
+
+		--------------------
+		GVAR[framename].MainMoverFrame = CreateFrame("Frame", nil, GVAR[buttonname][1])
+		GVAR[framename].MainMoverFrame:SetPoint("TOPLEFT", GVAR[buttonname][1], "TOPLEFT", 0, 0)
+		GVAR[framename].MainMoverFrame:Hide()
+
+		GVAR[framename].MainMoverTexture = GVAR[framename].MainMoverFrame:CreateTexture(nil, "BORDER")
+		GVAR[framename].MainMoverTexture:SetTexture(0, 0, 0, 0)
+		GVAR[framename].MainMoverTexture:SetAllPoints()
+
+		-- mover mode frame
+		GVAR[framename].MainMoverBGTexture = GVAR[framename].MainMoverFrame:CreateTexture(nil, "ARTWORK")
+		GVAR[framename].MainMoverBGTexture:SetTexture(0, 0, 0, 1)
+		GVAR[framename].MainMoverBGTexture:SetPoint("CENTER", GVAR[framename].MainMoverFrame, "CENTER", 0, 0)
+
+		GVAR[framename].MainMoverFracTxt = GVAR[framename].MainMoverFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+		GVAR[framename].MainMoverFracTxt:SetPoint("TOP", GVAR[framename].MainMoverBGTexture, "TOP", 0, 0)
+		if side == "Friend" then
+			GVAR[framename].MainMoverFracTxt:SetText(Textures.FriendIconStr.." "..L["Friendly Players"])
+		elseif side == "Enemy" then
+			GVAR[framename].MainMoverFracTxt:SetText(Textures.EnemyIconStr.." "..L["Enemy Players"])
+		end
+		GVAR[framename].MainMoverFracTxt:SetTextColor(1, 1, 1, 1)
+
+		GVAR[framename].MainMoverTxt = GVAR[framename].MainMoverFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		GVAR[framename].MainMoverTxt:SetPoint("TOP", GVAR[framename].MainMoverFracTxt, "BOTTOM", 0, -10)
+		GVAR[framename].MainMoverTxt:SetText(L["click & move"])
+		GVAR[framename].MainMoverTxt:SetWidth( GVAR[framename].MainMoverTxt:GetStringWidth() )
+		GVAR[framename].MainMoverTxt:SetHeight( GVAR[framename].MainMoverTxt:GetStringHeight() )
+		GVAR[framename].MainMoverTxt:SetTextColor(0.5, 0.5, 0.5, 1)
+
+		GVAR[framename].MainMoverModeButton = CreateFrame("CheckButton", nil, GVAR[framename].MainMoverFrame)
+		TEMPLATE.CheckButton(GVAR[framename].MainMoverModeButton, 16, 4, Textures.MoverModeStr.." "..L["Mode"])
+		GVAR[framename].MainMoverModeButton:SetPoint("TOP", GVAR[framename].MainMoverTxt, "BOTTOM", 0, -10)
+		GVAR[framename].MainMoverModeButton:SetChecked(DATA[side].MainMoverModeValue)
+		GVAR[framename].MainMoverModeButton:SetScript("OnClick", function()
+			--if inCombat or InCombatLockdown() then return end
+			GVAR[framename].MainMoverTexture:SetTexture(0, 0, 1, 0.4)
+			BattlegroundTargets:ClickOnFractionTab(side)
+			if DATA[side].MainMoverModeValue then
+				DATA[side].MainMoverModeValue = false
+			else
+				DATA[side].MainMoverModeValue = true
+			end
+		end)
+
+		local maxW = GVAR[framename].MainMoverFracTxt:GetWidth()
+		local maxW2 = GVAR[framename].MainMoverTxt:GetWidth()
+		if maxW2 > maxW then maxW = maxW2 end
+		local maxW3 = GVAR[framename].MainMoverModeButton:GetWidth()
+		if maxW3 > maxW then maxW = maxW3 end
+		local maxH = GVAR[framename].MainMoverFracTxt:GetHeight() + 10 + GVAR[framename].MainMoverTxt:GetHeight() + 10 + GVAR[framename].MainMoverModeButton:GetHeight()
+		GVAR[framename].MainMoverBGTexture:SetWidth(maxW+5)
+		GVAR[framename].MainMoverBGTexture:SetHeight(maxH+5)
+		-- mover mode frame
+
+		GVAR[framename].MainMoverFrame:SetScript("OnLeave", function()
+			if GVAR[framename].MainMoverModeButton:IsMouseOver() then return end
+			GVAR[framename].MainMoverTxt:SetTextColor(0.5, 0.5, 0.5, 1)
+			if DATA[side].MainMoverModeValue then return end
+			GVAR[framename].MainMoverTexture:SetTexture(0, 0, 0, 0)
+			GVAR[framename].MainMoverFrame:Hide()
+			GVAR[framename].MainMoverButton[1]:Show()
+			GVAR[framename].MainMoverButton[2]:Show()
+		end)
+		GVAR[framename].MainMoverFrame:SetScript("OnEnter", function()
+			GVAR[framename].MainMoverTexture:SetTexture(0, 0, 1, 0.4)
+			GVAR[framename].MainMoverTxt:SetTextColor(1, 1, 1, 1)
+			GVAR[framename].MainMoverButton[1]:Hide()
+			GVAR[framename].MainMoverButton[2]:Hide()
+		end)
+		GVAR[framename].MainMoverFrame:SetScript("OnMouseDown", function() OnMouseDown(side, framename) end)
+		GVAR[framename].MainMoverFrame:SetScript("OnMouseUp", function() OnMouseUp(side, framename) end)
+		--------------------
+
+		--------------------
+		GVAR[framename].MainMoverButton = CreateFrame("Frame", nil, GVAR[framename])
+		GVAR[framename].MainMoverButton:SetPoint("CENTER", GVAR[framename].MonoblockAnchor, "CENTER", 0, 0)
+		for topORbottom = 1, 2 do
+			GVAR[framename].MainMoverButton[topORbottom] = CreateFrame("Button", nil, GVAR[framename].MainMoverButton)
+			GVAR[framename].MainMoverButton[topORbottom]:SetWidth(200)
+			GVAR[framename].MainMoverButton[topORbottom]:SetHeight(25)
+			if topORbottom == 1 then
+				GVAR[framename].MainMoverButton[topORbottom]:SetPoint("BOTTOM", GVAR[framename].MonoblockAnchor, "TOP", 0, 0) -- TOP
+			else
+				GVAR[framename].MainMoverButton[topORbottom]:SetPoint("TOP", GVAR[framename].MonoblockAnchor, "BOTTOM", 0, 0) -- BOTTOM
+			end
+			GVAR[framename].MainMoverButton[topORbottom].Texture = GVAR[framename].MainMoverButton[topORbottom]:CreateTexture(nil, "BACKGROUND")
+			GVAR[framename].MainMoverButton[topORbottom].Texture:SetAllPoints()
+			GVAR[framename].MainMoverButton[topORbottom].Texture:SetTexture(1, 1, 1, 0.2)
+			GVAR[framename].MainMoverButton[topORbottom].Txt = GVAR[framename].MainMoverButton[topORbottom]:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+			GVAR[framename].MainMoverButton[topORbottom].Txt:SetAllPoints()
+			if side == "Friend" then
+				GVAR[framename].MainMoverButton[topORbottom].Txt:SetText(Textures.FriendIconStr.." "..L["Friendly Players"])
+			elseif side == "Enemy" then
+				GVAR[framename].MainMoverButton[topORbottom].Txt:SetText(Textures.EnemyIconStr.." "..L["Enemy Players"])
+			end
+			GVAR[framename].MainMoverButton[topORbottom].Txt:SetTextColor(1, 1, 1, 1)
+
+			GVAR[framename].MainMoverButton[topORbottom]:SetScript("OnEnter", function(self)
+				if inCombat or InCombatLockdown() then return end
+				GVAR[framename].MainMoverTxt:SetTextColor(1, 1, 1, 1)
+				GVAR[framename].MainMoverFrame:SetFrameLevel( GVAR[side.."Button"][1]:GetFrameLevel() + 10 )
+				GVAR[framename].MainMoverFrame:Show()
+			end)
+			GVAR[framename].MainMoverButton[topORbottom]:SetScript("OnLeave", function(self)
+				if not GVAR[framename].MainMoverFrame:IsMouseOver() then
+					GVAR[framename].MainMoverFrame:Hide()
+				end
+			end)
+			GVAR[framename].MainMoverButton[topORbottom]:SetScript("OnMouseDown", function() OnMouseDown(side, framename) end)
+			GVAR[framename].MainMoverButton[topORbottom]:SetScript("OnMouseUp", function() OnMouseUp(side, framename) end)
+		end
+		--------------------
+	end
+	-- main mover
 
 	-- button
 	BattlegroundTargets.targetCountTimer = 0 -- _TIMER_
@@ -1494,7 +1615,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame:EnableMouse(true)
 	GVAR.OptionsFrame:SetMovable(true)
 	GVAR.OptionsFrame:SetToplevel(true)
-	GVAR.OptionsFrame:SetClampedToScreen(false)--TODO(true)
+	GVAR.OptionsFrame:SetClampedToScreen(false) -- TODO bug? (true) -- CLAMP_FIX_OPTIONS
 	-- BOOM GVAR.OptionsFrame:SetClampRectInsets()
 	-- BOOM GVAR.OptionsFrame:SetWidth()
 	GVAR.OptionsFrame:SetHeight(heightTotal)
@@ -1502,6 +1623,29 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame:SetScript("OnShow", function() BattlegroundTargets:OptionsFrameShow() end)
 	GVAR.OptionsFrame:SetScript("OnHide", function() BattlegroundTargets:OptionsFrameHide() end)
 	GVAR.OptionsFrame:SetScript("OnMouseWheel", NOOP)
+
+	-- CLAMP_FIX_OPTIONS BEGIN
+	GVAR.OptionsFrame.ClampDummy1 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal top
+	-- BOOM GVAR.OptionsFrame.ClampDummy1:SetSize(w, 1)
+	GVAR.OptionsFrame.ClampDummy1:SetPoint("TOP", GVAR.OptionsFrame, "TOP", 0, -40)
+	GVAR.OptionsFrame.ClampDummy1:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy1:Hide()
+	GVAR.OptionsFrame.ClampDummy2 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal bottom
+	-- BOOM GVAR.OptionsFrame.ClampDummy2:SetSize(w, 1)
+	GVAR.OptionsFrame.ClampDummy2:SetPoint("BOTTOM", GVAR.OptionsFrame, "BOTTOM", 0, 40)
+	GVAR.OptionsFrame.ClampDummy2:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy2:Hide()
+	GVAR.OptionsFrame.ClampDummy3 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- vertical left
+	-- BOOM GVAR.OptionsFrame.ClampDummy3:SetSize(1, h)
+	GVAR.OptionsFrame.ClampDummy3:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 40, 0)
+	GVAR.OptionsFrame.ClampDummy3:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy3:Hide()
+	GVAR.OptionsFrame.ClampDummy4 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal right
+	-- BOOM GVAR.OptionsFrame.ClampDummy4:SetSize(1, h)
+	GVAR.OptionsFrame.ClampDummy4:SetPoint("RIGHT", GVAR.OptionsFrame, "RIGHT", -40, 0)
+	GVAR.OptionsFrame.ClampDummy4:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy4:Hide()
+	-- CLAMP_FIX_OPTIONS END
 
 	-- close
 	GVAR.OptionsFrame.CloseConfig = CreateFrame("Button", nil, GVAR.OptionsFrame)
@@ -1650,49 +1794,25 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.EnableFriendBracket = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.TabButton(
 		GVAR.OptionsFrame.EnableFriendBracket,
-		L["Friendly Players"],--L["Friend"],--
-		BattlegroundTargets_Options.Friend.EnableBracket[currentSize],
-		nil,
-		Textures.FriendIconStr
-	)
+		Textures.FriendIconStr.." "..L["Friendly Players"],--L["Friend"],--
+		BattlegroundTargets_Options.Friend.EnableBracket[currentSize])
 	-- BOOM GVAR.OptionsFrame.EnableFriendBracket:SetWidth()
 	GVAR.OptionsFrame.EnableFriendBracket:SetHeight(22)
 	-- BOOM GVAR.OptionsFrame.EnableFriendBracket:SetPoint()
 	GVAR.OptionsFrame.EnableFriendBracket:SetScript("OnClick", function()
-		if fraction == "Friend" then return end
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableFriendBracket, true)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableEnemyBracket, nil)
-		BattlegroundTargets:CheckForEnabledBracket(currentSize, "Friend")
-		fraction = "Friend"
-		if BattlegroundTargets_Options.Friend.EnableBracket[currentSize] or BattlegroundTargets_Options.Enemy.EnableBracket[currentSize] then
-			BattlegroundTargets:EnableConfigMode()
-		else
-			BattlegroundTargets:DisableConfigMode()
-		end
+		BattlegroundTargets:ClickOnFractionTab("Friend")
 	end)
 
 	GVAR.OptionsFrame.EnableEnemyBracket = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.TabButton(
 		GVAR.OptionsFrame.EnableEnemyBracket,
-		L["Enemy Players"],--
-		BattlegroundTargets_Options.Enemy.EnableBracket[currentSize],
-		nil,
-		Textures.EnemyIconStr
-	)
+		Textures.EnemyIconStr.." "..L["Enemy Players"],--L["Enemy"],--
+		BattlegroundTargets_Options.Enemy.EnableBracket[currentSize])
 	-- BOOM GVAR.OptionsFrame.EnableEnemyBracket:SetWidth()
 	GVAR.OptionsFrame.EnableEnemyBracket:SetHeight(22)
 	-- BOOM GVAR.OptionsFrame.EnableEnemyBracket:SetPoint()
 	GVAR.OptionsFrame.EnableEnemyBracket:SetScript("OnClick", function()
-		if fraction == "Enemy" then return end
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableFriendBracket, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableEnemyBracket, true)
-		BattlegroundTargets:CheckForEnabledBracket(currentSize, "Enemy")
-		fraction = "Enemy"
-		if BattlegroundTargets_Options.Friend.EnableBracket[currentSize] or BattlegroundTargets_Options.Enemy.EnableBracket[currentSize] then
-			BattlegroundTargets:EnableConfigMode()
-		else
-			BattlegroundTargets:DisableConfigMode()
-		end
+		BattlegroundTargets:ClickOnFractionTab("Enemy")
 	end)
 
 	if fraction == "Friend" then
@@ -1733,32 +1853,13 @@ function BattlegroundTargets:CreateOptionsFrame()
 	end)
 
 
-	-- independent positioning
-	GVAR.OptionsFrame.IndependentPos = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.IndependentPos, 16, 4, L["Independent Positioning"])
-	GVAR.OptionsFrame.IndependentPos:SetPoint("LEFT", GVAR.OptionsFrame.EnableFraction, "RIGHT", 50, 0)
-	GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options[fraction].IndependentPositioning[currentSize])
-	GVAR.OptionsFrame.IndependentPos:SetScript("OnClick", function()
-		BattlegroundTargets_Options[fraction].IndependentPositioning[currentSize] = not BattlegroundTargets_Options[fraction].IndependentPositioning[currentSize]
-		GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options[fraction].IndependentPositioning[currentSize])
-		if not BattlegroundTargets_Options[fraction].IndependentPositioning[currentSize] then
-			BattlegroundTargets_Options.pos["BattlegroundTargets_"..fraction.."MainFrame"..currentSize] = nil
-			if inCombat or InCombatLockdown() then
-				reCheckBG = true
-				return
-			end
-			BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_"..fraction.."MainFrame", fraction)
-		end
-	end)
-
-
 
 	-- DUMMY
 	GVAR.OptionsFrame.Dummy1 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
 	-- BOOM GVAR.OptionsFrame.Dummy1:SetWidth()
 	GVAR.OptionsFrame.Dummy1:SetHeight(1)
 	GVAR.OptionsFrame.Dummy1:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy1:SetPoint("TOP", GVAR.OptionsFrame.IndependentPos, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy1:SetPoint("TOP", GVAR.OptionsFrame.EnableFraction, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.Dummy1:SetTexture(0.8, 0.2, 0.2, 1)
 
 
@@ -3480,7 +3581,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.MoverTopText = GVAR.OptionsFrame.MoverTop:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.MoverTopText:SetPoint("CENTER", GVAR.OptionsFrame.MoverTop, "CENTER", 0, 0)
 	GVAR.OptionsFrame.MoverTopText:SetJustifyH("CENTER")
-	GVAR.OptionsFrame.MoverTopText:SetTextColor(0.3, 0.3, 0.3, 1)
+	GVAR.OptionsFrame.MoverTopText:SetTextColor(0.5, 0.5, 0.5, 1)
 	GVAR.OptionsFrame.MoverTopText:SetText(L["click & move"])
 
 	GVAR.OptionsFrame.Close = CreateFrame("Button", nil, GVAR.OptionsFrame.MoverTop)
@@ -3501,40 +3602,42 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.MoverBottomText = GVAR.OptionsFrame.MoverBottom:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	GVAR.OptionsFrame.MoverBottomText:SetPoint("CENTER", GVAR.OptionsFrame.MoverBottom, "CENTER", 0, 0)
 	GVAR.OptionsFrame.MoverBottomText:SetJustifyH("CENTER")
-	GVAR.OptionsFrame.MoverBottomText:SetTextColor(0.3, 0.3, 0.3, 1)
+	GVAR.OptionsFrame.MoverBottomText:SetTextColor(0.5, 0.5, 0.5, 1)
 	GVAR.OptionsFrame.MoverBottomText:SetText(L["click & move"])
 
-	GVAR.OptionsFrame.MoverTop:SetScript("OnEnter", function()
+	local function OnEnter()
 		GVAR.OptionsFrame.MoverTopText:SetTextColor(1, 1, 1, 1)
 		GVAR.OptionsFrame.MoverBottomText:SetTextColor(1, 1, 1, 1)
-	end)
-	GVAR.OptionsFrame.MoverTop:SetScript("OnLeave", function()
-		GVAR.OptionsFrame.MoverTopText:SetTextColor(0.3, 0.3, 0.3, 1)
-		GVAR.OptionsFrame.MoverBottomText:SetTextColor(0.3, 0.3, 0.3, 1)
-	end)
-	GVAR.OptionsFrame.MoverTop:SetScript("OnMouseDown", function()
+		GVAR.OptionsFrame.ClampDummy1:Show()
+		GVAR.OptionsFrame.ClampDummy2:Show()
+		GVAR.OptionsFrame.ClampDummy3:Show()
+		GVAR.OptionsFrame.ClampDummy4:Show()
+	end
+	local function OnLeave()
+		GVAR.OptionsFrame.MoverTopText:SetTextColor(0.5, 0.5, 0.5, 1)
+		GVAR.OptionsFrame.MoverBottomText:SetTextColor(0.5, 0.5, 0.5, 1)
+		GVAR.OptionsFrame.ClampDummy1:Hide()
+		GVAR.OptionsFrame.ClampDummy2:Hide()
+		GVAR.OptionsFrame.ClampDummy3:Hide()
+		GVAR.OptionsFrame.ClampDummy4:Hide()
+	end
+	local function OnMouseDown()
 		GVAR.OptionsFrame:StartMoving()
-	end)
-	GVAR.OptionsFrame.MoverTop:SetScript("OnMouseUp", function()
+	end
+	local function OnMouseUp()
 		GVAR.OptionsFrame:StopMovingOrSizing()
 		BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_OptionsFrame")
-	end)
+	end
 
-	GVAR.OptionsFrame.MoverBottom:SetScript("OnEnter", function()
-		GVAR.OptionsFrame.MoverTopText:SetTextColor(1, 1, 1, 1)
-		GVAR.OptionsFrame.MoverBottomText:SetTextColor(1, 1, 1, 1)
-	end)
-	GVAR.OptionsFrame.MoverBottom:SetScript("OnLeave", function()
-		GVAR.OptionsFrame.MoverTopText:SetTextColor(0.3, 0.3, 0.3, 1)
-		GVAR.OptionsFrame.MoverBottomText:SetTextColor(0.3, 0.3, 0.3, 1)
-	end)
-	GVAR.OptionsFrame.MoverBottom:SetScript("OnMouseDown", function()
-		GVAR.OptionsFrame:StartMoving()
-	end)
-	GVAR.OptionsFrame.MoverBottom:SetScript("OnMouseUp", function()
-		GVAR.OptionsFrame:StopMovingOrSizing()
-		BattlegroundTargets:Frame_SavePosition("BattlegroundTargets_OptionsFrame")
-	end)
+	GVAR.OptionsFrame.MoverTop:SetScript("OnEnter", OnEnter)
+	GVAR.OptionsFrame.MoverTop:SetScript("OnLeave", OnLeave)
+	GVAR.OptionsFrame.MoverTop:SetScript("OnMouseDown", OnMouseDown)
+	GVAR.OptionsFrame.MoverTop:SetScript("OnMouseUp", OnMouseUp)
+
+	GVAR.OptionsFrame.MoverBottom:SetScript("OnEnter", OnEnter)
+	GVAR.OptionsFrame.MoverBottom:SetScript("OnLeave", OnLeave)
+	GVAR.OptionsFrame.MoverBottom:SetScript("OnMouseDown", OnMouseDown)
+	GVAR.OptionsFrame.MoverBottom:SetScript("OnMouseUp", OnMouseUp)
 	-- ###
 	-- ####################################################################################################
 
@@ -3556,6 +3659,12 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame:SetClampRectInsets((frameWidth-50)/2, -((frameWidth-50)/2), -(heightTotal-35), heightTotal-35)
 	GVAR.OptionsFrame:SetWidth(frameWidth)
 	GVAR.OptionsFrame.CloseConfig:SetWidth(frameWidth-20)
+	-- CLAMP_FIX_OPTIONS BEGIN
+	GVAR.OptionsFrame.ClampDummy1:SetSize(frameWidth+50, 2)
+	GVAR.OptionsFrame.ClampDummy2:SetSize(frameWidth+50, 2)
+	GVAR.OptionsFrame.ClampDummy3:SetSize(2, heightTotal+90) -- 50 + 40 (2xMover height)
+	GVAR.OptionsFrame.ClampDummy4:SetSize(2, heightTotal+90) -- 50 + 40 (2xMover height)
+	-- CLAMP_FIX_OPTIONS END
 	-- Base
 	GVAR.OptionsFrame.Base:SetWidth(frameWidth)
 	GVAR.OptionsFrame.Title:SetWidth(frameWidth)
@@ -3598,6 +3707,26 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.MoverBottom:SetWidth(frameWidth)
 	-- ###
 	-- ####################################################################################################
+end
+
+function BattlegroundTargets:ClickOnFractionTab(side)
+	if fraction == side then return end
+	local fracF, fracE
+	if side == "Friend" then
+		fracF = true
+	elseif side == "Enemy" then
+		fracE = true
+	end
+	TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableFriendBracket, fracF)
+	TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableEnemyBracket, fracE)
+	BattlegroundTargets:CheckForEnabledBracket(currentSize, side)
+	fraction = side
+	local BattlegroundTargets_Options = BattlegroundTargets_Options
+	if BattlegroundTargets_Options.Friend.EnableBracket[currentSize] or BattlegroundTargets_Options.Enemy.EnableBracket[currentSize] then
+		BattlegroundTargets:EnableConfigMode()
+	else
+		BattlegroundTargets:DisableConfigMode()
+	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -3707,10 +3836,6 @@ end
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:SetOptions(side)
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
-
-	--print("Set Options")--EnableFractionTODO
-	--GVAR.OptionsFrame.EnableFraction:SetChecked(BattlegroundTargets_Options[side].EnableBracket[currentSize])--EnableFractionTODO
-	GVAR.OptionsFrame.IndependentPos:SetChecked(BattlegroundTargets_Options[side].IndependentPositioning[currentSize])
 
 	if side == "Enemy" then
 		if currentSize == 10 then
@@ -3865,13 +3990,26 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 		GVAR.OptionsFrame.EnableEnemyBracket.TabText:SetTextColor(1, 0, 0, 1)
 	end
 
-	--print("CheckForEnabledBracket")--EnableFractionTODO
-	GVAR.OptionsFrame.EnableFraction:SetChecked(BattlegroundTargets_Options[side].EnableBracket[bracketSize])--EnableFractionTODO
+	if side == "Friend" then
+		GVAR.FriendMainFrame.MainMoverButton[1].Texture:SetTexture(0, 0, 0, 1)
+		GVAR.FriendMainFrame.MainMoverButton[2].Texture:SetTexture(0, 0, 0, 1)
+		GVAR.EnemyMainFrame.MainMoverButton[1].Texture:SetTexture(1, 1, 1, 0.2)
+		GVAR.EnemyMainFrame.MainMoverButton[2].Texture:SetTexture(1, 1, 1, 0.2)
+		GVAR.FriendMainFrame.MainMoverFracTxt:SetTextColor(1, 1, 1, 1)
+		GVAR.EnemyMainFrame.MainMoverFracTxt:SetTextColor(0.5, 0.5, 0.5, 1)
+	else
+		GVAR.FriendMainFrame.MainMoverButton[1].Texture:SetTexture(1, 1, 1, 0.2)
+		GVAR.FriendMainFrame.MainMoverButton[2].Texture:SetTexture(1, 1, 1, 0.2)
+		GVAR.EnemyMainFrame.MainMoverButton[1].Texture:SetTexture(0, 0, 0, 1)
+		GVAR.EnemyMainFrame.MainMoverButton[2].Texture:SetTexture(0, 0, 0, 1)
+		GVAR.FriendMainFrame.MainMoverFracTxt:SetTextColor(0.5, 0.5, 0.5, 1)
+		GVAR.EnemyMainFrame.MainMoverFracTxt:SetTextColor(1, 1, 1, 1)
+	end
+
+	GVAR.OptionsFrame.EnableFraction:SetChecked(BattlegroundTargets_Options[side].EnableBracket[bracketSize])
 
 	if BattlegroundTargets_Options[side].EnableBracket[bracketSize] then
 		-- ----------------------------------------
-		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.IndependentPos)
-
 		GVAR.OptionsFrame.LayoutTHText:SetTextColor(1, 1, 1, 1)
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.LayoutTHx18)
 		if bracketSize == 10 or bracketSize == 15 then
@@ -4013,8 +4151,6 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 		-- ----------------------------------------
 	else
 		-- ----------------------------------------
-		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.IndependentPos)
-
 		GVAR.OptionsFrame.LayoutTHText:SetTextColor(0.5, 0.5, 0.5, 1)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.LayoutTHx18)
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.LayoutTHx24)
@@ -4108,7 +4244,6 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 	TEMPLATE.DisableTabButton(GVAR.OptionsFrame.EnableEnemyBracket)
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.EnableFraction)
-	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.IndependentPos)
 
 	TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings1)
 	TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings2)
@@ -4388,9 +4523,17 @@ function BattlegroundTargets:SetupMonoblockPosition(side) -- SUMPOSi
 	end
 
 	local MainFrame = GVAR[side.."MainFrame"]
-	MainFrame:SetClampRectInsets(0, totalWidth*ButtonScale, 0, -(totalHeight*ButtonScale))
+	MainFrame:SetClampRectInsets(0, totalWidth*ButtonScale, 0, -(totalHeight*ButtonScale)) -- CLAMP_FIX_MAIN TODO
 	MainFrame.MonoblockAnchor:SetSize(totalWidth, totalHeight)
-	MainFrame.Mover:SetSize(totalWidth, totalHeight)
+	MainFrame.MainMoverFrame:SetSize(totalWidth, totalHeight)
+	MainFrame.MainMoverButton:SetSize(totalWidth, totalHeight)
+
+	local moverwidth = totalWidth*ButtonScale
+	if moverwidth < 200 then
+		moverwidth = 200
+	end
+	MainFrame.MainMoverButton[1]:SetWidth(moverwidth+40)
+	MainFrame.MainMoverButton[2]:SetWidth(moverwidth+40)
 
 	if BattlegroundTargets_Options[side].SummaryToggle[currentSize] then -- SUMMARY
 		local SummaryPos = BattlegroundTargets_Options[side].SummaryPos[currentSize]
@@ -4574,8 +4717,11 @@ function BattlegroundTargets:SetupButtonLayout(side)
 		if ButtonRangeCheck and ButtonRangeDisplay < 7 then -- RANGE_DISP_LAY
 			button.RangeTexture:Show()
 			button.RangeTexture:SetSize(rangedisplayWidth, B_uttonHeight_2)
+			button.RangeTxt:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize-1, "OUTLINE")
+			button.RangeTxt:SetHeight(fallbackFontSize)
 		else
 			button.RangeTexture:Hide()
+			button.RangeTxt:Hide()
 		end
 
 		button.LeaderTexture:SetSize(ButtonGroupSymbolSize, ButtonGroupSymbolSize)
@@ -4693,9 +4839,6 @@ function BattlegroundTargets:SetupButtonLayout(side)
 		button.HealthText:SetHeight(fallbackFontSize)
 
 		button.ClassColorBackground:SetSize(DATA[side].healthBarWidth, B_uttonHeight_2)
-
-		button.RangeTxt:SetFont(fButtonFontNumberStyle, ButtonFontNumberSize-1, "OUTLINE")
-		button.RangeTxt:SetHeight(fallbackFontSize)
 
 		-- pvp_trinket_
 		button.PVPTrinketTexture:SetSize(B_uttonHeight_2, B_uttonHeight_2)
@@ -4818,7 +4961,7 @@ function BattlegroundTargets:SetupButtonLayout(side)
 
 			ToTButton.BackgroundX:SetSize(ButtonWidth, ButtonHeight)
 
-			ToTButton.FactionTexture:SetSize(B_uttonHeight_2-2, B_uttonHeight_2-2) -- -2 TODO CHK
+			ToTButton.FactionTexture:SetSize(B_uttonHeight_2-2, B_uttonHeight_2-2) -- -2
 			if ButtonShowRole then
 				ToTButton.RoleTexture:SetPoint("LEFT", ToTButton.FactionTexture, "RIGHT", 2, 0) -- -2
 				ToTButton.RoleTexture:SetSize(B_uttonHeight_2, B_uttonHeight_2)
@@ -4986,7 +5129,11 @@ function BattlegroundTargets:RangeInfoText(buttonTxt)
 		end
 		minRange = minRange or 0
 		maxRange = maxRange or 0
-		rangeInfoTxt = rangeInfoTxt.."   "..L[side].."\n\n"
+		if side == "Friend" then
+			rangeInfoTxt = rangeInfoTxt.."   "..L["Friendly Players"]..":\n\n"
+		else
+			rangeInfoTxt = rangeInfoTxt.."   "..L["Enemy Players"]..":\n\n"
+		end
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffffCombatLog:|r 40 - max: |cffffff790-"..(40+maxRange).." (40+"..maxRange..")|r\n\n"
 		rangeInfoTxt = rangeInfoTxt.."   |cffffffff"..L["Class"]..":|r\n"
 		table_sort(class_IntegerSort, function(a, b) return a.loc < b.loc end)
@@ -5002,7 +5149,9 @@ function BattlegroundTargets:RangeInfoText(buttonTxt)
 				rangeInfoTxt = rangeInfoTxt.."     "..txtStr.."\n"
 			end
 		end
-		rangeInfoTxt = rangeInfoTxt.."\n"
+		if frc == 1 then
+			rangeInfoTxt = rangeInfoTxt.."\n\n\n"
+		end
 	end
 	buttonTxt:SetText(rangeInfoTxt)
 end
@@ -5026,19 +5175,10 @@ end
 function BattlegroundTargets:Frame_SetupPosition(frameName, side)
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 
-	if frameName == "BattlegroundTargets_FriendMainFrame" or
-	   frameName == "BattlegroundTargets_EnemyMainFrame"
-	then
-		if BattlegroundTargets_Options[side].IndependentPositioning[currentSize] and BattlegroundTargets_Options.pos[frameName..currentSize] then
-			local options = BattlegroundTargets_Options.pos[frameName..currentSize]
-			local x     = options.x or 0
-			local y     = options.y or 0
-			local point = options.point or "CENTER"
-			local s     = options.s or 1
-			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
-		elseif BattlegroundTargets_Options.pos[frameName] then
-			local options = BattlegroundTargets_Options.pos[frameName]
+	if frameName == "BattlegroundTargets_OptionsFrame" then
+		local saveName = "OptionsFrame"
+		local options = BattlegroundTargets_Options.FramePosition[saveName]
+		if options then
 			local x     = options.x or 0
 			local y     = options.y or 0
 			local point = options.point or "CENTER"
@@ -5047,29 +5187,41 @@ function BattlegroundTargets:Frame_SetupPosition(frameName, side)
 			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
 		else
 			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint("TOPRIGHT", GVAR.OptionsFrame, "TOPLEFT", -80, 19)
+			_G[frameName]:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+		end
+	else
+		local saveName = side.."MainFrame"..currentSize
+		local options = BattlegroundTargets_Options.FramePosition[saveName]
+		if options then
+			local x     = options.x or 0
+			local y     = options.y or 0
+			local point = options.point or "CENTER"
+			local s     = options.s or 1
+			_G[frameName]:ClearAllPoints()
+			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
+		else
+			local x = -200
+			if currentSize == 40 then
+				x = -225
+			end
+			if side == "Enemy" then
+				_G[frameName]:ClearAllPoints()
+				_G[frameName]:SetPoint("TOPRIGHT", GVAR.OptionsFrame, "TOPLEFT", x, -400)
+			else
+				_G[frameName]:ClearAllPoints()
+				_G[frameName]:SetPoint("TOPRIGHT", GVAR.OptionsFrame, "TOPLEFT", x, 0)
+			end
 			local X = _G[frameName]:GetLeft()
 			local Y = _G[frameName]:GetTop()
 			_G[frameName]:ClearAllPoints()
 			_G[frameName]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", X, Y)
 		end
-	elseif frameName == "BattlegroundTargets_OptionsFrame" then
-		if BattlegroundTargets_Options.pos[frameName] then
-			local options = BattlegroundTargets_Options.pos[frameName]
-			local x     = options.x or 0
-			local y     = options.y or 0
-			local point = options.point or "CENTER"
-			local s     = options.s or 1
-			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
-		else
-			_G[frameName]:ClearAllPoints()
-			_G[frameName]:SetPoint("CENTER", UIParent, "CENTER", 0, 50)
-		end
 	end
 end
 
 function BattlegroundTargets:Frame_SavePosition(frameName, side)
+	local BattlegroundTargets_Options = BattlegroundTargets_Options
+
 	-- from LibWindow-1.1
 	local frame = _G[frameName]
 	local s = frame:GetScale()
@@ -5101,16 +5253,35 @@ function BattlegroundTargets:Frame_SavePosition(frameName, side)
 	end
 	-- ------------------
 
-	local varName = frameName
-	if frameName ~= "BattlegroundTargets_OptionsFrame" and BattlegroundTargets_Options[side].IndependentPositioning[currentSize] then
-		varName = frameName..currentSize
+	local saveName
+	if frameName == "BattlegroundTargets_OptionsFrame" then
+		saveName = "OptionsFrame"
+		-- CLAMP_FIX_OPTIONS BEGIN
+		local frameWidth = frame:GetWidth()
+		--local frameHeight = frame:GetHeight()
+		--print(floor(pwidth), floor(pheight), "#", "t:", floor(top), "l:", floor(left), "b:", floor(bottom), "r:", floor(right), "#", floor(frameWidth), floor(frameHeight))
+		if -left > frameWidth-40 or -- LEFT
+		   left > pwidth-40 or      -- RIGHT
+		   bottom > pheight-40 or   -- TOP
+		   top < 40                 -- BOTTOM
+		then
+			x = 0
+			y = 0
+			point = "CENTER"
+			s = 1
+		end
+		-- CLAMP_FIX_OPTIONS END
+	else
+		saveName = side.."MainFrame"..currentSize
 	end
-	--print("varName:", varName, "x:", x, "y:", y, "point:", point, "scale:", s)
-	BattlegroundTargets_Options.pos[varName] = {}
-	BattlegroundTargets_Options.pos[varName].x = x
-	BattlegroundTargets_Options.pos[varName].y = y
-	BattlegroundTargets_Options.pos[varName].point = point
-	BattlegroundTargets_Options.pos[varName].s = s
+
+	--print("saveName:", saveName, "x:", x, "y:", y, "point:", point, "scale:", s)
+
+	BattlegroundTargets_Options.FramePosition[saveName] = {}
+	BattlegroundTargets_Options.FramePosition[saveName].x = x
+	BattlegroundTargets_Options.FramePosition[saveName].y = y
+	BattlegroundTargets_Options.FramePosition[saveName].point = point
+	BattlegroundTargets_Options.FramePosition[saveName].s = s
 
 	_G[frameName]:ClearAllPoints()
 	_G[frameName]:SetPoint(point, UIParent, point, x/s, y/s)
@@ -5433,7 +5604,7 @@ function BattlegroundTargets:EnableConfigMode()
 			GVAR[side.."MainFrame"]:EnableMouse(true)
 			GVAR[side.."MainFrame"]:SetAlpha(1)
 			GVAR[side.."MainFrame"]:Show() -- POSiCHK
-			GVAR[side.."MainFrame"].Mover:Show()
+			GVAR[side.."MainFrame"].MainMoverButton:Show()
 			GVAR[side.."ScoreUpdateTexture"]:Show()
 			GVAR[side.."IsGhostTexture"]:Show()
 
@@ -6795,10 +6966,9 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	end
 
 	if not flagflag and isFlagBG > 0 then
-		-- x
 		if DATA.Enemy.MainData[1] or DATA.Friend.MainData[1] then
 			if BattlegroundTargets_Options.Friend.ButtonShowFlag[currentSize] or BattlegroundTargets_Options.Enemy.ButtonShowFlag[currentSize] then
-				flagflag = true--TODO x
+				flagflag = true
 				flagCHK = true
 				BattlegroundTargets:CheckFlagCarrierSTART()
 			end
@@ -6933,7 +7103,8 @@ function BattlegroundTargets:IsBattleground()
 				GVAR[side.."MainFrame"]:EnableMouse(false)
 				GVAR[side.."MainFrame"]:SetAlpha(0)
 				GVAR[side.."MainFrame"]:Show() -- POSiCHK
-				GVAR[side.."MainFrame"].Mover:Hide()
+				GVAR[side.."MainFrame"].MainMoverFrame:Hide()
+				GVAR[side.."MainFrame"].MainMoverButton:Hide()
 				GVAR[side.."ScoreUpdateTexture"]:Hide()
 				GVAR[side.."IsGhostTexture"]:Hide()
 				for i = 1, 40 do
@@ -6996,7 +7167,7 @@ function BattlegroundTargets:IsBattleground()
 		end
 		-- battleground score END -----
 
-		--[[ -- screenshot_ BEGIN TEST TODO --
+		--[[ -- screenshot_ BEGIN TEST --
 		if side then -- singleside
 			local elapsed = 0
 			GVAR[side.."ScreenShot_Timer_Button"]:SetScript("OnUpdate", function(self, elap)
@@ -8939,7 +9110,7 @@ local function CombatLogRangeCheck(sourceName, destName, spellId)
 	local sourceButton = GVAR.EnemyButton[ DATA.Enemy.Name2Button[sourceName] ]
 	-- source is enemy ----------------------------------------
 	if sourceButton then
-		while true do 
+		while true do
 			if DATA.Enemy.Name2Percent[sourceName] == 0 then
 				DATA.Enemy.Name2Range[sourceName] = nil
 				BattlegroundTargets:Range_Display(false, sourceButton, nil, BattlegroundTargets_Options.Enemy.ButtonRangeDisplay[currentSize])
@@ -9369,7 +9540,7 @@ function BattlegroundTargets:CheckIfPlayerIsGhost(state)
 		BattlegroundTargets:ClearRangeData("Friend")
 		BattlegroundTargets:ClearRangeData("Enemy")
 
-		--Screenshot() -- TEST TODO
+		--Screenshot() -- TEST
 	else
 		isDeadUpdateStop = false
 		if isConfig then return end
@@ -9617,7 +9788,7 @@ local function OnEvent(self, event, ...)
 		CombatLogPVPTrinketCheck(clEvent, spellId, sourceName)
 		if not destFlags or band(destFlags, 0x00000400) == 0 then return end
 		if sourceName == destName then return end
-		---[[
+		---[[ TEST
 		range_CL_Throttle = range_CL_Throttle + 1
 		if range_CL_Throttle > range_CL_Frequency then
 			range_CL_Throttle = 0
