@@ -158,6 +158,7 @@ local SetMapToCurrentZone = SetMapToCurrentZone
 local UnitBuff = UnitBuff
 local UnitClass = UnitClass
 local UnitDebuff = UnitDebuff
+local UnitExists = UnitExists
 local UnitFactionGroup = UnitFactionGroup
 local UnitHealth = UnitHealth
 local UnitHealthMax = UnitHealthMax
@@ -166,6 +167,9 @@ local UnitIsGhost = UnitIsGhost
 local UnitIsGroupLeader = UnitIsGroupLeader
 local UnitLevel = UnitLevel
 local UnitName = UnitName
+
+-- -------------------------------------------------------------------------- --
+
 local function GetUnitFullName(unit)
 	local name, server = UnitName(unit)
 	if server and server ~= "" then
@@ -176,6 +180,7 @@ local function GetUnitFullName(unit)
 		return name
 	end
 end
+
 local function UnitInCheckedRange(unit)
 	local inRange, checkedRange = UnitInRange(unit)
 	--print("RANGE_CHK UnitInRange:", inRange, checkedRange, "#", unit, "#", UnitInRange(unit))
@@ -5297,6 +5302,17 @@ function BattlegroundTargets:OptionsFrameHide()
 	BattlegroundTargets:EventRegister()
 	TEMPLATE.EnableTextButton(GVAR.InterfaceOptions.CONFIG)
 
+	for frc = 1, #FRAMES do
+		local side = FRAMES[frc]
+		DATA[side].MainMoverModeValue = false
+		local MainFrame = side.."MainFrame"
+		GVAR[MainFrame].MainMoverButton:Show()
+		GVAR[MainFrame].MainMoverButton[1]:Show()
+		GVAR[MainFrame].MainMoverButton[2]:Show()
+		GVAR[MainFrame].MainMoverFrame:Hide()
+		GVAR[MainFrame].MainMoverModeButton:SetChecked(false)
+	end
+
 	testData.Loaded = false
 	BattlegroundTargets:DisableConfigMode()
 end
@@ -6976,7 +6992,6 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 	end
 
 	if reSizeCheck >= 10 then return end
-	reSizeCheck = reSizeCheck + 1
 	BattlegroundTargets:BattlefieldCheck()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
@@ -7001,6 +7016,7 @@ function BattlegroundTargets:IsBattleground()
 
 	-- Battleground name BEGIN ----------
 	local bgName, zoneName, mapName
+
 	if not currentBGMap then
 		local queueStatus, queueMapName
 		for i = 1, GetMaxBattlefieldID() do
@@ -7037,6 +7053,8 @@ function BattlegroundTargets:IsBattleground()
 			end
 		end
 	end
+
+	--print("reSizeCheck:", reSizeCheck, "#", currentBGMap, "#", "bgName:", bgName, "zoneName:", zoneName, "mapName:", mapName)
 
 	if currentBGMap then
 		reSizeCheck = 10
@@ -9039,19 +9057,32 @@ end
 local function CombatLogPVPTrinketCheck(clEvent, spellId, sourceName) -- pvp_trinket_
 	if pvptrinketIDs[spellId] and clEvent == "SPELL_CAST_SUCCESS" then
 		--print("cl trinket:", clEvent, spellId, sourceName)
-		local friendButton = GVAR.FriendButton[ DATA.Friend.Name2Button[sourceName] ]
-		if friendButton then
-			local curTime = GetTime()
-			DATA.PvPTrinketEndTime[sourceName] = floor(curTime + pvptrinketIDs[spellId])
-			BattlegroundTargets:UpdatePvPTrinket(friendButton, sourceName, curTime)
-			return
-		end
+		-- --------------------
 		local enemyButton = GVAR.EnemyButton[ DATA.Enemy.Name2Button[sourceName] ]
 		if enemyButton then
-			local curTime = GetTime()
-			DATA.PvPTrinketEndTime[sourceName] = floor(curTime + pvptrinketIDs[spellId])
-			BattlegroundTargets:UpdatePvPTrinket(enemyButton, sourceName, curTime)
+			local BattlegroundTargets_Options = BattlegroundTargets_Options
+			if BattlegroundTargets_Options.Enemy.EnableBracket[currentSize] and
+			   BattlegroundTargets_Options.Enemy.ButtonPvPTrinketToggle[currentSize]
+			then
+				local curTime = GetTime()
+				DATA.PvPTrinketEndTime[sourceName] = floor(curTime + pvptrinketIDs[spellId])
+				BattlegroundTargets:UpdatePvPTrinket(enemyButton, sourceName, curTime)
+			end
+			return
 		end
+		-- --------------------
+		local friendButton = GVAR.FriendButton[ DATA.Friend.Name2Button[sourceName] ]
+		if friendButton then
+			local BattlegroundTargets_Options = BattlegroundTargets_Options
+			if BattlegroundTargets_Options.Friend.EnableBracket[currentSize] and
+			   BattlegroundTargets_Options.Friend.ButtonPvPTrinketToggle[currentSize]
+			then
+				local curTime = GetTime()
+				DATA.PvPTrinketEndTime[sourceName] = floor(curTime + pvptrinketIDs[spellId])
+				BattlegroundTargets:UpdatePvPTrinket(friendButton, sourceName, curTime)
+			end
+		end
+		-- --------------------
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
