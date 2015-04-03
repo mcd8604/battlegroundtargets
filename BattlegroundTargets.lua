@@ -6460,7 +6460,15 @@ end
 function BattlegroundTargets:MainDataUpdate(side)
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 
-	if not BattlegroundTargets_Options[side].EnableBracket[currentSize] then return end
+	if not BattlegroundTargets_Options[side].EnableBracket[currentSize] then
+		wipe(DATA[side].Name2Button)
+		for i = 1, currentSize do
+			if DATA[side].MainData[i] then
+				DATA[side].Name2Button[ DATA[side].MainData[i].name ] = i
+			end
+		end
+		return
+	end
 
 	local ButtonSortBy           = BattlegroundTargets_Options[side].ButtonSortBy[currentSize]
 	local ButtonSortDetail       = BattlegroundTargets_Options[side].ButtonSortDetail[currentSize]
