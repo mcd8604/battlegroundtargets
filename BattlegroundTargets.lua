@@ -13,7 +13,7 @@
 -- # Main Assist Target                                                       --
 -- # Focus                                                                    --
 -- # Flag/Orb/Cart Carrier                                                    --
--- # Friend/Enemy Target Count                                                --
+-- # Target Count                                                             --
 -- # Health                                                                   --
 -- # Range Check                                                              --
 -- # PvP Trinket Timer                                                        --
