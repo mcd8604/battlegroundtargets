@@ -20,16 +20,18 @@ prg.TEMPLATE = TEMPLATE
 
 local Textures = {}
 Textures.Path          = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-icons"
-Textures.SliderKnob    = {0.296875, 0.46875,  0.015625, 0.28125}  -- {19/64, 30/64,  1/64, 18/64}
-Textures.SliderBG_Lnor = {0.296875, 0.375,    0.421875, 0.515625} -- {19/64, 24/64, 27/64, 33/64}
-Textures.SliderBG_Mnor = {0.390625, 0.40625,  0.421875, 0.515625} -- {25/64, 26/64, 27/64, 33/64}
-Textures.SliderBG_Rnor = {0.40625,  0.484375, 0.421875, 0.515625} -- {26/64, 31/64, 27/64, 33/64}
-Textures.SliderBG_Ldis = {0.296875, 0.375,    0.296875, 0.390625} -- {19/64, 24/64, 19/64, 25/64}
-Textures.SliderBG_Mdis = {0.390625, 0.40625,  0.296875, 0.390625} -- {25/64, 26/64, 19/64, 25/64}
-Textures.SliderBG_Rdis = {0.40625,  0.484375, 0.296875, 0.390625} -- {26/64, 31/64, 19/64, 25/64}
+Textures.SliderKnob    = {0.578125, 0.75,     0.734375, 1}        -- {37/64, 48/64, 47/64, 64/64}
+Textures.SliderBG_Lnor = {0.015625, 0.09375,  0.578125, 0.671875} -- { 1/64,  6/64, 37/64, 43/64}
+Textures.SliderBG_Mnor = {0.109375, 0.125,    0.578125, 0.671875} -- { 7/64,  8/64, 37/64, 43/64}
+Textures.SliderBG_Rnor = {0.125,    0.203125, 0.578125, 0.671875} -- { 8/64, 13/64, 37/64, 43/64}
+Textures.SliderBG_Ldis = {0.21875,  0.296875, 0.578125, 0.671875} -- {14/64, 19/64, 37/64, 43/64}
+Textures.SliderBG_Mdis = {0.296875, 0.3125,   0.578125, 0.671875} -- {19/64, 20/64, 37/64, 43/64}
+Textures.SliderBG_Rdis = {0.328125, 0.40625,  0.578125, 0.671875} -- {21/64, 26/64, 37/64, 43/64}
 Textures.Expand        = {0.015625, 0.28125,  0.015625, 0.28125}  -- { 1/64, 18/64,  1/64, 18/64}
 Textures.Collapse      = {0.28125,  0.28125,  0.28125,  0.015625, 0.015625, 0.28125,  0.015625, 0.015625}
 Textures.Close         = {0.015625, 0.28125,  0.296875, 0.5625}   -- { 1/64, 18/64, 19/64, 36/64}
+Textures.Copy1         = {0.296875, 0.6875,   0.015625, 0.28125}  -- {19/64, 44/64,  1/64, 18/64}
+Textures.Copy2         = {0.296875, 0.6875,   0.296875, 0.5625}   -- {19/64, 44/64, 19/64, 36/64}
 
 local function NOOP() end
 
@@ -128,6 +130,20 @@ end
 
 
 -- -----------------------------------------------------------------------------
+TEMPLATE.SetIconButton = function(button, cut)
+	local texture
+	if cut == 1 then
+		texture = Textures.Copy1
+	elseif cut == 2 then
+		texture = Textures.Copy2
+	else--if cut == 0 then
+		texture = Textures.Close
+	end
+	button.Normal:SetTexCoord(unpack(texture))
+	button.Push:SetTexCoord(unpack(texture))
+	button.Disabled:SetTexCoord(unpack(texture))
+end
+
 TEMPLATE.DisableIconButton = function(button)
 	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
 	button:Disable()
@@ -139,6 +155,15 @@ TEMPLATE.EnableIconButton = function(button)
 end
 
 TEMPLATE.IconButton = function(button, cut)
+	local texture
+	if cut == 1 then
+		texture = Textures.Copy1
+	elseif cut == 2 then
+		texture = Textures.Copy2
+	else--if cut == 0 then
+		texture = Textures.Close
+	end
+
 	button.Back = button:CreateTexture(nil, "BORDER")
 	button.Back:SetPoint("TOPLEFT", 1, -1)
 	button.Back:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -159,21 +184,21 @@ TEMPLATE.IconButton = function(button, cut)
 	button.Normal:SetPoint("TOPLEFT", 3, -3)
 	button.Normal:SetPoint("BOTTOMRIGHT", -3, 3)
 	button.Normal:SetTexture(Textures.Path)
-	button.Normal:SetTexCoord(unpack(Textures.Close))
+	button.Normal:SetTexCoord(unpack(texture))
 	button:SetNormalTexture(button.Normal)
 
 	button.Push = button:CreateTexture(nil, "ARTWORK")
 	button.Push:SetPoint("TOPLEFT", 4, -4)
 	button.Push:SetPoint("BOTTOMRIGHT", -4, 4)
 	button.Push:SetTexture(Textures.Path)
-	button.Push:SetTexCoord(unpack(Textures.Close))
+	button.Push:SetTexCoord(unpack(texture))
 	button:SetPushedTexture(button.Push)
 
 	button.Disabled = button:CreateTexture(nil, "ARTWORK")
 	button.Disabled:SetPoint("TOPLEFT", 3, -3)
 	button.Disabled:SetPoint("BOTTOMRIGHT", -3, 3)
 	button.Disabled:SetTexture(Textures.Path)
-	button.Disabled:SetTexCoord(unpack(Textures.Close))
+	button.Disabled:SetTexCoord(unpack(texture))
 	button:SetDisabledTexture(button.Disabled)
 	Desaturation(button.Disabled, true)
 end

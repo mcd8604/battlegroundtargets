@@ -703,14 +703,10 @@ local rangeDisplay = { -- RANGE_DISP_LAY
 local Textures = {}
 Textures.AddonIcon     = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-button"
 Textures.Path          = "Interface\\AddOns\\BattlegroundTargets\\BattlegroundTargets-texture-icons"
-Textures.RoleIcon      ={{0.5,      0.75,     0.25,     0.5},     -- {32/64, 48/64, 16/64, 32/64},  -- 1 HEALER
-                         {0.75,     1,        0,        0.25},    -- {48/64, 64/64,  0/64, 16/64},  -- 2 TANK
-                         {0.5,      0.75,     0,        0.25},    -- {32/64, 48/64,  0/64, 16/64},  -- 3 DAMAGER
-                         {0.75,     1,        0.25,     0.5}}     -- {48/64, 64/64, 16/64, 32/64}}, -- 4 UNKNOWN
-Textures.l40_18        = {coords = {0.5625,   0.640625, 0.578125, 0.796875}, width = 10, height = 28} -- {36/64, 41/64, 37/64, 51/64}, width =  5*2, height = 14*2},
-Textures.l40_24        = {coords = {0.421875, 0.5625,   0.578125, 0.734375}, width = 18, height = 20} -- {27/64, 36/64, 37/64, 47/64}, width =  9*2, height = 10*2},
-Textures.l40_42        = {coords = {0.21875,  0.421875, 0.578125, 0.6875},   width = 26, height = 14} -- {14/64, 27/64, 37/64, 44/64}, width = 13*2, height =  7*2},
-Textures.l40_81        = {coords = {0,        0.21875,  0.578125, 0.65625},  width = 28, height = 10} -- { 0/64, 14/64, 37/64, 42/64}, width = 14*2, height =  5*2},
+Textures.RoleIcon      ={{0.75, 1, 0,    0.25}, -- {48/64, 64/64,  0/64, 16/64} -- 1 HEALER
+                         {0.75, 1, 0.25, 0.5},  -- {48/64, 64/64, 16/64, 32/64} -- 2 TANK
+                         {0.75, 1, 0.5,  0.75}, -- {48/64, 64/64, 32/64, 48/64} -- 3 DAMAGER
+                         {0.75, 1, 0.75, 1}}    -- {48/64, 64/64, 48/64, 64/64} -- 4 UNKNOWN
 Textures.UpdateWarning = {0,        0.546875, 0.734375, 0.984375} -- { 0/64, 35/64, 47/64, 63/64},
 Textures.CombatIcon    = {0.015625, 0.265625, 0.734375, 0.984375} -- { 1/64, 17/64, 47/64, 63/64},
 Textures.FriendIcon    = {path = "Interface\\Common\\friendship-heart", coords = {6/32, 26/32, 3/32, 23/32}}
@@ -1695,439 +1691,24 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	BattlegroundTargets:DefaultShuffle()
 
-	local heightBase = 58 -- 10+16+10+22
-	local heightBracket = 626-10
+	local heightBase = 58
+	local heightBracket = 585
 
-	-- 58                                                   58 -- heightBase
+	-- 10+16+10+22                                          58 -- heightBase
 
 	-- 10+22                                                32 -- fraction
 	-- 10+16                                                26 -- top enable
+	-- 8+1+8 + 16+10 + 16+10 + 16 + 10                      95 -- scale -> height
+	-- 8+1+8 + 16 +                                         33 -- sort
 	-- 8+1+8 + 16+10 + 16 +                                 59 -- layout -> summary
-	-- 8+1+8 + 24                                           41 -- copy button
-	-- 8+1+8 + 16+10 + 16+10 + 16 +                         85 -- 1. row role -> targetcount
-	-- 8+1+8 + 16+10 + 16+10 + 16+10 + 16+10 + 16          137 -- 2. target -> targetassist
-	-- 8+1+8 + 16+10 + 16 +                                 59 -- 3. health -> range
-	-- 8+1+8 + 16 +                                         33 -- 4. sort
-	-- 8+1+8 + 16+10 + 16 +                                 59 -- 5. fonts
-	-- 8+1+8 + 16+10 + 16+10 + 16 + 10                      95 -- 6. scale -> height
+	-- 8+1+8 + 16+10 + 16+10 + 16 +                         85 -- row role -> targetcount
+	-- 8+1+8 + 16+10 + 16+10 + 16+10 + 16+10 + 16          137 -- target -> targetassist
+	-- 8+1+8 + 16+10 + 16 +                                 59 -- health -> range
+	-- 8+1+8 + 16+10 + 16 +                                 59 -- fonts
 	--                                                    =====
-	--                                                     626
+	--                                                     585
 	local heightTotal = heightBase + heightBracket + 30 + 10
 
-	-- ####################################################################################################
-	-- xMx OptionsFrame
-	GVAR.OptionsFrame = CreateFrame("Frame", "BattlegroundTargets_OptionsFrame", UIParent)
-	TEMPLATE.BorderTRBL(GVAR.OptionsFrame)
-	GVAR.OptionsFrame:EnableMouse(true)
-	GVAR.OptionsFrame:SetMovable(true)
-	GVAR.OptionsFrame:SetToplevel(true)
-	GVAR.OptionsFrame:SetClampedToScreen(false) -- TODO bug? (true) -- CLAMP_FIX_OPTIONS
-	-- BOOM GVAR.OptionsFrame:SetClampRectInsets()
-	-- BOOM GVAR.OptionsFrame:SetWidth()
-	GVAR.OptionsFrame:SetHeight(heightTotal)
-	GVAR.OptionsFrame:Hide()
-	GVAR.OptionsFrame:SetScript("OnShow", function() BattlegroundTargets:OptionsFrameShow() end)
-	GVAR.OptionsFrame:SetScript("OnHide", function() BattlegroundTargets:OptionsFrameHide() end)
-	GVAR.OptionsFrame:SetScript("OnMouseWheel", NOOP)
-
-	-- CLAMP_FIX_OPTIONS BEGIN
-	GVAR.OptionsFrame.ClampDummy1 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal top
-	-- BOOM GVAR.OptionsFrame.ClampDummy1:SetSize(w, 1)
-	GVAR.OptionsFrame.ClampDummy1:SetPoint("TOP", GVAR.OptionsFrame, "TOP", 0, -40)
-	GVAR.OptionsFrame.ClampDummy1:SetTexture(0, 0.5, 2, 0.5)
-	GVAR.OptionsFrame.ClampDummy1:Hide()
-	GVAR.OptionsFrame.ClampDummy2 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal bottom
-	-- BOOM GVAR.OptionsFrame.ClampDummy2:SetSize(w, 1)
-	GVAR.OptionsFrame.ClampDummy2:SetPoint("BOTTOM", GVAR.OptionsFrame, "BOTTOM", 0, 40)
-	GVAR.OptionsFrame.ClampDummy2:SetTexture(0, 0.5, 2, 0.5)
-	GVAR.OptionsFrame.ClampDummy2:Hide()
-	GVAR.OptionsFrame.ClampDummy3 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- vertical left
-	-- BOOM GVAR.OptionsFrame.ClampDummy3:SetSize(1, h)
-	GVAR.OptionsFrame.ClampDummy3:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 40, 0)
-	GVAR.OptionsFrame.ClampDummy3:SetTexture(0, 0.5, 2, 0.5)
-	GVAR.OptionsFrame.ClampDummy3:Hide()
-	GVAR.OptionsFrame.ClampDummy4 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal right
-	-- BOOM GVAR.OptionsFrame.ClampDummy4:SetSize(1, h)
-	GVAR.OptionsFrame.ClampDummy4:SetPoint("RIGHT", GVAR.OptionsFrame, "RIGHT", -40, 0)
-	GVAR.OptionsFrame.ClampDummy4:SetTexture(0, 0.5, 2, 0.5)
-	GVAR.OptionsFrame.ClampDummy4:Hide()
-	-- CLAMP_FIX_OPTIONS END
-
-	-- close
-	GVAR.OptionsFrame.CloseConfig = CreateFrame("Button", nil, GVAR.OptionsFrame)
-	TEMPLATE.TextButton(GVAR.OptionsFrame.CloseConfig, L["Close Configuration"], 1)
-	GVAR.OptionsFrame.CloseConfig:SetPoint("BOTTOM", GVAR.OptionsFrame, "BOTTOM", 0, 10)
-	GVAR.OptionsFrame.CloseConfig:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	-- BOOM GVAR.OptionsFrame.CloseConfig:SetWidth()
-	GVAR.OptionsFrame.CloseConfig:SetHeight(30)
-	GVAR.OptionsFrame.CloseConfig:SetScript("OnClick", function() GVAR.OptionsFrame:Hide() end)
-	-- ###
-	-- ####################################################################################################
-
-
-
-	-- ####################################################################################################
-	-- xMx Base
-	GVAR.OptionsFrame.Base = CreateFrame("Frame", nil, GVAR.OptionsFrame)
-	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.Base)
-	-- BOOM GVAR.OptionsFrame.Base:SetWidth()
-	GVAR.OptionsFrame.Base:SetHeight(heightBase)
-	GVAR.OptionsFrame.Base:SetPoint("TOPLEFT", GVAR.OptionsFrame, "TOPLEFT", 0, 0)
-	GVAR.OptionsFrame.Base:EnableMouse(true)
-
-	GVAR.OptionsFrame.Title = GVAR.OptionsFrame.Base:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-	-- BOOM GVAR.OptionsFrame.Title:SetWidth()
-	GVAR.OptionsFrame.Title:SetHeight(16)
-	GVAR.OptionsFrame.Title:SetPoint("TOPLEFT", GVAR.OptionsFrame.Base, "TOPLEFT", 0, -10)
-	GVAR.OptionsFrame.Title:SetJustifyH("CENTER")
-	GVAR.OptionsFrame.Title:SetText("BattlegroundTargets")
-
-	-- tabs
-	GVAR.OptionsFrame.TabGeneral = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
-	TEMPLATE.TabButton(GVAR.OptionsFrame.TabGeneral, L["Options"], nil, "monotext")
-	-- BOOM GVAR.OptionsFrame.TabGeneral:SetWidth()
-	GVAR.OptionsFrame.TabGeneral:SetHeight(22)
-	-- BOOM GVAR.OptionsFrame.TabGeneral:SetPoint()
-	GVAR.OptionsFrame.TabGeneral:SetScript("OnClick", function()
-		if GVAR.OptionsFrame.ConfigGeneral:IsShown() then
-			TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
-			GVAR.OptionsFrame.ConfigGeneral:Hide()
-			GVAR.OptionsFrame.ConfigBrackets:Show()
-			GVAR.OptionsFrame["TabRaidSize"..testSize].TextureBottom:SetTexture(0, 0, 0, 1)
-		else
-			TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, true)
-			GVAR.OptionsFrame.ConfigGeneral:Show()
-			GVAR.OptionsFrame.ConfigBrackets:Hide()
-			GVAR.OptionsFrame["TabRaidSize"..testSize].TextureBottom:SetTexture(0.8, 0.2, 0.2, 1)
-		end
-	end)
-
-	GVAR.OptionsFrame.TabRaidSize10 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
-	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize10, L["10v10"], BattlegroundTargets_Options.Friend.EnableBracket[10] or BattlegroundTargets_Options.Enemy.EnableBracket[10])
-	-- BOOM GVAR.OptionsFrame.TabRaidSize10:SetWidth()
-	GVAR.OptionsFrame.TabRaidSize10:SetHeight(22)
-	-- BOOM GVAR.OptionsFrame.TabRaidSize10:SetPoint()
-	GVAR.OptionsFrame.TabRaidSize10:SetScript("OnClick", function()
-		BattlegroundTargets:ClickOnBracketTab(10, fraction)
-	end)
-
-	GVAR.OptionsFrame.TabRaidSize15 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
-	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize15, L["15v15"], BattlegroundTargets_Options.Friend.EnableBracket[15] or BattlegroundTargets_Options.Enemy.EnableBracket[15])
-	-- BOOM GVAR.OptionsFrame.TabRaidSize15:SetWidth()
-	GVAR.OptionsFrame.TabRaidSize15:SetHeight(22)
-	-- BOOM GVAR.OptionsFrame.TabRaidSize15:SetPoint()
-	GVAR.OptionsFrame.TabRaidSize15:SetScript("OnClick", function()
-		BattlegroundTargets:ClickOnBracketTab(15, fraction)
-	end)
-
-	GVAR.OptionsFrame.TabRaidSize40 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
-	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize40, L["40v40"], BattlegroundTargets_Options.Friend.EnableBracket[40] or BattlegroundTargets_Options.Enemy.EnableBracket[40])
-	-- BOOM GVAR.OptionsFrame.TabRaidSize40:SetWidth()
-	GVAR.OptionsFrame.TabRaidSize40:SetHeight(22)
-	-- BOOM GVAR.OptionsFrame.TabRaidSize40:SetPoint()
-	GVAR.OptionsFrame.TabRaidSize40:SetScript("OnClick", function()
-		BattlegroundTargets:ClickOnBracketTab(40, fraction)
-	end)
-
-	if testSize == 10 then
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, true)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
-	elseif testSize == 15 then
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, true)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
-	elseif testSize == 40 then
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, true)
-	end
-	-- ###
-	-- ####################################################################################################
-
-
-
-	-- ####################################################################################################
-	-- xMx ConfigBrackets
-	GVAR.OptionsFrame.ConfigBrackets = CreateFrame("Frame", nil, GVAR.OptionsFrame)
-	-- BOOM GVAR.OptionsFrame.ConfigBrackets:SetWidth()
-	GVAR.OptionsFrame.ConfigBrackets:SetHeight(heightBracket)
-	GVAR.OptionsFrame.ConfigBrackets:SetPoint("TOPLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", 0, 1)
-	GVAR.OptionsFrame.ConfigBrackets:Hide()
-
-
-
-	-- EnableBracket
-	GVAR.OptionsFrame.EnableFriendBracket = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.TabButton(
-		GVAR.OptionsFrame.EnableFriendBracket,
-		Textures.FriendIconStr.." "..L["Friendly Players"],--L["Friend"],--
-		BattlegroundTargets_Options.Friend.EnableBracket[currentSize])
-	-- BOOM GVAR.OptionsFrame.EnableFriendBracket:SetWidth()
-	GVAR.OptionsFrame.EnableFriendBracket:SetHeight(22)
-	-- BOOM GVAR.OptionsFrame.EnableFriendBracket:SetPoint()
-	GVAR.OptionsFrame.EnableFriendBracket:SetScript("OnClick", function()
-		BattlegroundTargets:ClickOnFractionTab("Friend")
-	end)
-
-	GVAR.OptionsFrame.EnableEnemyBracket = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.TabButton(
-		GVAR.OptionsFrame.EnableEnemyBracket,
-		Textures.EnemyIconStr.." "..L["Enemy Players"],--L["Enemy"],--
-		BattlegroundTargets_Options.Enemy.EnableBracket[currentSize])
-	-- BOOM GVAR.OptionsFrame.EnableEnemyBracket:SetWidth()
-	GVAR.OptionsFrame.EnableEnemyBracket:SetHeight(22)
-	-- BOOM GVAR.OptionsFrame.EnableEnemyBracket:SetPoint()
-	GVAR.OptionsFrame.EnableEnemyBracket:SetScript("OnClick", function()
-		BattlegroundTargets:ClickOnFractionTab("Enemy")
-	end)
-
-	if fraction == "Friend" then
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableFriendBracket, true)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableEnemyBracket, nil)
-	else
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableFriendBracket, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableEnemyBracket, true)
-	end
-
-
-
-	-- DUMMY
-	GVAR.OptionsFrame.Dummy0 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
-	-- BOOM GVAR.OptionsFrame.Dummy0:SetWidth()
-	GVAR.OptionsFrame.Dummy0:SetHeight(1)
-	GVAR.OptionsFrame.Dummy0:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 0, 0)
-	GVAR.OptionsFrame.Dummy0:SetPoint("TOP", GVAR.OptionsFrame.EnableFriendBracket, "BOTTOM", 0, 2)
-	GVAR.OptionsFrame.Dummy0:SetTexture(0.8, 0.2, 0.2, 1)
-
-
-
-	-- enable fraction
-	GVAR.OptionsFrame.EnableFraction = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.EnableFraction, 16, 4, L["Enable"])
-	GVAR.OptionsFrame.EnableFraction:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.EnableFraction:SetPoint("TOP", GVAR.OptionsFrame.Dummy0, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.EnableFraction:SetChecked(BattlegroundTargets_Options[fraction].EnableBracket[currentSize])
-	GVAR.OptionsFrame.EnableFraction:SetScript("OnClick", function()
-		BattlegroundTargets_Options[fraction].EnableBracket[currentSize] = not BattlegroundTargets_Options[fraction].EnableBracket[currentSize]
-		GVAR.OptionsFrame.EnableFraction:SetChecked(BattlegroundTargets_Options[fraction].EnableBracket[currentSize])
-		BattlegroundTargets:CheckForEnabledBracket(currentSize, fraction)
-		if BattlegroundTargets_Options.Friend.EnableBracket[currentSize] or BattlegroundTargets_Options.Enemy.EnableBracket[currentSize] then
-			BattlegroundTargets:EnableConfigMode()
-		else
-			BattlegroundTargets:DisableConfigMode()
-		end
-	end)
-
-
-
-	-- DUMMY
-	GVAR.OptionsFrame.Dummy1 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
-	-- BOOM GVAR.OptionsFrame.Dummy1:SetWidth()
-	GVAR.OptionsFrame.Dummy1:SetHeight(1)
-	GVAR.OptionsFrame.Dummy1:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy1:SetPoint("TOP", GVAR.OptionsFrame.EnableFraction, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy1:SetTexture(0.8, 0.2, 0.2, 1)
-
-
-
-	-- layout
-	GVAR.OptionsFrame.LayoutTHText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.LayoutTHText:SetHeight(16)
-	GVAR.OptionsFrame.LayoutTHText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 26, 0)
-	GVAR.OptionsFrame.LayoutTHText:SetPoint("TOP", GVAR.OptionsFrame.Dummy1, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.LayoutTHText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.LayoutTHText:SetText(L["Layout"]..":")
-	GVAR.OptionsFrame.LayoutTHText:SetTextColor(1, 1, 1, 1)
-	GVAR.OptionsFrame.LayoutTHText.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
-	GVAR.OptionsFrame.LayoutTHText.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.LayoutTHText, "TOPLEFT", 0, 0)
-	GVAR.OptionsFrame.LayoutTHText.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.LayoutTHText, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.LayoutTHText.Background:SetTexture(0, 0, 0, 0)
-
-	GVAR.OptionsFrame.LayoutTHx18 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.LayoutTHx18, 16, 4, nil, Textures.l40_18)
-	GVAR.OptionsFrame.LayoutTHx18:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHText, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.LayoutTHx18:SetScript("OnClick", function()
-		BattlegroundTargets_Options[fraction].LayoutTH[currentSize] = 18
-		GVAR.OptionsFrame.LayoutTHx18:SetChecked(true)
-		GVAR.OptionsFrame.LayoutTHx24:SetChecked(false)
-		GVAR.OptionsFrame.LayoutTHx42:SetChecked(false)
-		GVAR.OptionsFrame.LayoutTHx81:SetChecked(false)
-		TEMPLATE.DisableSlider(GVAR.OptionsFrame.LayoutSpace)
-		BattlegroundTargets:SetupMainFrameLayout(fraction)
-	end)
-	GVAR.OptionsFrame.LayoutTHx24 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.LayoutTHx24, 16, 4, nil, Textures.l40_24)
-	GVAR.OptionsFrame.LayoutTHx24:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHx18, "RIGHT", 0, 0)
-	GVAR.OptionsFrame.LayoutTHx24:SetScript("OnClick", function()
-		BattlegroundTargets_Options[fraction].LayoutTH[currentSize] = 24
-		GVAR.OptionsFrame.LayoutTHx18:SetChecked(false)
-		GVAR.OptionsFrame.LayoutTHx24:SetChecked(true)
-		GVAR.OptionsFrame.LayoutTHx42:SetChecked(false)
-		GVAR.OptionsFrame.LayoutTHx81:SetChecked(false)
-		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
-		BattlegroundTargets:SetupMainFrameLayout(fraction)
-	end)
-	GVAR.OptionsFrame.LayoutTHx42 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.LayoutTHx42, 16, 4, nil, Textures.l40_42)
-	GVAR.OptionsFrame.LayoutTHx42:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHx24, "RIGHT", 0, 0)
-	GVAR.OptionsFrame.LayoutTHx42:SetScript("OnClick", function()
-		BattlegroundTargets_Options[fraction].LayoutTH[currentSize] = 42
-		GVAR.OptionsFrame.LayoutTHx18:SetChecked(false)
-		GVAR.OptionsFrame.LayoutTHx24:SetChecked(false)
-		GVAR.OptionsFrame.LayoutTHx42:SetChecked(true)
-		GVAR.OptionsFrame.LayoutTHx81:SetChecked(false)
-		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
-		BattlegroundTargets:SetupMainFrameLayout(fraction)
-	end)
-	GVAR.OptionsFrame.LayoutTHx81 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.LayoutTHx81, 16, 4, nil, Textures.l40_81)
-	GVAR.OptionsFrame.LayoutTHx81:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHx42, "RIGHT", 0, 0)
-	GVAR.OptionsFrame.LayoutTHx81:SetScript("OnClick", function()
-		BattlegroundTargets_Options[fraction].LayoutTH[currentSize] = 81
-		GVAR.OptionsFrame.LayoutTHx18:SetChecked(false)
-		GVAR.OptionsFrame.LayoutTHx24:SetChecked(false)
-		GVAR.OptionsFrame.LayoutTHx42:SetChecked(false)
-		GVAR.OptionsFrame.LayoutTHx81:SetChecked(true)
-		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
-		BattlegroundTargets:SetupMainFrameLayout(fraction)
-	end)
-	GVAR.OptionsFrame.LayoutSpace = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
-	GVAR.OptionsFrame.LayoutSpaceText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.LayoutSpace, 100, 5, 0, 300, BattlegroundTargets_Options[fraction].LayoutSpace[currentSize],
-	function(self, value)
-		if value == BattlegroundTargets_Options[fraction].LayoutSpace[currentSize] then return end
-		BattlegroundTargets_Options[fraction].LayoutSpace[currentSize] = value
-		GVAR.OptionsFrame.LayoutSpaceText:SetText(value)
-		BattlegroundTargets:EnableConfigMode()
-	end,
-	"blank")
-	GVAR.OptionsFrame.LayoutSpace:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHx81, "RIGHT", 0, 0)
-	GVAR.OptionsFrame.LayoutSpaceText:SetHeight(20)
-	GVAR.OptionsFrame.LayoutSpaceText:SetPoint("LEFT", GVAR.OptionsFrame.LayoutSpace, "RIGHT", 5, 0)
-	GVAR.OptionsFrame.LayoutSpaceText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.LayoutSpaceText:SetText(BattlegroundTargets_Options[fraction].LayoutSpace[currentSize])
-	GVAR.OptionsFrame.LayoutSpaceText:SetTextColor(1, 1, 0.49, 1)
-	local layoutW = GVAR.OptionsFrame.LayoutTHText:GetStringWidth() + 10 +
-	                GVAR.OptionsFrame.LayoutTHx18:GetWidth() + 0 +
-	                GVAR.OptionsFrame.LayoutTHx24:GetWidth() + 0 +
-	                GVAR.OptionsFrame.LayoutTHx42:GetWidth() + 0 +
-	                GVAR.OptionsFrame.LayoutTHx81:GetWidth() + 0 +
-	                GVAR.OptionsFrame.LayoutSpace:GetWidth() + 50
-
-	local function ConfigFontNumberOptionCheck(size)
-		if BattlegroundTargets_Options[fraction].SummaryToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonFlagToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonHealthTextToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonFTargetCountToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonETargetCountToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonPvPTrinketToggle[size]
-		then
-			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
-			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
-			TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNumberSlider)
-		else
-			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
-			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(0.5, 0.5, 0.5, 1)
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNumberSlider)
-		end
-	end
-
-	-- summary
-	GVAR.OptionsFrame.SummaryText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.SummaryText:SetHeight(16)
-	GVAR.OptionsFrame.SummaryText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 26, 0)
-	GVAR.OptionsFrame.SummaryText:SetPoint("TOP", GVAR.OptionsFrame.LayoutTHText, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.SummaryText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.SummaryText:SetText(L["Summary"]..":")
-	GVAR.OptionsFrame.SummaryText:SetTextColor(1, 1, 1, 1)
-	GVAR.OptionsFrame.SummaryText.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
-	GVAR.OptionsFrame.SummaryText.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.SummaryText, "TOPLEFT", 0, 0)
-	GVAR.OptionsFrame.SummaryText.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.SummaryText, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.SummaryText.Background:SetTexture(0, 0, 0, 0)
-
-	GVAR.OptionsFrame.SummaryToggle = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets) -- SUMMARY
-	TEMPLATE.CheckButton(GVAR.OptionsFrame.SummaryToggle, 16, 0, "")
-	GVAR.OptionsFrame.SummaryToggle:SetPoint("LEFT", GVAR.OptionsFrame.SummaryText, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.SummaryToggle:SetChecked(BattlegroundTargets_Options[fraction].SummaryToggle[currentSize])
-	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.SummaryToggle)
-	GVAR.OptionsFrame.SummaryToggle:SetScript("OnClick", function()
-		BattlegroundTargets_Options[fraction].SummaryToggle[currentSize] = not BattlegroundTargets_Options[fraction].SummaryToggle[currentSize]
-		if BattlegroundTargets_Options[fraction].SummaryToggle[currentSize] then
-			TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScale)
-			TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryPosition)
-		else
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScale)
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryPosition)
-		end
-		ConfigFontNumberOptionCheck(currentSize)
-		BattlegroundTargets:EnableConfigMode()
-	end)
-
-	GVAR.OptionsFrame.SummaryScale = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
-	GVAR.OptionsFrame.SummaryScaleText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.SummaryScale, 85, 5, 40, 150, BattlegroundTargets_Options[fraction].SummaryScale[currentSize],
-	function(self, value)
-		local nvalue = value/100
-		if nvalue == BattlegroundTargets_Options[fraction].SummaryScale[currentSize] then return end
-		BattlegroundTargets_Options[fraction].SummaryScale[currentSize] = nvalue
-		GVAR.OptionsFrame.SummaryScaleText:SetText(value.."%")
-		BattlegroundTargets:EnableConfigMode()
-	end,
-	"blank")
-	GVAR.OptionsFrame.SummaryScale:SetPoint("LEFT", GVAR.OptionsFrame.SummaryToggle, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.SummaryScaleText:SetHeight(16)
-	GVAR.OptionsFrame.SummaryScaleText:SetPoint("LEFT", GVAR.OptionsFrame.SummaryScale, "RIGHT", 5, 0)
-	GVAR.OptionsFrame.SummaryScaleText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.SummaryScaleText:SetText((BattlegroundTargets_Options[fraction].SummaryScale[currentSize]*100).."%")
-	GVAR.OptionsFrame.SummaryScaleText:SetTextColor(1, 1, 0.49, 1)
-
-	GVAR.OptionsFrame.SummaryPosition = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets) -- SUMPOSi
-	GVAR.OptionsFrame.SummaryPositionText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	TEMPLATE.Slider(GVAR.OptionsFrame.SummaryPosition, 85, 1, 1, 9, BattlegroundTargets_Options[fraction].SummaryPos[currentSize],
-	function(self, value)
-		if value == BattlegroundTargets_Options[fraction].SummaryPos[currentSize] then return end
-		BattlegroundTargets_Options[fraction].SummaryPos[currentSize] = value
-		GVAR.OptionsFrame.SummaryPositionText:SetText(sumPos[ value ])
-		BattlegroundTargets:EnableConfigMode()
-	end,
-	"blank")
-	GVAR.OptionsFrame.SummaryPosition:SetPoint("LEFT", GVAR.OptionsFrame.SummaryScale, "RIGHT", 50, 0)
-	GVAR.OptionsFrame.SummaryPositionText:SetHeight(20)
-	GVAR.OptionsFrame.SummaryPositionText:SetWidth(50)
-	GVAR.OptionsFrame.SummaryPositionText:SetPoint("LEFT", GVAR.OptionsFrame.SummaryPosition, "RIGHT", 5, 0)
-	GVAR.OptionsFrame.SummaryPositionText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.SummaryPositionText:SetText(sumPos[ BattlegroundTargets_Options[fraction].SummaryPos[currentSize] ])
-	GVAR.OptionsFrame.SummaryPositionText:SetTextColor(1, 1, 0.49, 1)
-
-	if BattlegroundTargets_Options[fraction].SummaryToggle[currentSize] then
-		TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScale)
-		TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryPosition)
-	else
-		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScale)
-		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryPosition)
-	end
-	local summaryW = GVAR.OptionsFrame.SummaryText:GetStringWidth() + 10 +
-	                 GVAR.OptionsFrame.SummaryToggle:GetWidth() + 10 +
-	                 GVAR.OptionsFrame.SummaryScale:GetWidth() + 10 +
-	                 GVAR.OptionsFrame.SummaryPosition:GetWidth() + 50
-
-
-
-	-- DUMMY
-	GVAR.OptionsFrame.Dummy2 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
-	-- BOOM GVAR.OptionsFrame.Dummy2:SetWidth()
-	GVAR.OptionsFrame.Dummy2:SetHeight(1)
-	GVAR.OptionsFrame.Dummy2:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy2:SetPoint("TOP", GVAR.OptionsFrame.SummaryToggle, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy2:SetTexture(0.73, 0.26, 0.21, 0.5)
-
-
-
-	-- copy settings
 	local function HighlightOnEnter(what)
 		GVAR.OptionsFrame.LayoutTHText.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.LayoutTHx18.Highlight:Show()
@@ -2273,45 +1854,494 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.HeightSlider.Background:SetTexture(0, 0, 0, 0)
 	end
 
-	GVAR.OptionsFrame.CopyText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.CopyText:SetHeight(16)
-	GVAR.OptionsFrame.CopyText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.CopyText:SetPoint("TOP", GVAR.OptionsFrame.Dummy2, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.CopyText:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.CopyText:SetText(L["Copy settings to"]..":")
-	GVAR.OptionsFrame.CopyText:SetTextColor(1, 1, 1, 1)
+	-- ####################################################################################################
+	-- xMx OptionsFrame
+	GVAR.OptionsFrame = CreateFrame("Frame", "BattlegroundTargets_OptionsFrame", UIParent)
+	TEMPLATE.BorderTRBL(GVAR.OptionsFrame)
+	GVAR.OptionsFrame:EnableMouse(true)
+	GVAR.OptionsFrame:SetMovable(true)
+	GVAR.OptionsFrame:SetToplevel(true)
+	GVAR.OptionsFrame:SetClampedToScreen(false) -- TODO bug? (true) -- CLAMP_FIX_OPTIONS
+	-- BOOM GVAR.OptionsFrame:SetClampRectInsets()
+	-- BOOM GVAR.OptionsFrame:SetWidth()
+	GVAR.OptionsFrame:SetHeight(heightTotal)
+	GVAR.OptionsFrame:Hide()
+	GVAR.OptionsFrame:SetScript("OnShow", function() BattlegroundTargets:OptionsFrameShow() end)
+	GVAR.OptionsFrame:SetScript("OnHide", function() BattlegroundTargets:OptionsFrameHide() end)
+	GVAR.OptionsFrame:SetScript("OnMouseWheel", NOOP)
 
-	GVAR.OptionsFrame.CopySettings1 = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.TextButton(GVAR.OptionsFrame.CopySettings1, L["15v15"].." "..Textures.EnemyIconStr.." "..L["Enemy"], 4)
-	GVAR.OptionsFrame.CopySettings1:SetPoint("LEFT", GVAR.OptionsFrame.CopyText, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.CopySettings1:SetHeight(24)
+	-- CLAMP_FIX_OPTIONS BEGIN
+	GVAR.OptionsFrame.ClampDummy1 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal top
+	-- BOOM GVAR.OptionsFrame.ClampDummy1:SetSize(w, 1)
+	GVAR.OptionsFrame.ClampDummy1:SetPoint("TOP", GVAR.OptionsFrame, "TOP", 0, -40)
+	GVAR.OptionsFrame.ClampDummy1:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy1:Hide()
+	GVAR.OptionsFrame.ClampDummy2 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal bottom
+	-- BOOM GVAR.OptionsFrame.ClampDummy2:SetSize(w, 1)
+	GVAR.OptionsFrame.ClampDummy2:SetPoint("BOTTOM", GVAR.OptionsFrame, "BOTTOM", 0, 40)
+	GVAR.OptionsFrame.ClampDummy2:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy2:Hide()
+	GVAR.OptionsFrame.ClampDummy3 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- vertical left
+	-- BOOM GVAR.OptionsFrame.ClampDummy3:SetSize(1, h)
+	GVAR.OptionsFrame.ClampDummy3:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 40, 0)
+	GVAR.OptionsFrame.ClampDummy3:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy3:Hide()
+	GVAR.OptionsFrame.ClampDummy4 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal right
+	-- BOOM GVAR.OptionsFrame.ClampDummy4:SetSize(1, h)
+	GVAR.OptionsFrame.ClampDummy4:SetPoint("RIGHT", GVAR.OptionsFrame, "RIGHT", -40, 0)
+	GVAR.OptionsFrame.ClampDummy4:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy4:Hide()
+	-- CLAMP_FIX_OPTIONS END
+
+	-- close
+	GVAR.OptionsFrame.CloseConfig = CreateFrame("Button", nil, GVAR.OptionsFrame)
+	TEMPLATE.TextButton(GVAR.OptionsFrame.CloseConfig, L["Close Configuration"], 1)
+	GVAR.OptionsFrame.CloseConfig:SetPoint("BOTTOM", GVAR.OptionsFrame, "BOTTOM", 0, 10)
+	GVAR.OptionsFrame.CloseConfig:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	-- BOOM GVAR.OptionsFrame.CloseConfig:SetWidth()
+	GVAR.OptionsFrame.CloseConfig:SetHeight(30)
+	GVAR.OptionsFrame.CloseConfig:SetScript("OnClick", function() GVAR.OptionsFrame:Hide() end)
+	-- ###
+	-- ####################################################################################################
+
+
+
+	-- ####################################################################################################
+	-- xMx Base
+	GVAR.OptionsFrame.Base = CreateFrame("Frame", nil, GVAR.OptionsFrame)
+	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.Base)
+	-- BOOM GVAR.OptionsFrame.Base:SetWidth()
+	GVAR.OptionsFrame.Base:SetHeight(heightBase)
+	GVAR.OptionsFrame.Base:SetPoint("TOPLEFT", GVAR.OptionsFrame, "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.Base:EnableMouse(true)
+
+	GVAR.OptionsFrame.Title = GVAR.OptionsFrame.Base:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+	-- BOOM GVAR.OptionsFrame.Title:SetWidth()
+	GVAR.OptionsFrame.Title:SetHeight(16)
+	GVAR.OptionsFrame.Title:SetPoint("TOPLEFT", GVAR.OptionsFrame.Base, "TOPLEFT", 0, -10)
+	GVAR.OptionsFrame.Title:SetJustifyH("CENTER")
+	GVAR.OptionsFrame.Title:SetText("BattlegroundTargets")
+
+	-- tabs
+	GVAR.OptionsFrame.TabGeneral = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
+	TEMPLATE.TabButton(GVAR.OptionsFrame.TabGeneral, L["Options"], nil, "monotext")
+	-- BOOM GVAR.OptionsFrame.TabGeneral:SetWidth()
+	GVAR.OptionsFrame.TabGeneral:SetHeight(22)
+	-- BOOM GVAR.OptionsFrame.TabGeneral:SetPoint()
+	GVAR.OptionsFrame.TabGeneral:SetScript("OnClick", function()
+		if GVAR.OptionsFrame.ConfigGeneral:IsShown() then
+			TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
+			GVAR.OptionsFrame.ConfigGeneral:Hide()
+			GVAR.OptionsFrame.ConfigBrackets:Show()
+			GVAR.OptionsFrame["TabRaidSize"..testSize].TextureBottom:SetTexture(0, 0, 0, 1)
+		else
+			TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, true)
+			GVAR.OptionsFrame.ConfigGeneral:Show()
+			GVAR.OptionsFrame.ConfigBrackets:Hide()
+			GVAR.OptionsFrame["TabRaidSize"..testSize].TextureBottom:SetTexture(0.8, 0.2, 0.2, 1)
+		end
+	end)
+
+	GVAR.OptionsFrame.TabRaidSize10 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
+	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize10, L["10v10"], BattlegroundTargets_Options.Friend.EnableBracket[10] or BattlegroundTargets_Options.Enemy.EnableBracket[10])
+	-- BOOM GVAR.OptionsFrame.TabRaidSize10:SetWidth()
+	GVAR.OptionsFrame.TabRaidSize10:SetHeight(22)
+	-- BOOM GVAR.OptionsFrame.TabRaidSize10:SetPoint()
+	GVAR.OptionsFrame.TabRaidSize10:SetPoint("LEFT", GVAR.OptionsFrame.TabGeneral, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.TabRaidSize10:SetScript("OnClick", function()
+		BattlegroundTargets:ClickOnBracketTab(10, fraction)
+	end)
+
+	-- copy settings1
+	GVAR.OptionsFrame.CopySettings1 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
+	TEMPLATE.IconButton(GVAR.OptionsFrame.CopySettings1, 1)
+	GVAR.OptionsFrame.CopySettings1:SetPoint("LEFT", GVAR.OptionsFrame.TabRaidSize10, "RIGHT", 10, 5)
+	GVAR.OptionsFrame.CopySettings1:SetHeight(20.4) -- 17 * 1.2 -- COPY_HW
+	GVAR.OptionsFrame.CopySettings1:SetWidth(30) -- 25 * 1.2
 	GVAR.OptionsFrame.CopySettings1:SetScript("OnClick", function() BattlegroundTargets:CopyAllSettings(currentSize) end)
 	GVAR.OptionsFrame.CopySettings1:SetScript("OnEnter", function() HighlightOnEnter("diffSize") end)
 	GVAR.OptionsFrame.CopySettings1:SetScript("OnLeave", HighlightOnLeave)
 
+	GVAR.OptionsFrame.TabRaidSize15 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
+	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize15, L["15v15"], BattlegroundTargets_Options.Friend.EnableBracket[15] or BattlegroundTargets_Options.Enemy.EnableBracket[15])
+	-- BOOM GVAR.OptionsFrame.TabRaidSize15:SetWidth()
+	GVAR.OptionsFrame.TabRaidSize15:SetHeight(22)
+	-- BOOM GVAR.OptionsFrame.TabRaidSize15:SetPoint()
+	GVAR.OptionsFrame.TabRaidSize15:SetPoint("LEFT", GVAR.OptionsFrame.CopySettings1, "RIGHT", 10, -5)
+	GVAR.OptionsFrame.TabRaidSize15:SetScript("OnClick", function()
+		BattlegroundTargets:ClickOnBracketTab(15, fraction)
+	end)
+
+	GVAR.OptionsFrame.TabRaidSize40 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
+	TEMPLATE.TabButton(GVAR.OptionsFrame.TabRaidSize40, L["40v40"], BattlegroundTargets_Options.Friend.EnableBracket[40] or BattlegroundTargets_Options.Enemy.EnableBracket[40])
+	-- BOOM GVAR.OptionsFrame.TabRaidSize40:SetWidth()
+	GVAR.OptionsFrame.TabRaidSize40:SetHeight(22)
+	-- BOOM GVAR.OptionsFrame.TabRaidSize40:SetPoint()
+	GVAR.OptionsFrame.TabRaidSize40:SetPoint("LEFT", GVAR.OptionsFrame.TabRaidSize15, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.TabRaidSize40:SetScript("OnClick", function()
+		BattlegroundTargets:ClickOnBracketTab(40, fraction)
+	end)
+
+	if testSize == 10 then
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, true)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
+	elseif testSize == 15 then
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, true)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
+	elseif testSize == 40 then
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, true)
+	end
+	-- ###
+	-- ####################################################################################################
+
+
+
+	-- ####################################################################################################
+	-- xMx ConfigBrackets
+	GVAR.OptionsFrame.ConfigBrackets = CreateFrame("Frame", nil, GVAR.OptionsFrame)
+	-- BOOM GVAR.OptionsFrame.ConfigBrackets:SetWidth()
+	GVAR.OptionsFrame.ConfigBrackets:SetHeight(heightBracket)
+	GVAR.OptionsFrame.ConfigBrackets:SetPoint("TOPLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", 0, -1)
+	GVAR.OptionsFrame.ConfigBrackets:Hide()
+
+	-- EnableBracket
+	GVAR.OptionsFrame.EnableFriendBracket = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.TabButton(
+		GVAR.OptionsFrame.EnableFriendBracket,
+		Textures.FriendIconStr.." "..L["Friendly Players"],--L["Friend"],--
+		BattlegroundTargets_Options.Friend.EnableBracket[currentSize])
+	-- BOOM GVAR.OptionsFrame.EnableFriendBracket:SetWidth()
+	GVAR.OptionsFrame.EnableFriendBracket:SetHeight(22)
+	-- BOOM GVAR.OptionsFrame.EnableFriendBracket:SetPoint()
+	GVAR.OptionsFrame.EnableFriendBracket:SetScript("OnClick", function()
+		BattlegroundTargets:ClickOnFractionTab("Friend")
+	end)
+
+	-- copy settings2
 	GVAR.OptionsFrame.CopySettings2 = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.TextButton(GVAR.OptionsFrame.CopySettings2, L["10v10"].." "..Textures.FriendIconStr.." "..L["Friend"], 4)
-	GVAR.OptionsFrame.CopySettings2:SetPoint("LEFT", GVAR.OptionsFrame.CopySettings1, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.CopySettings2:SetHeight(24)
+	TEMPLATE.IconButton(GVAR.OptionsFrame.CopySettings2, 2)
+	GVAR.OptionsFrame.CopySettings2:SetPoint("LEFT", GVAR.OptionsFrame.EnableFriendBracket, "RIGHT", 10, 5)
+	GVAR.OptionsFrame.CopySettings2:SetHeight(20.4) -- 17 * 1.2 -- COPY_HW
+	GVAR.OptionsFrame.CopySettings2:SetWidth(30) -- 25 * 1.2
 	GVAR.OptionsFrame.CopySettings2:SetScript("OnClick", function() BattlegroundTargets:CopyAllSettings(currentSize, "sameSize") end)
 	GVAR.OptionsFrame.CopySettings2:SetScript("OnEnter", function() HighlightOnEnter("sameSize") end)
 	GVAR.OptionsFrame.CopySettings2:SetScript("OnLeave", HighlightOnLeave)
 
-	local w1 = GVAR.OptionsFrame.CopySettings1.Text:GetStringWidth()
-	GVAR.OptionsFrame.CopySettings1.Text:SetText(L["15v15"].." "..Textures.FriendIconStr.." "..L["Friend"])
-	local w2 = GVAR.OptionsFrame.CopySettings1.Text:GetStringWidth()
-	if w2 > w1 then
-		w1 = w2
-		end
-	GVAR.OptionsFrame.CopySettings1:SetWidth(w1 + 30)
+	GVAR.OptionsFrame.EnableEnemyBracket = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.TabButton(
+		GVAR.OptionsFrame.EnableEnemyBracket,
+		Textures.EnemyIconStr.." "..L["Enemy Players"],--L["Enemy"],--
+		BattlegroundTargets_Options.Enemy.EnableBracket[currentSize])
+	-- BOOM GVAR.OptionsFrame.EnableEnemyBracket:SetWidth()
+	GVAR.OptionsFrame.EnableEnemyBracket:SetHeight(22)
+	GVAR.OptionsFrame.EnableEnemyBracket:SetPoint("LEFT", GVAR.OptionsFrame.CopySettings2, "RIGHT", 10, -5)
+	GVAR.OptionsFrame.EnableEnemyBracket:SetScript("OnClick", function()
+		BattlegroundTargets:ClickOnFractionTab("Enemy")
+	end)
 
-	local w1 = GVAR.OptionsFrame.CopySettings2.Text:GetStringWidth()
-	GVAR.OptionsFrame.CopySettings2.Text:SetText(L["10v10"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
-	local w2 = GVAR.OptionsFrame.CopySettings2.Text:GetStringWidth()
-	if w2 > w1 then
-		w1 = w2
+	if fraction == "Friend" then
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableFriendBracket, true)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableEnemyBracket, nil)
+	else
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableFriendBracket, nil)
+		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableEnemyBracket, true)
+	end
+
+
+
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy0 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy0:SetWidth()
+	GVAR.OptionsFrame.Dummy0:SetHeight(1)
+	GVAR.OptionsFrame.Dummy0:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 0, 0)
+	GVAR.OptionsFrame.Dummy0:SetPoint("TOP", GVAR.OptionsFrame.EnableFriendBracket, "BOTTOM", 0, 2)
+	GVAR.OptionsFrame.Dummy0:SetTexture(0.8, 0.2, 0.2, 1)
+
+
+
+	-- enable fraction
+	GVAR.OptionsFrame.EnableFraction = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.EnableFraction, 16, 4, L["Enable"])
+	GVAR.OptionsFrame.EnableFraction:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.EnableFraction:SetPoint("TOP", GVAR.OptionsFrame.Dummy0, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.EnableFraction:SetChecked(BattlegroundTargets_Options[fraction].EnableBracket[currentSize])
+	GVAR.OptionsFrame.EnableFraction:SetScript("OnClick", function()
+		BattlegroundTargets_Options[fraction].EnableBracket[currentSize] = not BattlegroundTargets_Options[fraction].EnableBracket[currentSize]
+		GVAR.OptionsFrame.EnableFraction:SetChecked(BattlegroundTargets_Options[fraction].EnableBracket[currentSize])
+		BattlegroundTargets:CheckForEnabledBracket(currentSize, fraction)
+		if BattlegroundTargets_Options.Friend.EnableBracket[currentSize] or BattlegroundTargets_Options.Enemy.EnableBracket[currentSize] then
+			BattlegroundTargets:EnableConfigMode()
+		else
+			BattlegroundTargets:DisableConfigMode()
 		end
-	GVAR.OptionsFrame.CopySettings2:SetWidth(w1 + 30)
+	end)
+
+
+
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy1 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy1:SetWidth()
+	GVAR.OptionsFrame.Dummy1:SetHeight(1)
+	GVAR.OptionsFrame.Dummy1:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy1:SetPoint("TOP", GVAR.OptionsFrame.EnableFraction, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy1:SetTexture(0.8, 0.2, 0.2, 1)
+
+
+
+	-- scale
+	GVAR.OptionsFrame.ScaleTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.ScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
+	GVAR.OptionsFrame.ScaleValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.ScaleTitle:SetHeight(16)
+	GVAR.OptionsFrame.ScaleTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.ScaleTitle:SetPoint("TOP", GVAR.OptionsFrame.Dummy1, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.ScaleTitle:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.ScaleTitle:SetText(L["Scale"]..":")
+	GVAR.OptionsFrame.ScaleTitle:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.ScaleTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
+	GVAR.OptionsFrame.ScaleTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.ScaleTitle, "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.ScaleTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.ScaleTitle, "BOTTOMRIGHT", 0, 0)
+	GVAR.OptionsFrame.ScaleTitle.Background:SetTexture(0, 0, 0, 0)
+	TEMPLATE.Slider(GVAR.OptionsFrame.ScaleSlider, 180, 5, 50, 250, BattlegroundTargets_Options[fraction].ButtonScale[currentSize]*100,
+	function(self, value)
+		local nvalue = value/100
+		if nvalue == BattlegroundTargets_Options[fraction].ButtonScale[currentSize] then return end
+		BattlegroundTargets_Options[fraction].ButtonScale[currentSize] = nvalue
+		GVAR.OptionsFrame.ScaleValue:SetText(value.."%")
+		BattlegroundTargets:EnableConfigMode()
+	end,
+	"blank")
+	GVAR.OptionsFrame.ScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ScaleTitle, "RIGHT", 20, 0)
+	GVAR.OptionsFrame.ScaleValue:SetHeight(20)
+	GVAR.OptionsFrame.ScaleValue:SetPoint("LEFT", GVAR.OptionsFrame.ScaleSlider, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.ScaleValue:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.ScaleValue:SetText((BattlegroundTargets_Options[fraction].ButtonScale[currentSize]*100).."%")
+	GVAR.OptionsFrame.ScaleValue:SetTextColor(1, 1, 0.49, 1)
+
+	-- width
+	GVAR.OptionsFrame.WidthTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.WidthSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
+	GVAR.OptionsFrame.WidthValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.WidthTitle:SetHeight(16)
+	GVAR.OptionsFrame.WidthTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.WidthTitle:SetPoint("TOP", GVAR.OptionsFrame.ScaleSlider, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.WidthTitle:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.WidthTitle:SetText(L["Width"]..":")
+	GVAR.OptionsFrame.WidthTitle:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.WidthTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
+	GVAR.OptionsFrame.WidthTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.WidthTitle, "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.WidthTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.WidthTitle, "BOTTOMRIGHT", 0, 0)
+	GVAR.OptionsFrame.WidthTitle.Background:SetTexture(0, 0, 0, 0)
+	TEMPLATE.Slider(GVAR.OptionsFrame.WidthSlider, 180, 5, 50, 300, BattlegroundTargets_Options[fraction].ButtonWidth[currentSize],
+	function(self, value)
+		if value == BattlegroundTargets_Options[fraction].ButtonWidth[currentSize] then return end
+		BattlegroundTargets_Options[fraction].ButtonWidth[currentSize] = value
+		GVAR.OptionsFrame.WidthValue:SetText(value)
+		BattlegroundTargets:EnableConfigMode()
+	end,
+	"blank")
+	GVAR.OptionsFrame.WidthSlider:SetPoint("LEFT", GVAR.OptionsFrame.WidthTitle, "RIGHT", 20, 0)
+	GVAR.OptionsFrame.WidthValue:SetHeight(20)
+	GVAR.OptionsFrame.WidthValue:SetPoint("LEFT", GVAR.OptionsFrame.WidthSlider, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.WidthValue:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.WidthValue:SetText(BattlegroundTargets_Options[fraction].ButtonWidth[currentSize])
+	GVAR.OptionsFrame.WidthValue:SetTextColor(1, 1, 0.49, 1)
+
+	-- height
+	GVAR.OptionsFrame.HeightTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.HeightSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
+	GVAR.OptionsFrame.HeightValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.HeightTitle:SetHeight(16)
+	GVAR.OptionsFrame.HeightTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.HeightTitle:SetPoint("TOP", GVAR.OptionsFrame.WidthTitle, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.HeightTitle:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.HeightTitle:SetText(L["Height"]..":")
+	GVAR.OptionsFrame.HeightTitle:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.HeightTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
+	GVAR.OptionsFrame.HeightTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.HeightTitle, "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.HeightTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.HeightTitle, "BOTTOMRIGHT", 0, 0)
+	GVAR.OptionsFrame.HeightTitle.Background:SetTexture(0, 0, 0, 0)
+	TEMPLATE.Slider(GVAR.OptionsFrame.HeightSlider, 180, 1, 10, 50, BattlegroundTargets_Options[fraction].ButtonHeight[currentSize],
+	function(self, value)
+		if value == BattlegroundTargets_Options[fraction].ButtonHeight[currentSize] then return end
+		BattlegroundTargets_Options[fraction].ButtonHeight[currentSize] = value
+		GVAR.OptionsFrame.HeightValue:SetText(value)
+		BattlegroundTargets:EnableConfigMode()
+	end,
+	"blank")
+	GVAR.OptionsFrame.HeightSlider:SetPoint("LEFT", GVAR.OptionsFrame.HeightTitle, "RIGHT", 20, 0)
+	GVAR.OptionsFrame.HeightValue:SetHeight(20)
+	GVAR.OptionsFrame.HeightValue:SetPoint("LEFT", GVAR.OptionsFrame.HeightSlider, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.HeightValue:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.HeightValue:SetText(BattlegroundTargets_Options[fraction].ButtonHeight[currentSize])
+	GVAR.OptionsFrame.HeightValue:SetTextColor(1, 1, 0.49, 1)
+
+	local equalTextWidthSliders, sw = 0, 0
+	sw = GVAR.OptionsFrame.ScaleTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
+	sw = GVAR.OptionsFrame.WidthTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
+	sw = GVAR.OptionsFrame.HeightTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
+	GVAR.OptionsFrame.ScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ScaleTitle, "LEFT", equalTextWidthSliders+10, 0)
+	GVAR.OptionsFrame.WidthSlider:SetPoint("LEFT", GVAR.OptionsFrame.WidthTitle, "LEFT", equalTextWidthSliders+10, 0)
+	GVAR.OptionsFrame.HeightSlider:SetPoint("LEFT", GVAR.OptionsFrame.HeightTitle, "LEFT", equalTextWidthSliders+10, 0)
+
+
+
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy2 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy2:SetWidth()
+	GVAR.OptionsFrame.Dummy2:SetHeight(1)
+	GVAR.OptionsFrame.Dummy2:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy2:SetPoint("TOP", GVAR.OptionsFrame.HeightTitle, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy2:SetTexture(0.73, 0.26, 0.21, 0.5)
+
+
+
+	-- sort by
+	local sortW = 0
+	GVAR.OptionsFrame.SortByTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.SortByTitle:SetHeight(16)
+	GVAR.OptionsFrame.SortByTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.SortByTitle:SetPoint("TOP", GVAR.OptionsFrame.Dummy2, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.SortByTitle:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SortByTitle:SetText(L["Sort By"]..":")
+	GVAR.OptionsFrame.SortByTitle:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.SortByTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
+	GVAR.OptionsFrame.SortByTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.SortByTitle, "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.SortByTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.SortByTitle, "BOTTOMRIGHT", 0, 0)
+	GVAR.OptionsFrame.SortByTitle.Background:SetTexture(0, 0, 0, 0)
+	sortW = sortW + 10 + GVAR.OptionsFrame.SortByTitle:GetStringWidth()
+
+	GVAR.OptionsFrame.SortByPullDown = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.PullDownMenu(
+		GVAR.OptionsFrame.SortByPullDown,
+		sortBy,
+		sortBy[ BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize] ],
+		0,
+		function(value) -- PDFUNC
+			BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize] = value
+			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button) -- TODO check - potential bug port
+			GVAR.OptionsFrame.SortByPullDown.spookval = BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize]
+			BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize] = self.value1
+			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button) -- TODO check - potential bug port
+			BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize] = GVAR.OptionsFrame.SortByPullDown.spookval or self.value1
+			BattlegroundTargets:EnableConfigMode()
+		end
+	)
+	GVAR.OptionsFrame.SortByPullDown:SetPoint("LEFT", GVAR.OptionsFrame.SortByTitle, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.SortByPullDown:SetHeight(18)
+	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
+	sortW = sortW + 10 + GVAR.OptionsFrame.SortByPullDown:GetWidth()
+
+	-- sort detail
+	GVAR.OptionsFrame.SortDetailPullDown = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.PullDownMenu(
+		GVAR.OptionsFrame.SortDetailPullDown,
+		sortDetail,
+		sortBy[ BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize] ],
+		0,
+		function(value) -- PDFUNC
+			BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize] = value
+			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button) -- TODO check - potential bug port
+			GVAR.OptionsFrame.SortDetailPullDown.spookval = BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize]
+			BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize] = self.value1
+			BattlegroundTargets:EnableConfigMode()
+		end,
+		function(self, button) -- TODO check - potential bug port
+			BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize] = GVAR.OptionsFrame.SortDetailPullDown.spookval or self.value1
+			BattlegroundTargets:EnableConfigMode()
+		end
+	)
+	GVAR.OptionsFrame.SortDetailPullDown:SetPoint("LEFT", GVAR.OptionsFrame.SortByPullDown, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.SortDetailPullDown:SetHeight(18)
+	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
+	sortW = sortW + 10 + GVAR.OptionsFrame.SortDetailPullDown:GetWidth()
+
+	-- sort info
+		----- text
+		local infoTxt1 = sortDetail[1]..":\n"
+		table_sort(class_IntegerSort, function(a, b) return a.loc < b.loc end)
+		for i = 1, #class_IntegerSort do
+			infoTxt1 = infoTxt1.." |cff"..classcolors[class_IntegerSort[i].cid].colorStr..class_IntegerSort[i].loc.."|r"
+			if i <= #class_IntegerSort then
+				infoTxt1 = infoTxt1.."\n"
+			end
+		end
+		local infoTxt2 = sortDetail[2]..":\n"
+		table_sort(class_IntegerSort, function(a, b) return a.eng < b.eng end)
+		for i = 1, #class_IntegerSort do
+			infoTxt2 = infoTxt2.." |cff"..classcolors[class_IntegerSort[i].cid].colorStr..class_IntegerSort[i].eng.." ("..class_IntegerSort[i].loc..")|r"
+			if i <= #class_IntegerSort then
+				infoTxt2 = infoTxt2.."\n"
+			end
+		end
+		local infoTxt3 = sortDetail[3]..":\n"
+		table_sort(class_IntegerSort, function(a, b) return a.blizz < b.blizz end)
+		for i = 1, #class_IntegerSort do
+			infoTxt3 = infoTxt3.." |cff"..classcolors[class_IntegerSort[i].cid].colorStr..class_IntegerSort[i].loc.."|r"
+			if i <= #class_IntegerSort then
+				infoTxt3 = infoTxt3.."\n"
+			end
+		end
+		----- text
+	GVAR.OptionsFrame.SortInfo = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
+	GVAR.OptionsFrame.SortInfo:SetWidth(16)
+	GVAR.OptionsFrame.SortInfo:SetHeight(16)
+	GVAR.OptionsFrame.SortInfo:SetPoint("LEFT", GVAR.OptionsFrame.SortDetailPullDown, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.SortInfo.Texture = GVAR.OptionsFrame.SortInfo:CreateTexture(nil, "ARTWORK")
+	GVAR.OptionsFrame.SortInfo.Texture:SetWidth(16)
+	GVAR.OptionsFrame.SortInfo.Texture:SetHeight(16)
+	GVAR.OptionsFrame.SortInfo.Texture:SetPoint("LEFT", 0, 0)
+	GVAR.OptionsFrame.SortInfo.Texture:SetTexture("Interface\\FriendsFrame\\InformationIcon")
+	GVAR.OptionsFrame.SortInfo.TextFrame = CreateFrame("Frame", nil, GVAR.OptionsFrame.SortInfo)
+	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.SortInfo.TextFrame)
+	GVAR.OptionsFrame.SortInfo.TextFrame:SetToplevel(true)
+	GVAR.OptionsFrame.SortInfo.TextFrame:SetPoint("BOTTOM", GVAR.OptionsFrame.SortInfo.Texture, "TOP", 0, 0)
+	GVAR.OptionsFrame.SortInfo.TextFrame:Hide()
+	GVAR.OptionsFrame.SortInfo.Text1 = GVAR.OptionsFrame.SortInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.SortInfo.Text1:SetPoint("TOPLEFT", GVAR.OptionsFrame.SortInfo.TextFrame, "TOPLEFT", 10, -10)
+	GVAR.OptionsFrame.SortInfo.Text1:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SortInfo.Text1:SetText(infoTxt1)
+	GVAR.OptionsFrame.SortInfo.Text1:SetTextColor(1, 1, 0.49, 1)
+	GVAR.OptionsFrame.SortInfo.Text2 = GVAR.OptionsFrame.SortInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.SortInfo.Text2:SetPoint("LEFT", GVAR.OptionsFrame.SortInfo.Text1, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.SortInfo.Text2:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SortInfo.Text2:SetText(infoTxt2)
+	GVAR.OptionsFrame.SortInfo.Text2:SetTextColor(1, 1, 0.49, 1)
+	GVAR.OptionsFrame.SortInfo.Text3 = GVAR.OptionsFrame.SortInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.SortInfo.Text3:SetPoint("LEFT", GVAR.OptionsFrame.SortInfo.Text2, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.SortInfo.Text3:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SortInfo.Text3:SetText(infoTxt3)
+	GVAR.OptionsFrame.SortInfo.Text3:SetTextColor(1, 1, 0.49, 1)
+	GVAR.OptionsFrame.SortInfo:SetScript("OnEnter", function() GVAR.OptionsFrame.SortInfo.TextFrame:Show() end)
+	GVAR.OptionsFrame.SortInfo:SetScript("OnLeave", function() GVAR.OptionsFrame.SortInfo.TextFrame:Hide() end)
+		-----
+		local txtWidth1 = GVAR.OptionsFrame.SortInfo.Text1:GetStringWidth()
+		local txtWidth2 = GVAR.OptionsFrame.SortInfo.Text2:GetStringWidth()
+		local txtWidth3 = GVAR.OptionsFrame.SortInfo.Text3:GetStringWidth()
+		GVAR.OptionsFrame.SortInfo.Text1:SetWidth(txtWidth1+10)
+		GVAR.OptionsFrame.SortInfo.Text2:SetWidth(txtWidth2+10)
+		GVAR.OptionsFrame.SortInfo.Text3:SetWidth(txtWidth3+10)
+		GVAR.OptionsFrame.SortInfo.TextFrame:SetWidth(10+ txtWidth1+10 + txtWidth2+10 + txtWidth3+10 +10)
+		local txtHeight = GVAR.OptionsFrame.SortInfo.Text1:GetStringHeight()
+		GVAR.OptionsFrame.SortInfo.Text1:SetHeight(txtHeight+10)
+		GVAR.OptionsFrame.SortInfo.Text2:SetHeight(txtHeight+10)
+		GVAR.OptionsFrame.SortInfo.Text3:SetHeight(txtHeight+10)
+		GVAR.OptionsFrame.SortInfo.TextFrame:SetHeight(10+ txtHeight+10 +10)
+		-----
+	sortW = sortW + 10 + 16 +10
 
 
 
@@ -2320,8 +2350,201 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- BOOM GVAR.OptionsFrame.Dummy3:SetWidth()
 	GVAR.OptionsFrame.Dummy3:SetHeight(1)
 	GVAR.OptionsFrame.Dummy3:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy3:SetPoint("TOP", GVAR.OptionsFrame.CopyText, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy3:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.Dummy3:SetTexture(0.73, 0.26, 0.21, 0.5)
+
+
+
+	-- layout
+	GVAR.OptionsFrame.LayoutTHText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.LayoutTHText:SetHeight(16)
+	GVAR.OptionsFrame.LayoutTHText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 26, 0)
+	GVAR.OptionsFrame.LayoutTHText:SetPoint("TOP", GVAR.OptionsFrame.Dummy3, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.LayoutTHText:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.LayoutTHText:SetText(L["Layout"]..":")
+	GVAR.OptionsFrame.LayoutTHText:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.LayoutTHText.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
+	GVAR.OptionsFrame.LayoutTHText.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.LayoutTHText, "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.LayoutTHText.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.LayoutTHText, "BOTTOMRIGHT", 0, 0)
+	GVAR.OptionsFrame.LayoutTHText.Background:SetTexture(0, 0, 0, 0)
+
+	GVAR.OptionsFrame.LayoutTHx18 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.LayoutTHx18, 16, 4, nil)
+	GVAR.OptionsFrame.LayoutTHx18:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHText, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.LayoutTHx18:SetScript("OnClick", function()
+		BattlegroundTargets_Options[fraction].LayoutTH[currentSize] = 18
+		GVAR.OptionsFrame.LayoutTHx18:SetChecked(true)
+		GVAR.OptionsFrame.LayoutTHx24:SetChecked(false)
+		GVAR.OptionsFrame.LayoutTHx42:SetChecked(false)
+		GVAR.OptionsFrame.LayoutTHx81:SetChecked(false)
+		TEMPLATE.DisableSlider(GVAR.OptionsFrame.LayoutSpace)
+		BattlegroundTargets:SetupMainFrameLayout(fraction)
+	end)
+	GVAR.OptionsFrame.LayoutTHx24 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.LayoutTHx24, 16, 4, nil)
+	GVAR.OptionsFrame.LayoutTHx24:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHx18, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.LayoutTHx24:SetScript("OnClick", function()
+		BattlegroundTargets_Options[fraction].LayoutTH[currentSize] = 24
+		GVAR.OptionsFrame.LayoutTHx18:SetChecked(false)
+		GVAR.OptionsFrame.LayoutTHx24:SetChecked(true)
+		GVAR.OptionsFrame.LayoutTHx42:SetChecked(false)
+		GVAR.OptionsFrame.LayoutTHx81:SetChecked(false)
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
+		BattlegroundTargets:SetupMainFrameLayout(fraction)
+	end)
+	GVAR.OptionsFrame.LayoutTHx42 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.LayoutTHx42, 16, 4, nil)
+	GVAR.OptionsFrame.LayoutTHx42:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHx24, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.LayoutTHx42:SetScript("OnClick", function()
+		BattlegroundTargets_Options[fraction].LayoutTH[currentSize] = 42
+		GVAR.OptionsFrame.LayoutTHx18:SetChecked(false)
+		GVAR.OptionsFrame.LayoutTHx24:SetChecked(false)
+		GVAR.OptionsFrame.LayoutTHx42:SetChecked(true)
+		GVAR.OptionsFrame.LayoutTHx81:SetChecked(false)
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
+		BattlegroundTargets:SetupMainFrameLayout(fraction)
+	end)
+	GVAR.OptionsFrame.LayoutTHx81 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.LayoutTHx81, 16, 4, nil)
+	GVAR.OptionsFrame.LayoutTHx81:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHx42, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.LayoutTHx81:SetScript("OnClick", function()
+		BattlegroundTargets_Options[fraction].LayoutTH[currentSize] = 81
+		GVAR.OptionsFrame.LayoutTHx18:SetChecked(false)
+		GVAR.OptionsFrame.LayoutTHx24:SetChecked(false)
+		GVAR.OptionsFrame.LayoutTHx42:SetChecked(false)
+		GVAR.OptionsFrame.LayoutTHx81:SetChecked(true)
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.LayoutSpace)
+		BattlegroundTargets:SetupMainFrameLayout(fraction)
+	end)
+	GVAR.OptionsFrame.LayoutSpace = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
+	GVAR.OptionsFrame.LayoutSpaceText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	TEMPLATE.Slider(GVAR.OptionsFrame.LayoutSpace, 100, 5, 0, 300, BattlegroundTargets_Options[fraction].LayoutSpace[currentSize],
+	function(self, value)
+		if value == BattlegroundTargets_Options[fraction].LayoutSpace[currentSize] then return end
+		BattlegroundTargets_Options[fraction].LayoutSpace[currentSize] = value
+		GVAR.OptionsFrame.LayoutSpaceText:SetText(value)
+		BattlegroundTargets:EnableConfigMode()
+	end,
+	"blank")
+	GVAR.OptionsFrame.LayoutSpace:SetPoint("LEFT", GVAR.OptionsFrame.LayoutTHx81, "RIGHT", 0, 0)
+	GVAR.OptionsFrame.LayoutSpaceText:SetHeight(20)
+	GVAR.OptionsFrame.LayoutSpaceText:SetPoint("LEFT", GVAR.OptionsFrame.LayoutSpace, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.LayoutSpaceText:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.LayoutSpaceText:SetText(BattlegroundTargets_Options[fraction].LayoutSpace[currentSize])
+	GVAR.OptionsFrame.LayoutSpaceText:SetTextColor(1, 1, 0.49, 1)
+	local layoutW = GVAR.OptionsFrame.LayoutTHText:GetStringWidth() + 10 +
+	                GVAR.OptionsFrame.LayoutTHx18:GetWidth() + 0 +
+	                GVAR.OptionsFrame.LayoutTHx24:GetWidth() + 0 +
+	                GVAR.OptionsFrame.LayoutTHx42:GetWidth() + 0 +
+	                GVAR.OptionsFrame.LayoutTHx81:GetWidth() + 0 +
+	                GVAR.OptionsFrame.LayoutSpace:GetWidth() + 50
+
+	local function ConfigFontNumberOptionCheck(size)
+		if BattlegroundTargets_Options[fraction].SummaryToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonFlagToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonHealthTextToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonFTargetCountToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonETargetCountToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonPvPTrinketToggle[size]
+		then
+			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNumberSlider)
+		else
+			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNumberSlider)
+		end
+	end
+
+	-- summary
+	GVAR.OptionsFrame.SummaryText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	GVAR.OptionsFrame.SummaryText:SetHeight(16)
+	GVAR.OptionsFrame.SummaryText:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 26, 0)
+	GVAR.OptionsFrame.SummaryText:SetPoint("TOP", GVAR.OptionsFrame.LayoutTHText, "BOTTOM", 0, -10)
+	GVAR.OptionsFrame.SummaryText:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SummaryText:SetText(L["Summary"]..":")
+	GVAR.OptionsFrame.SummaryText:SetTextColor(1, 1, 1, 1)
+	GVAR.OptionsFrame.SummaryText.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
+	GVAR.OptionsFrame.SummaryText.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.SummaryText, "TOPLEFT", 0, 0)
+	GVAR.OptionsFrame.SummaryText.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.SummaryText, "BOTTOMRIGHT", 0, 0)
+	GVAR.OptionsFrame.SummaryText.Background:SetTexture(0, 0, 0, 0)
+
+	GVAR.OptionsFrame.SummaryToggle = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets) -- SUMMARY
+	TEMPLATE.CheckButton(GVAR.OptionsFrame.SummaryToggle, 16, 0, "")
+	GVAR.OptionsFrame.SummaryToggle:SetPoint("LEFT", GVAR.OptionsFrame.SummaryText, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.SummaryToggle:SetChecked(BattlegroundTargets_Options[fraction].SummaryToggle[currentSize])
+	TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.SummaryToggle)
+	GVAR.OptionsFrame.SummaryToggle:SetScript("OnClick", function()
+		BattlegroundTargets_Options[fraction].SummaryToggle[currentSize] = not BattlegroundTargets_Options[fraction].SummaryToggle[currentSize]
+		if BattlegroundTargets_Options[fraction].SummaryToggle[currentSize] then
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScale)
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryPosition)
+		else
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScale)
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryPosition)
+		end
+		ConfigFontNumberOptionCheck(currentSize)
+		BattlegroundTargets:EnableConfigMode()
+	end)
+
+	GVAR.OptionsFrame.SummaryScale = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
+	GVAR.OptionsFrame.SummaryScaleText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	TEMPLATE.Slider(GVAR.OptionsFrame.SummaryScale, 85, 5, 40, 150, BattlegroundTargets_Options[fraction].SummaryScale[currentSize],
+	function(self, value)
+		local nvalue = value/100
+		if nvalue == BattlegroundTargets_Options[fraction].SummaryScale[currentSize] then return end
+		BattlegroundTargets_Options[fraction].SummaryScale[currentSize] = nvalue
+		GVAR.OptionsFrame.SummaryScaleText:SetText(value.."%")
+		BattlegroundTargets:EnableConfigMode()
+	end,
+	"blank")
+	GVAR.OptionsFrame.SummaryScale:SetPoint("LEFT", GVAR.OptionsFrame.SummaryToggle, "RIGHT", 10, 0)
+	GVAR.OptionsFrame.SummaryScaleText:SetHeight(16)
+	GVAR.OptionsFrame.SummaryScaleText:SetPoint("LEFT", GVAR.OptionsFrame.SummaryScale, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.SummaryScaleText:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SummaryScaleText:SetText((BattlegroundTargets_Options[fraction].SummaryScale[currentSize]*100).."%")
+	GVAR.OptionsFrame.SummaryScaleText:SetTextColor(1, 1, 0.49, 1)
+
+	GVAR.OptionsFrame.SummaryPosition = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets) -- SUMPOSi
+	GVAR.OptionsFrame.SummaryPositionText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	TEMPLATE.Slider(GVAR.OptionsFrame.SummaryPosition, 85, 1, 1, 9, BattlegroundTargets_Options[fraction].SummaryPos[currentSize],
+	function(self, value)
+		if value == BattlegroundTargets_Options[fraction].SummaryPos[currentSize] then return end
+		BattlegroundTargets_Options[fraction].SummaryPos[currentSize] = value
+		GVAR.OptionsFrame.SummaryPositionText:SetText(sumPos[ value ])
+		BattlegroundTargets:EnableConfigMode()
+	end,
+	"blank")
+	GVAR.OptionsFrame.SummaryPosition:SetPoint("LEFT", GVAR.OptionsFrame.SummaryScale, "RIGHT", 50, 0)
+	GVAR.OptionsFrame.SummaryPositionText:SetHeight(20)
+	GVAR.OptionsFrame.SummaryPositionText:SetWidth(50)
+	GVAR.OptionsFrame.SummaryPositionText:SetPoint("LEFT", GVAR.OptionsFrame.SummaryPosition, "RIGHT", 5, 0)
+	GVAR.OptionsFrame.SummaryPositionText:SetJustifyH("LEFT")
+	GVAR.OptionsFrame.SummaryPositionText:SetText(sumPos[ BattlegroundTargets_Options[fraction].SummaryPos[currentSize] ])
+	GVAR.OptionsFrame.SummaryPositionText:SetTextColor(1, 1, 0.49, 1)
+
+	if BattlegroundTargets_Options[fraction].SummaryToggle[currentSize] then
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryScale)
+		TEMPLATE.EnableSlider(GVAR.OptionsFrame.SummaryPosition)
+	else
+		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryScale)
+		TEMPLATE.DisableSlider(GVAR.OptionsFrame.SummaryPosition)
+	end
+	local summaryW = GVAR.OptionsFrame.SummaryText:GetStringWidth() + 10 +
+	                 GVAR.OptionsFrame.SummaryToggle:GetWidth() + 10 +
+	                 GVAR.OptionsFrame.SummaryScale:GetWidth() + 10 +
+	                 GVAR.OptionsFrame.SummaryPosition:GetWidth() + 50
+
+
+
+	-- DUMMY
+	GVAR.OptionsFrame.Dummy4 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy4:SetWidth()
+	GVAR.OptionsFrame.Dummy4:SetHeight(1)
+	GVAR.OptionsFrame.Dummy4:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy4:SetPoint("TOP", GVAR.OptionsFrame.SummaryToggle, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy4:SetTexture(0.73, 0.26, 0.21, 0.5)
 
 
 
@@ -2329,7 +2552,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ShowRole = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowRole, 16, 4, L["Role"])
 	GVAR.OptionsFrame.ShowRole:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowRole:SetPoint("TOP", GVAR.OptionsFrame.Dummy3, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.ShowRole:SetPoint("TOP", GVAR.OptionsFrame.Dummy4, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.ShowRole:SetChecked(BattlegroundTargets_Options[fraction].ButtonRoleToggle[currentSize])
 	GVAR.OptionsFrame.ShowRole:SetScript("OnClick", function()
 		BattlegroundTargets_Options[fraction].ButtonRoleToggle[currentSize] = not BattlegroundTargets_Options[fraction].ButtonRoleToggle[currentSize]
@@ -2443,12 +2666,12 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 	-- DUMMY
-	GVAR.OptionsFrame.Dummy4 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
-	-- BOOM GVAR.OptionsFrame.Dummy4:SetWidth()
-	GVAR.OptionsFrame.Dummy4:SetHeight(1)
-	GVAR.OptionsFrame.Dummy4:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy4:SetPoint("TOP", GVAR.OptionsFrame.ShowFTargetCount, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy4:SetTexture(0.73, 0.26, 0.21, 0.5)
+	GVAR.OptionsFrame.Dummy5 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy5:SetWidth()
+	GVAR.OptionsFrame.Dummy5:SetHeight(1)
+	GVAR.OptionsFrame.Dummy5:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy5:SetPoint("TOP", GVAR.OptionsFrame.ShowFTargetCount, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy5:SetTexture(0.73, 0.26, 0.21, 0.5)
 
 
 
@@ -2458,7 +2681,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ShowTargetIndicator = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowTargetIndicator, 16, 4, L["Target"])
 	GVAR.OptionsFrame.ShowTargetIndicator:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowTargetIndicator:SetPoint("TOP", GVAR.OptionsFrame.Dummy4, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.ShowTargetIndicator:SetPoint("TOP", GVAR.OptionsFrame.Dummy5, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.ShowTargetIndicator:SetChecked(BattlegroundTargets_Options[fraction].ButtonTargetToggle[currentSize])
 	GVAR.OptionsFrame.ShowTargetIndicator:SetScript("OnClick", function()
 		BattlegroundTargets_Options[fraction].ButtonTargetToggle[currentSize] = not BattlegroundTargets_Options[fraction].ButtonTargetToggle[currentSize]
@@ -2981,12 +3204,12 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 	-- DUMMY
-	GVAR.OptionsFrame.Dummy5 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
-	-- BOOM GVAR.OptionsFrame.Dummy5:SetWidth()
-	GVAR.OptionsFrame.Dummy5:SetHeight(1)
-	GVAR.OptionsFrame.Dummy5:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy5:SetPoint("TOP", GVAR.OptionsFrame.ShowAssist, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy5:SetTexture(0.73, 0.26, 0.21, 0.5)
+	GVAR.OptionsFrame.Dummy6 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
+	-- BOOM GVAR.OptionsFrame.Dummy6:SetWidth()
+	GVAR.OptionsFrame.Dummy6:SetHeight(1)
+	GVAR.OptionsFrame.Dummy6:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
+	GVAR.OptionsFrame.Dummy6:SetPoint("TOP", GVAR.OptionsFrame.ShowAssist, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy6:SetTexture(0.73, 0.26, 0.21, 0.5)
 
 
 
@@ -2994,7 +3217,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ShowHealthBar = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.ShowHealthBar, 16, 4, L["Health Bar"])
 	GVAR.OptionsFrame.ShowHealthBar:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ShowHealthBar:SetPoint("TOP", GVAR.OptionsFrame.Dummy5, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.ShowHealthBar:SetPoint("TOP", GVAR.OptionsFrame.Dummy6, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.ShowHealthBar:SetChecked(BattlegroundTargets_Options[fraction].ButtonHealthBarToggle[currentSize])
 	GVAR.OptionsFrame.ShowHealthBar:SetScript("OnClick", function()
 		BattlegroundTargets_Options[fraction].ButtonHealthBarToggle[currentSize] = not BattlegroundTargets_Options[fraction].ButtonHealthBarToggle[currentSize]
@@ -3102,163 +3325,11 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 
 	-- DUMMY
-	GVAR.OptionsFrame.Dummy6 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
-	-- BOOM GVAR.OptionsFrame.Dummy6:SetWidth()
-	GVAR.OptionsFrame.Dummy6:SetHeight(1)
-	GVAR.OptionsFrame.Dummy6:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy6:SetPoint("TOP", GVAR.OptionsFrame.RangeCheck, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy6:SetTexture(0.73, 0.26, 0.21, 0.5)
-
-
-
-	-- sort by
-	local sortW = 0
-	GVAR.OptionsFrame.SortByTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.SortByTitle:SetHeight(16)
-	GVAR.OptionsFrame.SortByTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.SortByTitle:SetPoint("TOP", GVAR.OptionsFrame.Dummy6, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.SortByTitle:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.SortByTitle:SetText(L["Sort By"]..":")
-	GVAR.OptionsFrame.SortByTitle:SetTextColor(1, 1, 1, 1)
-	GVAR.OptionsFrame.SortByTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
-	GVAR.OptionsFrame.SortByTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.SortByTitle, "TOPLEFT", 0, 0)
-	GVAR.OptionsFrame.SortByTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.SortByTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.SortByTitle.Background:SetTexture(0, 0, 0, 0)
-	sortW = sortW + 10 + GVAR.OptionsFrame.SortByTitle:GetStringWidth()
-
-	GVAR.OptionsFrame.SortByPullDown = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.PullDownMenu(
-		GVAR.OptionsFrame.SortByPullDown,
-		sortBy,
-		sortBy[ BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize] ],
-		0,
-		function(value) -- PDFUNC
-			BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize] = value
-			BattlegroundTargets:EnableConfigMode()
-		end,
-		function(self, button) -- TODO check - potential bug port
-			GVAR.OptionsFrame.SortByPullDown.spookval = BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize]
-			BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize] = self.value1
-			BattlegroundTargets:EnableConfigMode()
-		end,
-		function(self, button) -- TODO check - potential bug port
-			BattlegroundTargets_Options[fraction].ButtonSortBy[currentSize] = GVAR.OptionsFrame.SortByPullDown.spookval or self.value1
-			BattlegroundTargets:EnableConfigMode()
-		end
-	)
-	GVAR.OptionsFrame.SortByPullDown:SetPoint("LEFT", GVAR.OptionsFrame.SortByTitle, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.SortByPullDown:SetHeight(18)
-	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortByPullDown)
-	sortW = sortW + 10 + GVAR.OptionsFrame.SortByPullDown:GetWidth()
-
-	-- sort detail
-	GVAR.OptionsFrame.SortDetailPullDown = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
-	TEMPLATE.PullDownMenu(
-		GVAR.OptionsFrame.SortDetailPullDown,
-		sortDetail,
-		sortBy[ BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize] ],
-		0,
-		function(value) -- PDFUNC
-			BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize] = value
-			BattlegroundTargets:EnableConfigMode()
-		end,
-		function(self, button) -- TODO check - potential bug port
-			GVAR.OptionsFrame.SortDetailPullDown.spookval = BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize]
-			BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize] = self.value1
-			BattlegroundTargets:EnableConfigMode()
-		end,
-		function(self, button) -- TODO check - potential bug port
-			BattlegroundTargets_Options[fraction].ButtonSortDetail[currentSize] = GVAR.OptionsFrame.SortDetailPullDown.spookval or self.value1
-			BattlegroundTargets:EnableConfigMode()
-		end
-	)
-	GVAR.OptionsFrame.SortDetailPullDown:SetPoint("LEFT", GVAR.OptionsFrame.SortByPullDown, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.SortDetailPullDown:SetHeight(18)
-	TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.SortDetailPullDown)
-	sortW = sortW + 10 + GVAR.OptionsFrame.SortDetailPullDown:GetWidth()
-
-	-- sort info
-		----- text
-		local infoTxt1 = sortDetail[1]..":\n"
-		table_sort(class_IntegerSort, function(a, b) return a.loc < b.loc end)
-		for i = 1, #class_IntegerSort do
-			infoTxt1 = infoTxt1.." |cff"..classcolors[class_IntegerSort[i].cid].colorStr..class_IntegerSort[i].loc.."|r"
-			if i <= #class_IntegerSort then
-				infoTxt1 = infoTxt1.."\n"
-			end
-		end
-		local infoTxt2 = sortDetail[2]..":\n"
-		table_sort(class_IntegerSort, function(a, b) return a.eng < b.eng end)
-		for i = 1, #class_IntegerSort do
-			infoTxt2 = infoTxt2.." |cff"..classcolors[class_IntegerSort[i].cid].colorStr..class_IntegerSort[i].eng.." ("..class_IntegerSort[i].loc..")|r"
-			if i <= #class_IntegerSort then
-				infoTxt2 = infoTxt2.."\n"
-			end
-		end
-		local infoTxt3 = sortDetail[3]..":\n"
-		table_sort(class_IntegerSort, function(a, b) return a.blizz < b.blizz end)
-		for i = 1, #class_IntegerSort do
-			infoTxt3 = infoTxt3.." |cff"..classcolors[class_IntegerSort[i].cid].colorStr..class_IntegerSort[i].loc.."|r"
-			if i <= #class_IntegerSort then
-				infoTxt3 = infoTxt3.."\n"
-			end
-		end
-		----- text
-	GVAR.OptionsFrame.SortInfo = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
-	GVAR.OptionsFrame.SortInfo:SetWidth(16)
-	GVAR.OptionsFrame.SortInfo:SetHeight(16)
-	GVAR.OptionsFrame.SortInfo:SetPoint("LEFT", GVAR.OptionsFrame.SortDetailPullDown, "RIGHT", 10, 0)
-	GVAR.OptionsFrame.SortInfo.Texture = GVAR.OptionsFrame.SortInfo:CreateTexture(nil, "ARTWORK")
-	GVAR.OptionsFrame.SortInfo.Texture:SetWidth(16)
-	GVAR.OptionsFrame.SortInfo.Texture:SetHeight(16)
-	GVAR.OptionsFrame.SortInfo.Texture:SetPoint("LEFT", 0, 0)
-	GVAR.OptionsFrame.SortInfo.Texture:SetTexture("Interface\\FriendsFrame\\InformationIcon")
-	GVAR.OptionsFrame.SortInfo.TextFrame = CreateFrame("Frame", nil, GVAR.OptionsFrame.SortInfo)
-	TEMPLATE.BorderTRBL(GVAR.OptionsFrame.SortInfo.TextFrame)
-	GVAR.OptionsFrame.SortInfo.TextFrame:SetToplevel(true)
-	GVAR.OptionsFrame.SortInfo.TextFrame:SetPoint("BOTTOM", GVAR.OptionsFrame.SortInfo.Texture, "TOP", 0, 0)
-	GVAR.OptionsFrame.SortInfo.TextFrame:Hide()
-	GVAR.OptionsFrame.SortInfo.Text1 = GVAR.OptionsFrame.SortInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.SortInfo.Text1:SetPoint("TOPLEFT", GVAR.OptionsFrame.SortInfo.TextFrame, "TOPLEFT", 10, -10)
-	GVAR.OptionsFrame.SortInfo.Text1:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.SortInfo.Text1:SetText(infoTxt1)
-	GVAR.OptionsFrame.SortInfo.Text1:SetTextColor(1, 1, 0.49, 1)
-	GVAR.OptionsFrame.SortInfo.Text2 = GVAR.OptionsFrame.SortInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.SortInfo.Text2:SetPoint("LEFT", GVAR.OptionsFrame.SortInfo.Text1, "RIGHT", 0, 0)
-	GVAR.OptionsFrame.SortInfo.Text2:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.SortInfo.Text2:SetText(infoTxt2)
-	GVAR.OptionsFrame.SortInfo.Text2:SetTextColor(1, 1, 0.49, 1)
-	GVAR.OptionsFrame.SortInfo.Text3 = GVAR.OptionsFrame.SortInfo.TextFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.SortInfo.Text3:SetPoint("LEFT", GVAR.OptionsFrame.SortInfo.Text2, "RIGHT", 0, 0)
-	GVAR.OptionsFrame.SortInfo.Text3:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.SortInfo.Text3:SetText(infoTxt3)
-	GVAR.OptionsFrame.SortInfo.Text3:SetTextColor(1, 1, 0.49, 1)
-	GVAR.OptionsFrame.SortInfo:SetScript("OnEnter", function() GVAR.OptionsFrame.SortInfo.TextFrame:Show() end)
-	GVAR.OptionsFrame.SortInfo:SetScript("OnLeave", function() GVAR.OptionsFrame.SortInfo.TextFrame:Hide() end)
-		-----
-		local txtWidth1 = GVAR.OptionsFrame.SortInfo.Text1:GetStringWidth()
-		local txtWidth2 = GVAR.OptionsFrame.SortInfo.Text2:GetStringWidth()
-		local txtWidth3 = GVAR.OptionsFrame.SortInfo.Text3:GetStringWidth()
-		GVAR.OptionsFrame.SortInfo.Text1:SetWidth(txtWidth1+10)
-		GVAR.OptionsFrame.SortInfo.Text2:SetWidth(txtWidth2+10)
-		GVAR.OptionsFrame.SortInfo.Text3:SetWidth(txtWidth3+10)
-		GVAR.OptionsFrame.SortInfo.TextFrame:SetWidth(10+ txtWidth1+10 + txtWidth2+10 + txtWidth3+10 +10)
-		local txtHeight = GVAR.OptionsFrame.SortInfo.Text1:GetStringHeight()
-		GVAR.OptionsFrame.SortInfo.Text1:SetHeight(txtHeight+10)
-		GVAR.OptionsFrame.SortInfo.Text2:SetHeight(txtHeight+10)
-		GVAR.OptionsFrame.SortInfo.Text3:SetHeight(txtHeight+10)
-		GVAR.OptionsFrame.SortInfo.TextFrame:SetHeight(10+ txtHeight+10 +10)
-		-----
-	sortW = sortW + 10 + 16 +10
-
-
-
-	-- DUMMY
 	GVAR.OptionsFrame.Dummy7 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
 	-- BOOM GVAR.OptionsFrame.Dummy7:SetWidth()
 	GVAR.OptionsFrame.Dummy7:SetHeight(1)
 	GVAR.OptionsFrame.Dummy7:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy7:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -8)
+	GVAR.OptionsFrame.Dummy7:SetPoint("TOP", GVAR.OptionsFrame.RangeCheck, "BOTTOM", 0, -8)
 	GVAR.OptionsFrame.Dummy7:SetTexture(0.73, 0.26, 0.21, 0.5)
 
 
@@ -3434,114 +3505,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 
 	local fontstyleW = 10+ eq+10 + GVAR.OptionsFrame.FontNameSlider:GetWidth() + 30 + GVAR.OptionsFrame.FontNamePullDown:GetWidth() + 10
 
-
-
-	-- DUMMY
-	GVAR.OptionsFrame.Dummy8 = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "ARTWORK")
-	-- BOOM GVAR.OptionsFrame.Dummy8:SetWidth()
-	GVAR.OptionsFrame.Dummy8:SetHeight(1)
-	GVAR.OptionsFrame.Dummy8:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.Dummy8:SetPoint("TOP", GVAR.OptionsFrame.FontNumberSlider, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy8:SetTexture(0.73, 0.26, 0.21, 0.5)
-
-
-
-	-- scale
-	GVAR.OptionsFrame.ScaleTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.ScaleSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
-	GVAR.OptionsFrame.ScaleValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.ScaleTitle:SetHeight(16)
-	GVAR.OptionsFrame.ScaleTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.ScaleTitle:SetPoint("TOP", GVAR.OptionsFrame.Dummy8, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.ScaleTitle:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.ScaleTitle:SetText(L["Scale"]..":")
-	GVAR.OptionsFrame.ScaleTitle:SetTextColor(1, 1, 1, 1)
-	GVAR.OptionsFrame.ScaleTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
-	GVAR.OptionsFrame.ScaleTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.ScaleTitle, "TOPLEFT", 0, 0)
-	GVAR.OptionsFrame.ScaleTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.ScaleTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.ScaleTitle.Background:SetTexture(0, 0, 0, 0)
-	TEMPLATE.Slider(GVAR.OptionsFrame.ScaleSlider, 180, 5, 50, 200, BattlegroundTargets_Options[fraction].ButtonScale[currentSize]*100,
-	function(self, value)
-		local nvalue = value/100
-		if nvalue == BattlegroundTargets_Options[fraction].ButtonScale[currentSize] then return end
-		BattlegroundTargets_Options[fraction].ButtonScale[currentSize] = nvalue
-		GVAR.OptionsFrame.ScaleValue:SetText(value.."%")
-		BattlegroundTargets:EnableConfigMode()
-	end,
-	"blank")
-	GVAR.OptionsFrame.ScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ScaleTitle, "RIGHT", 20, 0)
-	GVAR.OptionsFrame.ScaleValue:SetHeight(20)
-	GVAR.OptionsFrame.ScaleValue:SetPoint("LEFT", GVAR.OptionsFrame.ScaleSlider, "RIGHT", 5, 0)
-	GVAR.OptionsFrame.ScaleValue:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.ScaleValue:SetText((BattlegroundTargets_Options[fraction].ButtonScale[currentSize]*100).."%")
-	GVAR.OptionsFrame.ScaleValue:SetTextColor(1, 1, 0.49, 1)
-
-	-- width
-	GVAR.OptionsFrame.WidthTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.WidthSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
-	GVAR.OptionsFrame.WidthValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.WidthTitle:SetHeight(16)
-	GVAR.OptionsFrame.WidthTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.WidthTitle:SetPoint("TOP", GVAR.OptionsFrame.ScaleSlider, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.WidthTitle:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.WidthTitle:SetText(L["Width"]..":")
-	GVAR.OptionsFrame.WidthTitle:SetTextColor(1, 1, 1, 1)
-	GVAR.OptionsFrame.WidthTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
-	GVAR.OptionsFrame.WidthTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.WidthTitle, "TOPLEFT", 0, 0)
-	GVAR.OptionsFrame.WidthTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.WidthTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.WidthTitle.Background:SetTexture(0, 0, 0, 0)
-	TEMPLATE.Slider(GVAR.OptionsFrame.WidthSlider, 180, 5, 50, 300, BattlegroundTargets_Options[fraction].ButtonWidth[currentSize],
-	function(self, value)
-		if value == BattlegroundTargets_Options[fraction].ButtonWidth[currentSize] then return end
-		BattlegroundTargets_Options[fraction].ButtonWidth[currentSize] = value
-		GVAR.OptionsFrame.WidthValue:SetText(value)
-		BattlegroundTargets:EnableConfigMode()
-	end,
-	"blank")
-	GVAR.OptionsFrame.WidthSlider:SetPoint("LEFT", GVAR.OptionsFrame.WidthTitle, "RIGHT", 20, 0)
-	GVAR.OptionsFrame.WidthValue:SetHeight(20)
-	GVAR.OptionsFrame.WidthValue:SetPoint("LEFT", GVAR.OptionsFrame.WidthSlider, "RIGHT", 5, 0)
-	GVAR.OptionsFrame.WidthValue:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.WidthValue:SetText(BattlegroundTargets_Options[fraction].ButtonWidth[currentSize])
-	GVAR.OptionsFrame.WidthValue:SetTextColor(1, 1, 0.49, 1)
-
-	-- height
-	GVAR.OptionsFrame.HeightTitle = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.HeightSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
-	GVAR.OptionsFrame.HeightValue = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	GVAR.OptionsFrame.HeightTitle:SetHeight(16)
-	GVAR.OptionsFrame.HeightTitle:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
-	GVAR.OptionsFrame.HeightTitle:SetPoint("TOP", GVAR.OptionsFrame.WidthTitle, "BOTTOM", 0, -10)
-	GVAR.OptionsFrame.HeightTitle:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.HeightTitle:SetText(L["Height"]..":")
-	GVAR.OptionsFrame.HeightTitle:SetTextColor(1, 1, 1, 1)
-	GVAR.OptionsFrame.HeightTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
-	GVAR.OptionsFrame.HeightTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.HeightTitle, "TOPLEFT", 0, 0)
-	GVAR.OptionsFrame.HeightTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.HeightTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.HeightTitle.Background:SetTexture(0, 0, 0, 0)
-	TEMPLATE.Slider(GVAR.OptionsFrame.HeightSlider, 180, 1, 10, 30, BattlegroundTargets_Options[fraction].ButtonHeight[currentSize],
-	function(self, value)
-		if value == BattlegroundTargets_Options[fraction].ButtonHeight[currentSize] then return end
-		BattlegroundTargets_Options[fraction].ButtonHeight[currentSize] = value
-		GVAR.OptionsFrame.HeightValue:SetText(value)
-		BattlegroundTargets:EnableConfigMode()
-	end,
-	"blank")
-	GVAR.OptionsFrame.HeightSlider:SetPoint("LEFT", GVAR.OptionsFrame.HeightTitle, "RIGHT", 20, 0)
-	GVAR.OptionsFrame.HeightValue:SetHeight(20)
-	GVAR.OptionsFrame.HeightValue:SetPoint("LEFT", GVAR.OptionsFrame.HeightSlider, "RIGHT", 5, 0)
-	GVAR.OptionsFrame.HeightValue:SetJustifyH("LEFT")
-	GVAR.OptionsFrame.HeightValue:SetText(BattlegroundTargets_Options[fraction].ButtonHeight[currentSize])
-	GVAR.OptionsFrame.HeightValue:SetTextColor(1, 1, 0.49, 1)
-
-	local equalTextWidthSliders, sw = 0, 0
-	sw = GVAR.OptionsFrame.ScaleTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
-	sw = GVAR.OptionsFrame.WidthTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
-	sw = GVAR.OptionsFrame.HeightTitle:GetStringWidth() if sw > equalTextWidthSliders then equalTextWidthSliders = sw end
-	GVAR.OptionsFrame.ScaleSlider:SetPoint("LEFT", GVAR.OptionsFrame.ScaleTitle, "LEFT", equalTextWidthSliders+10, 0)
-	GVAR.OptionsFrame.WidthSlider:SetPoint("LEFT", GVAR.OptionsFrame.WidthTitle, "LEFT", equalTextWidthSliders+10, 0)
-	GVAR.OptionsFrame.HeightSlider:SetPoint("LEFT", GVAR.OptionsFrame.HeightTitle, "LEFT", equalTextWidthSliders+10, 0)
-
 	-- testshuffler
 	GVAR.OptionsFrame.TestShuffler = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	BattlegroundTargets.shuffleStyle = true
@@ -3655,7 +3618,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.MoverTopText:SetText(L["click & move"])
 
 	GVAR.OptionsFrame.Close = CreateFrame("Button", nil, GVAR.OptionsFrame.MoverTop)
-	TEMPLATE.IconButton(GVAR.OptionsFrame.Close, 1)
+	TEMPLATE.IconButton(GVAR.OptionsFrame.Close, 0)
 	GVAR.OptionsFrame.Close:SetWidth(20)
 	GVAR.OptionsFrame.Close:SetHeight(20)
 	GVAR.OptionsFrame.Close:SetPoint("RIGHT", GVAR.OptionsFrame.MoverTop, "RIGHT", 0, 0)
@@ -3739,25 +3702,23 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Base:SetWidth(frameWidth)
 	GVAR.OptionsFrame.Title:SetWidth(frameWidth)
 	local spacer = 10
+	local copyButtonWidth = GVAR.OptionsFrame.CopySettings1:GetWidth() + 20
 	local tabWidth1 = GVAR.OptionsFrame.TabGeneral.TabText:GetStringWidth() + 20
-	local tabWidth2 = floor( (frameWidth-tabWidth1-tabWidth1-(6*spacer)) / 3 )
+	local tabWidth2 = floor( (frameWidth-tabWidth1-tabWidth1-copyButtonWidth-(6*spacer)) / 3 )
 	GVAR.OptionsFrame.TabGeneral:SetWidth(tabWidth1)
 	GVAR.OptionsFrame.TabRaidSize10:SetWidth(tabWidth2)
 	GVAR.OptionsFrame.TabRaidSize15:SetWidth(tabWidth2)
 	GVAR.OptionsFrame.TabRaidSize40:SetWidth(tabWidth2)
 	GVAR.OptionsFrame.TabGeneral:SetPoint("BOTTOMLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", spacer, -1)
-	GVAR.OptionsFrame.TabRaidSize10:SetPoint("BOTTOMLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", spacer+tabWidth1+spacer, -1)
-	GVAR.OptionsFrame.TabRaidSize15:SetPoint("BOTTOMLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", spacer+tabWidth1+spacer+((tabWidth2+spacer)*1), -1)
-	GVAR.OptionsFrame.TabRaidSize40:SetPoint("BOTTOMLEFT", GVAR.OptionsFrame.Base, "BOTTOMLEFT", spacer+tabWidth1+spacer+((tabWidth2+spacer)*2), -1)
 
+	local copyButtonWidth = GVAR.OptionsFrame.CopySettings2:GetWidth() + 20
 	local tabWidth1 = GVAR.OptionsFrame.EnableFriendBracket.TabText:GetStringWidth() + 20
 	local tabWidth2 = GVAR.OptionsFrame.EnableEnemyBracket.TabText:GetStringWidth() + 20
 	if tabWidth2 > tabWidth1 then tabWidth1 = tabWidth2 end
-	local tabWidth2 = floor( (frameWidth-tabWidth1-tabWidth1-spacer) /2 )
+	local tabWidth2 = floor( (frameWidth-tabWidth1-tabWidth1-copyButtonWidth-spacer) /2 )
 	GVAR.OptionsFrame.EnableFriendBracket:SetWidth(tabWidth1)
 	GVAR.OptionsFrame.EnableEnemyBracket:SetWidth(tabWidth1)
 	GVAR.OptionsFrame.EnableFriendBracket:SetPoint("TOPLEFT", GVAR.OptionsFrame.ConfigBrackets, "TOPLEFT", tabWidth2, -10)
-	GVAR.OptionsFrame.EnableEnemyBracket:SetPoint("LEFT", GVAR.OptionsFrame.EnableFriendBracket, "RIGHT", spacer, 0)
 
 	GVAR.OptionsFrame.Dummy0:SetWidth(frameWidth) -- DUMMY
 	GVAR.OptionsFrame.Dummy1:SetWidth(frameWidth-20)
@@ -3767,7 +3728,6 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy5:SetWidth(frameWidth-20)
 	GVAR.OptionsFrame.Dummy6:SetWidth(frameWidth-20)
 	GVAR.OptionsFrame.Dummy7:SetWidth(frameWidth-20)
-	GVAR.OptionsFrame.Dummy8:SetWidth(frameWidth-20)
 	-- ConfigBrackets
 	GVAR.OptionsFrame.ConfigBrackets:SetWidth(frameWidth)
 	-- ConfigGeneral
@@ -3927,34 +3887,19 @@ function BattlegroundTargets:CreateMinimapButton()
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
-
-
 -- ---------------------------------------------------------------------------------------------------------------------
 function BattlegroundTargets:SetOptions(side)
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 
+	if currentSize == 10 then
+		TEMPLATE.SetIconButton(GVAR.OptionsFrame.CopySettings1, 1)
+	elseif currentSize == 15 then
+		TEMPLATE.SetIconButton(GVAR.OptionsFrame.CopySettings1, 2)
+	end
 	if side == "Enemy" then
-		if currentSize == 10 then
-			GVAR.OptionsFrame.CopySettings1.Text:SetText(L["15v15"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
-			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["10v10"].." "..Textures.FriendIconStr.." "..L["Friend"])
-		elseif currentSize == 15 then
-			GVAR.OptionsFrame.CopySettings1.Text:SetText(L["10v10"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
-			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["15v15"].." "..Textures.FriendIconStr.." "..L["Friend"])
-		elseif currentSize == 40 then
-			--GVAR.OptionsFrame.CopySettings1.Text:SetText(L["10v10"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
-			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["40v40"].." "..Textures.FriendIconStr.." "..L["Friend"])
-		end
+		TEMPLATE.SetIconButton(GVAR.OptionsFrame.CopySettings2, 2)
 	else
-		if currentSize == 10 then
-			GVAR.OptionsFrame.CopySettings1.Text:SetText(L["15v15"].." "..Textures.FriendIconStr.." "..L["Friend"])
-			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["10v10"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
-		elseif currentSize == 15 then
-			GVAR.OptionsFrame.CopySettings1.Text:SetText(L["10v10"].." "..Textures.FriendIconStr.." "..L["Friend"])
-			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["15v15"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
-		elseif currentSize == 40 then
-			--GVAR.OptionsFrame.CopySettings1.Text:SetText(L["10v10"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
-			GVAR.OptionsFrame.CopySettings2.Text:SetText(L["40v40"].." "..Textures.EnemyIconStr.." "..L["Enemy"])
-		end
+		TEMPLATE.SetIconButton(GVAR.OptionsFrame.CopySettings2, 1)
 	end
 
 	local LayoutTH = BattlegroundTargets_Options[side].LayoutTH[currentSize]
@@ -4134,12 +4079,12 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 
 		if bracketSize == 40 then
 			GVAR.OptionsFrame.CopySettings1:Hide()
-			TEMPLATE.EnableTextButton(GVAR.OptionsFrame.CopySettings2)
+			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.CopySettings2)
 		else
 			GVAR.OptionsFrame.CopySettings1:Show()
 			GVAR.OptionsFrame.CopySettings2:Show()
-			TEMPLATE.EnableTextButton(GVAR.OptionsFrame.CopySettings1)
-			TEMPLATE.EnableTextButton(GVAR.OptionsFrame.CopySettings2)
+			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.CopySettings1)
+			TEMPLATE.EnableIconButton(GVAR.OptionsFrame.CopySettings2)
 		end
 
 		TEMPLATE.EnableCheckButton(GVAR.OptionsFrame.ShowRole)
@@ -4261,12 +4206,12 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 
 		if bracketSize == 40 then
 			GVAR.OptionsFrame.CopySettings1:Hide()
-			TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings2)
+			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.CopySettings2)
 		else
 			GVAR.OptionsFrame.CopySettings1:Show()
 			GVAR.OptionsFrame.CopySettings2:Show()
-			TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings1)
-			TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings2)
+			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.CopySettings1)
+			TEMPLATE.DisableIconButton(GVAR.OptionsFrame.CopySettings2)
 		end
 
 		TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.ShowRole)
@@ -4341,8 +4286,8 @@ function BattlegroundTargets:DisableInsecureConfigWidges()
 
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.EnableFraction)
 
-	TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings1)
-	TEMPLATE.DisableTextButton(GVAR.OptionsFrame.CopySettings2)
+	TEMPLATE.DisableIconButton(GVAR.OptionsFrame.CopySettings1)
+	TEMPLATE.DisableIconButton(GVAR.OptionsFrame.CopySettings2)
 
 	GVAR.OptionsFrame.LayoutTHText:SetTextColor(0.5, 0.5, 0.5, 1)
 	TEMPLATE.DisableCheckButton(GVAR.OptionsFrame.LayoutTHx18)
@@ -8125,13 +8070,15 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName, isEvent)
 	local button = GVAR[side.."Button"][ DATA[side].Name2Button[targetName] ]
 	if not button then return end
 
+	local BattlegroundTargets_Options = BattlegroundTargets_Options
+	if not BattlegroundTargets_Options[side].EnableBracket[currentSize] then return end
+
 	BattlegroundTargets:CheckPlayerHealth(side, button, targetID, targetName, "checkunittarget") -- health_
 	BattlegroundTargets:CheckCarrierDebuff(side, button, targetID, targetName, "checkunittarget") -- FLAGSPY -- carrier_debuff_
 	BattlegroundTargets:CheckClassRange(side, button, targetID, targetName, "checkunittarget") -- class_range_
 	BattlegroundTargets:CheckLeader(side, button, targetID, targetName) -- leader_
 
 	-- target assist_
-	local BattlegroundTargets_Options = BattlegroundTargets_Options
 	if isAssistName and BattlegroundTargets_Options[side].ButtonAssistToggle[currentSize] then
 		local curTime = GetTime()
 		if isAssistName == friendName then
@@ -9550,7 +9497,7 @@ function BattlegroundTargets:CheckIfPlayerIsGhost(state)
 		BattlegroundTargets:ClearRangeData("Friend")
 		BattlegroundTargets:ClearRangeData("Enemy")
 		
-		---[[ TEST
+		--[[ TEST
 		Screenshot()
 		--]]
 	else
