@@ -3,7 +3,7 @@
 ## Notes: A Friend-Enemy-Unit-Frame for battlegrounds.
 ## Notes-deDE: Eine Freund-Feind-Anzeige für Schlachtfelder.
 ## Author: kunda
-## Version: 60100-3
+## Version: 60100-4
 ## SavedVariables: BattlegroundTargets_Options
 
 BattlegroundTargets-localized-carrier.lua
