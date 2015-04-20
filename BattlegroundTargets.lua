@@ -331,25 +331,25 @@ for frc = 1, #FRAMES do
 
 	DATA[side].MainMoverModeValue = false
 
-	DATA[side].rangeSpellName = nil -- for class-spell based range check
-	DATA[side].rangeMin = nil       -- for class-spell based range check
-	DATA[side].rangeMax = nil       -- for class-spell based range check
+	DATA[side].rangeSpellName = nil -- value (string) | for class-spell based range check
+	DATA[side].rangeMin = nil       -- value (number) | for class-spell based range check
+	DATA[side].rangeMax = nil       -- value (number) | for class-spell based range check
 
-	DATA[side].hasFlag = nil            -- DATA.Friend.hasFlag           | DATA.Enemy.hasFlag           | value (string) = player name
-	DATA[side].isLeader = nil           -- DATA.Friend.isLeader          | DATA.Enemy.isLeader          | value (string) = player name
-	DATA[side].healthBarWidth = 0.01    -- DATA.Friend.healthBarWidth    | DATA.Enemy.healthBarWidth    | value (number) = health bar width
-	DATA[side].totHealthBarWidth = 0.01 -- DATA.Friend.totHealthBarWidth | DATA.Enemy.totHealthBarWidth | value (string) = target of target health bar width
+	DATA[side].hasFlag = nil            -- value (string) = player name
+	DATA[side].isLeader = nil           -- value (string) = player name
+	DATA[side].healthBarWidth = 0.01    -- value (number) = health bar width
+	DATA[side].totHealthBarWidth = 0.01 -- value (number) = target of target health bar width
 
-	DATA[side].MainData = {}         -- DATA.Friend.MainData         | DATA.Enemy.MainData         | key = numerical                value          = all player data
-	DATA[side].Name4Flag = {}        -- DATA.Friend.Name4Flag        | DATA.Enemy.Name4Flag        | key = unitName without realm | value (number) = button number
-	DATA[side].Name2Button = {}      -- DATA.Friend.Name2Button      | DATA.Enemy.Name2Button      | key = unitName               | value (number) = button number
-	DATA[side].Name2UnitID = {}      -- DATA.Friend.Name2UnitID      | DATA.Enemy.Name2UnitID      | key = unitName               | value (number) = unitID
-	DATA[side].UnitID2Name = {}      -- DATA.Friend.UnitID2Name      | DATA.Enemy.UnitID2Name      | key = unitID                 | value (string) = unitName
-	DATA[side].Name2Level = {}       -- DATA.Friend.Name2Level       | DATA.Enemy.Name2Level       | key = unitName               | value (number) = level
-	DATA[side].Name2Percent = {}     -- DATA.Friend.Name2Percent     | DATA.Enemy.Name2Percent     | key = unitName | value (number) = health in percent
-	DATA[side].Name2Range = {}       -- DATA.Friend.Name2Range       | DATA.Enemy.Name2Range       | key = unitName | value (number) = distance in ym
+	DATA[side].MainData = {}     -- key = numerical              | value          = all player data
+	DATA[side].Name4Flag = {}    -- key = unitName without realm | value (number) = button number
+	DATA[side].Name2Button = {}  -- key = unitName               | value (number) = button number
+	DATA[side].Name2UnitID = {}  -- key = unitName               | value (string) = unitID
+	DATA[side].UnitID2Name = {}  -- key = unitID                 | value (string) = unitName
+	DATA[side].Name2Level = {}   -- key = unitName               | value (number) = level
+	DATA[side].Name2Percent = {} -- key = unitName               | value (number) = health in percent
+	DATA[side].Name2Range = {}   -- key = unitName               | value (number) = distance in ym
 
-	DATA[side].Roles = {0,0,0,0}     -- DATA.Friend.Roles            | DATA.Enemy.Roles            |
+	DATA[side].Roles = {0,0,0,0}
 end
 
 local SPELL_Range = {} -- key = spellId | value = maxRange
@@ -387,23 +387,22 @@ end
 
 local mapID = {}
 local bgMaps = {}
-local bgInfo = {[10]={},[15]={},[40]={}}
 local function BuildBattlegroundMapTable()
 	for i = 1, GetNumBattlegroundTypes() do
 		local localizedName, _, _, _, bgID, _, _, _, gameType, icon = GetBattlegroundInfo(i)
 		--print(localizedName, bgID, gameType, icon, i, "#", GetBattlegroundInfo(i))
-		    if bgID ==   1 then mapID[401] = localizedName bgInfo[40][1] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = gameType, icon = icon} -- Alterac Valley
-		elseif bgID ==   2 then mapID[443] = localizedName bgInfo[10][1] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 1, gameType = gameType, icon = icon} -- Warsong Gulch
-		elseif bgID ==   3 then mapID[461] = localizedName bgInfo[15][1] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0, gameType = gameType, icon = icon} -- Arathi Basin
-		elseif bgID ==   7 then mapID[482] = localizedName bgInfo[15][2] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 2, gameType = gameType, icon = icon} -- Eye of the Storm
-		elseif bgID ==   9 then mapID[512] = localizedName bgInfo[15][3] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0, gameType = gameType, icon = icon} -- Strand of the Ancients
-		elseif bgID ==  30 then mapID[540] = localizedName bgInfo[40][2] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = gameType, icon = icon} -- Isle of Conquest
-		elseif bgID == 108 then mapID[626] = localizedName bgInfo[10][2] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 3, gameType = gameType, icon = icon} -- Twin Peaks
-		elseif bgID == 120 then mapID[736] = localizedName bgInfo[10][3] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0, gameType = gameType, icon = icon} -- The Battle for Gilneas
-		elseif bgID == 699 then mapID[856] = localizedName bgInfo[10][4] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 5, gameType = gameType, icon = icon} -- Temple of Kotmogu
-		elseif bgID == 708 then mapID[860] = localizedName bgInfo[10][5] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0, gameType = gameType, icon = icon} -- Silvershard Mines
-		elseif bgID == 754 then mapID[935] = localizedName bgInfo[15][4] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 4, gameType = gameType, icon = icon} -- Deepwind Gorge
-		elseif bgID == 789 then                            bgInfo[40][3] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0, gameType = "-"     , icon = "Interface\\PVPFrame\\RandomPVPIcon"} -- Southshore vs Tarren Mill -- DEFAULT_BG_TEXTURE Blizzard_PVPUI.lua
+		    if bgID ==   1 then mapID[401] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0} -- Alterac Valley
+		elseif bgID ==   2 then mapID[443] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 1} -- Warsong Gulch
+		elseif bgID ==   3 then mapID[461] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Arathi Basin
+		elseif bgID ==   7 then mapID[482] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 2} -- Eye of the Storm
+		elseif bgID ==   9 then mapID[512] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 0} -- Strand of the Ancients
+		elseif bgID ==  30 then mapID[540] = localizedName bgMaps[localizedName] = {bgSize = 40, flagBG = 0} -- Isle of Conquest
+		elseif bgID == 108 then mapID[626] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 3} -- Twin Peaks
+		elseif bgID == 120 then mapID[736] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- The Battle for Gilneas
+		elseif bgID == 699 then mapID[856] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 5} -- Temple of Kotmogu
+		elseif bgID == 708 then mapID[860] = localizedName bgMaps[localizedName] = {bgSize = 10, flagBG = 0} -- Silvershard Mines
+		elseif bgID == 754 then mapID[935] = localizedName bgMaps[localizedName] = {bgSize = 15, flagBG = 4} -- Deepwind Gorge
+		elseif bgID == 789 then                            bgMaps[localizedName] = {bgSize = 40, flagBG = 0} -- Southshore vs Tarren Mill
 		end
 	end
 end
@@ -520,7 +519,6 @@ classcolors["ZZZFAILURE"] = {r = 0.6, g = 0.6, b = 0.6, colorStr = "999999"}
 --for k, v in pairs(classcolors) do print(k, v.r, v.g, v.b, v.colorStr) end
 
 -- texture: Interface\\WorldStateFrame\\Icons-Classes
--- role   : 1 = HEALER | 2 = TANK | 3 = DAMAGER | 4 = UNKNOWN
 local classes = {
 	DEATHKNIGHT = {coords = {0.2578125,  0.4921875,  0.5078125,  0.7421875 }}, -- ( 66/256, 126/256, 130/256, 190/256)
 	DRUID       = {coords = {0.74609375, 0.98046875, 0.0078125,  0.2421875 }}, -- (191/256, 251/256,   2/256,  62/256)
@@ -536,6 +534,8 @@ local classes = {
 	ZZZFAILURE  = {coords = {0, 0, 0, 0}},
 }
 
+-- roles: 1 = HEALER | 2 = TANK | 3 = DAMAGER
+local classROLES = {HEALER = {}, TANK = {}, DAMAGER = {}}
 for classID = 1, MAX_CLASSES do
 	local _, classTag = GetClassInfoByID(classID)
 	local numTabs = GetNumSpecializationsForClassID(classID)
@@ -544,9 +544,9 @@ for classID = 1, MAX_CLASSES do
 	for i = 1, numTabs do
 		local id, name, _, icon, _, role = GetSpecializationInfoForClassID(classID, i)
 		--print(role, id, classID, i, name, icon, "#", GetSpecializationInfoForClassID(classID, i))
-		if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, specID = id, specName = name, icon = icon} -- DAMAGER: total = 23
-		elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, specID = id, specName = name, icon = icon} -- HEALER : total =  6
-		elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, specID = id, specName = name, icon = icon} -- TANK   : total =  5
+		if     role == "DAMAGER" then classes[classTag].spec[i] = {role = 3, specID = id, specName = name, icon = icon} tinsert(classROLES.DAMAGER, {classTag = classTag, specIndex = i}) -- DAMAGER: total = 23
+		elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, specID = id, specName = name, icon = icon} tinsert(classROLES.HEALER,  {classTag = classTag, specIndex = i}) -- HEALER : total =  6
+		elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, specID = id, specName = name, icon = icon} tinsert(classROLES.TANK,    {classTag = classTag, specIndex = i}) -- TANK   : total =  5
 		end
 	end
 end
@@ -571,6 +571,62 @@ for k, v in pairs(classes) do
 	end
 end
 --]]
+
+-- 10 HEALER   1- 3 | 15 HEALER   2- 4 | 40 HEALER   3- 6
+-- 10 TANK     1- 2 | 15 TANK     2- 4 | 40 TANK     2- 4
+-- 10 DAMAGER  5- 8 | 15 DAMAGER  7-11 | 40 DAMAGER 30-35
+testData.Friend.MainTestDATA = {[10] = {}, [15] = {}, [40] = {}}
+testData.Enemy.MainTestDATA  = {[10] = {}, [15] = {}, [40] = {}}
+local function newTestData()
+	local classDATA = {}
+	for frc = 1, #FRAMES do
+		local side = FRAMES[frc]
+		local healerRND10, tankRND10 = random(1,3), random(1,2)
+		local healerRND15, tankRND15 = random(2,4), random(1,3)
+		local healerRND40, tankRND40 = random(3,6), random(2,4)
+		local damagerRND10 = 10-healerRND10-tankRND10
+		local damagerRND15 = 15-healerRND15-tankRND15
+		local damagerRND40 = 40-healerRND40-tankRND40
+		classDATA[side] = {
+			HEALER  = {[10] = healerRND10,  [15] = healerRND15,  [40] = healerRND40},
+			TANK    = {[10] = tankRND10,    [15] = tankRND15,    [40] = tankRND40},
+			DAMAGER = {[10] = damagerRND10, [15] = damagerRND15, [40] = damagerRND40}
+		}
+	end
+
+	for frc = 1, #FRAMES do
+		local side = FRAMES[frc]
+		----------
+		for bracket = 1, 3 do
+			local bracketSize
+			if bracket == 1 then bracketSize = 10
+			elseif bracket == 2 then bracketSize = 15
+			elseif bracket == 3 then bracketSize = 40
+			end
+			local charnum1 = random(65, 90) -- 65 = A |  90 = Z
+			local charnum2 = random(97,111) -- 97 = a | 111 = o
+			wipe(testData[side].MainTestDATA[bracketSize])
+			for role in pairs(classROLES) do
+				local index = 0
+				while index < classDATA[side][role][bracketSize] do
+					local rndNum     = random(1, #classROLES[role])
+					local classToken = classROLES[role][rndNum].classTag
+					local specIndex  = classROLES[role][rndNum].specIndex
+					tinsert(testData[side].MainTestDATA[bracketSize], {
+						name = L["Target"].."_"..strchar(charnum1)..strchar(charnum2).."-servername",
+						classToken = classToken,
+						talentSpec = classes[classToken].spec[specIndex].role,
+						specIcon   = classes[classToken].spec[specIndex].icon
+					})
+					if charnum1 ==  90 then charnum1 = 65 else charnum1 = charnum1 + 1 end
+					if charnum2 == 111 then charnum2 = 97 else charnum2 = charnum2 + 1 end
+					index = index + 1
+				end
+			end
+		end
+		----------
+	end
+end
 
 local class_LocaSort = {}
 FillLocalizedClassList(class_LocaSort, false) -- Constants.lua
@@ -1752,19 +1808,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TabRaidSize10:SetHeight(22)
 	-- BOOM GVAR.OptionsFrame.TabRaidSize10:SetPoint()
 	GVAR.OptionsFrame.TabRaidSize10:SetScript("OnClick", function()
-		GVAR.OptionsFrame.ConfigGeneral:Hide()
-		GVAR.OptionsFrame.ConfigBrackets:Show()
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, true)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
-		if testSize == 10 then return end
-		testSize = 10
-		BattlegroundTargets:CheckForEnabledBracket(testSize, fraction)
-		BattlegroundTargets:DisableConfigMode()
-		if BattlegroundTargets_Options.Friend.EnableBracket[testSize] or BattlegroundTargets_Options.Enemy.EnableBracket[testSize] then
-			BattlegroundTargets:EnableConfigMode()
-		end
+		BattlegroundTargets:ClickOnBracketTab(10, fraction)
 	end)
 
 	GVAR.OptionsFrame.TabRaidSize15 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
@@ -1773,19 +1817,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TabRaidSize15:SetHeight(22)
 	-- BOOM GVAR.OptionsFrame.TabRaidSize15:SetPoint()
 	GVAR.OptionsFrame.TabRaidSize15:SetScript("OnClick", function()
-		GVAR.OptionsFrame.ConfigGeneral:Hide()
-		GVAR.OptionsFrame.ConfigBrackets:Show()
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, true)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
-		if testSize == 15 then return end
-		testSize = 15
-		BattlegroundTargets:CheckForEnabledBracket(testSize, fraction)
-		BattlegroundTargets:DisableConfigMode()
-		if BattlegroundTargets_Options.Friend.EnableBracket[testSize] or BattlegroundTargets_Options.Enemy.EnableBracket[testSize] then
-			BattlegroundTargets:EnableConfigMode()
-		end
+		BattlegroundTargets:ClickOnBracketTab(15, fraction)
 	end)
 
 	GVAR.OptionsFrame.TabRaidSize40 = CreateFrame("Button", nil, GVAR.OptionsFrame.Base)
@@ -1794,19 +1826,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.TabRaidSize40:SetHeight(22)
 	-- BOOM GVAR.OptionsFrame.TabRaidSize40:SetPoint()
 	GVAR.OptionsFrame.TabRaidSize40:SetScript("OnClick", function()
-		GVAR.OptionsFrame.ConfigGeneral:Hide()
-		GVAR.OptionsFrame.ConfigBrackets:Show()
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, true)
-		if testSize == 40 then return end
-		testSize = 40
-		BattlegroundTargets:CheckForEnabledBracket(testSize, fraction)
-		BattlegroundTargets:DisableConfigMode()
-		if BattlegroundTargets_Options.Friend.EnableBracket[testSize] or BattlegroundTargets_Options.Enemy.EnableBracket[testSize] then
-			BattlegroundTargets:EnableConfigMode()
-		end
+		BattlegroundTargets:ClickOnBracketTab(40, fraction)
 	end)
 
 	if testSize == 10 then
@@ -3759,6 +3779,32 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- ####################################################################################################
 end
 
+function BattlegroundTargets:ClickOnBracketTab(bracketSize, fraction, force)
+	if not force and testSize == bracketSize then return end
+	testSize = bracketSize
+	local size10, size15, size40
+	if testSize == 10 then
+		size10 = true
+	elseif testSize == 15 then
+		size15 = true
+	elseif testSize == 40 then
+		size40 = true
+	end
+	GVAR.OptionsFrame.ConfigGeneral:Hide()
+	GVAR.OptionsFrame.ConfigBrackets:Show()
+	TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
+	TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, size10)
+	TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, size15)
+	TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, size40)
+	BattlegroundTargets:CheckForEnabledBracket(testSize, fraction)
+	local BattlegroundTargets_Options = BattlegroundTargets_Options
+	if BattlegroundTargets_Options.Friend.EnableBracket[testSize] or BattlegroundTargets_Options.Enemy.EnableBracket[testSize] then
+		BattlegroundTargets:EnableConfigMode()
+	else
+		BattlegroundTargets:DisableConfigMode()
+	end
+end
+
 function BattlegroundTargets:ClickOnFractionTab(side)
 	if fraction == side then return end
 	local fracF, fracE
@@ -5553,111 +5599,16 @@ function BattlegroundTargets:EnableConfigMode()
 
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
 
-	if not testData.Loaded then
-		for frc = 1, #FRAMES do
-			local side = FRAMES[frc]
-
-			DATA[side].MainData[1]  = {name = L["Target"].."_Aa-servername", classToken = "DRUID",       talentSpec = classes["DRUID"      ].spec[3].specName}
-			DATA[side].MainData[2]  = {name = L["Target"].."_Bb-servername", classToken = "PRIEST",      talentSpec = classes["PRIEST"     ].spec[3].specName}
-			DATA[side].MainData[3]  = {name = L["Target"].."_Cc-servername", classToken = "MONK",        talentSpec = classes["MONK"       ].spec[2].specName}
-			DATA[side].MainData[4]  = {name = L["Target"].."_Dd-servername", classToken = "HUNTER",      talentSpec = classes["HUNTER"     ].spec[3].specName}
-			DATA[side].MainData[5]  = {name = L["Target"].."_Ee-servername", classToken = "WARRIOR",     talentSpec = classes["WARRIOR"    ].spec[3].specName}
-			DATA[side].MainData[6]  = {name = L["Target"].."_Ff-servername", classToken = "ROGUE",       talentSpec = classes["ROGUE"      ].spec[2].specName}
-			DATA[side].MainData[7]  = {name = L["Target"].."_Gg-servername", classToken = "SHAMAN",      talentSpec = classes["SHAMAN"     ].spec[3].specName}
-			DATA[side].MainData[8]  = {name = L["Target"].."_Hh-servername", classToken = "PALADIN",     talentSpec = classes["PALADIN"    ].spec[3].specName}
-			DATA[side].MainData[9]  = {name = L["Target"].."_Ii-servername", classToken = "MAGE",        talentSpec = classes["MAGE"       ].spec[3].specName}
-			DATA[side].MainData[10] = {name = L["Target"].."_Jj-servername", classToken = "DEATHKNIGHT", talentSpec = classes["DEATHKNIGHT"].spec[2].specName}
-			DATA[side].MainData[11] = {name = L["Target"].."_Kk-servername", classToken = "DRUID",       talentSpec = classes["DRUID"      ].spec[1].specName}
-			DATA[side].MainData[12] = {name = L["Target"].."_Ll-servername", classToken = "DEATHKNIGHT", talentSpec = classes["DEATHKNIGHT"].spec[3].specName}
-			DATA[side].MainData[13] = {name = L["Target"].."_Mm-servername", classToken = "PALADIN",     talentSpec = classes["PALADIN"    ].spec[3].specName}
-			DATA[side].MainData[14] = {name = L["Target"].."_Nn-servername", classToken = "MAGE",        talentSpec = classes["MAGE"       ].spec[1].specName}
-			DATA[side].MainData[15] = {name = L["Target"].."_Oo-servername", classToken = "SHAMAN",      talentSpec = classes["SHAMAN"     ].spec[2].specName}
-			DATA[side].MainData[16] = {name = L["Target"].."_Pp-servername", classToken = "ROGUE",       talentSpec = classes["ROGUE"      ].spec[1].specName}
-			DATA[side].MainData[17] = {name = L["Target"].."_Qq-servername", classToken = "WARLOCK",     talentSpec = classes["WARLOCK"    ].spec[2].specName}
-			DATA[side].MainData[18] = {name = L["Target"].."_Rr-servername", classToken = "PRIEST",      talentSpec = classes["PRIEST"     ].spec[3].specName}
-			DATA[side].MainData[19] = {name = L["Target"].."_Ss-servername", classToken = "WARRIOR",     talentSpec = classes["WARRIOR"    ].spec[1].specName}
-			DATA[side].MainData[20] = {name = L["Target"].."_Tt-servername", classToken = "DRUID",       talentSpec = classes["DRUID"      ].spec[2].specName}
-			DATA[side].MainData[21] = {name = L["Target"].."_Uu-servername", classToken = "PRIEST",      talentSpec = classes["PRIEST"     ].spec[3].specName}
-			DATA[side].MainData[22] = {name = L["Target"].."_Vv-servername", classToken = "MONK",        talentSpec = classes["MONK"       ].spec[1].specName}
-			DATA[side].MainData[23] = {name = L["Target"].."_Ww-servername", classToken = "SHAMAN",      talentSpec = classes["SHAMAN"     ].spec[1].specName}
-			DATA[side].MainData[24] = {name = L["Target"].."_Xx-servername", classToken = "HUNTER",      talentSpec = classes["HUNTER"     ].spec[2].specName}
-			DATA[side].MainData[25] = {name = L["Target"].."_Yy-servername", classToken = "SHAMAN",      talentSpec = classes["SHAMAN"     ].spec[2].specName}
-			DATA[side].MainData[26] = {name = L["Target"].."_Zz-servername", classToken = "WARLOCK",     talentSpec = classes["WARLOCK"    ].spec[3].specName}
-			DATA[side].MainData[27] = {name = L["Target"].."_Ab-servername", classToken = "PRIEST",      talentSpec = classes["PRIEST"     ].spec[2].specName}
-			DATA[side].MainData[28] = {name = L["Target"].."_Cd-servername", classToken = "MONK",        talentSpec = classes["MONK"       ].spec[3].specName}
-			DATA[side].MainData[29] = {name = L["Target"].."_Ef-servername", classToken = "ROGUE",       talentSpec = classes["ROGUE"      ].spec[3].specName}
-			DATA[side].MainData[30] = {name = L["Target"].."_Gh-servername", classToken = "DRUID",       talentSpec = classes["DRUID"      ].spec[4].specName}
-			DATA[side].MainData[31] = {name = L["Target"].."_Ij-servername", classToken = "HUNTER",      talentSpec = classes["HUNTER"     ].spec[3].specName}
-			DATA[side].MainData[32] = {name = L["Target"].."_Kl-servername", classToken = "WARRIOR",     talentSpec = classes["WARRIOR"    ].spec[2].specName}
-			DATA[side].MainData[33] = {name = L["Target"].."_Mn-servername", classToken = "PALADIN",     talentSpec = classes["PALADIN"    ].spec[1].specName}
-			DATA[side].MainData[34] = {name = L["Target"].."_Op-servername", classToken = "MAGE",        talentSpec = classes["MAGE"       ].spec[3].specName}
-			DATA[side].MainData[35] = {name = L["Target"].."_Qr-servername", classToken = "DEATHKNIGHT", talentSpec = classes["DEATHKNIGHT"].spec[3].specName}
-			DATA[side].MainData[36] = {name = L["Target"].."_St-servername", classToken = "MAGE",        talentSpec = classes["MAGE"       ].spec[2].specName}
-			DATA[side].MainData[37] = {name = L["Target"].."_Uv-servername", classToken = "HUNTER",      talentSpec = classes["HUNTER"     ].spec[2].specName}
-			DATA[side].MainData[38] = {name = L["Target"].."_Wx-servername", classToken = "WARLOCK",     talentSpec = classes["WARLOCK"    ].spec[1].specName}
-			DATA[side].MainData[39] = {name = L["Target"].."_Yz-servername", classToken = "WARLOCK",     talentSpec = classes["WARLOCK"    ].spec[2].specName}
-			DATA[side].MainData[40] = {name = L["Target"].."_Zx-servername", classToken = "ROGUE",       talentSpec = nil}
-
-			for i = 1, 40 do
-				local specrole = 4
-				local specicon = nil
-				local talentSpec = DATA[side].MainData[i].talentSpec
-				local classToken = DATA[side].MainData[i].classToken
-
-				if talentSpec and classToken then
-					local token = classes[classToken] -- BGSPEC
-					if token then
-						if token.spec then
-							for i = 1, #token.spec do
-								if talentSpec == token.spec[i].specName then
-									specrole = token.spec[i].role
-									specicon = token.spec[i].icon
-									break
-								end
-							end
-						end
-					end
-				end
-
-				DATA[side].MainData[i].specIcon = specicon
-				DATA[side].MainData[i].talentSpec = specrole
-			end
-
-		end
-		testData.Loaded = true
-	end
-
---[[
-	-- 3x HEALER TODO
-	-- 3x TANK
-	-- Xx DAMAGER
-	if not testData.Loaded then
-		for frc = 1, #FRAMES do
-			local side = FRAMES[frc]
-			wipe(DATA[side].MainData)
-			local charnum1 = random(65, 90) -- 65 = A |  90 = Z
-			local charnum2 = random(97,111) -- 97 = a | 111 = o
-			for i = 1, 40 do
-				local spec = random(1,3)
-				local classToken = class_IntegerSort[ random(1,11) ].cid
-				DATA[side].MainData[i]  = {
-					name = L["Target"].."_"..strchar(charnum1)..strchar(charnum2).."-servername",
-					classToken = classToken,
-					talentSpec = classes[ classToken ].spec[ spec ].role,
-					specIcon   = classes[ classToken ].spec[ spec ].icon
-				}
-				if charnum1 ==  90 then charnum1 = 65 else charnum1 = charnum1 + 1 end
-				if charnum2 == 111 then charnum2 = 97 else charnum2 = charnum2 + 1 end
-			end
-		end
-		testData.Loaded = true
-	end
---]]
-
 	currentSize = testSize
+	if not testData.Loaded then
+		newTestData()
+		testData.Loaded = true
+	end
 
 	for frc = 1, #FRAMES do
 		local side = FRAMES[frc]
+
+		DATA[side].MainData = testData[side].MainTestDATA[currentSize]
 
 		if BattlegroundTargets_Options[side].EnableBracket[currentSize] then
 			BattlegroundTargets:Frame_SetupPosition("BattlegroundTargets_"..side.."MainFrame", side)
@@ -6407,29 +6358,7 @@ function BattlegroundTargets:CopyAllSettings(sourceSize, sameSize)
 		TEMPLATE.SetTabButton(GVAR.OptionsFrame.EnableEnemyBracket, true)
 	end
 
-	if destinationSize == 10 then
-		testSize = 10
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, true)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
-	elseif destinationSize == 15 then
-		testSize = 15
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, true)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, nil)
-	elseif destinationSize == 40 then
-		testSize = 40
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize10, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize15, nil)
-		TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabRaidSize40, true)
-	end
-
-	BattlegroundTargets:CheckForEnabledBracket(testSize, destinationFraction)
-	if BattlegroundTargets_Options.Friend.EnableBracket[testSize] or BattlegroundTargets_Options.Enemy.EnableBracket[testSize] then
-		BattlegroundTargets:EnableConfigMode()
-	else
-		BattlegroundTargets:DisableConfigMode()
-	end
+	BattlegroundTargets:ClickOnBracketTab(destinationSize, destinationFraction, "force")
 end
 -- ---------------------------------------------------------------------------------------------------------------------
 
@@ -6642,7 +6571,7 @@ function BattlegroundTargets:MainDataUpdate(side)
 				button:SetAttribute("macrotext2", "/targetexact "..qname.."\n/focus\n/targetlasttarget")
 			end
 
-			if ButtonFocusToggle and playerFocusName then
+			if ButtonFocusToggle then
 				if qname == playerFocusName then
 					button.FocusTexture:SetAlpha(1)
 					if not inCombat then
@@ -6685,7 +6614,7 @@ function BattlegroundTargets:MainDataUpdate(side)
 				end
 			end
 
-			if ButtonTargetToggle and playerTargetName then
+			if ButtonTargetToggle then
 				if qname == playerTargetName then
 					button.HighlightT:SetTexture(0.5, 0.5, 0.5, 1)
 					button.HighlightR:SetTexture(0.5, 0.5, 0.5, 1)
@@ -6748,19 +6677,19 @@ function BattlegroundTargets:MainDataUpdate(side)
 			end
 
 			if ButtonAssistToggle then
-				if playerAssistTargetName and qname == playerAssistTargetName then
+				if qname == playerAssistTargetName then
 					button.AssistTargetTexture:SetAlpha(1)
 				else
 					button.AssistTargetTexture:SetAlpha(0)
 				end
-				if isAssistName and qname == isAssistName then
+				if qname == isAssistName then
 					button.AssistSourceTexture:SetAlpha(1)
 				else
 					button.AssistSourceTexture:SetAlpha(0)
 				end
 			end
 
-			if ButtonLeaderToggle and DATA[side].isLeader then -- leader_
+			if ButtonLeaderToggle then -- leader_
 				if qname == DATA[side].isLeader then
 					button.LeaderTexture:SetAlpha(1)
 				else
@@ -8035,15 +7964,14 @@ end
 function BattlegroundTargets:FriendLeaderUpdate() -- leader_
 	for unitName, unitID in pairs(DATA.Friend.Name2UnitID) do
 		if UnitIsGroupLeader(unitID) then
-			local curTime = GetTime()
 			local clrButton = GVAR.FriendButton
 			for i = 1, currentSize do
 				clrButton[i].LeaderTexture:SetAlpha(0)
-				clrButton[i].leaderTimer = curTime
 			end
 			local button = GVAR.FriendButton[ DATA.Friend.Name2Button[ unitName ] ]
 			if button then
 				DATA.Friend.isLeader = unitName
+				button.leaderTimer = GetTime()
 				button.LeaderTexture:SetAlpha(1)
 			end
 			return
@@ -8068,19 +7996,17 @@ function BattlegroundTargets:CheckLeader(side, button, unitID, unitName) -- lead
 			local clrButton = GVAR[side.."Button"]
 			for i = 1, currentSize do
 				clrButton[i].LeaderTexture:SetAlpha(0)
-				clrButton[i].leaderTimer = curTime
 			end
 			DATA[side].isLeader = unitName
 			button.LeaderTexture:SetAlpha(1)
 		end
 	elseif UnitIsGroupLeader(unitID) then
-		local curTime = GetTime()
 		local clrButton = GVAR[side.."Button"]
 		for i = 1, currentSize do
 			clrButton[i].LeaderTexture:SetAlpha(0)
-			clrButton[i].leaderTimer = curTime
 		end
 		DATA[side].isLeader = unitName
+		button.leaderTimer = GetTime()
 		button.LeaderTexture:SetAlpha(1)
 	end
 end
@@ -9623,8 +9549,10 @@ function BattlegroundTargets:CheckIfPlayerIsGhost(state)
 
 		BattlegroundTargets:ClearRangeData("Friend")
 		BattlegroundTargets:ClearRangeData("Enemy")
-
-		--Screenshot() -- TEST
+		
+		---[[ TEST
+		Screenshot()
+		--]]
 	else
 		isDeadUpdateStop = false
 		if isConfig then return end
