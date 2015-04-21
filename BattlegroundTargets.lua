@@ -1709,6 +1709,10 @@ function BattlegroundTargets:CreateOptionsFrame()
 	--                                                     585
 	local heightTotal = heightBase + heightBracket + 30 + 10
 
+
+
+	-- ####################################################################################################
+	-- xMx local func
 	local function HighlightOnEnter(what)
 		GVAR.OptionsFrame.LayoutTHText.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.LayoutTHx18.Highlight:Show()
@@ -1853,6 +1857,28 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.HeightTitle.Background:SetTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.HeightSlider.Background:SetTexture(0, 0, 0, 0)
 	end
+
+	local function ConfigFontNumberOptionCheck(size)
+		if BattlegroundTargets_Options[fraction].SummaryToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonFlagToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonHealthTextToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonFTargetCountToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonETargetCountToggle[size] or
+		   BattlegroundTargets_Options[fraction].ButtonPvPTrinketToggle[size]
+		then
+			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
+			TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNumberSlider)
+		else
+			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
+			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(0.5, 0.5, 0.5, 1)
+			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNumberSlider)
+		end
+	end
+	-- ###
+	-- ####################################################################################################
+
+
 
 	-- ####################################################################################################
 	-- xMx OptionsFrame
@@ -2351,7 +2377,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy3:SetHeight(1)
 	GVAR.OptionsFrame.Dummy3:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Dummy3:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy3:SetTexture(0.73, 0.26, 0.21, 0.5)
+	GVAR.OptionsFrame.Dummy3:SetTexture(0.8, 0.2, 0.2, 1)
 
 
 
@@ -2439,23 +2465,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	                GVAR.OptionsFrame.LayoutTHx81:GetWidth() + 0 +
 	                GVAR.OptionsFrame.LayoutSpace:GetWidth() + 50
 
-	local function ConfigFontNumberOptionCheck(size)
-		if BattlegroundTargets_Options[fraction].SummaryToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonFlagToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonHealthTextToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonFTargetCountToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonETargetCountToggle[size] or
-		   BattlegroundTargets_Options[fraction].ButtonPvPTrinketToggle[size]
-		then
-			TEMPLATE.EnablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
-			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(1, 1, 1, 1)
-			TEMPLATE.EnableSlider(GVAR.OptionsFrame.FontNumberSlider)
-		else
-			TEMPLATE.DisablePullDownMenu(GVAR.OptionsFrame.FontNumberPullDown)
-			GVAR.OptionsFrame.FontNumberTitle:SetTextColor(0.5, 0.5, 0.5, 1)
-			TEMPLATE.DisableSlider(GVAR.OptionsFrame.FontNumberSlider)
-		end
-	end
+
 
 	-- summary
 	GVAR.OptionsFrame.SummaryText = GVAR.OptionsFrame.ConfigBrackets:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -2544,7 +2554,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy4:SetHeight(1)
 	GVAR.OptionsFrame.Dummy4:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Dummy4:SetPoint("TOP", GVAR.OptionsFrame.SummaryToggle, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy4:SetTexture(0.73, 0.26, 0.21, 0.5)
+	GVAR.OptionsFrame.Dummy4:SetTexture(0.8, 0.2, 0.2, 1)
 
 
 
@@ -3508,7 +3518,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- testshuffler
 	GVAR.OptionsFrame.TestShuffler = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
 	BattlegroundTargets.shuffleStyle = true
-	GVAR.OptionsFrame.TestShuffler:SetPoint("BOTTOM", GVAR.OptionsFrame.HeightSlider, "BOTTOM", 0, 0)
+	GVAR.OptionsFrame.TestShuffler:SetPoint("BOTTOM", GVAR.OptionsFrame.Base, "BOTTOM", 0, 13)
 	GVAR.OptionsFrame.TestShuffler:SetPoint("RIGHT", GVAR.OptionsFrame, "RIGHT", -10, 0)
 	GVAR.OptionsFrame.TestShuffler:SetWidth(32)
 	GVAR.OptionsFrame.TestShuffler:SetHeight(32)
