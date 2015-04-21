@@ -9506,7 +9506,7 @@ function BattlegroundTargets:CheckIfPlayerIsGhost(state)
 
 		BattlegroundTargets:ClearRangeData("Friend")
 		BattlegroundTargets:ClearRangeData("Enemy")
-		
+
 		--[[ TEST
 		Screenshot()
 		--]]
