@@ -51,11 +51,11 @@ TEMPLATE.BorderTRBL = function(frame) -- TRBL = Top-Right-Bottom-Left
 	frame.FrameBorder = frame:CreateTexture(nil, "BORDER")
 	frame.FrameBorder:SetPoint("TOPLEFT", 1, -1)
 	frame.FrameBorder:SetPoint("BOTTOMRIGHT", -1, 1)
-	frame.FrameBorder:SetTexture(0, 0, 0, 1)
+	frame.FrameBorder:SetColorTexture(0, 0, 0, 1)
 	frame.FrameBackground = frame:CreateTexture(nil, "BACKGROUND")
 	frame.FrameBackground:SetPoint("TOPLEFT", 0, 0)
 	frame.FrameBackground:SetPoint("BOTTOMRIGHT", 0, 0)
-	frame.FrameBackground:SetTexture(0.8, 0.2, 0.2, 1)
+	frame.FrameBackground:SetColorTexture(0.8, 0.2, 0.2, 1)
 end
 -- -----------------------------------------------------------------------------
 
@@ -72,14 +72,14 @@ local ButtonColor = {
 
 TEMPLATE.DisableTextButton = function(button)
 	button.Text:SetTextColor(0.4, 0.4, 0.4, 1)
-	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
+	button.Border:SetColorTexture(0.4, 0.4, 0.4, 1)
 	button:EnableMouse(false)
 	button:Disable()
 end
 
 TEMPLATE.EnableTextButton = function(button)
 	button.Text:SetTextColor(button.r, button.g, button.b, 1)
-	button.Border:SetTexture(unpack(ButtonColor[button.action].border))
+	button.Border:SetColorTexture(unpack(ButtonColor[button.action].border))
 	button:EnableMouse(true)
 	button:Enable()
 end
@@ -88,29 +88,29 @@ TEMPLATE.TextButton = function(button, text, action)
 	button.Background = button:CreateTexture(nil, "BORDER")
 	button.Background:SetPoint("TOPLEFT", 1, -1)
 	button.Background:SetPoint("BOTTOMRIGHT", -1, 1)
-	button.Background:SetTexture(0, 0, 0, 1)
+	button.Background:SetColorTexture(0, 0, 0, 1)
 
 	button.Border = button:CreateTexture(nil, "BACKGROUND")
 	button.Border:SetPoint("TOPLEFT", 0, 0)
 	button.Border:SetPoint("BOTTOMRIGHT", 0, 0)
-	button.Border:SetTexture(unpack(ButtonColor[action].border))
+	button.Border:SetColorTexture(unpack(ButtonColor[action].border))
 
 	button.Normal = button:CreateTexture(nil, "ARTWORK")
 	button.Normal:SetPoint("TOPLEFT", 2, -2)
 	button.Normal:SetPoint("BOTTOMRIGHT", -2, 2)
-	button.Normal:SetTexture(unpack(ButtonColor[action].normal))
+	button.Normal:SetColorTexture(unpack(ButtonColor[action].normal))
 	button:SetNormalTexture(button.Normal)
 
 	button.Disabled = button:CreateTexture(nil, "OVERLAY")
 	button.Disabled:SetPoint("TOPLEFT", 3, -3)
 	button.Disabled:SetPoint("BOTTOMRIGHT", -3, 3)
-	button.Disabled:SetTexture(0.6, 0.6, 0.6, 0.2)
+	button.Disabled:SetColorTexture(0.6, 0.6, 0.6, 0.2)
 	button:SetDisabledTexture(button.Disabled)
 
 	button.Highlight = button:CreateTexture(nil, "OVERLAY")
 	button.Highlight:SetPoint("TOPLEFT", 3, -3)
 	button.Highlight:SetPoint("BOTTOMRIGHT", -3, 3)
-	button.Highlight:SetTexture(0.6, 0.6, 0.6, 0.2)
+	button.Highlight:SetColorTexture(0.6, 0.6, 0.6, 0.2)
 	button:SetHighlightTexture(button.Highlight)
 
 	button.Text = button:CreateFontString(nil, "OVERLAY", ButtonColor[action].font)
@@ -145,12 +145,12 @@ TEMPLATE.SetIconButton = function(button, cut)
 end
 
 TEMPLATE.DisableIconButton = function(button)
-	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
+	button.Border:SetColorTexture(0.4, 0.4, 0.4, 1)
 	button:Disable()
 end
 
 TEMPLATE.EnableIconButton = function(button)
-	button.Border:SetTexture(0.8, 0.2, 0.2, 1)
+	button.Border:SetColorTexture(0.8, 0.2, 0.2, 1)
 	button:Enable()
 end
 
@@ -167,17 +167,17 @@ TEMPLATE.IconButton = function(button, cut)
 	button.Back = button:CreateTexture(nil, "BORDER")
 	button.Back:SetPoint("TOPLEFT", 1, -1)
 	button.Back:SetPoint("BOTTOMRIGHT", -1, 1)
-	button.Back:SetTexture(0, 0, 0, 1)
+	button.Back:SetColorTexture(0, 0, 0, 1)
 
 	button.Border = button:CreateTexture(nil, "BACKGROUND")
 	button.Border:SetPoint("TOPLEFT", 0, 0)
 	button.Border:SetPoint("BOTTOMRIGHT", 0, 0)
-	button.Border:SetTexture(0.8, 0.2, 0.2, 1)
+	button.Border:SetColorTexture(0.8, 0.2, 0.2, 1)
 
 	button.Highlight = button:CreateTexture(nil, "OVERLAY")
 	button.Highlight:SetPoint("TOPLEFT", 3, -3)
 	button.Highlight:SetPoint("BOTTOMRIGHT", -3, 3)
-	button.Highlight:SetTexture(0.6, 0.6, 0.6, 0.2)
+	button.Highlight:SetColorTexture(0.6, 0.6, 0.6, 0.2)
 	button:SetHighlightTexture(button.Highlight)
 
 	button.Normal = button:CreateTexture(nil, "ARTWORK")
@@ -213,7 +213,7 @@ TEMPLATE.DisableCheckButton = function(button)
 	elseif button.Icon then
 		Desaturation(button.Icon, true)
 	end
-	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
+	button.Border:SetColorTexture(0.4, 0.4, 0.4, 1)
 	button:Disable()
 end
 
@@ -223,7 +223,7 @@ TEMPLATE.EnableCheckButton = function(button)
 	elseif button.Icon then
 		Desaturation(button.Icon, false)
 	end
-	button.Border:SetTexture(0.8, 0.2, 0.2, 1)
+	button.Border:SetColorTexture(0.8, 0.2, 0.2, 1)
 	button:Enable()
 end
 
@@ -232,29 +232,29 @@ TEMPLATE.CheckButton = function(button, size, space, text, icon)
 	button.Border:SetWidth( size )
 	button.Border:SetHeight( size )
 	button.Border:SetPoint("LEFT", 0, 0)
-	button.Border:SetTexture(0.4, 0.4, 0.4, 1)
+	button.Border:SetColorTexture(0.4, 0.4, 0.4, 1)
 
 	button.Background = button:CreateTexture(nil, "BORDER")
 	button.Background:SetPoint("TOPLEFT", button.Border, "TOPLEFT", 1, -1)
 	button.Background:SetPoint("BOTTOMRIGHT", button.Border, "BOTTOMRIGHT", -1, 1)
-	button.Background:SetTexture(0, 0, 0, 1)
+	button.Background:SetColorTexture(0, 0, 0, 1)
 
 	button.Normal = button:CreateTexture(nil, "ARTWORK")
 	button.Normal:SetPoint("TOPLEFT", button.Border, "TOPLEFT", 1, -1)
 	button.Normal:SetPoint("BOTTOMRIGHT", button.Border, "BOTTOMRIGHT", -1, 1)
-	button.Normal:SetTexture(0, 0, 0, 1)
+	button.Normal:SetColorTexture(0, 0, 0, 1)
 	button:SetNormalTexture(button.Normal)
 
 	button.Push = button:CreateTexture(nil, "ARTWORK")
 	button.Push:SetPoint("TOPLEFT", button.Border, "TOPLEFT", 4, -4)
 	button.Push:SetPoint("BOTTOMRIGHT", button.Border, "BOTTOMRIGHT", -4, 4)
-	button.Push:SetTexture(0.4, 0.4, 0.4, 0.5)
+	button.Push:SetColorTexture(0.4, 0.4, 0.4, 0.5)
 	button:SetPushedTexture(button.Push)
 
 	button.Disabled = button:CreateTexture(nil, "ARTWORK")
 	button.Disabled:SetPoint("TOPLEFT", button.Border, "TOPLEFT", 3, -3)
 	button.Disabled:SetPoint("BOTTOMRIGHT", button.Border, "BOTTOMRIGHT", -3, 3)
-	button.Disabled:SetTexture(0.4, 0.4, 0.4, 0.5)
+	button.Disabled:SetColorTexture(0.4, 0.4, 0.4, 0.5)
 	button:SetDisabledTexture(button.Disabled)
 
 	button.Checked = button:CreateTexture(nil, "ARTWORK")
@@ -293,7 +293,7 @@ TEMPLATE.CheckButton = function(button, size, space, text, icon)
 	button.Highlight = button:CreateTexture(nil, "OVERLAY")
 	button.Highlight:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
 	button.Highlight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
-	button.Highlight:SetTexture(1, 1, 1, 0.15) -- COPYHL
+	button.Highlight:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 	button.Highlight:Hide()
 
 	button:SetScript("OnEnter", function() button.Highlight:Show() end)
@@ -306,12 +306,12 @@ end
 -- -----------------------------------------------------------------------------
 TEMPLATE.SetTabButton = function(button, show)
 	if show then
-		button.TextureBottom:SetTexture(0, 0, 0, 1)
-		button.TextureBorder:SetTexture(0.8, 0.2, 0.2, 1)
+		button.TextureBottom:SetColorTexture(0, 0, 0, 1)
+		button.TextureBorder:SetColorTexture(0.8, 0.2, 0.2, 1)
 		button.show = true
 	else
-		button.TextureBottom:SetTexture(0.8, 0.2, 0.2, 1)
-		button.TextureBorder:SetTexture(0.4, 0.4, 0.4, 0.4)
+		button.TextureBottom:SetColorTexture(0.8, 0.2, 0.2, 1)
+		button.TextureBorder:SetColorTexture(0.4, 0.4, 0.4, 0.4)
 		button.show = false
 	end
 end
@@ -345,26 +345,26 @@ TEMPLATE.TabButton = function(button, text, active, monotext)
 	button.Texture = button:CreateTexture(nil, "BORDER")
 	button.Texture:SetPoint("TOPLEFT", 1, -1)
 	button.Texture:SetPoint("BOTTOMRIGHT", -1, 1)
-	button.Texture:SetTexture(0, 0, 0, 1)
+	button.Texture:SetColorTexture(0, 0, 0, 1)
 
 	button.TextureBorder = button:CreateTexture(nil, "BACKGROUND")
 	button.TextureBorder:SetPoint("TOPLEFT", 0, 0)
 	button.TextureBorder:SetPoint("BOTTOMRIGHT", -1, 1)
 	button.TextureBorder:SetPoint("TOPRIGHT" ,0, 0)
 	button.TextureBorder:SetPoint("BOTTOMLEFT" ,1, 1)
-	button.TextureBorder:SetTexture(0.8, 0.2, 0.2, 1)
+	button.TextureBorder:SetColorTexture(0.8, 0.2, 0.2, 1)
 
 	button.TextureBottom = button:CreateTexture(nil, "ARTWORK")
 	button.TextureBottom:SetPoint("TOPLEFT", button, "BOTTOMLEFT" ,1, 2)
 	button.TextureBottom:SetPoint("BOTTOMLEFT" ,1, 1)
 	button.TextureBottom:SetPoint("TOPRIGHT", button, "BOTTOMRIGHT" ,-1, 2)
 	button.TextureBottom:SetPoint("BOTTOMRIGHT" ,-1, 1)
-	button.TextureBottom:SetTexture(0.8, 0.2, 0.2, 1)
+	button.TextureBottom:SetColorTexture(0.8, 0.2, 0.2, 1)
 
 	button.TextureHighlight = button:CreateTexture(nil, "ARTWORK")
 	button.TextureHighlight:SetPoint("TOPLEFT", 3, -3)
 	button.TextureHighlight:SetPoint("BOTTOMRIGHT", -3, 3)
-	button.TextureHighlight:SetTexture(1, 1, 1, 0.1)
+	button.TextureHighlight:SetColorTexture(1, 1, 1, 0.1)
 	button:SetHighlightTexture(button.TextureHighlight)
 
 	button.TabText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -381,8 +381,8 @@ TEMPLATE.TabButton = function(button, text, active, monotext)
 		button.TabText:SetTextColor(1, 0, 0, 1)
 	end
 
-	button:SetScript("OnEnter", function() if not button.show then button.TextureBorder:SetTexture(0.4, 0.4, 0.4, 0.8) end end)
-	button:SetScript("OnLeave", function() if not button.show then button.TextureBorder:SetTexture(0.4, 0.4, 0.4, 0.4) end end)
+	button:SetScript("OnEnter", function() if not button.show then button.TextureBorder:SetColorTexture(0.4, 0.4, 0.4, 0.8) end end)
+	button:SetScript("OnLeave", function() if not button.show then button.TextureBorder:SetColorTexture(0.4, 0.4, 0.4, 0.4) end end)
 end
 -- -----------------------------------------------------------------------------
 
@@ -396,7 +396,7 @@ TEMPLATE.DisableSlider = function(slider)
 	slider.sliderBGM:SetTexCoord(unpack(Textures.SliderBG_Mdis))
 	slider.sliderBGR:SetTexCoord(unpack(Textures.SliderBG_Rdis))
 	slider.thumb:SetTexCoord(0, 0, 0, 0)
-	slider.Background:SetTexture(0, 0, 0, 0)
+	slider.Background:SetColorTexture(0, 0, 0, 0)
 	slider:SetScript("OnEnter", NOOP)
 	slider:SetScript("OnLeave", NOOP)
 	slider:Disable()
@@ -409,8 +409,8 @@ TEMPLATE.EnableSlider = function(slider)
 	slider.sliderBGM:SetTexCoord(unpack(Textures.SliderBG_Mnor))
 	slider.sliderBGR:SetTexCoord(unpack(Textures.SliderBG_Rnor))
 	slider.thumb:SetTexCoord(unpack(Textures.SliderKnob))
-	slider:SetScript("OnEnter", function() slider.Background:SetTexture(1, 1, 1, 0.15) end) -- COPYHL
-	slider:SetScript("OnLeave", function() slider.Background:SetTexture(0, 0, 0, 0) end)
+	slider:SetScript("OnEnter", function() slider.Background:SetColorTexture(1, 1, 1, 0.15) end) -- COPYHL
+	slider:SetScript("OnLeave", function() slider.Background:SetColorTexture(0, 0, 0, 0) end)
 	slider:Enable()
 end
 
@@ -427,7 +427,7 @@ TEMPLATE.Slider = function(slider, width, step, minVal, maxVal, curVal, func, me
 	slider.Background:SetWidth(width)
 	slider.Background:SetHeight(16)
 	slider.Background:SetPoint("LEFT", 0, 0)
-	slider.Background:SetTexture(0, 0, 0, 0)
+	slider.Background:SetColorTexture(0, 0, 0, 0)
 
 	slider.textMin = slider:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	slider.textMin:SetPoint("TOP", slider, "BOTTOM", 0, -1)
@@ -499,8 +499,8 @@ TEMPLATE.Slider = function(slider, width, step, minVal, maxVal, curVal, func, me
 		end
 	end)
 
-	slider:SetScript("OnEnter", function() slider.Background:SetTexture(1, 1, 1, 0.15) end) -- COPYHL
-	slider:SetScript("OnLeave", function() slider.Background:SetTexture(0, 0, 0, 0) end)
+	slider:SetScript("OnEnter", function() slider.Background:SetColorTexture(1, 1, 1, 0.15) end) -- COPYHL
+	slider:SetScript("OnLeave", function() slider.Background:SetColorTexture(0, 0, 0, 0) end)
 end
 -- -----------------------------------------------------------------------------
 
@@ -509,12 +509,12 @@ end
 -- -----------------------------------------------------------------------------
 TEMPLATE.DisablePullDownMenu = function(button)
 	button.PullDownMenu:Hide()
-	button.PullDownButtonBorder:SetTexture(0.4, 0.4, 0.4, 1)
+	button.PullDownButtonBorder:SetColorTexture(0.4, 0.4, 0.4, 1)
 	button:Disable()
 end
 
 TEMPLATE.EnablePullDownMenu = function(button)
-	button.PullDownButtonBorder:SetTexture(0.8, 0.2, 0.2, 1)
+	button.PullDownButtonBorder:SetColorTexture(0.8, 0.2, 0.2, 1)
 	button:Enable()
 end
 
@@ -525,12 +525,12 @@ TEMPLATE.PullDownMenu = function(button, contentTable, buttonText, pulldownWidth
 	button.PullDownButtonBG = button:CreateTexture(nil, "BORDER")
 	button.PullDownButtonBG:SetPoint("TOPLEFT", 1, -1)
 	button.PullDownButtonBG:SetPoint("BOTTOMRIGHT", -1, 1)
-	button.PullDownButtonBG:SetTexture(0, 0, 0, 1)
+	button.PullDownButtonBG:SetColorTexture(0, 0, 0, 1)
 
 	button.PullDownButtonBorder = button:CreateTexture(nil, "BACKGROUND")
 	button.PullDownButtonBorder:SetPoint("TOPLEFT", 0, 0)
 	button.PullDownButtonBorder:SetPoint("BOTTOMRIGHT", 0, 0)
-	button.PullDownButtonBorder:SetTexture(0.4, 0.4, 0.4, 1)
+	button.PullDownButtonBorder:SetColorTexture(0.4, 0.4, 0.4, 1)
 
 	button.PullDownButtonExpand = button:CreateTexture(nil, "OVERLAY")
 	button.PullDownButtonExpand:SetHeight(14)
@@ -543,13 +543,13 @@ TEMPLATE.PullDownMenu = function(button, contentTable, buttonText, pulldownWidth
 	button.PullDownButtonDisabled = button:CreateTexture(nil, "OVERLAY")
 	button.PullDownButtonDisabled:SetPoint("TOPLEFT", 3, -3)
 	button.PullDownButtonDisabled:SetPoint("BOTTOMRIGHT", -3, 3)
-	button.PullDownButtonDisabled:SetTexture(0.6, 0.6, 0.6, 0.2)
+	button.PullDownButtonDisabled:SetColorTexture(0.6, 0.6, 0.6, 0.2)
 	button:SetDisabledTexture(button.PullDownButtonDisabled)
 
 	button.PullDownButtonHighlight = button:CreateTexture(nil, "OVERLAY")
 	button.PullDownButtonHighlight:SetPoint("TOPLEFT", 1, -1)
 	button.PullDownButtonHighlight:SetPoint("BOTTOMRIGHT", -1, 1)
-	button.PullDownButtonHighlight:SetTexture(1, 1, 1, 0.15) -- COPYHL
+	button.PullDownButtonHighlight:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 	button:SetHighlightTexture(button.PullDownButtonHighlight)
 
 	button.PullDownButtonText = button:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -611,7 +611,7 @@ TEMPLATE.PullDownMenu = function(button, contentTable, buttonText, pulldownWidth
 		button.PullDownMenu.Button[i].Highlight = button.PullDownMenu.Button[i]:CreateTexture(nil, "ARTWORK")
 		button.PullDownMenu.Button[i].Highlight:SetPoint("TOPLEFT", 0, 0)
 		button.PullDownMenu.Button[i].Highlight:SetPoint("BOTTOMRIGHT", 0, 0)
-		button.PullDownMenu.Button[i].Highlight:SetTexture(1, 1, 1, 0.2)
+		button.PullDownMenu.Button[i].Highlight:SetColorTexture(1, 1, 1, 0.2)
 		button.PullDownMenu.Button[i]:SetHighlightTexture(button.PullDownMenu.Button[i].Highlight)
 
 		button.PullDownMenu.Button[i].Text:SetText(contentTable[i])

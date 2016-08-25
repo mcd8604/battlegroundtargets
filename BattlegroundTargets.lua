@@ -316,10 +316,15 @@ DATA.TargetFCountNum = {}     -- key = unitName | value (number) = target count 
 DATA.TargetECountNum = {}     -- key = unitName | value (number) = target count enemy
 
 DATA.PvPTrinketEndTime = {}   -- key = unitName | value (number) = endtime: when the trinket is ready for use again
+DATA.PvPTrinketId = {}        -- key = unitName | value (number) = spellId of trinket
+
 local pvptrinketIDs = {
-   [7744] = 120, -- Will of the Forsaken (Undead)
-  [42292] = 120, -- Every Man for Himself (Human)
-  [59752] = 120  -- PvP Trinket
+   [7744] =  30, -- Will of the Forsaken (Undead)
+  [42292] = 120, --trinket
+  [59752] =  30,  -- human
+  
+  [195710] = 180,  -- 180 PvP talent Trinket
+  [208683] = 120  -- 120 PvP talent Trinket
 }
 
 DATA.TransName = {}           -- key = unitName | value (string) = transliteration name
@@ -531,6 +536,7 @@ local classes = {
 	SHAMAN      = {coords = {0.25390625, 0.48828125, 0.2578125,  0.4921875 }}, -- ( 65/256, 125/256,  66/256, 126/256)
 	WARLOCK     = {coords = {0.75,       0.984375,   0.2578125,  0.4921875 }}, -- (192/256, 252/256,  66/256, 126/256)
 	WARRIOR     = {coords = {0.0078125,  0.2421875,  0.0078125,  0.2421875 }}, -- (  2/256,  62/256,   2/256,  62/256)
+	DEMONHUNTER = {coords = {0.74609375, 0.98046875, 0.5078125,  0.7421875 }}, -- (191/256, 251/256,  131/256, 191/256)
 	ZZZFAILURE  = {coords = {0, 0, 0, 0}},
 }
 
@@ -541,6 +547,8 @@ for classID = 1, MAX_CLASSES do
 	local numTabs = GetNumSpecializationsForClassID(classID)
 	--print(numTabs, classID, "#", GetNumSpecializationsForClassID(classID))
 	classes[classTag].spec = {}
+	classes[classTag].fixname = {}
+	classes[classTag].fix = false
 	for i = 1, numTabs do
 		local id, name, _, icon, _, role = GetSpecializationInfoForClassID(classID, i)
 		--print(role, id, classID, i, name, icon, "#", GetSpecializationInfoForClassID(classID, i))
@@ -548,6 +556,12 @@ for classID = 1, MAX_CLASSES do
 		elseif role == "HEALER"  then classes[classTag].spec[i] = {role = 1, specID = id, specName = name, icon = icon} tinsert(classROLES.HEALER,  {classTag = classTag, specIndex = i}) -- HEALER : total =  6
 		elseif role == "TANK"    then classes[classTag].spec[i] = {role = 2, specID = id, specName = name, icon = icon} tinsert(classROLES.TANK,    {classTag = classTag, specIndex = i}) -- TANK   : total =  5
 		end
+		--locale fix
+		local _ , fname = GetSpecializationInfoForClassID(classID, i, 3)
+		if name ~= fname then
+			classes[classTag].fixname[fname] = name
+			classes[classTag].fix = true
+		end		
 	end
 end
 
@@ -648,34 +662,37 @@ local class_IntegerSort = { -- .cid .blizz .eng .loc
 	{cid = "SHAMAN",      blizz = class_BlizzSort.SHAMAN      or  6, eng = "Shaman",       loc = class_LocaSort.SHAMAN      or "Shaman"},       -- 9
 	{cid = "WARLOCK",     blizz = class_BlizzSort.WARLOCK     or 10, eng = "Warlock",      loc = class_LocaSort.WARLOCK     or "Warlock"},      -- 10
 	{cid = "WARRIOR",     blizz = class_BlizzSort.WARRIOR     or  1, eng = "Warrior",      loc = class_LocaSort.WARRIOR     or "Warrior"},      -- 11
+	{cid = "DEMONHUNTER", blizz = class_BlizzSort.DEMONHUNTER or 12, eng = "Demon Hunter", loc = class_LocaSort.DEMONHUNTER or "Demon Hunter"}, -- 12
 }
 
 local ranges = {
 	Friend = {
 		DEATHKNIGHT = {id =  61999, lvl =  72}, -- Raise Ally          (  0 - 40yd/m) - Lvl 72 DKN72
-		DRUID       = {id =    774, lvl =   4}, -- Rejuvenation        (  0 - 40yd/m) - Lvl  4
-		HUNTER      = {id =  34477, lvl =  42}, -- Misdirection        (  0 -100yd/m) - Lvl 42 HUN42 -- no_def_range
-		MAGE        = {id =    475, lvl =  29}, -- Remove Curse        (  0 - 40yd/m) - Lvl 29 MAG29
-		MONK        = {id = 115178, lvl =  18}, -- Resuscitate         (  0 - 40yd/m) - Lvl 18 MON18
-		PALADIN     = {id =  85673, lvl =   9}, -- Word of Glory       (  0 - 40yd/m) - Lvl  9
-		PRIEST      = {id =   2061, lvl =   7}, -- Flash Heal          (  0 - 40yd/m) - Lvl  7
-		ROGUE       = {id =  57934, lvl =  78}, -- Tricks of the Trade (  0 -100yd/m) - Lvl 78 ROG78 -- no_def_range
-		SHAMAN      = {id =   8004, lvl =   7}, -- Healing Surge       (  0 - 40yd/m) - Lvl  7
+		DRUID       = {id =  50769, lvl =  14}, -- Revive	           (  0 - 40yd/m) - Lvl  4
+		HUNTER      = {id =    136, lvl = 111}, --none Misdirection    (  0 -100yd/m) - Lvl 42 HUN42 -- no_def_range
+		MAGE        = {id =    130, lvl =  32}, -- Slow Fall	       (  0 - 40yd/m) - Lvl 29 MAG32
+		MONK        = {id = 115178, lvl =  14}, -- Resuscitate         (  0 - 40yd/m) - Lvl 18 MON18
+		PALADIN     = {id =    633, lvl =  22}, -- LoH			       (  0 - 40yd/m) - Lvl  9
+		PRIEST      = {id =   2006, lvl =  14}, -- Resurection         (  0 - 40yd/m) - Lvl  7
+		ROGUE       = {id =  57934, lvl =  64}, -- Tricks of the Trade (  0 -100yd/m) - Lvl 78 ROG78 -- no_def_range
+		SHAMAN      = {id =   2008, lvl =  14}, -- Ancestral Spirit    (  0 - 40yd/m) - Lvl  7
 		WARLOCK     = {id =  20707, lvl =  18}, -- Soulstone           (  0 - 40yd/m) - Lvl 18 WLK18
-		WARRIOR     = {id =   3411, lvl =  72}, -- Intervene           (  0 -100yd/m) - Lvl 72 WRR72 -- no_def_range
+		WARRIOR     = {id = 198304, lvl =  72}, -- Intercept           (  0 -100yd/m) - Lvl 72 WRR72 -- no_def_range
+		DEMONHUNTER = {id =   6603, lvl =  98}, -- Intercept           (  0 -100yd/m) - Lvl 72 WRR72 -- no_def_range
 	},
 	Enemy = {
-		DEATHKNIGHT = {id =  47541, lvl =  55}, -- Death Coil          (  0 - 40yd/m) - Lvl 55
-		DRUID       = {id =   5176, lvl =   1}, -- Wrath               (  0 - 40yd/m) - Lvl  1
+		DEATHKNIGHT = {id =  49576, lvl =  55}, -- Death Grip          (  0 - 40yd/m) - Lvl 55
+		DRUID       = {id =    339, lvl =  22}, -- Entangling Roots              (  0 - 40yd/m) - Lvl  1
 		HUNTER      = {id =     75, lvl =   1}, -- Auto Shot           (  0 - 40yd/m) - Lvl  1
-		MAGE        = {id =  44614, lvl =   1}, -- Frostfire Bolt      (  0 - 40yd/m) - Lvl  1
-		MONK        = {id = 115546, lvl =  14}, -- Provoke             (  0 - 40yd/m) - Lvl 14 MON14
+		MAGE        = {id =   2139, lvl =  34}, -- Counterspell        (  0 - 40yd/m) - Lvl  1
+		MONK        = {id = 117952, lvl =  36}, -- Crackling Jade L    (  0 - 40yd/m) - Lvl 14 MON14
 		PALADIN     = {id =  20271, lvl =   3}, -- Judgment            (  0 - 30yd/m) - Lvl  3
-		PRIEST      = {id =    589, lvl =   4}, -- Shadow Word: Pain   (  0 - 40yd/m) - Lvl  4
+		PRIEST      = {id =    585, lvl =   1}, -- smite               (  0 - 40yd/m) - Lvl  4
 		ROGUE       = {id =   6770, lvl =  12}, -- Sap                 (  0 - 10yd/m) - Lvl 12 ROG12
 		SHAMAN      = {id =    403, lvl =   1}, -- Lightning Bolt      (  0 - 30yd/m) - Lvl  1
-		WARLOCK     = {id =    686, lvl =   1}, -- Shadow Bolt         (  0 - 40yd/m) - Lvl  1
+		WARLOCK     = {id =    689, lvl =   1}, -- Drain Life          (  0 - 40yd/m) - Lvl  1
 		WARRIOR     = {id =    100, lvl =   3}, -- Charge              (  8 - 25yd/m) - Lvl  3
+		DEMONHUNTER = {id = 162794, lvl = 100}, -- Chaos Strike        (  8 - 25yd/m) - Lvl  3 ]]
 	}
 }
 --[[
@@ -1222,22 +1239,22 @@ function BattlegroundTargets:CreateFrames()
 			button:SetAttribute("macrotext1", "")
 			button:SetAttribute("macrotext2", "")
 			button:SetScript("OnEnter", function(self)
-				self.HighlightT:SetTexture(1, 1, 0.49, 1)
-				self.HighlightR:SetTexture(1, 1, 0.49, 1)
-				self.HighlightB:SetTexture(1, 1, 0.49, 1)
-				self.HighlightL:SetTexture(1, 1, 0.49, 1)
+				self.HighlightT:SetColorTexture(1, 1, 0.49, 1)
+				self.HighlightR:SetColorTexture(1, 1, 0.49, 1)
+				self.HighlightB:SetColorTexture(1, 1, 0.49, 1)
+				self.HighlightL:SetColorTexture(1, 1, 0.49, 1)
 			end)
 			button:SetScript("OnLeave", function(self)
 				if isTargetButton == self then
-					self.HighlightT:SetTexture(0.5, 0.5, 0.5, 1)
-					self.HighlightR:SetTexture(0.5, 0.5, 0.5, 1)
-					self.HighlightB:SetTexture(0.5, 0.5, 0.5, 1)
-					self.HighlightL:SetTexture(0.5, 0.5, 0.5, 1)
+					self.HighlightT:SetColorTexture(0.5, 0.5, 0.5, 1)
+					self.HighlightR:SetColorTexture(0.5, 0.5, 0.5, 1)
+					self.HighlightB:SetColorTexture(0.5, 0.5, 0.5, 1)
+					self.HighlightL:SetColorTexture(0.5, 0.5, 0.5, 1)
 				else
-					self.HighlightT:SetTexture(0, 0, 0, 1)
-					self.HighlightR:SetTexture(0, 0, 0, 1)
-					self.HighlightB:SetTexture(0, 0, 0, 1)
-					self.HighlightL:SetTexture(0, 0, 0, 1)
+					self.HighlightT:SetColorTexture(0, 0, 0, 1)
+					self.HighlightR:SetColorTexture(0, 0, 0, 1)
+					self.HighlightB:SetColorTexture(0, 0, 0, 1)
+					self.HighlightL:SetColorTexture(0, 0, 0, 1)
 				end
 			end)
 
@@ -1283,12 +1300,12 @@ function BattlegroundTargets:CreateFrames()
 		GVAR[framename].MainMoverFrame:Hide()
 
 		GVAR[framename].MainMoverTexture = GVAR[framename].MainMoverFrame:CreateTexture(nil, "BORDER")
-		GVAR[framename].MainMoverTexture:SetTexture(0, 0, 0, 0)
+		GVAR[framename].MainMoverTexture:SetColorTexture(0, 0, 0, 0)
 		GVAR[framename].MainMoverTexture:SetAllPoints()
 
 		-- mover mode frame
 		GVAR[framename].MainMoverBGTexture = GVAR[framename].MainMoverFrame:CreateTexture(nil, "ARTWORK")
-		GVAR[framename].MainMoverBGTexture:SetTexture(0, 0, 0, 1)
+		GVAR[framename].MainMoverBGTexture:SetColorTexture(0, 0, 0, 1)
 		GVAR[framename].MainMoverBGTexture:SetPoint("CENTER", GVAR[framename].MainMoverFrame, "CENTER", 0, 0)
 
 		GVAR[framename].MainMoverFracTxt = GVAR[framename].MainMoverFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -1313,7 +1330,7 @@ function BattlegroundTargets:CreateFrames()
 		GVAR[framename].MainMoverModeButton:SetChecked(DATA[side].MainMoverModeValue)
 		GVAR[framename].MainMoverModeButton:SetScript("OnClick", function()
 			--if inCombat or InCombatLockdown() then return end
-			GVAR[framename].MainMoverTexture:SetTexture(0, 0, 1, 0.4)
+			GVAR[framename].MainMoverTexture:SetColorTexture(0, 0, 1, 0.4)
 			BattlegroundTargets:ClickOnFractionTab(side)
 			if DATA[side].MainMoverModeValue then
 				DATA[side].MainMoverModeValue = false
@@ -1336,13 +1353,13 @@ function BattlegroundTargets:CreateFrames()
 			if GVAR[framename].MainMoverModeButton:IsMouseOver() then return end
 			GVAR[framename].MainMoverTxt:SetTextColor(0.5, 0.5, 0.5, 1)
 			if DATA[side].MainMoverModeValue then return end
-			GVAR[framename].MainMoverTexture:SetTexture(0, 0, 0, 0)
+			GVAR[framename].MainMoverTexture:SetColorTexture(0, 0, 0, 0)
 			GVAR[framename].MainMoverFrame:Hide()
 			GVAR[framename].MainMoverButton[1]:Show()
 			GVAR[framename].MainMoverButton[2]:Show()
 		end)
 		GVAR[framename].MainMoverFrame:SetScript("OnEnter", function()
-			GVAR[framename].MainMoverTexture:SetTexture(0, 0, 1, 0.4)
+			GVAR[framename].MainMoverTexture:SetColorTexture(0, 0, 1, 0.4)
 			GVAR[framename].MainMoverTxt:SetTextColor(1, 1, 1, 1)
 			GVAR[framename].MainMoverButton[1]:Hide()
 			GVAR[framename].MainMoverButton[2]:Hide()
@@ -1365,7 +1382,7 @@ function BattlegroundTargets:CreateFrames()
 			end
 			GVAR[framename].MainMoverButton[topORbottom].Texture = GVAR[framename].MainMoverButton[topORbottom]:CreateTexture(nil, "BACKGROUND")
 			GVAR[framename].MainMoverButton[topORbottom].Texture:SetAllPoints()
-			GVAR[framename].MainMoverButton[topORbottom].Texture:SetTexture(1, 1, 1, 0.2)
+			GVAR[framename].MainMoverButton[topORbottom].Texture:SetColorTexture(1, 1, 1, 0.2)
 			GVAR[framename].MainMoverButton[topORbottom].Txt = GVAR[framename].MainMoverButton[topORbottom]:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 			GVAR[framename].MainMoverButton[topORbottom].Txt:SetAllPoints()
 			if side == "Friend" then
@@ -1424,27 +1441,27 @@ function BattlegroundTargets:CreateFrames()
 				button.HighlightT = button:CreateTexture(nil, "BACKGROUND")
 				button.HighlightT:SetHeight(1)
 				button.HighlightT:SetPoint("TOP", 0, 0)
-				button.HighlightT:SetTexture(0, 0, 0, 1)
+				button.HighlightT:SetColorTexture(0, 0, 0, 1)
 				button.HighlightR = button:CreateTexture(nil, "BACKGROUND")
 				button.HighlightR:SetWidth(1)
 				button.HighlightR:SetPoint("RIGHT", 0, 0)
-				button.HighlightR:SetTexture(0, 0, 0, 1)
+				button.HighlightR:SetColorTexture(0, 0, 0, 1)
 				button.HighlightB = button:CreateTexture(nil, "BACKGROUND")
 				button.HighlightB:SetHeight(1)
 				button.HighlightB:SetPoint("BOTTOM", 0, 0)
-				button.HighlightB:SetTexture(0, 0, 0, 1)
+				button.HighlightB:SetColorTexture(0, 0, 0, 1)
 				button.HighlightL = button:CreateTexture(nil, "BACKGROUND")
 				button.HighlightL:SetWidth(1)
 				button.HighlightL:SetPoint("LEFT", 0, 0)
-				button.HighlightL:SetTexture(0, 0, 0, 1)
+				button.HighlightL:SetColorTexture(0, 0, 0, 1)
 
 				button.BackgroundX = button:CreateTexture(nil, "BACKGROUND")
 				button.BackgroundX:SetPoint("TOPLEFT", 1, -1)
-				button.BackgroundX:SetTexture(0, 0, 0, 1)
+				button.BackgroundX:SetColorTexture(0, 0, 0, 1)
 
 				button.RangeTexture = button:CreateTexture(nil, "BORDER")
 				button.RangeTexture:SetPoint("LEFT", button, "LEFT", 1, 0)
-				button.RangeTexture:SetTexture(0, 0, 0, 0)
+				button.RangeTexture:SetColorTexture(0, 0, 0, 0)
 
 				button.RangeTxt = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 				button.RangeTxt:SetWidth(50)
@@ -1457,7 +1474,7 @@ function BattlegroundTargets:CreateFrames()
 
 				button.PVPTrinketTexture = button:CreateTexture(nil, "BORDER")
 				button.PVPTrinketTexture:SetPoint("RIGHT", button, "LEFT", -2, 0)
-				button.PVPTrinketTexture:SetTexture("Interface\\Icons\\INV_Jewelry_TrinketPVP_01")
+				button.PVPTrinketTexture:SetTexture( 1322720)				--old   ("Interface\\Icons\\INV_Jewelry_TrinketPVP_01")
 				--button.PVPTrinketTexture:SetTexCoord(0.07812501, 0.92187499, 0.07812501, 0.92187499)--(5/64, 59/64, 5/64, 59/64)
 				button.PVPTrinketTxt = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 				button.PVPTrinketTxt:SetWidth(50)
@@ -1490,11 +1507,11 @@ function BattlegroundTargets:CreateFrames()
 				button.LeaderTexture:SetAlpha(0)
 
 				button.ClassColorBackground = button:CreateTexture(nil, "BORDER")
-				button.ClassColorBackground:SetTexture(0, 0, 0, 0)
+				button.ClassColorBackground:SetColorTexture(0, 0, 0, 0)
 
 				button.HealthBar = button:CreateTexture(nil, "ARTWORK")
 				button.HealthBar:SetPoint("LEFT", button.ClassColorBackground, "LEFT", 0, 0)
-				button.HealthBar:SetTexture(0, 0, 0, 0)
+				button.HealthBar:SetColorTexture(0, 0, 0, 0)
 
 				button.HealthTextButton = CreateFrame("Button", nil, button) -- xBUT
 				button.HealthText = button.HealthTextButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -1516,7 +1533,7 @@ function BattlegroundTargets:CreateFrames()
 				-- target count
 				button.TargetCountBackground = button:CreateTexture(nil, "ARTWORK")
 				button.TargetCountBackground:SetPoint("RIGHT", button, "RIGHT", -1, 0)
-				button.TargetCountBackground:SetTexture(0, 0, 0, 1)
+				button.TargetCountBackground:SetColorTexture(0, 0, 0, 1)
 
 				button.ETargetCount = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 				button.ETargetCount:SetPoint("RIGHT", button.TargetCountBackground, "RIGHT", 0, 0)
@@ -1563,19 +1580,19 @@ function BattlegroundTargets:CreateFrames()
 				button.OrbCornerTL = button.FlagDebuffButton:CreateTexture(nil, "OVERLAY")
 				button.OrbCornerTL:SetPoint("LEFT", button.FlagTexture, "LEFT", 0, 0)
 				button.OrbCornerTL:SetPoint("TOP", button, "TOP", 0, -2)
-				button.OrbCornerTL:SetTexture(0, 0, 0, 1)
+				button.OrbCornerTL:SetColorTexture(0, 0, 0, 1)
 				button.OrbCornerTR = button.FlagDebuffButton:CreateTexture(nil, "OVERLAY")
 				button.OrbCornerTR:SetPoint("RIGHT", button.FlagTexture, "RIGHT", 0, 0)
 				button.OrbCornerTR:SetPoint("TOP", button, "TOP", 0, -2)
-				button.OrbCornerTR:SetTexture(0, 0, 0, 1)
+				button.OrbCornerTR:SetColorTexture(0, 0, 0, 1)
 				button.OrbCornerBL = button.FlagDebuffButton:CreateTexture(nil, "OVERLAY")
 				button.OrbCornerBL:SetPoint("LEFT", button.FlagTexture, "LEFT", 0, 0)
 				button.OrbCornerBL:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
-				button.OrbCornerBL:SetTexture(0, 0, 0, 1)
+				button.OrbCornerBL:SetColorTexture(0, 0, 0, 1)
 				button.OrbCornerBR = button.FlagDebuffButton:CreateTexture(nil, "OVERLAY")
 				button.OrbCornerBR:SetPoint("RIGHT", button.FlagTexture, "RIGHT", 0, 0)
 				button.OrbCornerBR:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
-				button.OrbCornerBR:SetTexture(0, 0, 0, 1)
+				button.OrbCornerBR:SetColorTexture(0, 0, 0, 1)
 				-- carrier
 
 				button.AssistTextureButton = CreateFrame("Button", nil, button) -- xBUT
@@ -1714,16 +1731,16 @@ function BattlegroundTargets:CreateOptionsFrame()
 	-- ####################################################################################################
 	-- xMx local func
 	local function HighlightOnEnter(what)
-		GVAR.OptionsFrame.LayoutTHText.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.LayoutTHText.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.LayoutTHx18.Highlight:Show()
 		GVAR.OptionsFrame.LayoutTHx24.Highlight:Show()
 		GVAR.OptionsFrame.LayoutTHx42.Highlight:Show()
 		GVAR.OptionsFrame.LayoutTHx81.Highlight:Show()
-		GVAR.OptionsFrame.LayoutSpace.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.SummaryText.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.LayoutSpace.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.SummaryText.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.SummaryToggle.Highlight:Show()
-		GVAR.OptionsFrame.SummaryScale.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.SummaryPosition.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.SummaryScale.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.SummaryPosition.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		----------
 		GVAR.OptionsFrame.ShowRole.Highlight:Show()
 		GVAR.OptionsFrame.ShowSpec.Highlight:Show()
@@ -1735,41 +1752,41 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.ShowETargetCount.Highlight:Show()
 		----------
 		GVAR.OptionsFrame.ShowTargetIndicator.Highlight:Show()
-		GVAR.OptionsFrame.TargetScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.TargetPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.TargetScaleSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.TargetPositionSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.TargetofTarget.Highlight:Show()
-		GVAR.OptionsFrame.ToTScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.ToTPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.ToTScaleSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.ToTPositionSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.ShowFocusIndicator.Highlight:Show()
-		GVAR.OptionsFrame.FocusScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.FocusPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.FocusScaleSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.FocusPositionSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.ShowFlag.Highlight:Show()
-		GVAR.OptionsFrame.FlagScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.FlagPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.FlagScaleSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.FlagPositionSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.ShowAssist.Highlight:Show()
-		GVAR.OptionsFrame.AssistScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.AssistPositionSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.AssistScaleSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.AssistPositionSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		----------
 		GVAR.OptionsFrame.ShowHealthBar.Highlight:Show()
 		GVAR.OptionsFrame.ShowHealthText.Highlight:Show()
 		GVAR.OptionsFrame.RangeCheck.Highlight:Show()
 		GVAR.OptionsFrame.RangeDisplayPullDown:LockHighlight()
-		GVAR.OptionsFrame.SortByTitle.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.SortByTitle.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.SortByPullDown:LockHighlight()
 		GVAR.OptionsFrame.SortDetailPullDown:LockHighlight()
 		----------
-		GVAR.OptionsFrame.FontNameTitle.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.FontNameTitle.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.FontNamePullDown:LockHighlight()
-		GVAR.OptionsFrame.FontNameSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.FontNumberTitle.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.FontNameSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.FontNumberTitle.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		GVAR.OptionsFrame.FontNumberPullDown:LockHighlight()
-		GVAR.OptionsFrame.FontNumberSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.ScaleTitle.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.ScaleSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.WidthTitle.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.WidthSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.HeightTitle.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
-		GVAR.OptionsFrame.HeightSlider.Background:SetTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.FontNumberSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.ScaleTitle.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.ScaleSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.WidthTitle.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.WidthSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.HeightTitle.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
+		GVAR.OptionsFrame.HeightSlider.Background:SetColorTexture(1, 1, 1, 0.15) -- COPYHL
 		if what == "sameSize" then
 			if currentSize == 10 then
 				GVAR.OptionsFrame.TabRaidSize10:LockHighlight()
@@ -1800,16 +1817,16 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.EnableFriendBracket:UnlockHighlight()
 		GVAR.OptionsFrame.EnableEnemyBracket:UnlockHighlight()
 		----------
-		GVAR.OptionsFrame.LayoutTHText.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.LayoutTHText.Background:SetColorTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.LayoutTHx18.Highlight:Hide()
 		GVAR.OptionsFrame.LayoutTHx24.Highlight:Hide()
 		GVAR.OptionsFrame.LayoutTHx42.Highlight:Hide()
 		GVAR.OptionsFrame.LayoutTHx81.Highlight:Hide()
-		GVAR.OptionsFrame.LayoutSpace.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.SummaryText.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.LayoutSpace.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.SummaryText.Background:SetColorTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.SummaryToggle.Highlight:Hide()
-		GVAR.OptionsFrame.SummaryScale.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.SummaryPosition.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.SummaryScale.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.SummaryPosition.Background:SetColorTexture(0, 0, 0, 0)
 		----------
 		GVAR.OptionsFrame.ShowRole.Highlight:Hide()
 		GVAR.OptionsFrame.ShowSpec.Highlight:Hide()
@@ -1821,41 +1838,41 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.ShowETargetCount.Highlight:Hide()
 		----------
 		GVAR.OptionsFrame.ShowTargetIndicator.Highlight:Hide()
-		GVAR.OptionsFrame.TargetScaleSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.TargetPositionSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.TargetScaleSlider.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.TargetPositionSlider.Background:SetColorTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.TargetofTarget.Highlight:Hide()
-		GVAR.OptionsFrame.ToTScaleSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.ToTPositionSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.ToTScaleSlider.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.ToTPositionSlider.Background:SetColorTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.ShowFocusIndicator.Highlight:Hide()
-		GVAR.OptionsFrame.FocusScaleSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.FocusPositionSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FocusScaleSlider.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FocusPositionSlider.Background:SetColorTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.ShowFlag.Highlight:Hide()
-		GVAR.OptionsFrame.FlagScaleSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.FlagPositionSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FlagScaleSlider.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FlagPositionSlider.Background:SetColorTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.ShowAssist.Highlight:Hide()
-		GVAR.OptionsFrame.AssistScaleSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.AssistPositionSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.AssistScaleSlider.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.AssistPositionSlider.Background:SetColorTexture(0, 0, 0, 0)
 		----------
 		GVAR.OptionsFrame.ShowHealthBar.Highlight:Hide()
 		GVAR.OptionsFrame.ShowHealthText.Highlight:Hide()
 		GVAR.OptionsFrame.RangeCheck.Highlight:Hide()
 		GVAR.OptionsFrame.RangeDisplayPullDown:UnlockHighlight()
-		GVAR.OptionsFrame.SortByTitle.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.SortByTitle.Background:SetColorTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.SortByPullDown:UnlockHighlight()
 		GVAR.OptionsFrame.SortDetailPullDown:UnlockHighlight()
 		----------
-		GVAR.OptionsFrame.FontNameTitle.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FontNameTitle.Background:SetColorTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.FontNamePullDown:UnlockHighlight()
-		GVAR.OptionsFrame.FontNameSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.FontNumberTitle.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FontNameSlider.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FontNumberTitle.Background:SetColorTexture(0, 0, 0, 0)
 		GVAR.OptionsFrame.FontNumberPullDown:UnlockHighlight()
-		GVAR.OptionsFrame.FontNumberSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.ScaleTitle.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.ScaleSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.WidthTitle.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.WidthSlider.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.HeightTitle.Background:SetTexture(0, 0, 0, 0)
-		GVAR.OptionsFrame.HeightSlider.Background:SetTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.FontNumberSlider.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.ScaleTitle.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.ScaleSlider.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.WidthTitle.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.WidthSlider.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.HeightTitle.Background:SetColorTexture(0, 0, 0, 0)
+		GVAR.OptionsFrame.HeightSlider.Background:SetColorTexture(0, 0, 0, 0)
 	end
 
 	local function ConfigFontNumberOptionCheck(size)
@@ -1900,22 +1917,22 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ClampDummy1 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal top
 	-- BOOM GVAR.OptionsFrame.ClampDummy1:SetSize(w, 1)
 	GVAR.OptionsFrame.ClampDummy1:SetPoint("TOP", GVAR.OptionsFrame, "TOP", 0, -40)
-	GVAR.OptionsFrame.ClampDummy1:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy1:SetColorTexture(0, 0.5, 2, 0.5)
 	GVAR.OptionsFrame.ClampDummy1:Hide()
 	GVAR.OptionsFrame.ClampDummy2 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal bottom
 	-- BOOM GVAR.OptionsFrame.ClampDummy2:SetSize(w, 1)
 	GVAR.OptionsFrame.ClampDummy2:SetPoint("BOTTOM", GVAR.OptionsFrame, "BOTTOM", 0, 40)
-	GVAR.OptionsFrame.ClampDummy2:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy2:SetColorTexture(0, 0.5, 2, 0.5)
 	GVAR.OptionsFrame.ClampDummy2:Hide()
 	GVAR.OptionsFrame.ClampDummy3 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- vertical left
 	-- BOOM GVAR.OptionsFrame.ClampDummy3:SetSize(1, h)
 	GVAR.OptionsFrame.ClampDummy3:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 40, 0)
-	GVAR.OptionsFrame.ClampDummy3:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy3:SetColorTexture(0, 0.5, 2, 0.5)
 	GVAR.OptionsFrame.ClampDummy3:Hide()
 	GVAR.OptionsFrame.ClampDummy4 = GVAR.OptionsFrame:CreateTexture(nil, "BACKGROUND") -- horizontal right
 	-- BOOM GVAR.OptionsFrame.ClampDummy4:SetSize(1, h)
 	GVAR.OptionsFrame.ClampDummy4:SetPoint("RIGHT", GVAR.OptionsFrame, "RIGHT", -40, 0)
-	GVAR.OptionsFrame.ClampDummy4:SetTexture(0, 0.5, 2, 0.5)
+	GVAR.OptionsFrame.ClampDummy4:SetColorTexture(0, 0.5, 2, 0.5)
 	GVAR.OptionsFrame.ClampDummy4:Hide()
 	-- CLAMP_FIX_OPTIONS END
 
@@ -1959,12 +1976,12 @@ function BattlegroundTargets:CreateOptionsFrame()
 			TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, nil)
 			GVAR.OptionsFrame.ConfigGeneral:Hide()
 			GVAR.OptionsFrame.ConfigBrackets:Show()
-			GVAR.OptionsFrame["TabRaidSize"..testSize].TextureBottom:SetTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame["TabRaidSize"..testSize].TextureBottom:SetColorTexture(0, 0, 0, 1)
 		else
 			TEMPLATE.SetTabButton(GVAR.OptionsFrame.TabGeneral, true)
 			GVAR.OptionsFrame.ConfigGeneral:Show()
 			GVAR.OptionsFrame.ConfigBrackets:Hide()
-			GVAR.OptionsFrame["TabRaidSize"..testSize].TextureBottom:SetTexture(0.8, 0.2, 0.2, 1)
+			GVAR.OptionsFrame["TabRaidSize"..testSize].TextureBottom:SetColorTexture(0.8, 0.2, 0.2, 1)
 		end
 	end)
 
@@ -2088,7 +2105,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy0:SetHeight(1)
 	GVAR.OptionsFrame.Dummy0:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 0, 0)
 	GVAR.OptionsFrame.Dummy0:SetPoint("TOP", GVAR.OptionsFrame.EnableFriendBracket, "BOTTOM", 0, 2)
-	GVAR.OptionsFrame.Dummy0:SetTexture(0.8, 0.2, 0.2, 1)
+	GVAR.OptionsFrame.Dummy0:SetColorTexture(0.8, 0.2, 0.2, 1)
 
 
 
@@ -2117,7 +2134,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy1:SetHeight(1)
 	GVAR.OptionsFrame.Dummy1:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Dummy1:SetPoint("TOP", GVAR.OptionsFrame.EnableFraction, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy1:SetTexture(0.8, 0.2, 0.2, 1)
+	GVAR.OptionsFrame.Dummy1:SetColorTexture(0.8, 0.2, 0.2, 1)
 
 
 
@@ -2134,7 +2151,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.ScaleTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
 	GVAR.OptionsFrame.ScaleTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.ScaleTitle, "TOPLEFT", 0, 0)
 	GVAR.OptionsFrame.ScaleTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.ScaleTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.ScaleTitle.Background:SetTexture(0, 0, 0, 0)
+	GVAR.OptionsFrame.ScaleTitle.Background:SetColorTexture(0, 0, 0, 0)
 	TEMPLATE.Slider(GVAR.OptionsFrame.ScaleSlider, 180, 5, 50, 250, BattlegroundTargets_Options[fraction].ButtonScale[currentSize]*100,
 	function(self, value)
 		local nvalue = value/100
@@ -2164,7 +2181,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.WidthTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
 	GVAR.OptionsFrame.WidthTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.WidthTitle, "TOPLEFT", 0, 0)
 	GVAR.OptionsFrame.WidthTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.WidthTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.WidthTitle.Background:SetTexture(0, 0, 0, 0)
+	GVAR.OptionsFrame.WidthTitle.Background:SetColorTexture(0, 0, 0, 0)
 	TEMPLATE.Slider(GVAR.OptionsFrame.WidthSlider, 180, 5, 50, 300, BattlegroundTargets_Options[fraction].ButtonWidth[currentSize],
 	function(self, value)
 		if value == BattlegroundTargets_Options[fraction].ButtonWidth[currentSize] then return end
@@ -2193,7 +2210,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.HeightTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
 	GVAR.OptionsFrame.HeightTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.HeightTitle, "TOPLEFT", 0, 0)
 	GVAR.OptionsFrame.HeightTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.HeightTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.HeightTitle.Background:SetTexture(0, 0, 0, 0)
+	GVAR.OptionsFrame.HeightTitle.Background:SetColorTexture(0, 0, 0, 0)
 	TEMPLATE.Slider(GVAR.OptionsFrame.HeightSlider, 180, 1, 10, 50, BattlegroundTargets_Options[fraction].ButtonHeight[currentSize],
 	function(self, value)
 		if value == BattlegroundTargets_Options[fraction].ButtonHeight[currentSize] then return end
@@ -2225,7 +2242,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy2:SetHeight(1)
 	GVAR.OptionsFrame.Dummy2:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Dummy2:SetPoint("TOP", GVAR.OptionsFrame.HeightTitle, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy2:SetTexture(0.73, 0.26, 0.21, 0.5)
+	GVAR.OptionsFrame.Dummy2:SetColorTexture(0.73, 0.26, 0.21, 0.5)
 
 
 
@@ -2241,7 +2258,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.SortByTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
 	GVAR.OptionsFrame.SortByTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.SortByTitle, "TOPLEFT", 0, 0)
 	GVAR.OptionsFrame.SortByTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.SortByTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.SortByTitle.Background:SetTexture(0, 0, 0, 0)
+	GVAR.OptionsFrame.SortByTitle.Background:SetColorTexture(0, 0, 0, 0)
 	sortW = sortW + 10 + GVAR.OptionsFrame.SortByTitle:GetStringWidth()
 
 	GVAR.OptionsFrame.SortByPullDown = CreateFrame("Button", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -2377,7 +2394,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy3:SetHeight(1)
 	GVAR.OptionsFrame.Dummy3:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Dummy3:SetPoint("TOP", GVAR.OptionsFrame.SortByTitle, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy3:SetTexture(0.8, 0.2, 0.2, 1)
+	GVAR.OptionsFrame.Dummy3:SetColorTexture(0.8, 0.2, 0.2, 1)
 
 
 
@@ -2392,7 +2409,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.LayoutTHText.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
 	GVAR.OptionsFrame.LayoutTHText.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.LayoutTHText, "TOPLEFT", 0, 0)
 	GVAR.OptionsFrame.LayoutTHText.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.LayoutTHText, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.LayoutTHText.Background:SetTexture(0, 0, 0, 0)
+	GVAR.OptionsFrame.LayoutTHText.Background:SetColorTexture(0, 0, 0, 0)
 
 	GVAR.OptionsFrame.LayoutTHx18 = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets)
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.LayoutTHx18, 16, 4, nil)
@@ -2478,7 +2495,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.SummaryText.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
 	GVAR.OptionsFrame.SummaryText.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.SummaryText, "TOPLEFT", 0, 0)
 	GVAR.OptionsFrame.SummaryText.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.SummaryText, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.SummaryText.Background:SetTexture(0, 0, 0, 0)
+	GVAR.OptionsFrame.SummaryText.Background:SetColorTexture(0, 0, 0, 0)
 
 	GVAR.OptionsFrame.SummaryToggle = CreateFrame("CheckButton", nil, GVAR.OptionsFrame.ConfigBrackets) -- SUMMARY
 	TEMPLATE.CheckButton(GVAR.OptionsFrame.SummaryToggle, 16, 0, "")
@@ -2554,7 +2571,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy4:SetHeight(1)
 	GVAR.OptionsFrame.Dummy4:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Dummy4:SetPoint("TOP", GVAR.OptionsFrame.SummaryToggle, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy4:SetTexture(0.8, 0.2, 0.2, 1)
+	GVAR.OptionsFrame.Dummy4:SetColorTexture(0.8, 0.2, 0.2, 1)
 
 
 
@@ -2681,7 +2698,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy5:SetHeight(1)
 	GVAR.OptionsFrame.Dummy5:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Dummy5:SetPoint("TOP", GVAR.OptionsFrame.ShowFTargetCount, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy5:SetTexture(0.73, 0.26, 0.21, 0.5)
+	GVAR.OptionsFrame.Dummy5:SetColorTexture(0.73, 0.26, 0.21, 0.5)
 
 
 
@@ -2899,7 +2916,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetWidth(27)
 	GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetHeight(27)
 	GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetPoint("CENTER", 0, 0)
-	GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
+	GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0, 0, 0, 1)
 	GVAR.OptionsFrame.CarrierSwitchFlag.Texture = GVAR.OptionsFrame.CarrierSwitchFlag:CreateTexture(nil, "OVERLAY")
 	GVAR.OptionsFrame.CarrierSwitchFlag.Texture:SetWidth(30)
 	GVAR.OptionsFrame.CarrierSwitchFlag.Texture:SetHeight(30)
@@ -2910,7 +2927,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = testData.CarrierDisplay
 		testData.CarrierDisplay = "flag"
 		BattlegroundTargets:EnableConfigMode()
-		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
 	end)
 	GVAR.OptionsFrame.CarrierSwitchFlag:SetScript("OnLeave", function(self)
 		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay ~= testData.CarrierDisplay then
@@ -2918,7 +2935,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 			BattlegroundTargets:EnableConfigMode()
 		end
 		if testData.CarrierDisplay == "flag" then return end
-		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0, 0, 0, 1)
 	end)
 	GVAR.OptionsFrame.CarrierSwitchFlag:SetScript("OnMouseDown", function()
 		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay == "flag" then return end
@@ -2934,9 +2951,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay == "flag" then return end
 		testData.CarrierDisplay = "flag"
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "flag"
-		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0.12, 0.12, 0.12, 1)
-		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0, 0, 0, 1)
 		BattlegroundTargets:EnableConfigMode()
 	end)
 	-- flag
@@ -2950,7 +2967,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetWidth(27)
 	GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetHeight(27)
 	GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetPoint("CENTER", 0, 0)
-	GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
+	GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0, 0, 0, 1)
 	GVAR.OptionsFrame.CarrierSwitchOrb.Texture = GVAR.OptionsFrame.CarrierSwitchOrb:CreateTexture(nil, "OVERLAY")
 	GVAR.OptionsFrame.CarrierSwitchOrb.Texture:SetWidth(30)
 	GVAR.OptionsFrame.CarrierSwitchOrb.Texture:SetHeight(30)
@@ -2961,7 +2978,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = testData.CarrierDisplay
 		testData.CarrierDisplay = "orb"
 		BattlegroundTargets:EnableConfigMode()
-		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
 	end)
 	GVAR.OptionsFrame.CarrierSwitchOrb:SetScript("OnLeave", function(self)
 		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay ~= testData.CarrierDisplay then
@@ -2969,7 +2986,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 			BattlegroundTargets:EnableConfigMode()
 		end
 		if testData.CarrierDisplay == "orb" then return end
-		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0, 0, 0, 1)
 	end)
 	GVAR.OptionsFrame.CarrierSwitchOrb:SetScript("OnMouseDown", function()
 		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay == "orb" then return end
@@ -2985,9 +3002,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay == "orb" then return end
 		testData.CarrierDisplay = "orb"
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "orb"
-		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0.12, 0.12, 0.12, 1)
-		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0, 0, 0, 1)
 		BattlegroundTargets:EnableConfigMode()
 	end)
 	-- orb
@@ -3001,7 +3018,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.CarrierSwitchCart.BG:SetWidth(27)
 	GVAR.OptionsFrame.CarrierSwitchCart.BG:SetHeight(27)
 	GVAR.OptionsFrame.CarrierSwitchCart.BG:SetPoint("CENTER", 0, 0)
-	GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+	GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0, 0, 0, 1)
 	GVAR.OptionsFrame.CarrierSwitchCart.Texture = GVAR.OptionsFrame.CarrierSwitchCart:CreateTexture(nil, "OVERLAY")
 	GVAR.OptionsFrame.CarrierSwitchCart.Texture:SetWidth(30)
 	GVAR.OptionsFrame.CarrierSwitchCart.Texture:SetHeight(30)
@@ -3012,7 +3029,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = testData.CarrierDisplay
 		testData.CarrierDisplay = "cart"
 		BattlegroundTargets:EnableConfigMode()
-		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
 	end)
 	GVAR.OptionsFrame.CarrierSwitchCart:SetScript("OnLeave", function(self)
 		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay ~= testData.CarrierDisplay then
@@ -3020,7 +3037,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 			BattlegroundTargets:EnableConfigMode()
 		end
 		if testData.CarrierDisplay == "cart" then return end
-		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0, 0, 0, 1)
 	end)
 	GVAR.OptionsFrame.CarrierSwitchCart:SetScript("OnMouseDown", function()
 		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay == "cart" then return end
@@ -3036,28 +3053,28 @@ function BattlegroundTargets:CreateOptionsFrame()
 		if GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay == "cart" then return end
 		testData.CarrierDisplay = "cart"
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "cart"
-		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
 		BattlegroundTargets:EnableConfigMode()
 	end)
 	-- cart
 
 	if testData.CarrierDisplay == "flag" then
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "flag"
-		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0.12, 0.12, 0.12, 1)
-		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0, 0, 0, 1)
 	elseif testData.CarrierDisplay == "orb" then
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "orb"
-		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0.12, 0.12, 0.12, 1)
-		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0, 0, 0, 1)
 	elseif testData.CarrierDisplay == "cart" then
 		GVAR.OptionsFrame.CarrierSwitchFlag.isDisplay = "cart"
-		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0.12, 0.12, 0.12, 1)
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
 	end
 
 	GVAR.OptionsFrame.CarrierSwitchEnableFunc = function()
@@ -3071,17 +3088,17 @@ function BattlegroundTargets:CreateOptionsFrame()
 		Desaturation(GVAR.OptionsFrame.CarrierSwitchOrb.Texture, false)
 		Desaturation(GVAR.OptionsFrame.CarrierSwitchCart.Texture, false)
 		if testData.CarrierDisplay == "flag" then
-			GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0.12, 0.12, 0.12, 1)
-			GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
-			GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
+			GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0, 0, 0, 1)
 		elseif testData.CarrierDisplay == "orb" then
-			GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
-			GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0.12, 0.12, 0.12, 1)
-			GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
+			GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0, 0, 0, 1)
 		elseif testData.CarrierDisplay == "cart" then
-			GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
-			GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
-			GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0.12, 0.12, 0.12, 1)
+			GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0, 0, 0, 1)
+			GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0.12, 0.12, 0.12, 1)
 		end
 	end
 
@@ -3095,9 +3112,9 @@ function BattlegroundTargets:CreateOptionsFrame()
 		Desaturation(GVAR.OptionsFrame.CarrierSwitchFlag.Texture, true)
 		Desaturation(GVAR.OptionsFrame.CarrierSwitchOrb.Texture, true)
 		Desaturation(GVAR.OptionsFrame.CarrierSwitchCart.Texture, true)
-		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetTexture(0, 0, 0, 1)
-		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchFlag.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchOrb.BG:SetColorTexture(0, 0, 0, 1)
+		GVAR.OptionsFrame.CarrierSwitchCart.BG:SetColorTexture(0, 0, 0, 1)
 	end
 
 	local iw = GVAR.OptionsFrame.ShowFlag:GetWidth() + 32 + 32 + 32
@@ -3219,7 +3236,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy6:SetHeight(1)
 	GVAR.OptionsFrame.Dummy6:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Dummy6:SetPoint("TOP", GVAR.OptionsFrame.ShowAssist, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy6:SetTexture(0.73, 0.26, 0.21, 0.5)
+	GVAR.OptionsFrame.Dummy6:SetColorTexture(0.73, 0.26, 0.21, 0.5)
 
 
 
@@ -3340,7 +3357,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.Dummy7:SetHeight(1)
 	GVAR.OptionsFrame.Dummy7:SetPoint("LEFT", GVAR.OptionsFrame, "LEFT", 10, 0)
 	GVAR.OptionsFrame.Dummy7:SetPoint("TOP", GVAR.OptionsFrame.RangeCheck, "BOTTOM", 0, -8)
-	GVAR.OptionsFrame.Dummy7:SetTexture(0.73, 0.26, 0.21, 0.5)
+	GVAR.OptionsFrame.Dummy7:SetColorTexture(0.73, 0.26, 0.21, 0.5)
 
 
 
@@ -3355,7 +3372,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FontNameTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
 	GVAR.OptionsFrame.FontNameTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.FontNameTitle, "TOPLEFT", 0, 0)
 	GVAR.OptionsFrame.FontNameTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.FontNameTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.FontNameTitle.Background:SetTexture(0, 0, 0, 0)
+	GVAR.OptionsFrame.FontNameTitle.Background:SetColorTexture(0, 0, 0, 0)
 
 	-- font name size
 	GVAR.OptionsFrame.FontNameSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -3451,7 +3468,7 @@ function BattlegroundTargets:CreateOptionsFrame()
 	GVAR.OptionsFrame.FontNumberTitle.Background = GVAR.OptionsFrame.ConfigBrackets:CreateTexture(nil, "BACKGROUND")
 	GVAR.OptionsFrame.FontNumberTitle.Background:SetPoint("TOPLEFT", GVAR.OptionsFrame.FontNumberTitle, "TOPLEFT", 0, 0)
 	GVAR.OptionsFrame.FontNumberTitle.Background:SetPoint("BOTTOMRIGHT", GVAR.OptionsFrame.FontNumberTitle, "BOTTOMRIGHT", 0, 0)
-	GVAR.OptionsFrame.FontNumberTitle.Background:SetTexture(0, 0, 0, 0)
+	GVAR.OptionsFrame.FontNumberTitle.Background:SetColorTexture(0, 0, 0, 0)
 
 	-- font number size
 	GVAR.OptionsFrame.FontNumberSlider = CreateFrame("Slider", nil, GVAR.OptionsFrame.ConfigBrackets)
@@ -4042,17 +4059,17 @@ function BattlegroundTargets:CheckForEnabledBracket(bracketSize, side)
 	end
 
 	if side == "Friend" then
-		GVAR.FriendMainFrame.MainMoverButton[1].Texture:SetTexture(0, 0, 0, 1)
-		GVAR.FriendMainFrame.MainMoverButton[2].Texture:SetTexture(0, 0, 0, 1)
-		GVAR.EnemyMainFrame.MainMoverButton[1].Texture:SetTexture(1, 1, 1, 0.2)
-		GVAR.EnemyMainFrame.MainMoverButton[2].Texture:SetTexture(1, 1, 1, 0.2)
+		GVAR.FriendMainFrame.MainMoverButton[1].Texture:SetColorTexture(0, 0, 0, 1)
+		GVAR.FriendMainFrame.MainMoverButton[2].Texture:SetColorTexture(0, 0, 0, 1)
+		GVAR.EnemyMainFrame.MainMoverButton[1].Texture:SetColorTexture(1, 1, 1, 0.2)
+		GVAR.EnemyMainFrame.MainMoverButton[2].Texture:SetColorTexture(1, 1, 1, 0.2)
 		GVAR.FriendMainFrame.MainMoverFracTxt:SetTextColor(1, 1, 1, 1)
 		GVAR.EnemyMainFrame.MainMoverFracTxt:SetTextColor(0.5, 0.5, 0.5, 1)
 	else
-		GVAR.FriendMainFrame.MainMoverButton[1].Texture:SetTexture(1, 1, 1, 0.2)
-		GVAR.FriendMainFrame.MainMoverButton[2].Texture:SetTexture(1, 1, 1, 0.2)
-		GVAR.EnemyMainFrame.MainMoverButton[1].Texture:SetTexture(0, 0, 0, 1)
-		GVAR.EnemyMainFrame.MainMoverButton[2].Texture:SetTexture(0, 0, 0, 1)
+		GVAR.FriendMainFrame.MainMoverButton[1].Texture:SetColorTexture(1, 1, 1, 0.2)
+		GVAR.FriendMainFrame.MainMoverButton[2].Texture:SetColorTexture(1, 1, 1, 0.2)
+		GVAR.EnemyMainFrame.MainMoverButton[1].Texture:SetColorTexture(0, 0, 0, 1)
+		GVAR.EnemyMainFrame.MainMoverButton[2].Texture:SetColorTexture(0, 0, 0, 1)
 		GVAR.FriendMainFrame.MainMoverFracTxt:SetTextColor(0.5, 0.5, 0.5, 1)
 		GVAR.EnemyMainFrame.MainMoverFracTxt:SetTextColor(1, 1, 1, 1)
 	end
@@ -5091,7 +5108,7 @@ function BattlegroundTargets:SetupButtonTextures(side) -- BG_Faction_Dependent
 
 	if BattlegroundTargets_Options[side].ButtonPvPTrinketToggle[currentSize] then -- pvp_trinket_
 		local trinketTexture
-		if side == "Friend" then
+		--[[if side == "Friend" then				---OLD
 			if playerFactionDEF == 0 then
 				trinketTexture = "Interface\\Icons\\INV_Jewelry_TrinketPVP_02" -- Horde
 			else
@@ -5104,6 +5121,13 @@ function BattlegroundTargets:SetupButtonTextures(side) -- BG_Faction_Dependent
 				trinketTexture = "Interface\\Icons\\INV_Jewelry_TrinketPVP_01" -- Alliance
 			end
 		end
+		--]]
+		if isLowLevel then 
+			trinketTexture = 338784   --lowlevelpvptrinket3m
+		else
+			trinketTexture = 1322720  --newpvptalenttrinket2m
+		end
+		
 		local button = GVAR[side.."Button"]
 		for i = 1, currentSize do
 			button[i].PVPTrinketTexture:SetTexture(trinketTexture)
@@ -5726,10 +5750,10 @@ function BattlegroundTargets:SetConfigButtonValues(side)
 
 		-- target, focus, flag, assist, leader
 		button.TargetTexture:SetAlpha(0)
-		button.HighlightT:SetTexture(0, 0, 0, 1)
-		button.HighlightR:SetTexture(0, 0, 0, 1)
-		button.HighlightB:SetTexture(0, 0, 0, 1)
-		button.HighlightL:SetTexture(0, 0, 0, 1)
+		button.HighlightT:SetColorTexture(0, 0, 0, 1)
+		button.HighlightR:SetColorTexture(0, 0, 0, 1)
+		button.HighlightB:SetColorTexture(0, 0, 0, 1)
+		button.HighlightL:SetColorTexture(0, 0, 0, 1)
 		button.FocusTexture:SetAlpha(0)
 		button.FlagTexture:SetAlpha(0)
 		button.FlagDebuff:SetText("")
@@ -5826,15 +5850,15 @@ function BattlegroundTargets:SetConfigButtonValues(side)
 				end
 
 				if ButtonHealthBarToggle then
-					ToTButton.ClassColorBackground:SetTexture(colR5, colG5, colB5, 1)
-					ToTButton.HealthBar:SetTexture(colR, colG, colB, 1)
+					ToTButton.ClassColorBackground:SetColorTexture(colR5, colG5, colB5, 1)
+					ToTButton.HealthBar:SetColorTexture(colR, colG, colB, 1)
 					local width = DATA[side].totHealthBarWidth * (num / 100)
 					width = math_max(0.01, width)
 					width = math_min(DATA[side].totHealthBarWidth, width)
 					ToTButton.HealthBar:SetWidth(width)
 				else
-					--ToTButton.ClassColorBackground:SetTexture(colR5, colG5, colB5, 1)
-					ToTButton.HealthBar:SetTexture(colR, colG, colB, 1)
+					--ToTButton.ClassColorBackground:SetColorTexture(colR5, colG5, colB5, 1)
+					ToTButton.HealthBar:SetColorTexture(colR, colG, colB, 1)
 				end
 				if ButtonHealthTextToggle then
 					ToTButton.HealthText:SetText(num)
@@ -5859,10 +5883,10 @@ function BattlegroundTargets:SetConfigButtonValues(side)
 	if BattlegroundTargets_Options[side].ButtonTargetToggle[currentSize] then
 		local button = GVAR[side.."Button"][testData[side].IconTarget]
 		button.TargetTexture:SetAlpha(1)
-		button.HighlightT:SetTexture(0.5, 0.5, 0.5, 1)
-		button.HighlightR:SetTexture(0.5, 0.5, 0.5, 1)
-		button.HighlightB:SetTexture(0.5, 0.5, 0.5, 1)
-		button.HighlightL:SetTexture(0.5, 0.5, 0.5, 1)
+		button.HighlightT:SetColorTexture(0.5, 0.5, 0.5, 1)
+		button.HighlightR:SetColorTexture(0.5, 0.5, 0.5, 1)
+		button.HighlightB:SetColorTexture(0.5, 0.5, 0.5, 1)
+		button.HighlightL:SetColorTexture(0.5, 0.5, 0.5, 1)
 		isTargetButton = button
 	end
 	if BattlegroundTargets_Options[side].ButtonFocusToggle[currentSize] then
@@ -5929,14 +5953,14 @@ function BattlegroundTargets:ClearConfigButtonValues(side, button, clearRange)
 	button.RoleTexture:SetTexCoord(0, 0, 0, 0)
 	button.SpecTexture:SetTexture(nil)
 	button.ClassTexture:SetTexCoord(0, 0, 0, 0)
-	button.ClassColorBackground:SetTexture(0, 0, 0, 0)
+	button.ClassColorBackground:SetColorTexture(0, 0, 0, 0)
 
 	-- target
 	button.TargetTexture:SetAlpha(0)
-	button.HighlightT:SetTexture(0, 0, 0, 1)
-	button.HighlightR:SetTexture(0, 0, 0, 1)
-	button.HighlightB:SetTexture(0, 0, 0, 1)
-	button.HighlightL:SetTexture(0, 0, 0, 1)
+	button.HighlightT:SetColorTexture(0, 0, 0, 1)
+	button.HighlightR:SetColorTexture(0, 0, 0, 1)
+	button.HighlightB:SetColorTexture(0, 0, 0, 1)
+	button.HighlightL:SetColorTexture(0, 0, 0, 1)
 
 	-- targetcount
 	button.FTargetCount:SetText("")
@@ -5965,22 +5989,22 @@ function BattlegroundTargets:ClearConfigButtonValues(side, button, clearRange)
 	button.PVPTrinketTxt:SetText("")
 
 	-- health
-	button.HealthBar:SetTexture(0, 0, 0, 0)
+	button.HealthBar:SetColorTexture(0, 0, 0, 0)
 	button.HealthBar:SetWidth(DATA[side].healthBarWidth)
 	button.HealthText:SetText("")
 
 	-- target_of_target
 	button.ToTButton:SetAlpha(0)
 	button.ToTButton.Name:SetText("")
-	button.ToTButton.ClassColorBackground:SetTexture(0, 0, 0, 0)
+	button.ToTButton.ClassColorBackground:SetColorTexture(0, 0, 0, 0)
 	button.ToTButton.RoleTexture:SetTexCoord(0, 0, 0, 0)
 	button.ToTButton.FactionTexture:SetTexCoord(0, 0, 0, 0)
-	button.ToTButton.HealthBar:SetTexture(0, 0, 0, 0)
+	button.ToTButton.HealthBar:SetColorTexture(0, 0, 0, 0)
 	button.ToTButton.HealthBar:SetWidth(DATA[side].healthBarWidth)
 	button.ToTButton.HealthText:SetText("")
 
 	-- range
-	button.RangeTexture:SetTexture(0, 0, 0, 0)
+	button.RangeTexture:SetColorTexture(0, 0, 0, 0)
 
 	if clearRange then
 		if BattlegroundTargets_Options[side].ButtonRangeToggle[currentSize] then
@@ -6024,7 +6048,12 @@ function BattlegroundTargets:DefaultShuffle()
 		for i = 1, 40 do
 			local rndnum = testData[side].TargetofTarget[i]
 			local classToken = class_IntegerSort[ random(1,11) ].cid
-			local talentSpec = classes[ classToken ].spec[ random(1,3) ].role
+			local talentSpec			
+			if classToken ~= "DEMONHUNTER" then
+				talentSpec = classes[ classToken ].spec[ random(1,3) ].role
+			else
+				talentSpec = classes[ classToken ].spec[ random(1,2) ].role
+			end
 			testData[side].TargetofTarget[i] = {
 				rnd = rndnum,
 				totName = L["Target of Target"]..i,
@@ -6474,8 +6503,8 @@ function BattlegroundTargets:MainDataUpdate(side)
 			button.colR5 = colR*0.5
 			button.colG5 = colG*0.5
 			button.colB5 = colB*0.5
-			button.ClassColorBackground:SetTexture(button.colR5, button.colG5, button.colB5, 1)
-			button.HealthBar:SetTexture(colR, colG, colB, 1)
+			button.ClassColorBackground:SetColorTexture(button.colR5, button.colG5, button.colB5, 1)
+			button.HealthBar:SetColorTexture(colR, colG, colB, 1)
 
 			button.RoleTexture:SetTexCoord(Textures.RoleIcon[qtalentSpec][1], Textures.RoleIcon[qtalentSpec][2], Textures.RoleIcon[qtalentSpec][3], Textures.RoleIcon[qtalentSpec][4])
 
@@ -6538,7 +6567,7 @@ function BattlegroundTargets:MainDataUpdate(side)
 			end
 
 			if ButtonRangeToggle then
-				button.RangeTexture:SetTexture(colR, colG, colB, 1)
+				button.RangeTexture:SetColorTexture(colR, colG, colB, 1)
 			end
 
 			if ButtonSpecToggle then
@@ -6571,16 +6600,16 @@ function BattlegroundTargets:MainDataUpdate(side)
 
 			if ButtonTargetToggle then
 				if qname == playerTargetName then
-					button.HighlightT:SetTexture(0.5, 0.5, 0.5, 1)
-					button.HighlightR:SetTexture(0.5, 0.5, 0.5, 1)
-					button.HighlightB:SetTexture(0.5, 0.5, 0.5, 1)
-					button.HighlightL:SetTexture(0.5, 0.5, 0.5, 1)
+					button.HighlightT:SetColorTexture(0.5, 0.5, 0.5, 1)
+					button.HighlightR:SetColorTexture(0.5, 0.5, 0.5, 1)
+					button.HighlightB:SetColorTexture(0.5, 0.5, 0.5, 1)
+					button.HighlightL:SetColorTexture(0.5, 0.5, 0.5, 1)
 					button.TargetTexture:SetAlpha(1)
 				else
-					button.HighlightT:SetTexture(0, 0, 0, 1)
-					button.HighlightR:SetTexture(0, 0, 0, 1)
-					button.HighlightB:SetTexture(0, 0, 0, 1)
-					button.HighlightL:SetTexture(0, 0, 0, 1)
+					button.HighlightT:SetColorTexture(0, 0, 0, 1)
+					button.HighlightR:SetColorTexture(0, 0, 0, 1)
+					button.HighlightB:SetColorTexture(0, 0, 0, 1)
+					button.HighlightL:SetColorTexture(0, 0, 0, 1)
 					button.TargetTexture:SetAlpha(0)
 				end
 			end
@@ -6800,6 +6829,23 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 		local name, _, _, _, _, faction, _, _, classToken, _, _, _, _, _, _, talentSpec = GetBattlefieldScore(index)
 		--print("INPUT_NAME_CHECK: _score_", index, name, faction, classToken, talentSpec, "#", GetBattlefieldScore(index))
 
+		
+
+					--bad locale fix
+					
+		if classes[classToken].fix then
+			if classes[classToken].fixname[talentSpec] ~= nill then
+			--	print ("fixed: ".. talentSpec .. " to ".. classes[classToken].fixname[talentSpec])
+				talentSpec = classes[classToken].fixname[talentSpec]
+			end
+		end
+
+			--rus
+			--if talentSpec == "Повелительница зверей" then talentSpec = "Повелитель зверей" end
+
+
+		
+
 		if not name then
 			if not BattlegroundTargets.UnknownNameIndex then
 				BattlegroundTargets.UnknownNameIndex = 1
@@ -6834,10 +6880,10 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 			if not specicon then
 				if not testData.specTest then testData.specTest = {} end
 				if not testData.specTest[class] then testData.specTest[class] = {} end
-				if not talentSpec then talentSpec = "talentSpec_is_unknown" end
+				if not talentSpec then talentSpec = "talentSpec_is_unknown!" end
 				if not testData.specTest[class][talentSpec] then
-					testData.specTest[class][talentSpec] = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
-					Print("ERROR unknown spec:", locale, faction, classToken, talentSpec)
+					testData.specTest[class][talentSpec] = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec, name=name}
+					Print("ERROR#1 unknown spec:", locale, faction, classToken, talentSpec)
 				end
 			end
 
@@ -6869,6 +6915,8 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 					class = classToken
 				end
 			end
+			--bad hotfix for ru locale
+						
 
 			if not specicon then
 				if not testData.specTest then testData.specTest = {} end
@@ -6876,7 +6924,7 @@ function BattlegroundTargets:BattlefieldScoreUpdate()
 				if not talentSpec then talentSpec = "talentSpec_is_unknown" end
 				if not testData.specTest[class][talentSpec] then
 					testData.specTest[class][talentSpec] = {locale=locale, faction=faction, classToken=classToken, talentSpec=talentSpec}
-					Print("ERROR unknown spec:", locale, faction, classToken, talentSpec)
+					--Print("ERROR#2 unknown spec:", locale, faction, classToken, talentSpec)
 				end
 			end
 
@@ -7295,11 +7343,13 @@ function BattlegroundTargets:IsNotBattleground()
 	end
 
 	if testData.specTest then
-		for k, v in pairs(testData.specTest) do
-			for k2, v2 in pairs(v) do
-				Print("ERROR unknown spec:", v2.locale, v2.faction, v2.classToken, v2.talentSpec)
-			end
-		end
+		---debug( wait for next update
+		--for k, v in pairs(testData.specTest) do
+--			for k2, v2 in pairs(v) do
+				--Print("ERROR#3 unknown spec:", v2.locale, v2.faction, v2.classToken, v2.talentSpec)
+			--end
+		
+		--end
 		testData.specTest = nil
 	end
 
@@ -7426,8 +7476,8 @@ function BattlegroundTargets:UpdateToTButton(sourceButton) -- target_of_target
 	--print("*totupd*", totSide, totFullName, "#", totName, "#", sourceButton.buttonNum, targetID)
 
 	ToTButton.Name:SetText(totName)-- only name, no realm
-	ToTButton.ClassColorBackground:SetTexture(colR5, colG5, colB5, 1)
-	ToTButton.HealthBar:SetTexture(colR, colG, colB, 1)
+	ToTButton.ClassColorBackground:SetColorTexture(colR5, colG5, colB5, 1)
+	ToTButton.HealthBar:SetColorTexture(colR, colG, colB, 1)
 	ToTButton.RoleTexture:SetTexCoord(talentSpec[1], talentSpec[2], talentSpec[3], talentSpec[4])
 
 	local BattlegroundTargets_Options = BattlegroundTargets_Options
@@ -7809,10 +7859,10 @@ function BattlegroundTargets:CheckPlayerTarget()
 			local button = GVAR[side.."Button"]
 			for i = 1, currentSize do
 				button[i].TargetTexture:SetAlpha(0)
-				button[i].HighlightT:SetTexture(0, 0, 0, 1)
-				button[i].HighlightR:SetTexture(0, 0, 0, 1)
-				button[i].HighlightB:SetTexture(0, 0, 0, 1)
-				button[i].HighlightL:SetTexture(0, 0, 0, 1)
+				button[i].HighlightT:SetColorTexture(0, 0, 0, 1)
+				button[i].HighlightR:SetColorTexture(0, 0, 0, 1)
+				button[i].HighlightB:SetColorTexture(0, 0, 0, 1)
+				button[i].HighlightL:SetColorTexture(0, 0, 0, 1)
 				button[i].FlagDebuffButton:SetScript("OnUpdate", nil)
 			end
 			-- targeet reset all END -----
@@ -7830,10 +7880,10 @@ function BattlegroundTargets:CheckPlayerTarget()
 			if button then
 				if BattlegroundTargets_Options[side].ButtonTargetToggle[currentSize] then
 					button.TargetTexture:SetAlpha(1)
-					button.HighlightT:SetTexture(0.5, 0.5, 0.5, 1)
-					button.HighlightR:SetTexture(0.5, 0.5, 0.5, 1)
-					button.HighlightB:SetTexture(0.5, 0.5, 0.5, 1)
-					button.HighlightL:SetTexture(0.5, 0.5, 0.5, 1)
+					button.HighlightT:SetColorTexture(0.5, 0.5, 0.5, 1)
+					button.HighlightR:SetColorTexture(0.5, 0.5, 0.5, 1)
+					button.HighlightB:SetColorTexture(0.5, 0.5, 0.5, 1)
+					button.HighlightL:SetColorTexture(0.5, 0.5, 0.5, 1)
 				end
 				isTargetButton = button
 				isTargetSide = side
@@ -8113,7 +8163,7 @@ function BattlegroundTargets:CheckUnitTarget(unitID, unitName, isEvent)
 	end
 
 	-- level
-	if isLowLevel then -- LVLCHK
+	if isLowLevel and playerLevel ~= 100 then -- LVLCHK
 		local level = UnitLevel(targetID) or 0
 		if level > 0 then
 			DATA[side].Name2Level[targetName] = level
@@ -8975,15 +9025,35 @@ function BattlegroundTargets:UpdatePvPTrinket(button, unitName, curTime) -- pvp_
 	if DATA.PvPTrinketEndTime[unitName] then
 		local trinketTime = floor(DATA.PvPTrinketEndTime[unitName] - curTime)
 		if trinketTime > 0 then
+
+		--icon change
+				--print (button, unitName, curTime ,DATA.PvPTrinketId[unitName] )
+			local id = DATA.PvPTrinketId[unitName]
+			if not isLowLevel then
+				if id == 195710 or				--lowlevel
+				   id == 208683 then        	--pvptrinkettalent
+				   button.PVPTrinketTexture:SetTexture( GetSpellTexture(id) )
+				end
+			end
+			
+			
 			button.PVPTrinketTexture:SetAlpha(1)
 			button.PVPTrinketTxt:SetText(trinketTime)
 		else
 			DATA.PvPTrinketEndTime[unitName] = nil
+			if DATA.PvPTrinketId[unitName] == 214027 then 
+				button.PVPTrinketTexture:SetAlpha(0.3)
+			else
 			button.PVPTrinketTexture:SetAlpha(0)
+			end
 			button.PVPTrinketTxt:SetText("")
 		end
 	else
+		if DATA.PvPTrinketId[unitName] == 214027 then 
+			button.PVPTrinketTexture:SetAlpha(0.3)
+		else
 		button.PVPTrinketTexture:SetAlpha(0)
+		end
 		button.PVPTrinketTxt:SetText("")
 	end
 end
@@ -9002,6 +9072,7 @@ local function CombatLogPVPTrinketCheck(clEvent, spellId, sourceName) -- pvp_tri
 			then
 				local curTime = GetTime()
 				DATA.PvPTrinketEndTime[sourceName] = floor(curTime + pvptrinketIDs[spellId])
+				DATA.PvPTrinketId[sourceName] = spellId
 				BattlegroundTargets:UpdatePvPTrinket(enemyButton, sourceName, curTime)
 			end
 			return
@@ -9015,6 +9086,7 @@ local function CombatLogPVPTrinketCheck(clEvent, spellId, sourceName) -- pvp_tri
 			then
 				local curTime = GetTime()
 				DATA.PvPTrinketEndTime[sourceName] = floor(curTime + pvptrinketIDs[spellId])
+				DATA.PvPTrinketId[sourceName] = spellId
 				BattlegroundTargets:UpdatePvPTrinket(friendButton, sourceName, curTime)
 			end
 		end
@@ -9278,8 +9350,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.RoleTexture:SetAlpha(1)
 		button.SpecTexture:SetAlpha(1)
 		button.ClassTexture:SetAlpha(1)
-		button.ClassColorBackground:SetTexture(button.colR5, button.colG5, button.colB5, 1)
-		button.HealthBar:SetTexture(button.colR, button.colG, button.colB, 1)
+		button.ClassColorBackground:SetColorTexture(button.colR5, button.colG5, button.colB5, 1)
+		button.HealthBar:SetColorTexture(button.colR, button.colG, button.colB, 1)
 	elseif display == 1 then -- STD 100
 		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(1)
@@ -9320,8 +9392,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.RoleTexture:SetAlpha(1)
 		button.SpecTexture:SetAlpha(1)
 		button.ClassTexture:SetAlpha(1)
-		button.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-		button.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+		button.ClassColorBackground:SetColorTexture(0.2, 0.2, 0.2, 1)
+		button.HealthBar:SetColorTexture(0.4, 0.4, 0.4, 1)
 	elseif display == 5 then -- STD 50 mono
 		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(0.5)
@@ -9332,8 +9404,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.RoleTexture:SetAlpha(0.5)
 		button.SpecTexture:SetAlpha(0.5)
 		button.ClassTexture:SetAlpha(0.5)
-		button.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-		button.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+		button.ClassColorBackground:SetColorTexture(0.2, 0.2, 0.2, 1)
+		button.HealthBar:SetColorTexture(0.4, 0.4, 0.4, 1)
 	elseif display == 6 then -- STD 10 mono
 		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(0.3)
@@ -9344,8 +9416,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.RoleTexture:SetAlpha(0.25)
 		button.SpecTexture:SetAlpha(0.25)
 		button.ClassTexture:SetAlpha(0.25)
-		button.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-		button.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+		button.ClassColorBackground:SetColorTexture(0.2, 0.2, 0.2, 1)
+		button.HealthBar:SetColorTexture(0.4, 0.4, 0.4, 1)
 	elseif display == 7 then -- X 10
 		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(0.3)
@@ -9366,8 +9438,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.RoleTexture:SetAlpha(1)
 		button.SpecTexture:SetAlpha(1)
 		button.ClassTexture:SetAlpha(1)
-		button.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-		button.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+		button.ClassColorBackground:SetColorTexture(0.2, 0.2, 0.2, 1)
+		button.HealthBar:SetColorTexture(0.4, 0.4, 0.4, 1)
 	elseif display == 9 then -- X 50 mono
 		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(0.5)
@@ -9378,8 +9450,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.RoleTexture:SetAlpha(0.5)
 		button.SpecTexture:SetAlpha(0.5)
 		button.ClassTexture:SetAlpha(0.5)
-		button.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-		button.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+		button.ClassColorBackground:SetColorTexture(0.2, 0.2, 0.2, 1)
+		button.HealthBar:SetColorTexture(0.4, 0.4, 0.4, 1)
 	else--if display == 10 then -- X 10 mono
 		button.RangeTxt:SetText("")
 		button.BackgroundX:SetAlpha(0.3)
@@ -9390,8 +9462,8 @@ function BattlegroundTargets:Range_Display(state, button, distance, display) -- 
 		button.RoleTexture:SetAlpha(0.25)
 		button.SpecTexture:SetAlpha(0.25)
 		button.ClassTexture:SetAlpha(0.25)
-		button.ClassColorBackground:SetTexture(0.2, 0.2, 0.2, 1)
-		button.HealthBar:SetTexture(0.4, 0.4, 0.4, 1)
+		button.ClassColorBackground:SetColorTexture(0.2, 0.2, 0.2, 1)
+		button.HealthBar:SetColorTexture(0.4, 0.4, 0.4, 1)
 	end
 end
 -- ---------------------------------------------------------------------------------------------------------------------
